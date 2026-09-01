@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e5e5df0abd4bec4b9145acf6be72e96, type: 3}
+  m_Name: PoolTableAssetSettings
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::UntitledPoolGame.PoolEditor.PoolTableAssetSettings
+  customTablePrefab: {fileID: 1154887790547816687, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
+  playLength: 3.47
+  playWidth: 1.97
+  tableSurfaceY: 1
+  surfaceThickness: 0.05
+  railHeight: 0.045
+  railThickness: 0.06
+  ballDiameter: 0.1
+  pocketRadius: 0.17

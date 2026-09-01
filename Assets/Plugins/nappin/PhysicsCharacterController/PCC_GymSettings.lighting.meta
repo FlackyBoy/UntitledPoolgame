@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 82a028154969f3647a8b89728106f337
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203438
+  packageName: Physics Character Controller
+  packageVersion: 5.0.0
+  assetPath: Assets/nappin/PhysicsCharacterController/PCC_GymSettings.lighting
+  uploadId: 798892

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6c6b520478211984c8534d0e5dc6a552
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203438
+  packageName: Physics Character Controller
+  packageVersion: 5.0.0
+  assetPath: Assets/nappin/PhysicsCharacterController/readme.txt
+  uploadId: 798892

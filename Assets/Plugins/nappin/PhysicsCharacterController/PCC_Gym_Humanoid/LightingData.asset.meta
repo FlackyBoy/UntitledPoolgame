@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 855e08637bc378843824ddd98f50c423
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203438
+  packageName: Physics Character Controller
+  packageVersion: 5.0.0
+  assetPath: Assets/nappin/PhysicsCharacterController/PCC_Gym_Humanoid/LightingData.asset
+  uploadId: 798892
