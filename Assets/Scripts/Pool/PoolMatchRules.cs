@@ -71,7 +71,25 @@ namespace UntitledPoolGame.Pool
         private bool pendingStart;
         private int pendingTargetScore;
 
-        private void Awake() => Instance = this;
+        // Resources-loaded, shared with PoolPocket (same "what happens on a
+        // pot" domain — see PoolPotEffectSettings) instead of private fields
+        // here.
+        private static PoolPotEffectSettings potEffectSettings;
+
+        private void Awake()
+        {
+            Instance = this;
+
+            if (potEffectSettings == null)
+            {
+                potEffectSettings = Resources.Load<PoolPotEffectSettings>("PoolPotEffectSettings");
+                if (potEffectSettings == null)
+                {
+                    Debug.LogWarning("PoolPotEffectSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Ensure Config Assets Exist to create it.");
+                    potEffectSettings = ScriptableObject.CreateInstance<PoolPotEffectSettings>();
+                }
+            }
+        }
 
         private void OnDestroy()
         {
@@ -92,12 +110,6 @@ namespace UntitledPoolGame.Pool
             PoolBall.Pocketed -= HandleBallPocketed;
             PoolBall.CueBallFirstContact -= HandleFirstContact;
         }
-
-        [Header("Pot slow-motion")]
-        [SerializeField] private float potSlowMotionScale = 0.3f;
-        // Real-world (unscaled) seconds — how long the dip itself lasts,
-        // independent of how slow gameplay appears to move during it.
-        [SerializeField] private float potSlowMotionDuration = 0.12f;
 
         private Coroutine slowMotionRoutine;
 
@@ -138,8 +150,8 @@ namespace UntitledPoolGame.Pool
 
         private IEnumerator PotSlowMotionRoutine()
         {
-            Time.timeScale = potSlowMotionScale;
-            yield return new WaitForSecondsRealtime(potSlowMotionDuration);
+            Time.timeScale = potEffectSettings.potSlowMotionScale;
+            yield return new WaitForSecondsRealtime(potEffectSettings.potSlowMotionDuration);
             Time.timeScale = 1f;
             slowMotionRoutine = null;
         }

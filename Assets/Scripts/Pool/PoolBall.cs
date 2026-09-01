@@ -119,7 +119,7 @@ namespace UntitledPoolGame.Pool
                 settings = Resources.Load<PoolPhysicsSettings>("PoolPhysicsSettings");
                 if (settings == null)
                 {
-                    Debug.LogWarning("PoolPhysicsSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Build Table to create it.");
+                    Debug.LogWarning("PoolPhysicsSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Ensure Config Assets Exist to create it.");
                     settings = ScriptableObject.CreateInstance<PoolPhysicsSettings>();
                 }
             }

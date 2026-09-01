@@ -17,6 +17,10 @@ namespace UntitledPoolGame.Pool
     //    over a fixed duration) for shots fired, balls pocketed, fouls, and
     //    power pickups — see RequestShake/RequestFlash/PlayShotFeedback.
     //
+    // All the tunable numbers behind both live in PoolScreenJuiceSettings
+    // (Resources-loaded, shared by both local players — same pattern as
+    // PoolPhysicsSettings) instead of private fields here.
+    //
     // Offline only for now: this needs to know "am I player 0 or player 1"
     // to look up the right slot, which PlayerInput.playerIndex gives locally
     // but has no online equivalent yet (see TODO.md — same limitation as
@@ -25,47 +29,7 @@ namespace UntitledPoolGame.Pool
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPoolPowerEffectReceiver : MonoBehaviour
     {
-        [Header("Vision Impair — screen flash")]
-        [SerializeField] private Color overlayColor = Color.white;
-        [SerializeField, Range(0f, 1f)] private float maxOverlayAlpha = 0.6f;
-        [SerializeField] private float flickerFrequency = 8f; // blinks per second
-
-        [Header("Vision Impair — camera shake")]
-        [SerializeField] private float shakeMagnitude = 0.03f; // meters, world space
-
-        [Header("Impact juice — charging a shot")]
-        // Grows continuously from 0 to this value as the shot charges up
-        // (reads LocalPoolAimController.ChargeFraction), unlike the other
-        // impact effects below which are fixed-duration decaying pulses —
-        // this one tracks the charge level directly, every frame.
-        [SerializeField] private float chargeShakeMaxMagnitude = 0.012f;
-
-        [Header("Impact juice — shot fired")]
-        // No flash here anymore — just the recoil kick. The white screen
-        // flash on release didn't read well and was removed.
-        [SerializeField] private float shotShakeMagnitude = 0.015f;
-        [SerializeField] private float shotShakeDuration = 0.1f;
-
-        [Header("Impact juice — ball pocketed")]
-        // No flash color/alpha here anymore — the light side of a pot now
-        // comes from a world-space halo at the actual pocket (PoolPocket.cs)
-        // instead of a flat screen-space tint.
-        [SerializeField] private float potShakeMagnitude = 0.02f;
-        [SerializeField] private float potShakeDuration = 0.15f;
-
-        [Header("Impact juice — foul")]
-        [SerializeField] private float foulShakeMagnitude = 0.04f;
-        [SerializeField] private float foulShakeDuration = 0.25f;
-        [SerializeField] private Color foulFlashColor = Color.red;
-        [SerializeField, Range(0f, 1f)] private float foulFlashMaxAlpha = 0.25f;
-        [SerializeField] private float foulFlashDuration = 0.3f;
-
-        [Header("Impact juice — power pickup")]
-        [SerializeField] private float pickupShakeMagnitude = 0.02f;
-        [SerializeField] private float pickupShakeDuration = 0.15f;
-        [SerializeField] private Color pickupFlashColor = new Color(0.4f, 0.85f, 1f); // cool cyan
-        [SerializeField, Range(0f, 1f)] private float pickupFlashMaxAlpha = 0.15f;
-        [SerializeField] private float pickupFlashDuration = 0.2f;
+        private static PoolScreenJuiceSettings settings;
 
         private LocalFpsPlayerController fpsController;
         private LocalPoolAimController aimController;
@@ -101,6 +65,16 @@ namespace UntitledPoolGame.Pool
             playerInput = GetComponent<PlayerInput>();
             playerCamera = GetComponentInChildren<Camera>(true);
             if (playerCamera != null) cameraRestLocalPosition = playerCamera.transform.localPosition;
+
+            if (settings == null)
+            {
+                settings = Resources.Load<PoolScreenJuiceSettings>("PoolScreenJuiceSettings");
+                if (settings == null)
+                {
+                    Debug.LogWarning("PoolScreenJuiceSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Ensure Config Assets Exist to create it.");
+                    settings = ScriptableObject.CreateInstance<PoolScreenJuiceSettings>();
+                }
+            }
         }
 
         private void OnEnable()
@@ -124,15 +98,15 @@ namespace UntitledPoolGame.Pool
         // screen-space tint, so no RequestFlash call anymore.
         private void HandleBallPocketed(PoolBall ball)
         {
-            RequestShake(potShakeMagnitude, potShakeDuration);
+            RequestShake(settings.potShakeMagnitude, settings.potShakeDuration);
         }
 
         // Same reasoning as pocketed — a foul is a shared-table moment,
         // both players feel it, not just whoever committed it.
         private void HandleFoul()
         {
-            RequestShake(foulShakeMagnitude, foulShakeDuration);
-            RequestFlash(foulFlashColor, foulFlashMaxAlpha, foulFlashDuration);
+            RequestShake(settings.foulShakeMagnitude, settings.foulShakeDuration);
+            RequestFlash(settings.foulFlashColor, settings.foulFlashMaxAlpha, settings.foulFlashDuration);
         }
 
         // Unlike pocketed/foul, only the player who actually picked up the
@@ -142,15 +116,15 @@ namespace UntitledPoolGame.Pool
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
             if (rules == null || player != rules.GetEffectivePlayerIndex(playerInput.playerIndex)) return;
-            RequestShake(pickupShakeMagnitude, pickupShakeDuration);
-            RequestFlash(pickupFlashColor, pickupFlashMaxAlpha, pickupFlashDuration);
+            RequestShake(settings.pickupShakeMagnitude, settings.pickupShakeDuration);
+            RequestFlash(settings.pickupFlashColor, settings.pickupFlashMaxAlpha, settings.pickupFlashDuration);
         }
 
         // Called directly by LocalPoolAimController.Shoot() on this same
         // player's GameObject right after the shot fires — not event-driven
         // like the others above, since a shot's recoil kick only ever
         // belongs to the player who took it.
-        public void PlayShotFeedback() => RequestShake(shotShakeMagnitude, shotShakeDuration);
+        public void PlayShotFeedback() => RequestShake(settings.shotShakeMagnitude, settings.shotShakeDuration);
 
         private void RequestShake(float magnitude, float duration)
         {
@@ -225,9 +199,9 @@ namespace UntitledPoolGame.Pool
             // Not a decaying pulse like the others — tracks the charge level
             // directly every frame, growing as the player holds Attack
             // longer and resetting the instant they stop charging.
-            float chargeMagnitude = isAiming ? chargeShakeMaxMagnitude * aimController.ChargeFraction : 0f;
+            float chargeMagnitude = isAiming ? settings.chargeShakeMaxMagnitude * aimController.ChargeFraction : 0f;
 
-            float totalMagnitude = shakeMagnitude * strength + impactShakeMagnitude * impactT + chargeMagnitude;
+            float totalMagnitude = settings.visionImpairShakeMagnitude * strength + impactShakeMagnitude * impactT + chargeMagnitude;
 
             if (totalMagnitude <= 0f)
             {
@@ -258,7 +232,7 @@ namespace UntitledPoolGame.Pool
             // blink rate doesn't slow down along with any hit-stop/pause
             // effects added later.
             bool visionOverlayVisible = strength > 0f &&
-                Mathf.Sin(Time.unscaledTime * flickerFrequency * Mathf.PI * 2f) > 0f;
+                Mathf.Sin(Time.unscaledTime * settings.visionImpairFlickerFrequency * Mathf.PI * 2f) > 0f;
 
             float impactAlpha = impactFlashDuration > 0f
                 ? impactFlashMaxAlpha * (impactFlashRemaining / impactFlashDuration)
@@ -282,7 +256,8 @@ namespace UntitledPoolGame.Pool
 
             if (visionOverlayVisible)
             {
-                GUI.color = new Color(overlayColor.r, overlayColor.g, overlayColor.b, strength * maxOverlayAlpha);
+                Color overlayColor = settings.visionImpairOverlayColor;
+                GUI.color = new Color(overlayColor.r, overlayColor.g, overlayColor.b, strength * settings.visionImpairMaxOverlayAlpha);
                 GUI.DrawTexture(screenRect, Texture2D.whiteTexture);
             }
 

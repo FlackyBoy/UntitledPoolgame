@@ -65,6 +65,24 @@ namespace UntitledPoolGame.PoolEditor
         [MenuItem("Tools/Pool/Select Custom Table Settings")]
         public static void SelectCustomTableSettings() => Selection.activeObject = GetOrCreateTableAssetSettings();
 
+        // Standalone from BuildTable() on purpose: "Attach Physics To Custom
+        // Table" destroys and fully regenerates the whole "PoolPhysics"
+        // child every time it runs (see the comment above it) — including
+        // the 6 pockets, wiping out any manual alignment already done on an
+        // existing table. Someone just wanting the Resources config assets
+        // created (PoolPhysicsSettings/PoolScreenJuiceSettings/
+        // PoolPotEffectSettings) shouldn't have to risk that. Safe to run
+        // any time — each Ensure*Asset() is a no-op if its asset already
+        // exists.
+        [MenuItem("Tools/Pool/Ensure Config Assets Exist")]
+        public static void EnsureConfigAssetsExist()
+        {
+            EnsurePhysicsSettingsAsset();
+            EnsureScreenJuiceSettingsAsset();
+            EnsurePotEffectSettingsAsset();
+            Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
+        }
+
         private static void BuildTable(bool networked, bool hideVisuals = false, bool parentToSelection = false)
         {
             settings = GetOrCreateTableAssetSettings();
@@ -100,6 +118,8 @@ namespace UntitledPoolGame.PoolEditor
                 PhysicsMaterialCombine.Average, PhysicsMaterialCombine.Minimum);
 
             EnsurePhysicsSettingsAsset();
+            EnsureScreenJuiceSettingsAsset();
+            EnsurePotEffectSettingsAsset();
 
             GameObject root;
             if (parentToSelection)
@@ -246,11 +266,6 @@ namespace UntitledPoolGame.PoolEditor
                 new Vector3(0f, settings.tableSurfaceY, settings.playWidth / 2f),
             };
 
-            // Same rising-aura effect for every pocket — loaded once outside
-            // the loop rather than per pocket.
-            const string auraPath = "Assets/Plugins/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR3 Magic Aura A (Runic).prefab";
-            GameObject auraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(auraPath);
-
             for (int i = 0; i < positions.Length; i++)
             {
                 GameObject pocket = new GameObject($"Pocket_{i}");
@@ -261,13 +276,11 @@ namespace UntitledPoolGame.PoolEditor
                 collider.radius = settings.pocketRadius;
                 collider.isTrigger = true;
 
-                PoolPocket poolPocket = pocket.AddComponent<PoolPocket>();
-                if (auraPrefab != null)
-                {
-                    SerializedObject so = new SerializedObject(poolPocket);
-                    so.FindProperty("risingAuraPrefab").objectReferenceValue = auraPrefab;
-                    so.ApplyModifiedPropertiesWithoutUndo();
-                }
+                // No per-pocket wiring needed anymore — halo/aura tuning
+                // (including the rising aura prefab reference) lives on the
+                // shared PoolPotEffectSettings asset, see
+                // EnsurePotEffectSettingsAsset().
+                pocket.AddComponent<PoolPocket>();
             }
         }
 
@@ -408,6 +421,32 @@ namespace UntitledPoolGame.PoolEditor
             if (AssetDatabase.LoadAssetAtPath<PoolPhysicsSettings>(path) != null) return;
 
             PoolPhysicsSettings settings = ScriptableObject.CreateInstance<PoolPhysicsSettings>();
+            AssetDatabase.CreateAsset(settings, path);
+        }
+
+        private static void EnsureScreenJuiceSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            string path = "Assets/Resources/PoolScreenJuiceSettings.asset";
+
+            if (AssetDatabase.LoadAssetAtPath<PoolScreenJuiceSettings>(path) != null) return;
+
+            PoolScreenJuiceSettings settings = ScriptableObject.CreateInstance<PoolScreenJuiceSettings>();
+            AssetDatabase.CreateAsset(settings, path);
+        }
+
+        private static void EnsurePotEffectSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            string path = "Assets/Resources/PoolPotEffectSettings.asset";
+
+            if (AssetDatabase.LoadAssetAtPath<PoolPotEffectSettings>(path) != null) return;
+
+            PoolPotEffectSettings settings = ScriptableObject.CreateInstance<PoolPotEffectSettings>();
+
+            const string auraPath = "Assets/Plugins/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR3 Magic Aura A (Runic).prefab";
+            settings.risingAuraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(auraPath);
+
             AssetDatabase.CreateAsset(settings, path);
         }
 

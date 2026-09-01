@@ -32,10 +32,9 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private float minPower = 0.1f;
         [SerializeField] private float maxPower = 1f;
         [SerializeField] private float chargeSpeed = 0.85f;
-        // How much closer the camera creeps toward the cue tip as the shot
-        // charges up — a "charging zoom" read cue for how much power is
-        // loaded, on top of the strike-point indicator and cue pullback.
-        [SerializeField] private float chargeZoomDistance = 0.15f;
+        // Charging zoom distance lives in PoolScreenJuiceSettings (shared
+        // with LocalPoolPowerEffectReceiver's charge shake — same "how does
+        // charging a shot feel" moment), not a local field here.
 
         [Header("Spin (strike point on the cue ball)")]
         [SerializeField] private float offsetAdjustSpeed = 1.2f;
@@ -68,6 +67,8 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private string interactActionName = "Interact";
         [SerializeField] private string attackActionName = "Attack";
 
+        private static PoolScreenJuiceSettings juiceSettings;
+
         private LocalFpsPlayerController fpsController;
         private LocalPlayerHandController handController;
         private PlayerInput playerInput;
@@ -99,6 +100,16 @@ namespace UntitledPoolGame.Pool
             fpsController = GetComponent<LocalFpsPlayerController>();
             handController = GetComponent<LocalPlayerHandController>();
             playerInput = GetComponent<PlayerInput>();
+
+            if (juiceSettings == null)
+            {
+                juiceSettings = Resources.Load<PoolScreenJuiceSettings>("PoolScreenJuiceSettings");
+                if (juiceSettings == null)
+                {
+                    Debug.LogWarning("PoolScreenJuiceSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Ensure Config Assets Exist to create it.");
+                    juiceSettings = ScriptableObject.CreateInstance<PoolScreenJuiceSettings>();
+                }
+            }
 
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             lookAction = map.FindAction(lookActionName, throwIfNotFound: true);
@@ -375,7 +386,7 @@ namespace UntitledPoolGame.Pool
             // Creeps the camera in toward the cue tip as the shot charges —
             // a "charging zoom", on top of the shake LocalPoolPowerEffectReceiver
             // layers on separately (reads ChargeFraction).
-            float currentOrbitDistance = orbitDistance - chargeZoomDistance * ChargeFraction;
+            float currentOrbitDistance = orbitDistance - juiceSettings.chargeZoomDistance * ChargeFraction;
             cameraTransform.position = ballPos - aimDirection * currentOrbitDistance + Vector3.up * orbitHeight;
             cameraTransform.LookAt(ballPos + Vector3.up * (orbitHeight * 0.3f));
 
