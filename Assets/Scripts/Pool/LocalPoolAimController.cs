@@ -465,6 +465,12 @@ namespace UntitledPoolGame.Pool
 
             chargedPower = 0f;
             ExitAim();
+
+            // Called after ExitAim(), not before: by then the camera is back
+            // to its normal FPS local-position control (ExitAim already
+            // reset it), so the recoil kick doesn't have to fight the aim
+            // orbit's own per-frame world-position override.
+            GetComponent<LocalPoolPowerEffectReceiver>()?.PlayShotFeedback();
         }
     }
 }

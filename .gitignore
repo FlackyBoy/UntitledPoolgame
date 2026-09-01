@@ -44,3 +44,6 @@ crashlytics-build.properties
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+
+# Claude Code local-only settings (machine-specific permission rules, not shared project config)
+.claude/settings.local.json

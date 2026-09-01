@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -106,9 +107,20 @@ namespace UntitledPoolGame.Pool
                 GrantPower(CurrentPlayer, powerBall.Power);
         }
 
+        // Static, same convention as PoolBall.Pocketed/CueBallFirstContact —
+        // lets each local player's own juice/feedback component subscribe
+        // independently without needing a hand-wired reference to this
+        // instance, and without caring about subscription-order timing
+        // against Instance being set.
+        public static event Action<int> PowerGranted;
+
         // Overwrites whatever the player was already holding (Mario
         // Kart-style single slot) — called by PowerBall pickups, PoolPowerCrate.
-        public void GrantPower(int player, PoolPower power) => heldPower[player] = power;
+        public void GrantPower(int player, PoolPower power)
+        {
+            heldPower[player] = power;
+            PowerGranted?.Invoke(player);
+        }
 
         public PoolPower GetHeldPower(int player) => heldPower[player];
 
@@ -226,6 +238,11 @@ namespace UntitledPoolGame.Pool
         public bool CanPlayerShoot(int playerIndex) =>
             MatchStarted && !GameOver && (CurrentPlayer == playerIndex || PlayerInput.all.Count <= 1);
 
+        // Static, same convention as PowerGranted above — fired before
+        // SwitchTurn(), so CurrentPlayer at invocation time is still the
+        // player who committed the foul, not who it's rebounding to.
+        public static event Action Fouled;
+
         // Called by a rule set from ResolveShot whenever the shot was a foul
         // (wrong ball hit first, no contact at all, or a scratch) — parks the
         // cue ball in a pickup-able state for the player who now has the turn.
@@ -233,6 +250,7 @@ namespace UntitledPoolGame.Pool
         {
             BallInHand = true;
             PoolBall.FindCueBall()?.BeginBallInHand();
+            Fouled?.Invoke();
         }
 
         // Called by the aim controller once the player has confirmed the cue
