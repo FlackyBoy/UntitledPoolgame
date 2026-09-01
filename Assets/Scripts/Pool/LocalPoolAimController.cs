@@ -32,6 +32,10 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private float minPower = 0.1f;
         [SerializeField] private float maxPower = 1f;
         [SerializeField] private float chargeSpeed = 0.85f;
+        // How much closer the camera creeps toward the cue tip as the shot
+        // charges up — a "charging zoom" read cue for how much power is
+        // loaded, on top of the strike-point indicator and cue pullback.
+        [SerializeField] private float chargeZoomDistance = 0.15f;
 
         [Header("Spin (strike point on the cue ball)")]
         [SerializeField] private float offsetAdjustSpeed = 1.2f;
@@ -80,6 +84,10 @@ namespace UntitledPoolGame.Pool
         // know this, so it can add to the current position instead of
         // fighting/overwriting the orbit.
         public bool IsAiming => isAiming;
+        // 0 while not charging, up to 1 at maxPower — read by
+        // LocalPoolPowerEffectReceiver to grow the charge shake in step with
+        // how loaded the shot is, and used locally for the charging zoom.
+        public float ChargeFraction => maxPower > 0f ? Mathf.Clamp01(chargedPower / maxPower) : 0f;
         private float aimYaw;
         private float chargedPower;
         private Vector2 contactOffset;
@@ -364,7 +372,11 @@ namespace UntitledPoolGame.Pool
             Vector3 aimDirection = Quaternion.Euler(0f, aimYaw, 0f) * Vector3.forward;
             Vector3 ballPos = currentCueBall.position;
 
-            cameraTransform.position = ballPos - aimDirection * orbitDistance + Vector3.up * orbitHeight;
+            // Creeps the camera in toward the cue tip as the shot charges —
+            // a "charging zoom", on top of the shake LocalPoolPowerEffectReceiver
+            // layers on separately (reads ChargeFraction).
+            float currentOrbitDistance = orbitDistance - chargeZoomDistance * ChargeFraction;
+            cameraTransform.position = ballPos - aimDirection * currentOrbitDistance + Vector3.up * orbitHeight;
             cameraTransform.LookAt(ballPos + Vector3.up * (orbitHeight * 0.3f));
 
             UpdatePreview(ballPos, aimDirection);

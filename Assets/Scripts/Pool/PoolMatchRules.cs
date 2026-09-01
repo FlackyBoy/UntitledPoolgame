@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -75,6 +76,9 @@ namespace UntitledPoolGame.Pool
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            // Safety net: never leave the game stuck slowed down if this
+            // gets destroyed (scene reload, etc.) mid-dip.
+            Time.timeScale = 1f;
         }
 
         private void OnEnable()
@@ -89,9 +93,24 @@ namespace UntitledPoolGame.Pool
             PoolBall.CueBallFirstContact -= HandleFirstContact;
         }
 
+        [Header("Pot slow-motion")]
+        [SerializeField] private float potSlowMotionScale = 0.3f;
+        // Real-world (unscaled) seconds — how long the dip itself lasts,
+        // independent of how slow gameplay appears to move during it.
+        [SerializeField] private float potSlowMotionDuration = 0.12f;
+
+        private Coroutine slowMotionRoutine;
+
         private void HandleBallPocketed(PoolBall ball)
         {
             if (!MatchStarted) return;
+
+            // Owned here (not per-pocket, not per-player) because
+            // Time.timeScale is a single global value — two independent
+            // MonoBehaviours each starting/stopping their own coroutine for
+            // it would race and could snap it back to 1 while another pot's
+            // dip was still supposed to be running.
+            TriggerPotSlowMotion();
 
             if (ball.IsCueBall)
             {
@@ -105,6 +124,24 @@ namespace UntitledPoolGame.Pool
             // grants the shooter a power on top.
             if (ball.TryGetComponent(out PowerBall powerBall) && powerBall.Power != null)
                 GrantPower(CurrentPlayer, powerBall.Power);
+        }
+
+        // Restarts the dip from full if another ball pockets while one is
+        // already running (e.g. two balls potted on the same shot) rather
+        // than stacking — a longer single dip reads better than the
+        // timescale snapping back to 1 partway through and re-dropping.
+        private void TriggerPotSlowMotion()
+        {
+            if (slowMotionRoutine != null) StopCoroutine(slowMotionRoutine);
+            slowMotionRoutine = StartCoroutine(PotSlowMotionRoutine());
+        }
+
+        private IEnumerator PotSlowMotionRoutine()
+        {
+            Time.timeScale = potSlowMotionScale;
+            yield return new WaitForSecondsRealtime(potSlowMotionDuration);
+            Time.timeScale = 1f;
+            slowMotionRoutine = null;
         }
 
         // Static, same convention as PoolBall.Pocketed/CueBallFirstContact —

@@ -33,16 +33,25 @@ namespace UntitledPoolGame.Pool
         [Header("Vision Impair — camera shake")]
         [SerializeField] private float shakeMagnitude = 0.03f; // meters, world space
 
+        [Header("Impact juice — charging a shot")]
+        // Grows continuously from 0 to this value as the shot charges up
+        // (reads LocalPoolAimController.ChargeFraction), unlike the other
+        // impact effects below which are fixed-duration decaying pulses —
+        // this one tracks the charge level directly, every frame.
+        [SerializeField] private float chargeShakeMaxMagnitude = 0.012f;
+
         [Header("Impact juice — shot fired")]
+        // No flash here anymore — just the recoil kick. The white screen
+        // flash on release didn't read well and was removed.
         [SerializeField] private float shotShakeMagnitude = 0.015f;
         [SerializeField] private float shotShakeDuration = 0.1f;
 
         [Header("Impact juice — ball pocketed")]
+        // No flash color/alpha here anymore — the light side of a pot now
+        // comes from a world-space halo at the actual pocket (PoolPocket.cs)
+        // instead of a flat screen-space tint.
         [SerializeField] private float potShakeMagnitude = 0.02f;
         [SerializeField] private float potShakeDuration = 0.15f;
-        [SerializeField] private Color potFlashColor = new Color(1f, 0.85f, 0.35f); // warm gold
-        [SerializeField, Range(0f, 1f)] private float potFlashMaxAlpha = 0.15f;
-        [SerializeField] private float potFlashDuration = 0.2f;
 
         [Header("Impact juice — foul")]
         [SerializeField] private float foulShakeMagnitude = 0.04f;
@@ -109,11 +118,13 @@ namespace UntitledPoolGame.Pool
         }
 
         // Shared by every ball pocketed on the table — no per-player
-        // filtering, both screens feel the same satisfying pot.
+        // filtering, both screens feel the same satisfying pot. Just the
+        // shake here: the flash side of this moved into a world-space light
+        // halo at the actual pocket (see PoolPocket.cs) instead of a flat
+        // screen-space tint, so no RequestFlash call anymore.
         private void HandleBallPocketed(PoolBall ball)
         {
             RequestShake(potShakeMagnitude, potShakeDuration);
-            RequestFlash(potFlashColor, potFlashMaxAlpha, potFlashDuration);
         }
 
         // Same reasoning as pocketed — a foul is a shared-table moment,
@@ -208,9 +219,15 @@ namespace UntitledPoolGame.Pool
             // player also happens to be vision-impaired just adds on top
             // instead of one silently overriding the other.
             float impactT = impactShakeDuration > 0f ? impactShakeRemaining / impactShakeDuration : 0f;
-            float totalMagnitude = shakeMagnitude * strength + impactShakeMagnitude * impactT;
 
             bool isAiming = aimController != null && aimController.IsAiming;
+
+            // Not a decaying pulse like the others — tracks the charge level
+            // directly every frame, growing as the player holds Attack
+            // longer and resetting the instant they stop charging.
+            float chargeMagnitude = isAiming ? chargeShakeMaxMagnitude * aimController.ChargeFraction : 0f;
+
+            float totalMagnitude = shakeMagnitude * strength + impactShakeMagnitude * impactT + chargeMagnitude;
 
             if (totalMagnitude <= 0f)
             {

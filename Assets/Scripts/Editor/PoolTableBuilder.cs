@@ -246,6 +246,11 @@ namespace UntitledPoolGame.PoolEditor
                 new Vector3(0f, settings.tableSurfaceY, settings.playWidth / 2f),
             };
 
+            // Same rising-aura effect for every pocket — loaded once outside
+            // the loop rather than per pocket.
+            const string auraPath = "Assets/Plugins/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR3 Magic Aura A (Runic).prefab";
+            GameObject auraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(auraPath);
+
             for (int i = 0; i < positions.Length; i++)
             {
                 GameObject pocket = new GameObject($"Pocket_{i}");
@@ -256,7 +261,13 @@ namespace UntitledPoolGame.PoolEditor
                 collider.radius = settings.pocketRadius;
                 collider.isTrigger = true;
 
-                pocket.AddComponent<PoolPocket>();
+                PoolPocket poolPocket = pocket.AddComponent<PoolPocket>();
+                if (auraPrefab != null)
+                {
+                    SerializedObject so = new SerializedObject(poolPocket);
+                    so.FindProperty("risingAuraPrefab").objectReferenceValue = auraPrefab;
+                    so.ApplyModifiedPropertiesWithoutUndo();
+                }
             }
         }
 
