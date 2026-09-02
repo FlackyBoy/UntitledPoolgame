@@ -70,7 +70,7 @@ namespace UntitledPoolGame.Pool
             if (!chosen.TryGetComponent(out PowerBall powerBall)) return;
 
             PoolPower power = settings.availablePowers[Random.Range(0, settings.availablePowers.Length)];
-            powerBall.SetGlow(power, settings.GetColor(power.Type), settings.ballGlowIntensity, settings.ballGlowRange);
+            powerBall.SetGlow(power, settings.GetColor(power.Type), settings.ballGlowIntensity, settings.ballGlowRange, settings.GetBallMaterial(power.Type));
             currentBall = powerBall;
         }
     }

@@ -71,5 +71,24 @@ namespace UntitledPoolGame.Pool
         // Light Units).
         public float ballGlowIntensity = 4f;
         public float ballGlowRange = 0.3f;
+
+        [Header("Power ball visuals — optional, one material per PowerType")]
+        // Assign your own shader/material here to swap the ball's own
+        // renderer to for as long as it carries this power (on top of the
+        // glow light above) — PowerBall restores its normal material via
+        // ClearGlow() once it stops. Leaving one unassigned just skips the
+        // swap for that type, so this can be filled in gradually; the light
+        // alone still marks which ball currently carries a power either way.
+        public Material attackBallMaterial;
+        public Material defenseBallMaterial;
+        public Material effectBallMaterial;
+
+        public Material GetBallMaterial(PowerType type) => type switch
+        {
+            PowerType.Attack => attackBallMaterial,
+            PowerType.Defense => defenseBallMaterial,
+            PowerType.Effect => effectBallMaterial,
+            _ => null,
+        };
     }
 }
