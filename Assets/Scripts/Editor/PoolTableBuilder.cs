@@ -444,7 +444,7 @@ namespace UntitledPoolGame.PoolEditor
 
             PoolPotEffectSettings settings = ScriptableObject.CreateInstance<PoolPotEffectSettings>();
 
-            const string auraPath = "Assets/Plugins/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR3 Magic Aura A (Runic).prefab";
+            const string auraPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR3 Magic Aura A (Runic).prefab";
             settings.risingAuraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(auraPath);
 
             AssetDatabase.CreateAsset(settings, path);

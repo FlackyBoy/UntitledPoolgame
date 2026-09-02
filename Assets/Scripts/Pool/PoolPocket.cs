@@ -87,17 +87,44 @@ namespace UntitledPoolGame.Pool
 
         // Stopping emission (rather than an immediate Destroy) lets whatever
         // particles are already in flight finish their own fade instead of
-        // popping out of existence mid-flight — that hard cut was the
-        // "abrupt" part, not the light.
+        // popping out of existence mid-flight.
         private IEnumerator AuraWindDownRoutine(GameObject aura)
         {
             yield return new WaitForSeconds(settings.risingAuraActiveDuration);
             if (aura == null) yield break;
 
-            foreach (ParticleSystem system in aura.GetComponentsInChildren<ParticleSystem>())
+            ParticleSystem[] systems = aura.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem system in systems)
                 system.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 
-            Destroy(aura, settings.risingAuraFadeOutBuffer);
+            // Poll until every system in the hierarchy actually reports no
+            // particles left, rather than guessing a fixed delay before
+            // Destroy() — a fixed guess is exactly what caused the "plays
+            // then cuts off abruptly" bug: whenever the real particle
+            // lifetime ran longer than the guess, Destroy() fired while
+            // particles were still fully visible. IsAlive() only looks at a
+            // system's OWN Transform children, so every system is checked
+            // individually rather than just the root. risingAuraFadeOutBuffer
+            // is now a safety ceiling (in case something never reports dead)
+            // instead of a fixed wait — normally this finishes well before
+            // hitting it.
+            float safetyDeadline = Time.time + settings.risingAuraFadeOutBuffer;
+            bool anyAlive = true;
+            while (anyAlive && aura != null && Time.time < safetyDeadline)
+            {
+                anyAlive = false;
+                foreach (ParticleSystem system in systems)
+                {
+                    if (system != null && system.IsAlive())
+                    {
+                        anyAlive = true;
+                        break;
+                    }
+                }
+                yield return null;
+            }
+
+            if (aura != null) Destroy(aura);
         }
 
         private IEnumerator HaloRoutine()

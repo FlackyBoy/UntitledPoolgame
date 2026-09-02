@@ -28,9 +28,13 @@ namespace UntitledPoolGame.Pool
         // down — after this, emission stops but particles already in
         // flight keep playing out their own lifetime for a soft finish.
         public float risingAuraActiveDuration = 1.2f;
-        // Extra time kept alive after emission stops, for the last emitted
-        // particles to finish fading before the GameObject is destroyed.
-        public float risingAuraFadeOutBuffer = 1f;
+        // A SAFETY CEILING, not a fixed wait: PoolPocket polls
+        // ParticleSystem.IsAlive() every frame after emission stops and
+        // destroys the instance the moment every system genuinely has no
+        // particles left — this only kicks in if that never happens (a
+        // looping system, etc.), so it can be generous without cutting
+        // anything short.
+        public float risingAuraFadeOutBuffer = 4f;
         // The prefab's own scale/pace was built for a much bigger, slower
         // effect than a pool pocket needs.
         public float risingAuraScale = 0.4f;
