@@ -145,8 +145,11 @@ namespace UntitledPoolGame.Pool
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
             int effectivePlayer = rules != null ? rules.GetEffectivePlayerIndex(playerInput.playerIndex) : 0;
+            // Multiplicative, not one overwriting the other — Vision Impair
+            // reduces sensitivity, Inverted Controls boosts it; if a player
+            // somehow had both active at once, both should still apply.
             fpsController.SensitivityMultiplier = rules != null
-                ? rules.GetVisionImpairmentSensitivityMultiplier(effectivePlayer)
+                ? rules.GetVisionImpairmentSensitivityMultiplier(effectivePlayer) * rules.GetInvertedControlsSensitivityMultiplier(effectivePlayer)
                 : 1f;
             fpsController.InvertLook = rules != null && rules.IsControlsInverted(effectivePlayer);
 

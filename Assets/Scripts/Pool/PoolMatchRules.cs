@@ -258,25 +258,42 @@ namespace UntitledPoolGame.Pool
 
         // Second Attack-type turn-bound debuff (see InvertedControlsPower) —
         // same queue/consume/end lifecycle as Vision Impair above, just
-        // inverting look instead of blinding it. Kept as separate arrays
-        // rather than generalizing the two into one "debuffs" system for
-        // now — with only two of these so far, a shared abstraction would be
-        // guesswork about what future debuffs actually need in common.
+        // inverting look (plus a sensitivity boost and hiding the
+        // trajectory preview — see IsControlsInverted's call sites) instead
+        // of blinding it. Kept as separate arrays rather than generalizing
+        // the two into one "debuffs" system for now — with only two of
+        // these so far, a shared abstraction would be guesswork about what
+        // future debuffs actually need in common.
         private readonly bool[] invertedControls = new bool[2];
-        private readonly bool[] invertedControlsPending = new bool[2];
+        private readonly float[] invertedControlsSensitivity = new float[2];
 
-        public void QueueInvertedControls(int player) => invertedControlsPending[player] = true;
+        private readonly bool[] invertedControlsPending = new bool[2];
+        private readonly float[] pendingInvertedControlsSensitivity = new float[2];
+
+        public void QueueInvertedControls(int player, float sensitivityMultiplier)
+        {
+            invertedControlsPending[player] = true;
+            pendingInvertedControlsSensitivity[player] = sensitivityMultiplier;
+        }
 
         public void ConsumePendingInvertedControls(int player)
         {
             if (!invertedControlsPending[player]) return;
             invertedControlsPending[player] = false;
             invertedControls[player] = true;
+            invertedControlsSensitivity[player] = pendingInvertedControlsSensitivity[player];
         }
 
         public void EndInvertedControls(int player) => invertedControls[player] = false;
 
+        // Also gates hiding the trajectory preview (LocalPoolAimController.
+        // UpdateAim()) — no separate flag, it's the same "controls are
+        // inverted" moment driving all three symptoms (look flip,
+        // sensitivity boost, blind aiming) together.
         public bool IsControlsInverted(int player) => invertedControls[player];
+
+        public float GetInvertedControlsSensitivityMultiplier(int player) =>
+            invertedControls[player] ? invertedControlsSensitivity[player] : 1f;
 
         // In split-screen (2 local PlayerInputs), a physical player always IS
         // the same index throughout — returns it unchanged. In hot-seat solo

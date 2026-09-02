@@ -383,13 +383,21 @@ namespace UntitledPoolGame.Pool
             bool isGamepad = lookAction.activeControl?.device is Gamepad;
             float turnSpeed = isGamepad ? gamepadAimTurnSpeed * Time.deltaTime : mouseAimTurnSpeed;
 
-            // InvertedControlsPower — same look inversion as the normal FPS
-            // view (LocalFpsPlayerController.InvertLook), applied directly
-            // here since the aim orbit reads its own look input rather than
-            // going through that controller (disabled while aiming).
+            // InvertedControlsPower — same look inversion + sensitivity boost
+            // as the normal FPS view (LocalFpsPlayerController.InvertLook/
+            // SensitivityMultiplier), applied directly here since the aim
+            // orbit reads its own look input rather than going through that
+            // controller (disabled while aiming). previewHidden also drives
+            // hiding the trajectory preview below — no way to "read" the
+            // flip off the line to compensate for it.
             PoolMatchRules rules = PoolMatchRules.Instance;
-            if (rules != null && rules.IsControlsInverted(rules.GetEffectivePlayerIndex(playerInput.playerIndex)))
+            int effectivePlayer = rules != null ? rules.GetEffectivePlayerIndex(playerInput.playerIndex) : 0;
+            bool previewHidden = rules != null && rules.IsControlsInverted(effectivePlayer);
+            if (previewHidden)
+            {
                 look.x = -look.x;
+                turnSpeed *= rules.GetInvertedControlsSensitivityMultiplier(effectivePlayer);
+            }
 
             aimYaw += look.x * turnSpeed;
 
@@ -407,7 +415,15 @@ namespace UntitledPoolGame.Pool
             cameraTransform.position = ballPos - aimDirection * currentOrbitDistance + Vector3.up * orbitHeight;
             cameraTransform.LookAt(ballPos + Vector3.up * (orbitHeight * 0.3f));
 
-            UpdatePreview(ballPos, aimDirection);
+            if (previewHidden)
+            {
+                if (cueBallPreview != null) cueBallPreview.enabled = false;
+                if (objectBallPreview != null) objectBallPreview.enabled = false;
+            }
+            else
+            {
+                UpdatePreview(ballPos, aimDirection);
+            }
             UpdateCueVisual(ballPos, aimDirection);
 
             if (attackAction.IsPressed())
