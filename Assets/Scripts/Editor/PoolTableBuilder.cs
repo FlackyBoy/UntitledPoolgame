@@ -222,15 +222,28 @@ namespace UntitledPoolGame.PoolEditor
             Selection.activeGameObject = root;
         }
 
-        // A simple inset grid rather than trying to procedurally scatter
-        // points while dodging pockets/rails — guaranteed to land safely
-        // inside the play area using the same dimensions as everything
-        // else, and freely adjustable/addable by hand afterward (each is
-        // just a PoolPowerSpawnPoint marker, same idea as PoolPocket).
+        // An inset grid with random per-point jitter — a pure grid read as
+        // too mechanical (retour utilisateur), pure random scatter risks
+        // clustering/overlap or landing on a rail, so this keeps the grid as
+        // a baseline spacing and nudges each point around within its own
+        // cell.
+        //
+        // spawnPointsParent.SetParent(..., worldPositionStays: false) is the
+        // actual fix for "spawns but not on the table": the default
+        // (worldPositionStays: true) keeps a newly-created object's WORLD
+        // transform unchanged across a reparent, which for a table root
+        // that's been manually Moved/Rotated away from world origin (see
+        // the "Attach Physics" comment above) bakes in whatever arbitrary
+        // offset cancels that out — instead of just sitting at the root's
+        // own local origin like everything else on the table. Passing false
+        // makes it land at local (0,0,0)/identity relative to root,
+        // deterministically, regardless of the root's current transform.
         private static void BuildPowerSpawnPoints(Transform parent)
         {
             GameObject spawnPointsParent = new GameObject("PowerSpawnPoints");
-            spawnPointsParent.transform.SetParent(parent);
+            spawnPointsParent.transform.SetParent(parent, worldPositionStays: false);
+            spawnPointsParent.transform.localPosition = Vector3.zero;
+            spawnPointsParent.transform.localRotation = Quaternion.identity;
 
             const int columns = 4;
             const int rows = 2;
@@ -238,14 +251,26 @@ namespace UntitledPoolGame.PoolEditor
             float marginZ = settings.playWidth * 0.25f;
             float y = settings.tableSurfaceY + 0.02f;
 
+            // How far a point can drift from its grid cell center, in each
+            // axis — a fraction of the spacing between adjacent cells, so
+            // jittered points never have a real chance of overlapping their
+            // neighbor's cell.
+            float cellSpacingX = (settings.playLength - 2f * marginX) / (columns - 1);
+            float cellSpacingZ = rows > 1 ? (settings.playWidth - 2f * marginZ) / (rows - 1) : 0f;
+            float jitterX = cellSpacingX * 0.35f;
+            float jitterZ = cellSpacingZ * 0.35f;
+
             for (int row = 0; row < rows; row++)
             {
                 float z = Mathf.Lerp(-settings.playWidth / 2f + marginZ, settings.playWidth / 2f - marginZ, rows == 1 ? 0.5f : row / (float)(rows - 1));
                 for (int col = 0; col < columns; col++)
                 {
                     float x = Mathf.Lerp(-settings.playLength / 2f + marginX, settings.playLength / 2f - marginX, col / (float)(columns - 1));
+                    x += Random.Range(-jitterX, jitterX);
+                    z += Random.Range(-jitterZ, jitterZ);
+
                     GameObject point = new GameObject($"SpawnPoint_{row}_{col}");
-                    point.transform.SetParent(spawnPointsParent.transform);
+                    point.transform.SetParent(spawnPointsParent.transform, worldPositionStays: false);
                     point.transform.localPosition = new Vector3(x, y, z);
                     point.AddComponent<PoolPowerSpawnPoint>();
                 }
@@ -385,7 +410,18 @@ namespace UntitledPoolGame.PoolEditor
         private static void RackBalls(Transform parent, PhysicsMaterial material)
         {
             GameObject rackParent = new GameObject("Balls");
-            rackParent.transform.SetParent(parent);
+            // worldPositionStays: false — see the comment on
+            // BuildPowerSpawnPoints for why the default (true) is wrong
+            // here: it would bake in whatever offset cancels out the root's
+            // CURRENT world transform instead of just sitting at its local
+            // origin. Hasn't caused a visible issue so far only because
+            // this has always run at build time, before the table root gets
+            // manually Moved/Rotated into alignment — fixed proactively
+            // rather than waiting for a table where that coincidence
+            // doesn't hold.
+            rackParent.transform.SetParent(parent, worldPositionStays: false);
+            rackParent.transform.localPosition = Vector3.zero;
+            rackParent.transform.localRotation = Quaternion.identity;
 
             float footSpotX = settings.playLength / 4f;
             float rowSpacing = settings.ballDiameter * Mathf.Sqrt(3f) / 2f;
