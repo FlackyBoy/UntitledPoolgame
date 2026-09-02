@@ -30,16 +30,29 @@ namespace UntitledPoolGame.Pool
 
         private IEnumerator RotationLoop()
         {
+            // Assigns a power right away once the match starts, rather than
+            // leaving every ball powerless for the first
+            // ballRotationMinInterval..MaxInterval seconds (up to 40s by
+            // default) — that gap was indistinguishable from "picking up a
+            // power ball doesn't work" if tested early in a match.
+            yield return new WaitUntil(IsMatchLive);
+            Rotate();
+
             while (true)
             {
                 float delay = Random.Range(settings.ballRotationMinInterval, settings.ballRotationMaxInterval);
                 yield return new WaitForSeconds(delay);
 
-                PoolMatchRules rules = PoolMatchRules.Instance;
-                if (rules == null || !rules.MatchStarted || rules.GameOver) continue;
+                if (!IsMatchLive()) continue;
 
                 Rotate();
             }
+        }
+
+        private static bool IsMatchLive()
+        {
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            return rules != null && rules.MatchStarted && !rules.GameOver;
         }
 
         private void Rotate()
