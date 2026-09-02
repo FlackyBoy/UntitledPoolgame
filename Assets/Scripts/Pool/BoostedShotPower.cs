@@ -11,7 +11,7 @@ namespace UntitledPoolGame.Pool
     {
         [SerializeField] private float shotPowerMultiplier = 1.6f;
 
-        public override PowerType Type => PowerType.PowerUp;
+        public override PowerType Type => PowerType.Effect;
 
         public override void Activate(PoolMatchRules match, int activatingPlayer)
         {

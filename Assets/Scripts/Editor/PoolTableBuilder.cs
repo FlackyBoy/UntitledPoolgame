@@ -80,6 +80,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePhysicsSettingsAsset();
             EnsureScreenJuiceSettingsAsset();
             EnsurePotEffectSettingsAsset();
+            EnsurePowerSpawnSettingsAsset();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
         }
 
@@ -120,6 +121,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePhysicsSettingsAsset();
             EnsureScreenJuiceSettingsAsset();
             EnsurePotEffectSettingsAsset();
+            EnsurePowerSpawnSettingsAsset();
 
             GameObject root;
             if (parentToSelection)
@@ -168,8 +170,41 @@ namespace UntitledPoolGame.PoolEditor
             CreateCue(root.transform, networked, "Cue_P1", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, -0.2f));
             CreateCue(root.transform, networked, "Cue_P2", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, 0.2f));
             root.AddComponent<PoolMatchRules>();
+            BuildPowerSpawnPoints(root.transform);
+            root.AddComponent<PoolPowerCrateManager>();
+            root.AddComponent<PoolPowerBallRotator>();
 
             Selection.activeGameObject = root;
+        }
+
+        // A simple inset grid rather than trying to procedurally scatter
+        // points while dodging pockets/rails — guaranteed to land safely
+        // inside the play area using the same dimensions as everything
+        // else, and freely adjustable/addable by hand afterward (each is
+        // just a PoolPowerSpawnPoint marker, same idea as PoolPocket).
+        private static void BuildPowerSpawnPoints(Transform parent)
+        {
+            GameObject spawnPointsParent = new GameObject("PowerSpawnPoints");
+            spawnPointsParent.transform.SetParent(parent);
+
+            const int columns = 4;
+            const int rows = 2;
+            float marginX = settings.playLength * 0.15f;
+            float marginZ = settings.playWidth * 0.25f;
+            float y = settings.tableSurfaceY + 0.02f;
+
+            for (int row = 0; row < rows; row++)
+            {
+                float z = Mathf.Lerp(-settings.playWidth / 2f + marginZ, settings.playWidth / 2f - marginZ, rows == 1 ? 0.5f : row / (float)(rows - 1));
+                for (int col = 0; col < columns; col++)
+                {
+                    float x = Mathf.Lerp(-settings.playLength / 2f + marginX, settings.playLength / 2f - marginX, col / (float)(columns - 1));
+                    GameObject point = new GameObject($"SpawnPoint_{row}_{col}");
+                    point.transform.SetParent(spawnPointsParent.transform);
+                    point.transform.localPosition = new Vector3(x, y, z);
+                    point.AddComponent<PoolPowerSpawnPoint>();
+                }
+            }
         }
 
         private static void CreateCue(Transform parent, bool networked, string name, Vector3 localPosition)
@@ -373,6 +408,11 @@ namespace UntitledPoolGame.PoolEditor
             if (isCueBall) so.FindProperty("isCueBall").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
 
+            // Every non-cue ball is a candidate for PoolPowerBallRotator to
+            // pick — starts with no power assigned (Power == null) until the
+            // rotator chooses it.
+            if (!isCueBall) ball.AddComponent<PowerBall>();
+
             Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"))
             {
                 mainTexture = PoolBallTextureGenerator.GetOrCreate(name, number, color, isCueBall),
@@ -446,6 +486,29 @@ namespace UntitledPoolGame.PoolEditor
 
             const string auraPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Magic Misc/CFXR3 Magic Aura A (Runic).prefab";
             settings.risingAuraPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(auraPath);
+
+            AssetDatabase.CreateAsset(settings, path);
+        }
+
+        private static void EnsurePowerSpawnSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            string path = "Assets/Resources/PoolPowerSpawnSettings.asset";
+
+            if (AssetDatabase.LoadAssetAtPath<PoolPowerSpawnSettings>(path) != null) return;
+
+            PoolPowerSpawnSettings settings = ScriptableObject.CreateInstance<PoolPowerSpawnSettings>();
+
+            // Auto-populate with whatever PoolPower assets already exist in
+            // the project (t:PoolPower matches subclasses too) — a
+            // reasonable starting pool rather than leaving it empty (which
+            // both PoolPowerCrateManager and PoolPowerBallRotator treat as
+            // "nothing to spawn").
+            string[] guids = AssetDatabase.FindAssets("t:PoolPower");
+            PoolPower[] powers = new PoolPower[guids.Length];
+            for (int i = 0; i < guids.Length; i++)
+                powers[i] = AssetDatabase.LoadAssetAtPath<PoolPower>(AssetDatabase.GUIDToAssetPath(guids[i]));
+            settings.availablePowers = powers;
 
             AssetDatabase.CreateAsset(settings, path);
         }

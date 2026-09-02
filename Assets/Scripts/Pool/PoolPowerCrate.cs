@@ -3,9 +3,11 @@ using UnityEngine;
 namespace UntitledPoolGame.Pool
 {
     // A Mario Kart-style item box sitting on the felt — whoever's shooting
-    // gets the power the moment the cue ball rolls close enough to it.
-    // Single-use for now (disables itself on pickup); a respawn-after-a-delay
-    // pass can come later if the table feels too empty after the first pickup.
+    // gets the power the moment the cue ball rolls close enough to it. Power
+    // + color are assigned by PoolPowerCrateManager (random draw from
+    // PoolPowerSpawnSettings.availablePowers), not fixed in the Inspector —
+    // this component only handles detection/visuals, the manager owns the
+    // spawn/respawn lifecycle (which location, when, with what).
     //
     // Checked explicitly every FixedUpdate via a distance test rather than
     // Collider/OnTriggerEnter: Unity's built-in trigger events are still a
@@ -18,20 +20,22 @@ namespace UntitledPoolGame.Pool
     // makes the pickup radius trivial to see (gizmo) and reason about.
     public class PoolPowerCrate : MonoBehaviour
     {
-        [SerializeField] private PoolPower power;
         [SerializeField] private float pickupRadius = 0.15f;
 
+        private PoolPower power;
+        private Renderer visualRenderer;
         private bool collected;
 
         private void Awake()
         {
             // So there's actually something to see on the table — without
             // this, an empty GameObject with just this component is invisible.
-            if (GetComponentInChildren<Renderer>() == null)
-                CreatePlaceholderVisual();
+            visualRenderer = GetComponentInChildren<Renderer>();
+            if (visualRenderer == null)
+                visualRenderer = CreatePlaceholderVisual();
         }
 
-        private void CreatePlaceholderVisual()
+        private Renderer CreatePlaceholderVisual()
         {
             GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
             visual.name = "Visual";
@@ -39,6 +43,20 @@ namespace UntitledPoolGame.Pool
             visual.transform.localPosition = Vector3.zero;
             visual.transform.localScale = Vector3.one * (pickupRadius * 1.2f);
             Destroy(visual.GetComponent<Collider>()); // purely visual — pickup logic below doesn't use colliders at all
+            return visual.GetComponent<Renderer>();
+        }
+
+        // Called by PoolPowerCrateManager whenever this crate (re)spawns —
+        // rolls the visual color to match the power's PowerType and clears
+        // the collected flag so it's pickable again.
+        public void Initialize(PoolPower assignedPower, Color color)
+        {
+            power = assignedPower;
+            collected = false;
+            // .material (not .sharedMaterial) instances a per-object copy —
+            // safe to recolor without touching every other crate/ball that
+            // happens to share the same source material asset.
+            if (visualRenderer != null) visualRenderer.material.color = color;
         }
 
         private void FixedUpdate()
@@ -63,6 +81,7 @@ namespace UntitledPoolGame.Pool
             collected = true;
             rules.GrantPower(rules.CurrentPlayer, power);
             gameObject.SetActive(false);
+            PoolPowerCrateManager.Instance?.NotifyCollected(this);
         }
 
         private void OnDrawGizmosSelected()
