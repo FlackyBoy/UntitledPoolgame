@@ -84,6 +84,51 @@ namespace UntitledPoolGame.PoolEditor
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
         }
 
+        // Bridges an EXISTING table (built before PoolPowerCrateManager/
+        // PoolPowerBallRotator existed) onto the new power spawn system,
+        // without going through BuildTable() — that destroys and rebuilds
+        // the whole "PoolPhysics" child from scratch (see the comment on
+        // "Attach Physics To Custom Table" above), which would throw away
+        // any manual alignment already done. This only ADDS what's missing:
+        // safe to run more than once, and safe on a table built before this
+        // feature existed. Select the table's root GameObject first (the
+        // one BuildTable() itself would have created — "PoolPhysics" for a
+        // custom table, "PoolTable"/"PoolTable (Offline)" for a generated
+        // one).
+        [MenuItem("Tools/Pool/Add Power Spawn System To Selected Table")]
+        public static void AddPowerSpawnSystemToSelectedTable()
+        {
+            GameObject root = Selection.activeGameObject;
+            if (root == null)
+            {
+                Debug.LogWarning("[PoolTableBuilder] Nothing selected — select the table's root GameObject first (\"PoolPhysics\" for a custom table, \"PoolTable\"/\"PoolTable (Offline)\" for a generated one).");
+                return;
+            }
+
+            settings = GetOrCreateTableAssetSettings();
+            EnsurePowerSpawnSettingsAsset();
+
+            if (root.GetComponentInChildren<PoolPowerSpawnPoint>() == null)
+                BuildPowerSpawnPoints(root.transform);
+            else
+                Debug.Log("[PoolTableBuilder] Skipped generating spawn points — this table already has some.");
+
+            if (root.GetComponent<PoolPowerCrateManager>() == null)
+                Undo.AddComponent<PoolPowerCrateManager>(root);
+            if (root.GetComponent<PoolPowerBallRotator>() == null)
+                Undo.AddComponent<PoolPowerBallRotator>(root);
+
+            int addedTo = 0;
+            foreach (PoolBall ball in root.GetComponentsInChildren<PoolBall>(true))
+            {
+                if (ball.IsCueBall || ball.GetComponent<PowerBall>() != null) continue;
+                Undo.AddComponent<PowerBall>(ball.gameObject);
+                addedTo++;
+            }
+
+            Debug.Log($"[PoolTableBuilder] Power spawn system added — PowerBall added to {addedTo} ball(s) that didn't already have one.");
+        }
+
         private static void BuildTable(bool networked, bool hideVisuals = false, bool parentToSelection = false)
         {
             settings = GetOrCreateTableAssetSettings();
