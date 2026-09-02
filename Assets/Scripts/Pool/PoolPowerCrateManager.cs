@@ -99,7 +99,7 @@ namespace UntitledPoolGame.Pool
             PoolPower power = settings.availablePowers[Random.Range(0, settings.availablePowers.Length)];
             crate.transform.position = point.transform.position;
             crate.gameObject.SetActive(true);
-            crate.Initialize(power, settings.GetColor(power.Type));
+            crate.Initialize(power, settings.GetCratePrefab(power.Type), settings.GetColor(power.Type));
             occupiedBy[crate] = point;
         }
 

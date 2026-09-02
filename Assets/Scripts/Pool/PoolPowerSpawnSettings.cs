@@ -41,6 +41,25 @@ namespace UntitledPoolGame.Pool
         public float crateRespawnMinDelay = 15f;
         public float crateRespawnMaxDelay = 30f;
 
+        [Header("Crate visuals — optional, one prefab per PowerType")]
+        // Assign your own crate/chest model here to use instead of the
+        // auto-generated placeholder cube — PoolPowerCrate swaps to whichever
+        // one matches the power it's currently carrying (and swaps again on
+        // respawn if the newly rolled power is a different type). Leaving
+        // one unassigned falls back to the tinted placeholder cube for that
+        // type specifically, so this can be filled in gradually.
+        public GameObject attackCratePrefab;
+        public GameObject defenseCratePrefab;
+        public GameObject effectCratePrefab;
+
+        public GameObject GetCratePrefab(PowerType type) => type switch
+        {
+            PowerType.Attack => attackCratePrefab,
+            PowerType.Defense => defenseCratePrefab,
+            PowerType.Effect => effectCratePrefab,
+            _ => null,
+        };
+
         [Header("Power ball rotation")]
         // How often the ball currently carrying a power changes — a new
         // random active (not yet pocketed) ball is chosen, with a freshly
