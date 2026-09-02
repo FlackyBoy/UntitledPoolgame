@@ -144,9 +144,11 @@ namespace UntitledPoolGame.Pool
         private void Update()
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
+            int effectivePlayer = rules != null ? rules.GetEffectivePlayerIndex(playerInput.playerIndex) : 0;
             fpsController.SensitivityMultiplier = rules != null
-                ? rules.GetVisionImpairmentSensitivityMultiplier(rules.GetEffectivePlayerIndex(playerInput.playerIndex))
+                ? rules.GetVisionImpairmentSensitivityMultiplier(effectivePlayer)
                 : 1f;
+            fpsController.InvertLook = rules != null && rules.IsControlsInverted(effectivePlayer);
 
             // Ticked down here, once a frame — never inside OnGUI, which can
             // run its method body more than once per frame (Layout then

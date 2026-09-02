@@ -256,6 +256,28 @@ namespace UntitledPoolGame.Pool
         public float GetVisionImpairmentSensitivityMultiplier(int player) =>
             visionImpaired[player] ? visionImpairedSensitivity[player] : 1f;
 
+        // Second Attack-type turn-bound debuff (see InvertedControlsPower) —
+        // same queue/consume/end lifecycle as Vision Impair above, just
+        // inverting look instead of blinding it. Kept as separate arrays
+        // rather than generalizing the two into one "debuffs" system for
+        // now — with only two of these so far, a shared abstraction would be
+        // guesswork about what future debuffs actually need in common.
+        private readonly bool[] invertedControls = new bool[2];
+        private readonly bool[] invertedControlsPending = new bool[2];
+
+        public void QueueInvertedControls(int player) => invertedControlsPending[player] = true;
+
+        public void ConsumePendingInvertedControls(int player)
+        {
+            if (!invertedControlsPending[player]) return;
+            invertedControlsPending[player] = false;
+            invertedControls[player] = true;
+        }
+
+        public void EndInvertedControls(int player) => invertedControls[player] = false;
+
+        public bool IsControlsInverted(int player) => invertedControls[player];
+
         // In split-screen (2 local PlayerInputs), a physical player always IS
         // the same index throughout — returns it unchanged. In hot-seat solo
         // testing (1 local PlayerInput, PlayerInput.playerIndex always 0),
@@ -358,11 +380,14 @@ namespace UntitledPoolGame.Pool
 
         public void SwitchTurn()
         {
-            // Any vision impairment against the player finishing their turn
-            // ends with it — see VisionImpairPower/QueueVisionImpair: the
-            // effect is meant to last exactly as long as the affected
-            // player holds the cue, not a fixed real-time duration.
+            // Any turn-bound debuff against the player finishing their turn
+            // ends with it — see VisionImpairPower/InvertedControlsPower:
+            // meant to last exactly as long as the affected player holds the
+            // cue, not a fixed real-time duration. (Normally already cleared
+            // by ExitAim() calling EndVisionImpair/EndInvertedControls —
+            // this is the safety net for a turn ending without one.)
             visionImpaired[CurrentPlayer] = false;
+            invertedControls[CurrentPlayer] = false;
             CurrentPlayer = 1 - CurrentPlayer;
         }
 

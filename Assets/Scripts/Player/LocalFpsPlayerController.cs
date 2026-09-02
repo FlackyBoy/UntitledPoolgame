@@ -39,6 +39,12 @@ namespace UntitledPoolGame.Player
         // or care why it's been changed.
         public float SensitivityMultiplier { get; set; } = 1f;
 
+        // Same idea as SensitivityMultiplier above — read by whatever's
+        // currently active (InvertedControlsPower via
+        // LocalPoolPowerEffectReceiver); this controller doesn't know or
+        // care why it's been set.
+        public bool InvertLook { get; set; }
+
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
@@ -72,6 +78,7 @@ namespace UntitledPoolGame.Player
         private void HandleLook()
         {
             Vector2 look = lookAction.ReadValue<Vector2>();
+            if (InvertLook) look = -look;
             bool isGamepad = lookAction.activeControl?.device is Gamepad;
 
             // Mouse delta is already a per-frame quantity (how far it moved

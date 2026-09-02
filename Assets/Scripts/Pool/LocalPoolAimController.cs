@@ -333,7 +333,11 @@ namespace UntitledPoolGame.Pool
             // actually up right now, not permanently slot 0.
             PoolMatchRules rulesForPower = PoolMatchRules.Instance;
             if (rulesForPower != null)
-                rulesForPower.ConsumePendingVisionImpair(rulesForPower.GetEffectivePlayerIndex(playerInput.playerIndex));
+            {
+                int effectivePlayer = rulesForPower.GetEffectivePlayerIndex(playerInput.playerIndex);
+                rulesForPower.ConsumePendingVisionImpair(effectivePlayer);
+                rulesForPower.ConsumePendingInvertedControls(effectivePlayer);
+            }
 
             cameraRestLocalPosition = cameraTransform.localPosition;
             cameraRestLocalRotation = cameraTransform.localRotation;
@@ -350,13 +354,17 @@ namespace UntitledPoolGame.Pool
             isAiming = false;
             fpsController.enabled = true;
 
-            // Mirrors the ConsumePendingVisionImpair() call in EnterAim() —
-            // the debuff (if any) started when this player entered aim mode,
-            // so it ends here when they leave it, whether that's from taking
-            // the shot or backing out.
+            // Mirrors the ConsumePending* calls in EnterAim() — any debuff
+            // that started when this player entered aim mode ends here when
+            // they leave it, whether that's from taking the shot or backing
+            // out.
             PoolMatchRules rulesForPower = PoolMatchRules.Instance;
             if (rulesForPower != null)
-                rulesForPower.EndVisionImpair(rulesForPower.GetEffectivePlayerIndex(playerInput.playerIndex));
+            {
+                int effectivePlayer = rulesForPower.GetEffectivePlayerIndex(playerInput.playerIndex);
+                rulesForPower.EndVisionImpair(effectivePlayer);
+                rulesForPower.EndInvertedControls(effectivePlayer);
+            }
 
             cameraTransform.localPosition = cameraRestLocalPosition;
             cameraTransform.localRotation = cameraRestLocalRotation;
@@ -374,6 +382,15 @@ namespace UntitledPoolGame.Pool
             Vector2 look = lookAction.ReadValue<Vector2>();
             bool isGamepad = lookAction.activeControl?.device is Gamepad;
             float turnSpeed = isGamepad ? gamepadAimTurnSpeed * Time.deltaTime : mouseAimTurnSpeed;
+
+            // InvertedControlsPower — same look inversion as the normal FPS
+            // view (LocalFpsPlayerController.InvertLook), applied directly
+            // here since the aim orbit reads its own look input rather than
+            // going through that controller (disabled while aiming).
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            if (rules != null && rules.IsControlsInverted(rules.GetEffectivePlayerIndex(playerInput.playerIndex)))
+                look.x = -look.x;
+
             aimYaw += look.x * turnSpeed;
 
             Vector2 moveInput = moveAction.ReadValue<Vector2>();

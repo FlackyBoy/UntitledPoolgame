@@ -18,7 +18,7 @@ MonoBehaviour:
   haloDuration: 0
   risingAuraPrefab: {fileID: 2900534572940629487, guid: b6c33720de6ba7b4e99883af09ada503, type: 3}
   risingAuraActiveDuration: 0.5
-  risingAuraFadeOutBuffer: 5
+  risingAuraFadeOutBuffer: 0.5
   risingAuraScale: 0.2
   risingAuraSpeedMultiplier: 5
   potSlowMotionScale: 1
