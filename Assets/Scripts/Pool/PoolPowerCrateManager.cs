@@ -40,10 +40,24 @@ namespace UntitledPoolGame.Pool
         private void Start()
         {
             if (settings == null || settings.availablePowers == null || settings.availablePowers.Length == 0) return;
+            StartCoroutine(WaitForPartyModeThenSpawnInitialCrates());
+        }
+
+        // Crates only exist in Party mode (retour utilisateur : elles se
+        // ramassaient encore en 8-ball/9-ball/14.1) — the mode itself isn't
+        // known/locked-in until PoolMatchRules.StartMatch() actually runs
+        // (selectedMode keeps changing while someone's still browsing the
+        // pre-match menu), so this waits for MatchStarted before checking
+        // Mode rather than checking eagerly at scene load.
+        private IEnumerator WaitForPartyModeThenSpawnInitialCrates()
+        {
+            yield return new WaitUntil(() => PoolMatchRules.Instance != null && PoolMatchRules.Instance.MatchStarted);
+            if (PoolMatchRules.Instance.Mode != PoolGameMode.Party) yield break;
+
             if (spawnPoints.Count == 0)
             {
                 Debug.LogWarning("PoolPowerCrateManager: no PoolPowerSpawnPoint found in the scene — no crates to spawn.");
-                return;
+                yield break;
             }
 
             int count = Mathf.Min(settings.activeCrateCount, spawnPoints.Count);

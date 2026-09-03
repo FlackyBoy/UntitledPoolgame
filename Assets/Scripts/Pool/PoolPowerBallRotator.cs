@@ -36,6 +36,16 @@ namespace UntitledPoolGame.Pool
             // default) — that gap was indistinguishable from "picking up a
             // power ball doesn't work" if tested early in a match.
             yield return new WaitUntil(IsMatchLive);
+
+            // Powers only exist in Party mode (retour utilisateur : les
+            // billes glowaient/donnaient encore un pouvoir en 8-ball/9-ball/
+            // 14.1) — Mode is only actually locked in once MatchStarted is
+            // true (StartMatch sets both together), which is exactly what
+            // IsMatchLive() just waited for. Stops the whole loop rather
+            // than looping forever re-checking — the mode never changes
+            // mid-match.
+            if (PoolMatchRules.Instance.Mode != PoolGameMode.Party) yield break;
+
             Rotate();
 
             while (true)

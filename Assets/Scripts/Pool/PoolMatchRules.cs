@@ -25,6 +25,12 @@ namespace UntitledPoolGame.Pool
         public bool GameOver { get; private set; }
         public int Winner { get; private set; } = -1;
         public bool MatchStarted { get; private set; }
+        // The mode actually locked in when the match started (set by
+        // StartMatch) — NOT the same as the pre-match UI's selectedMode
+        // field below, which keeps changing while someone browses the
+        // mode-select screen. PoolPowerCrateManager/PoolPowerBallRotator
+        // read this to gate powers to Party only.
+        public PoolGameMode Mode { get; private set; }
 
         // True from the moment a foul is registered until the fouled-against
         // player confirms where they've placed the cue ball — see
@@ -436,6 +442,7 @@ namespace UntitledPoolGame.Pool
 
         private void StartMatch(PoolGameMode mode, PoolPartyMode partyMode, int targetScore)
         {
+            Mode = mode;
             ruleSet = mode switch
             {
                 PoolGameMode.NineBall => new NineBallRuleSet(),
@@ -501,9 +508,9 @@ namespace UntitledPoolGame.Pool
 
             GUILayout.Label("Choisir les règles de la partie");
 
-            DrawModeButton(PoolGameMode.EightBall, "8-Ball (sans pouvoir)");
-            DrawModeButton(PoolGameMode.NineBall, "9-Ball (sans pouvoir)");
-            DrawModeButton(PoolGameMode.FourteenOne, "14.1 (score cible, sans pouvoir)");
+            DrawModeButton(PoolGameMode.EightBall, "8-Ball");
+            DrawModeButton(PoolGameMode.NineBall, "9-Ball");
+            DrawModeButton(PoolGameMode.FourteenOne, "14.1 (score cible)");
 
             // Party doesn't select immediately like the others above — it
             // opens a second screen (DrawPartySubmenuGUI) listing whichever
