@@ -4,7 +4,9 @@ namespace UntitledPoolGame.Pool
 {
     // Casual 8-ball, 2 players: no called shots/pockets — any legally
     // pocketed ball from your own group keeps your turn. Also used as-is by
-    // PoolGameMode.Party for now (see PoolGameMode.cs), until powers exist.
+    // Party's "Classic" sub-mode (see PoolMatchRules.CreatePartyRuleSet) —
+    // the powers active in that mode come from PoolPowerCrate/PowerBall on
+    // top, not from a different ruleset.
     public class EightBallRuleSet : IPoolRuleSet
     {
         // Cue means "not assigned yet".

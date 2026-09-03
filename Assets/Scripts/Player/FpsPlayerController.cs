@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Player
 {
@@ -89,6 +90,12 @@ namespace UntitledPoolGame.Player
 
         private void Update()
         {
+            // Same reasoning as LocalFpsPlayerController: stay put until
+            // PoolMatchRules.MatchStarted, not just spawn — permissive-null
+            // (no PoolMatchRules at all means nothing to wait for).
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            if (rules != null && !rules.MatchStarted) return;
+
             HandleLook();
             HandleMove();
         }

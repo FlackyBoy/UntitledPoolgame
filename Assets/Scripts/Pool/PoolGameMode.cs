@@ -5,9 +5,10 @@ namespace UntitledPoolGame.Pool
         EightBall,
         NineBall,
         FourteenOne,
-        // Powers/special balls aren't designed yet (see TODO.md backlog) —
-        // Party currently just plays 8-ball rules, it exists so the mode-select
-        // screen already has a slot reserved for it.
+        // Which PARTY variant is actually played is a separate choice, made
+        // on a second screen after picking this — see PoolPartyMode and
+        // PoolMatchRules.DrawPartySubmenuGUI/CreatePartyRuleSet. Only one
+        // sub-mode exists today (Classic: 8-ball rules + powers).
         Party,
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Player
 {
@@ -71,6 +72,16 @@ namespace UntitledPoolGame.Player
 
         private void Update()
         {
+            // Stay put during the pre-match mode-select screen — without
+            // this, the player could already walk/look around (and even
+            // pick up the cue) before anyone had actually clicked "Commencer
+            // la partie". Same permissive-null convention as
+            // CanShootNow()/CanPlayerShoot elsewhere: no PoolMatchRules at
+            // all (a scene without a table) means nothing to wait for, not
+            // "stay frozen forever".
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            if (rules != null && !rules.MatchStarted) return;
+
             HandleLook();
             HandleMove();
         }

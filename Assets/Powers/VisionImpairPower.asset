@@ -12,6 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62248a756a9fb3241aa74ce722e31096, type: 3}
   m_Name: VisionImpairPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.VisionImpairPower
-  powerName: Power
-  duration: 8
-  sensitivityMultiplier: 0.583
+  powerName: 'is it too much ? '
+  sensitivityMultiplier: 0.838

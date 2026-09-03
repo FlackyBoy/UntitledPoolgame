@@ -57,6 +57,12 @@ namespace UntitledPoolGame.Pool
         private bool shotInProgress;
 
         private PoolGameMode selectedMode = PoolGameMode.EightBall;
+        private PoolPartyMode selectedPartyMode = PoolPartyMode.Classic;
+        // Which mode-select screen is showing — the top-level list, or the
+        // Party sub-mode list (see DrawPartySubmenuGUI). A UI navigation
+        // flag, not match state, but it still needs the same deferred-pending
+        // treatment below for the same GUILayout reason.
+        private bool showingPartySubmenu;
         private string targetScoreInput = "150";
 
         // GUILayout draws OnGUI several times per frame (Layout pass, the
@@ -68,6 +74,8 @@ namespace UntitledPoolGame.Pool
         // mutation to Update() keeps the control structure identical across
         // every OnGUI pass within a frame; it only changes starting next frame.
         private PoolGameMode? pendingModeChange;
+        private PoolPartyMode? pendingPartyModeChange;
+        private bool? pendingShowPartySubmenuChange;
         private bool pendingStart;
         private int pendingTargetScore;
 
@@ -376,10 +384,22 @@ namespace UntitledPoolGame.Pool
                 pendingModeChange = null;
             }
 
+            if (pendingPartyModeChange.HasValue)
+            {
+                selectedPartyMode = pendingPartyModeChange.Value;
+                pendingPartyModeChange = null;
+            }
+
+            if (pendingShowPartySubmenuChange.HasValue)
+            {
+                showingPartySubmenu = pendingShowPartySubmenuChange.Value;
+                pendingShowPartySubmenuChange = null;
+            }
+
             if (pendingStart)
             {
                 pendingStart = false;
-                StartMatch(selectedMode, pendingTargetScore);
+                StartMatch(selectedMode, selectedPartyMode, pendingTargetScore);
             }
 
             if (!MatchStarted || GameOver) return;
@@ -414,13 +434,13 @@ namespace UntitledPoolGame.Pool
             Winner = player;
         }
 
-        private void StartMatch(PoolGameMode mode, int targetScore)
+        private void StartMatch(PoolGameMode mode, PoolPartyMode partyMode, int targetScore)
         {
             ruleSet = mode switch
             {
                 PoolGameMode.NineBall => new NineBallRuleSet(),
                 PoolGameMode.FourteenOne => new FourteenOneRuleSet(targetScore),
-                // EightBall and Party (no powers defined yet) share the same rules for now.
+                PoolGameMode.Party => CreatePartyRuleSet(partyMode),
                 _ => new EightBallRuleSet(),
             };
             ruleSet.Setup(this);
@@ -430,6 +450,17 @@ namespace UntitledPoolGame.Pool
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
+
+        // One case per PoolPartyMode — add a new one here (and its own
+        // IPoolRuleSet if it needs different base rules) alongside a new
+        // enum value and a button in DrawPartySubmenuGUI.
+        private static IPoolRuleSet CreatePartyRuleSet(PoolPartyMode partyMode) => partyMode switch
+        {
+            // Classic: plain 8-ball rules — the powers themselves come from
+            // PoolPowerCrate/PowerBall/the two spawn managers, not from the
+            // ruleset, so no dedicated IPoolRuleSet is needed for this one.
+            _ => new EightBallRuleSet(),
+        };
 
         private void OnGUI()
         {
@@ -459,13 +490,32 @@ namespace UntitledPoolGame.Pool
 
         private void DrawModeSelectGUI()
         {
-            GUILayout.BeginArea(new Rect(Screen.width / 2f - 150f, Screen.height / 2f - 130f, 300f, 260f), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(Screen.width / 2f - 150f, Screen.height / 2f - 150f, 300f, 300f), GUI.skin.box);
+
+            if (showingPartySubmenu)
+            {
+                DrawPartySubmenuGUI();
+                GUILayout.EndArea();
+                return;
+            }
+
             GUILayout.Label("Choisir les règles de la partie");
 
-            DrawModeButton(PoolGameMode.EightBall, "8-Ball");
-            DrawModeButton(PoolGameMode.NineBall, "9-Ball");
-            DrawModeButton(PoolGameMode.FourteenOne, "14.1 (score cible)");
-            DrawModeButton(PoolGameMode.Party, "Party (pouvoirs à venir)");
+            DrawModeButton(PoolGameMode.EightBall, "8-Ball (sans pouvoir)");
+            DrawModeButton(PoolGameMode.NineBall, "9-Ball (sans pouvoir)");
+            DrawModeButton(PoolGameMode.FourteenOne, "14.1 (score cible, sans pouvoir)");
+
+            // Party doesn't select immediately like the others above — it
+            // opens a second screen (DrawPartySubmenuGUI) listing whichever
+            // party sub-modes exist, since Party is meant to grow into
+            // several distinct variants over time rather than the top-level
+            // list itself growing with them.
+            GUI.color = selectedMode == PoolGameMode.Party ? Color.green : Color.white;
+            string partyLabel = selectedMode == PoolGameMode.Party
+                ? $"Party — {PartyModeLabel(selectedPartyMode)}"
+                : "Party";
+            if (GUILayout.Button(partyLabel)) pendingShowPartySubmenuChange = true;
+            GUI.color = Color.white;
 
             if (selectedMode == PoolGameMode.FourteenOne)
             {
@@ -484,11 +534,39 @@ namespace UntitledPoolGame.Pool
             GUILayout.EndArea();
         }
 
+        private void DrawPartySubmenuGUI()
+        {
+            GUILayout.Label("Choisir un mode Party");
+
+            DrawPartyModeButton(PoolPartyMode.Classic, "Classic (8-ball + pouvoirs)");
+            // Add a button here for each new PoolPartyMode as it's implemented.
+
+            if (GUILayout.Button("Retour")) pendingShowPartySubmenuChange = false;
+        }
+
         private void DrawModeButton(PoolGameMode mode, string label)
         {
             GUI.color = selectedMode == mode ? Color.green : Color.white;
             if (GUILayout.Button(label)) pendingModeChange = mode;
             GUI.color = Color.white;
         }
+
+        private void DrawPartyModeButton(PoolPartyMode partyMode, string label)
+        {
+            GUI.color = selectedPartyMode == partyMode ? Color.green : Color.white;
+            if (GUILayout.Button(label))
+            {
+                pendingPartyModeChange = partyMode;
+                pendingModeChange = PoolGameMode.Party;
+                pendingShowPartySubmenuChange = false;
+            }
+            GUI.color = Color.white;
+        }
+
+        private static string PartyModeLabel(PoolPartyMode partyMode) => partyMode switch
+        {
+            PoolPartyMode.Classic => "Classic",
+            _ => partyMode.ToString(),
+        };
     }
 }

@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31f74d0a838971d4a93755b9dfac46ef, type: 3}
   m_Name: BoostedShotPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.BoostedShotPower
-  powerName: Power
-  shotPowerMultiplier: 50
+  powerName: Boost
+  shotPowerMultiplier: 3

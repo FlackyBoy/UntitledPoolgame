@@ -178,8 +178,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 928579136391435514}
-  - {fileID: 8337248684247049178}
   - {fileID: 2618867538516616031}
+  - {fileID: 1520183378188730580}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &4630068376014274799
@@ -219,7 +219,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1053637657
+  GlobalObjectIdHash: 616425567
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -544,10 +544,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 354aa501091cc0042a62d7d82bd37d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.LocalPoolPowerEffectReceiver
-  overlayColor: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 1}
-  maxOverlayAlpha: 0.6
-  flickerFrequency: 8
-  shakeMagnitude: 0.03
 --- !u!1 &2604193902669247130
 GameObject:
   m_ObjectHideFlags: 0
@@ -629,13 +625,12 @@ Transform:
   m_GameObject: {fileID: 3520690697457071501}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.529, z: -0.386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7193408669336603905}
-  - {fileID: 1520183378188730580}
-  m_Father: {fileID: 5939782006227554151}
+  m_Father: {fileID: 928579136391435514}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4454856835886160874
 GameObject:
@@ -1145,6 +1140,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 8337248684247049178}
   - {fileID: 6864654777373453488}
   m_Father: {fileID: 5939782006227554151}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1286,14 +1282,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8527261530098894043}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6140786670136420064}
   - {fileID: 1752645692042055427}
-  m_Father: {fileID: 8337248684247049178}
+  m_Father: {fileID: 5939782006227554151}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &3110326176735985743
 Animator:

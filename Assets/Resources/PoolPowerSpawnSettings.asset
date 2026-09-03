@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10047901968f5084a85295bbf89eee9a, type: 3}
+  m_Name: PoolPowerSpawnSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnSettings
+  availablePowers:
+  - {fileID: 11400000, guid: 666a3d0e16192ed48b4d0255b861ae7c, type: 2}
+  - {fileID: 11400000, guid: 269747528ad48034793f0f02716520b9, type: 2}
+  - {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
+  attackColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  defenseColor: {r: 0.25, g: 0.55, b: 1, a: 1}
+  effectColor: {r: 0.3, g: 0.9, b: 0.4, a: 1}
+  activeCrateCount: 3
+  crateRespawnMinDelay: 15
+  crateRespawnMaxDelay: 30
+  ballRotationMinInterval: 20
+  ballRotationMaxInterval: 40
+  ballGlowIntensity: 4
+  ballGlowRange: 0.3

@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e57b3c6a348a5e648a6776a5b546a1ec, type: 3}
   m_Name: InvertedControlsPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.InvertedControlsPower
-  powerName: Power
+  powerName: What is happening ?!
+  sensitivityMultiplier: 1.8

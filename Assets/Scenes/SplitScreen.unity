@@ -302,6 +302,7 @@ GameObject:
   - component: {fileID: 119663183}
   - component: {fileID: 119663182}
   - component: {fileID: 119663181}
+  - component: {fileID: 119663186}
   m_Layer: 0
   m_Name: Ball_9
   m_TagString: Untagged
@@ -442,6 +443,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 119663179}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &119663186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119663179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &126185559
 GameObject:
   m_ObjectHideFlags: 0
@@ -509,6 +522,7 @@ GameObject:
   - component: {fileID: 211613514}
   - component: {fileID: 211613513}
   - component: {fileID: 211613512}
+  - component: {fileID: 211613517}
   m_Layer: 0
   m_Name: Ball_11
   m_TagString: Untagged
@@ -649,6 +663,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 211613510}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &211613517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 211613510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &243678416
 GameObject:
   m_ObjectHideFlags: 0
@@ -817,6 +843,7 @@ GameObject:
   - component: {fileID: 250217596}
   - component: {fileID: 250217595}
   - component: {fileID: 250217594}
+  - component: {fileID: 250217599}
   m_Layer: 0
   m_Name: Ball_14
   m_TagString: Untagged
@@ -957,6 +984,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 250217592}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &250217599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 250217592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &321335000
 GameObject:
   m_ObjectHideFlags: 0
@@ -1140,6 +1179,7 @@ GameObject:
   - component: {fileID: 335084903}
   - component: {fileID: 335084902}
   - component: {fileID: 335084901}
+  - component: {fileID: 335084906}
   m_Layer: 0
   m_Name: Ball_5
   m_TagString: Untagged
@@ -1280,6 +1320,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 335084899}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &335084906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 335084899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &377187906
 GameObject:
   m_ObjectHideFlags: 0
@@ -1362,6 +1414,7 @@ GameObject:
   - component: {fileID: 405613965}
   - component: {fileID: 405613964}
   - component: {fileID: 405613963}
+  - component: {fileID: 405613968}
   m_Layer: 0
   m_Name: Ball_6
   m_TagString: Untagged
@@ -1502,6 +1555,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 405613961}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &405613968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405613961}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &424720035
 GameObject:
   m_ObjectHideFlags: 0
@@ -1547,15 +1612,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a678d18b688f52341b72e945420d61d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPocket
-  haloColor: {r: 1, g: 0.85, b: 0.35, a: 1}
-  haloIntensity: 8
-  haloRange: 0.6
-  haloDuration: 0.35
-  risingAuraPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
-  risingAuraActiveDuration: 1
-  risingAuraFadeOutBuffer: 1
-  risingAuraScale: 0.2
-  risingAuraSpeedMultiplier: 1.8
 --- !u!135 &424720038
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1604,7 +1660,7 @@ Transform:
   m_GameObject: {fileID: 434482784}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0.985}
+  m_LocalPosition: {x: 0, y: 1, z: 1.095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1622,15 +1678,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a678d18b688f52341b72e945420d61d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPocket
-  haloColor: {r: 1, g: 0.85, b: 0.35, a: 1}
-  haloIntensity: 8
-  haloRange: 0.6
-  haloDuration: 0.35
-  risingAuraPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
-  risingAuraActiveDuration: 1
-  risingAuraFadeOutBuffer: 1
-  risingAuraScale: 0.2
-  risingAuraSpeedMultiplier: 1.8
 --- !u!135 &434482787
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1719,6 +1766,7 @@ GameObject:
   - component: {fileID: 461582057}
   - component: {fileID: 461582056}
   - component: {fileID: 461582055}
+  - component: {fileID: 461582060}
   m_Layer: 0
   m_Name: Ball_7
   m_TagString: Untagged
@@ -1859,6 +1907,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 461582053}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &461582060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 461582053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &585732920
 GameObject:
   m_ObjectHideFlags: 0
@@ -1926,6 +1986,7 @@ GameObject:
   - component: {fileID: 760893658}
   - component: {fileID: 760893657}
   - component: {fileID: 760893656}
+  - component: {fileID: 760893661}
   m_Layer: 0
   m_Name: Ball_10
   m_TagString: Untagged
@@ -2066,6 +2127,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 760893654}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &760893661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760893654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &762481603
 GameObject:
   m_ObjectHideFlags: 0
@@ -2111,15 +2184,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a678d18b688f52341b72e945420d61d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPocket
-  haloColor: {r: 1, g: 0.85, b: 0.35, a: 1}
-  haloIntensity: 8
-  haloRange: 0.6
-  haloDuration: 0.35
-  risingAuraPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
-  risingAuraActiveDuration: 1
-  risingAuraFadeOutBuffer: 1
-  risingAuraScale: 0.2
-  risingAuraSpeedMultiplier: 1.8
 --- !u!135 &762481606
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2194,6 +2258,55 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &841596259
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 841596260}
+  - component: {fileID: 841596261}
+  m_Layer: 0
+  m_Name: SpawnPoint_1_0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &841596260
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 841596259}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.3064771, y: 1.02, z: 0.77555233}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &841596261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 841596259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
+--- !u!1 &878689512 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1154887790547816687, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
+  m_PrefabInstance: {fileID: 1071006959}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &895715533
 GameObject:
   m_ObjectHideFlags: 0
@@ -2239,15 +2352,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a678d18b688f52341b72e945420d61d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPocket
-  haloColor: {r: 1, g: 0.85, b: 0.35, a: 1}
-  haloIntensity: 8
-  haloRange: 0.6
-  haloDuration: 0.35
-  risingAuraPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
-  risingAuraActiveDuration: 1
-  risingAuraFadeOutBuffer: 1
-  risingAuraScale: 0.2
-  risingAuraSpeedMultiplier: 1.8
 --- !u!135 &895715536
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2269,6 +2373,50 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.17
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &941567725
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 941567726}
+  - component: {fileID: 941567727}
+  m_Layer: 0
+  m_Name: SpawnPoint_1_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &941567726
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941567725}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.26651394, y: 1.02, z: 0.65284395}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &941567727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941567725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
 --- !u!1 &951432986
 GameObject:
   m_ObjectHideFlags: 0
@@ -2288,7 +2436,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &951432987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2301,7 +2449,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05ad3fb567d1cd44b9e6c2f2c3a04a7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerCrate
-  power: {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
   pickupRadius: 0.05
 --- !u!65 &951432988
 BoxCollider:
@@ -2389,7 +2536,7 @@ Transform:
   m_GameObject: {fileID: 951432986}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.191, y: 0.0924, z: -0.68}
+  m_LocalPosition: {x: -0.506, y: 0.067, z: 4.038}
   m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2448,6 +2595,50 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1022840332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1022840333}
+  - component: {fileID: 1022840334}
+  m_Layer: 0
+  m_Name: SpawnPoint_0_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1022840333
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022840332}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.21882609, y: 1.02, z: -0.6637036}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1022840334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022840332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
 --- !u!1 &1051530979
 GameObject:
   m_ObjectHideFlags: 0
@@ -2607,11 +2798,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.402
+      value: 4.34
       objectReference: {fileID: 0}
     - target: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       propertyPath: m_LocalRotation.x
@@ -2619,7 +2810,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       propertyPath: m_LocalRotation.z
@@ -2631,7 +2822,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 180
       objectReference: {fileID: 0}
     - target: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -2643,7 +2834,16 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1966976227}
-    m_AddedComponents: []
+    - targetCorrespondingSourceObject: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1740800111}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1154887790547816687, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1315811911}
+    - targetCorrespondingSourceObject: {fileID: 1154887790547816687, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1315811910}
   m_SourcePrefab: {fileID: 100100000, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
 --- !u!1 &1075286832
 GameObject:
@@ -2698,6 +2898,50 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1137327700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1137327701}
+  - component: {fileID: 1137327702}
+  m_Layer: 0
+  m_Name: SpawnPoint_0_0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1137327701
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137327700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.2349341, y: 1.02, z: -0.8202522}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1137327702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137327700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
 --- !u!1 &1167623558
 GameObject:
   m_ObjectHideFlags: 0
@@ -2825,132 +3069,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1 &1184112942
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1184112947}
-  - component: {fileID: 1184112946}
-  - component: {fileID: 1184112945}
-  - component: {fileID: 1184112944}
-  - component: {fileID: 1184112943}
-  m_Layer: 0
-  m_Name: Cube (3)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1184112943
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1184112942}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05ad3fb567d1cd44b9e6c2f2c3a04a7c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerCrate
-  power: {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
-  pickupRadius: 0.05
---- !u!65 &1184112944
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1184112942}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!23 &1184112945
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1184112942}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1184112946
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1184112942}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &1184112947
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1184112942}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.6559997, y: 0.0924, z: -0.379}
-  m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1186605282
 GameObject:
   m_ObjectHideFlags: 0
@@ -2965,6 +3083,7 @@ GameObject:
   - component: {fileID: 1186605286}
   - component: {fileID: 1186605285}
   - component: {fileID: 1186605284}
+  - component: {fileID: 1186605289}
   m_Layer: 0
   m_Name: Ball_4
   m_TagString: Untagged
@@ -3105,6 +3224,62 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1186605282}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1186605289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186605282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
+--- !u!1 &1239525073
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1239525074}
+  - component: {fileID: 1239525075}
+  m_Layer: 0
+  m_Name: SpawnPoint_1_3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1239525074
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239525073}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.4565051, y: 1.02, z: 0.7934045}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1239525075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239525073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
 --- !u!1 &1245535934
 GameObject:
   m_ObjectHideFlags: 0
@@ -3222,6 +3397,30 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1967278086055103061, guid: b56e9dc3c270ec442aff0b7c12ae1f1c, type: 3}
   m_PrefabInstance: {fileID: 1071006959}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1315811910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 878689512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 817c0802ed6cdd94bb010d750cdd7684, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerBallRotator
+--- !u!114 &1315811911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 878689512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04c25923518d8ee4b8472d701c588812, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerCrateManager
 --- !u!1 &1401166546
 GameObject:
   m_ObjectHideFlags: 0
@@ -3236,6 +3435,7 @@ GameObject:
   - component: {fileID: 1401166550}
   - component: {fileID: 1401166549}
   - component: {fileID: 1401166548}
+  - component: {fileID: 1401166553}
   m_Layer: 0
   m_Name: Ball_13
   m_TagString: Untagged
@@ -3376,6 +3576,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1401166546}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1401166553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1401166546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &1412458575
 GameObject:
   m_ObjectHideFlags: 0
@@ -3395,7 +3607,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1412458576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3408,7 +3620,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05ad3fb567d1cd44b9e6c2f2c3a04a7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerCrate
-  power: {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
   pickupRadius: 0.05
 --- !u!65 &1412458577
 BoxCollider:
@@ -3496,7 +3707,7 @@ Transform:
   m_GameObject: {fileID: 1412458575}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.178, y: 0.0924, z: 0.628}
+  m_LocalPosition: {x: 0.4809999, y: 0.0669999, z: 5.3460007}
   m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3516,6 +3727,7 @@ GameObject:
   - component: {fileID: 1521351087}
   - component: {fileID: 1521351086}
   - component: {fileID: 1521351085}
+  - component: {fileID: 1521351090}
   m_Layer: 0
   m_Name: Ball_2
   m_TagString: Untagged
@@ -3656,6 +3868,62 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1521351083}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1521351090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521351083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
+--- !u!1 &1645030478
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1645030479}
+  - component: {fileID: 1645030480}
+  m_Layer: 0
+  m_Name: SpawnPoint_1_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1645030479
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1645030478}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.24703076, y: 1.02, z: 0.57766485}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1645030480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1645030478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
 --- !u!1 &1705583188
 GameObject:
   m_ObjectHideFlags: 0
@@ -3732,6 +4000,45 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1740800110
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1740800111}
+  m_Layer: 0
+  m_Name: PowerSpawnPoints
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1740800111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1740800110}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0.15, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1137327701}
+  - {fileID: 1022840333}
+  - {fileID: 2111733533}
+  - {fileID: 1991922394}
+  - {fileID: 841596260}
+  - {fileID: 941567726}
+  - {fileID: 1645030479}
+  - {fileID: 1239525074}
+  m_Father: {fileID: 1315811909}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &1755506125
 GameObject:
   m_ObjectHideFlags: 0
@@ -3746,6 +4053,7 @@ GameObject:
   - component: {fileID: 1755506129}
   - component: {fileID: 1755506128}
   - component: {fileID: 1755506127}
+  - component: {fileID: 1755506132}
   m_Layer: 0
   m_Name: Ball_12
   m_TagString: Untagged
@@ -3886,6 +4194,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1755506125}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1755506132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1755506125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &1758828438
 GameObject:
   m_ObjectHideFlags: 0
@@ -3978,15 +4298,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a678d18b688f52341b72e945420d61d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPocket
-  haloColor: {r: 1, g: 0.85, b: 0.35, a: 1}
-  haloIntensity: 8
-  haloRange: 0.6
-  haloDuration: 0.35
-  risingAuraPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
-  risingAuraActiveDuration: 1
-  risingAuraFadeOutBuffer: 1
-  risingAuraScale: 0.2
-  risingAuraSpeedMultiplier: 1.8
 --- !u!135 &1767884892
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -4035,7 +4346,7 @@ Transform:
   m_GameObject: {fileID: 1820852982}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -0.985}
+  m_LocalPosition: {x: -0, y: 1, z: -1.104}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4053,15 +4364,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a678d18b688f52341b72e945420d61d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPocket
-  haloColor: {r: 1, g: 0.85, b: 0.35, a: 1}
-  haloIntensity: 8
-  haloRange: 0.6
-  haloDuration: 0.35
-  risingAuraPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
-  risingAuraActiveDuration: 1
-  risingAuraFadeOutBuffer: 1
-  risingAuraScale: 0.2
-  risingAuraSpeedMultiplier: 1.8
 --- !u!135 &1820852985
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -4097,6 +4399,7 @@ GameObject:
   - component: {fileID: 1826344146}
   - component: {fileID: 1826344145}
   - component: {fileID: 1826344144}
+  - component: {fileID: 1826344149}
   m_Layer: 0
   m_Name: Ball_3
   m_TagString: Untagged
@@ -4237,6 +4540,107 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1826344142}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1826344149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1826344142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
+--- !u!1 &1910530669
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+  m_PrefabInstance: {fileID: 1960919055}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1910530672}
+  - component: {fileID: 1910530671}
+  - component: {fileID: 1910530670}
+  m_Layer: 0
+  m_Name: Wall1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &1910530670
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+  m_PrefabInstance: {fileID: 1960919055}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1910530669}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: -6922793697723135513, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1910530671
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: -5754084199372789682, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+  m_PrefabInstance: {fileID: 1960919055}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1910530669}
+  m_Mesh: {fileID: 6416302070336371891, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+--- !u!4 &1910530672
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+  m_PrefabInstance: {fileID: 1960919055}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1910530669}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071067}
+  m_LocalPosition: {x: -10.08301, y: -0.9700012, z: 16.821991}
+  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1935724301
 GameObject:
   m_ObjectHideFlags: 0
@@ -4251,6 +4655,7 @@ GameObject:
   - component: {fileID: 1935724305}
   - component: {fileID: 1935724304}
   - component: {fileID: 1935724303}
+  - component: {fileID: 1935724308}
   m_Layer: 0
   m_Name: Ball_15
   m_TagString: Untagged
@@ -4391,6 +4796,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1935724301}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1935724308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935724301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1 &1940611760
 GameObject:
   m_ObjectHideFlags: 0
@@ -4410,7 +4827,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1940611761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4423,7 +4840,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05ad3fb567d1cd44b9e6c2f2c3a04a7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerCrate
-  power: {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
   pickupRadius: 0.05
 --- !u!65 &1940611762
 BoxCollider:
@@ -4511,7 +4927,7 @@ Transform:
   m_GameObject: {fileID: 1940611760}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.278, y: 0.0924, z: -0.88}
+  m_LocalPosition: {x: 0.5809998, y: 0.113, z: 3.8380005}
   m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4531,6 +4947,7 @@ GameObject:
   - component: {fileID: 1945102233}
   - component: {fileID: 1945102232}
   - component: {fileID: 1945102231}
+  - component: {fileID: 1945102236}
   m_Layer: 0
   m_Name: Ball_8
   m_TagString: Untagged
@@ -4671,6 +5088,75 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945102229}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1945102236
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1945102229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
+--- !u!1001 &1960919055
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -10.08301
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.9700012
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 16.821991
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071067
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
+      propertyPath: m_Name
+      value: Wall1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 91d79690b50d5584da80a85a22c4d707, type: 3}
 --- !u!1 &1966976226
 GameObject:
   m_ObjectHideFlags: 0
@@ -4731,8 +5217,94 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edf51d85a08f161499c41188d55b1abc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolMatchRules
-  potSlowMotionScale: 0.3
-  potSlowMotionDuration: 0.12
+--- !u!1 &1991922393
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1991922394}
+  - component: {fileID: 1991922395}
+  m_Layer: 0
+  m_Name: SpawnPoint_0_3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1991922394
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1991922393}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3494791, y: 1.02, z: -0.59841716}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1991922395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1991922393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
+--- !u!1 &2111733532
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2111733533}
+  - component: {fileID: 2111733534}
+  m_Layer: 0
+  m_Name: SpawnPoint_0_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2111733533
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2111733532}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.39329514, y: 1.02, z: -0.4616615}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1740800111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2111733534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2111733532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b016a36ba60c1b44ad21217b4310a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnPoint
 --- !u!1 &2143247803
 GameObject:
   m_ObjectHideFlags: 0
@@ -4747,6 +5319,7 @@ GameObject:
   - component: {fileID: 2143247807}
   - component: {fileID: 2143247806}
   - component: {fileID: 2143247805}
+  - component: {fileID: 2143247810}
   m_Layer: 0
   m_Name: Ball_1
   m_TagString: Untagged
@@ -4887,6 +5460,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2143247803}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2143247810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143247803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb8b634992a197448b0240055bc2d01c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerBall
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -4898,5 +5483,5 @@ SceneRoots:
   - {fileID: 951432991}
   - {fileID: 1940611765}
   - {fileID: 1412458580}
-  - {fileID: 1184112947}
   - {fileID: 1071006959}
+  - {fileID: 1960919055}
