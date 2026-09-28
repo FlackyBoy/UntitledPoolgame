@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 49d48b45b746c3c49b2ca474230c9461
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 48977
+  packageName: PuppetMaster
+  packageVersion: 1.5
+  assetPath: Assets/Plugins/RootMotion/PuppetMaster/_Integration/Final IK (Unity 6000.0.72).unitypackage
+  uploadId: 897882
