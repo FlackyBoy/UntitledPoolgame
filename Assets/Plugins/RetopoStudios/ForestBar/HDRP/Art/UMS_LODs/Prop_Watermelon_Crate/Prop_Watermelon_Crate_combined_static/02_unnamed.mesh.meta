@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ed8e073ee06a0664d98f7f945e840d36
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Watermelon_Crate/Prop_Watermelon_Crate_combined_static/02_unnamed.mesh
+  uploadId: 717042

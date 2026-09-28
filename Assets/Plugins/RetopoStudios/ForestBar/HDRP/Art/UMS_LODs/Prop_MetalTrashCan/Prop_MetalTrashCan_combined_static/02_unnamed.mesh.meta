@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 49d18a4369dbbf74db4f0880d3b67ec6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_MetalTrashCan/Prop_MetalTrashCan_combined_static/02_unnamed.mesh
+  uploadId: 717042

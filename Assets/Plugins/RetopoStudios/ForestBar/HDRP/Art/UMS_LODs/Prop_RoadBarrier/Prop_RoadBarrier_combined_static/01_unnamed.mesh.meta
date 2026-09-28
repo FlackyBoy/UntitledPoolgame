@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1dfbcf01952579c4e85b9a73a40b01bf
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_RoadBarrier/Prop_RoadBarrier_combined_static/01_unnamed.mesh
+  uploadId: 717042

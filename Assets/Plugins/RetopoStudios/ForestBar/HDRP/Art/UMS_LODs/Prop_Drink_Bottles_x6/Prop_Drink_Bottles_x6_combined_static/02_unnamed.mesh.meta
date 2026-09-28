@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5b272d2d4a381f944b531b8ec146683a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Drink_Bottles_x6/Prop_Drink_Bottles_x6_combined_static/02_unnamed.mesh
+  uploadId: 717042

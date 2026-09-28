@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e7d1be9f91a7bbc47baf8f1b3e63e45f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/Animation/Prop_BarSign.controller
+  uploadId: 717042

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a23c13d709bd4094c9a6c0e20350e9fc
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Kitchen_Knife_x1/Prop_Kitchen_Knife_x1_combined_static/02_unnamed.mesh
+  uploadId: 717042

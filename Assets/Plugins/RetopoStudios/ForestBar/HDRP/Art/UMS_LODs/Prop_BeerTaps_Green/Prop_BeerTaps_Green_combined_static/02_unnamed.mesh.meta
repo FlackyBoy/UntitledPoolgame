@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2c881204835984b4585bf99f9c852b9c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_BeerTaps_Green/Prop_BeerTaps_Green_combined_static/02_unnamed.mesh
+  uploadId: 717042

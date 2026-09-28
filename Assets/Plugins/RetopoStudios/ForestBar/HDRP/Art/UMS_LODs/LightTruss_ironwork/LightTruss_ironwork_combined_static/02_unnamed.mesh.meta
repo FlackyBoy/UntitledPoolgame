@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ad99b57948aea4e4fa87eea8a12b8753
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/LightTruss_ironwork/LightTruss_ironwork_combined_static/02_unnamed.mesh
+  uploadId: 717042

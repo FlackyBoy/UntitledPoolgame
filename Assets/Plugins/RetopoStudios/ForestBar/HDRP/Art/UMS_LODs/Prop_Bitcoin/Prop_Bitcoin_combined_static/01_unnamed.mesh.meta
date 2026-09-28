@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 283f9605f33efce42b3462e4cf28a3af
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Bitcoin/Prop_Bitcoin_combined_static/01_unnamed.mesh
+  uploadId: 717042

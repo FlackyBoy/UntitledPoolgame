@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b9a4daa08d1561143954f6c65012e1c4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_DrinkCover_Billboard_X6/Prop_DrinkCover_Billboard_X6_combined_static/01_unnamed.mesh
+  uploadId: 717042

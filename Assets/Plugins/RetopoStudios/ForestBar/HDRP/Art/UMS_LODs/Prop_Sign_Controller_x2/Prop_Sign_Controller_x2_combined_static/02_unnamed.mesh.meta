@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2f4f5c3927c688f4fb3d86c8ca9727d2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Sign_Controller_x2/Prop_Sign_Controller_x2_combined_static/02_unnamed.mesh
+  uploadId: 717042

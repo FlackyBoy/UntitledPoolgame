@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4e94818dc529a8d4f96c5174e51aa4db
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Pepper_Crate/Prop_Pepper_Crate_combined_static/01_unnamed.mesh
+  uploadId: 717042

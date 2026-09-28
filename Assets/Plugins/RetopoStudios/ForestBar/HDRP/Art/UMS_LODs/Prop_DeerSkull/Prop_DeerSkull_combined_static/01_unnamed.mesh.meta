@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c5646e23254872b43b655e9a5b246a97
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_DeerSkull/Prop_DeerSkull_combined_static/01_unnamed.mesh
+  uploadId: 717042

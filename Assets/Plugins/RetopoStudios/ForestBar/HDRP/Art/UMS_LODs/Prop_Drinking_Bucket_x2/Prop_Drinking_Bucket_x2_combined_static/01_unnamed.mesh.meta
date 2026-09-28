@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3f41bf0d8fb39aa46aa450bb80d5cc4d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Drinking_Bucket_x2/Prop_Drinking_Bucket_x2_combined_static/01_unnamed.mesh
+  uploadId: 717042

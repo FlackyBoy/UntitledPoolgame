@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1933f13b18e2f884c8d20e776cf145af
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_CarPlates_Ladder_x6/Prop_CarPlates_Ladder_x6_combined_static/02_unnamed.mesh
+  uploadId: 717042

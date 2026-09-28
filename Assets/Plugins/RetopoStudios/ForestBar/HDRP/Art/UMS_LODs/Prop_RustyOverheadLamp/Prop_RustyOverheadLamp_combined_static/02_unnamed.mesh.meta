@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 965a8ef6c9f4aa3438df4e54f1563011
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_RustyOverheadLamp/Prop_RustyOverheadLamp_combined_static/02_unnamed.mesh
+  uploadId: 717042

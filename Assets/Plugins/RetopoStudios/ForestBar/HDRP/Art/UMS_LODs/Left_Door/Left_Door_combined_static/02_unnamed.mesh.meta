@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e82ded69aadd70646b24c77dd4a4f495
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Left_Door/Left_Door_combined_static/02_unnamed.mesh
+  uploadId: 717042

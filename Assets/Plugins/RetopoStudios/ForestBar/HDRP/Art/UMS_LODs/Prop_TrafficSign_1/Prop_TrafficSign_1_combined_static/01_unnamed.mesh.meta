@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 78d727dd67e76c148aed8465880f958b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_TrafficSign_1/Prop_TrafficSign_1_combined_static/01_unnamed.mesh
+  uploadId: 717042

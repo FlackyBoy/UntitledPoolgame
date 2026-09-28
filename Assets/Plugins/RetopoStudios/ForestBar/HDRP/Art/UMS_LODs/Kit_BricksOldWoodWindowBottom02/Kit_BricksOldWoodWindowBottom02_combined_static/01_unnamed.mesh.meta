@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 57d7f7349254aa840a26b222d3b1f178
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Kit_BricksOldWoodWindowBottom02/Kit_BricksOldWoodWindowBottom02_combined_static/01_unnamed.mesh
+  uploadId: 717042

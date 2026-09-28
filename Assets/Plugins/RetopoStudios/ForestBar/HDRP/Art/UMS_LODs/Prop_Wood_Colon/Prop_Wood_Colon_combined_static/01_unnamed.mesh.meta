@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 15202d0d4bc839e4d8d18df245a304e0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Wood_Colon/Prop_Wood_Colon_combined_static/01_unnamed.mesh
+  uploadId: 717042

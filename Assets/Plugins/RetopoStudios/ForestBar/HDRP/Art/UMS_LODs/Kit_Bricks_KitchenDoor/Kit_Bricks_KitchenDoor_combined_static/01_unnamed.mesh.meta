@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c8acfe36ac0a64442a9f6d37dc3c4bfc
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Kit_Bricks_KitchenDoor/Kit_Bricks_KitchenDoor_combined_static/01_unnamed.mesh
+  uploadId: 717042

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2ef6116f7801b774aac7b4a4a5b9c836
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 36300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Scenes/HDRP_ForestBar/OcclusionCullingData.asset
+  uploadId: 717042

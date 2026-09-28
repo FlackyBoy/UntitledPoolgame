@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2142c81d6d4e0c749b3e0fdbabcb682f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Iron/Iron_combined_static/01_unnamed.mesh
+  uploadId: 717042

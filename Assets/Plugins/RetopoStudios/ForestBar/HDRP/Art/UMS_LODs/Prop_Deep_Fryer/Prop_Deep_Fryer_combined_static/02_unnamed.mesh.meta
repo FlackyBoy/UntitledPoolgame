@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 43f1ce11fc257d7499d1758b52f00032
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Deep_Fryer/Prop_Deep_Fryer_combined_static/02_unnamed.mesh
+  uploadId: 717042

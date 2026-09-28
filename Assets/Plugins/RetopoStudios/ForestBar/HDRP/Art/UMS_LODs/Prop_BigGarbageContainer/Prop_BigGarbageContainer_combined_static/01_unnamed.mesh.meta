@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7b07acb5f9b185e429906bde40075dc9
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_BigGarbageContainer/Prop_BigGarbageContainer_combined_static/01_unnamed.mesh
+  uploadId: 717042

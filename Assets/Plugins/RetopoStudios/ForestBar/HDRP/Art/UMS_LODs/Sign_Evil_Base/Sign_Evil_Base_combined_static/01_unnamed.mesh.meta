@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6454a06e695f8764b8acec13d40f3c94
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Sign_Evil_Base/Sign_Evil_Base_combined_static/01_unnamed.mesh
+  uploadId: 717042

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7c7d1c5bf536bb948af7a99bde500229
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Crime_Number/Prop_Crime_Number_combined_static/01_unnamed.mesh
+  uploadId: 717042

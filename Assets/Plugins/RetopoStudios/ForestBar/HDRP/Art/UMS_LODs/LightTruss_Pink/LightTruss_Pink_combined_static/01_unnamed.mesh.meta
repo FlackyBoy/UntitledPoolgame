@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 88bacf087a78f794a898236c0bfa5699
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/LightTruss_Pink/LightTruss_Pink_combined_static/01_unnamed.mesh
+  uploadId: 717042

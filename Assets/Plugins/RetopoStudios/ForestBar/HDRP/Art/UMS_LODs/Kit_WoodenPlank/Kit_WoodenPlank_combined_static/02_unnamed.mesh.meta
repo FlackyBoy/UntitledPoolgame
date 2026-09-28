@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 828fdfafffceb4f4d91c7e3586b05e7f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Kit_WoodenPlank/Kit_WoodenPlank_combined_static/02_unnamed.mesh
+  uploadId: 717042

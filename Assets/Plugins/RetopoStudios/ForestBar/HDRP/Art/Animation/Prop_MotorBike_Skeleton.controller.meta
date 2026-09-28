@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 00bc82cd592decb47879abbee83c1f3d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/Animation/Prop_MotorBike_Skeleton.controller
+  uploadId: 717042

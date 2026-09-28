@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4e24f6daa0aeb7e4a937cfd73d3f4fe3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Lamp_Post/Prop_Lamp_Post_combined_static/01_unnamed.mesh
+  uploadId: 717042

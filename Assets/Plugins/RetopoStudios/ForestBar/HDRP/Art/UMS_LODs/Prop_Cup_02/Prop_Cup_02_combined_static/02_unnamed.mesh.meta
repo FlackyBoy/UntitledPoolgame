@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 32e6f7fba27a5e047bb95660818f8353
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Cup_02/Prop_Cup_02_combined_static/02_unnamed.mesh
+  uploadId: 717042

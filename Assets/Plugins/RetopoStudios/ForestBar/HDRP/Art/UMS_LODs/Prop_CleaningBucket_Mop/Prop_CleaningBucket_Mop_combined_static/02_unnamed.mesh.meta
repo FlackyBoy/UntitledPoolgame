@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c5edf089cfd448c4db418ed7deecc4b3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_CleaningBucket_Mop/Prop_CleaningBucket_Mop_combined_static/02_unnamed.mesh
+  uploadId: 717042

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6ea77ef2fe390964bb5e2c7c2408aa28
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Kit_BricksDoorRoofAsbestos/Kit_BricksDoorRoofAsbestos_combined_static/02_unnamed.mesh
+  uploadId: 717042

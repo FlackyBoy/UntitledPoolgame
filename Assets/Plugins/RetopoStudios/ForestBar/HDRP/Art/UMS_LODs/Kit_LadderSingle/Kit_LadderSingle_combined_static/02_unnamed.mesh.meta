@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c29a9c98524df1b4aa63f497b7605490
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Kit_LadderSingle/Kit_LadderSingle_combined_static/02_unnamed.mesh
+  uploadId: 717042

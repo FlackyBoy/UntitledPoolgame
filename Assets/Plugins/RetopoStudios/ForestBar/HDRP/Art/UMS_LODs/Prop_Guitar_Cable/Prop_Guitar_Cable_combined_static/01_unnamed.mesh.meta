@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 55a8f4d38f3273c449250be4131fb897
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Guitar_Cable/Prop_Guitar_Cable_combined_static/01_unnamed.mesh
+  uploadId: 717042

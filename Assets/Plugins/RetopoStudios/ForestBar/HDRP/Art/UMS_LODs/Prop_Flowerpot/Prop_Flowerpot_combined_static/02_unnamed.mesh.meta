@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a8ce6177e91de8f478453e766d0a0a6d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Flowerpot/Prop_Flowerpot_combined_static/02_unnamed.mesh
+  uploadId: 717042

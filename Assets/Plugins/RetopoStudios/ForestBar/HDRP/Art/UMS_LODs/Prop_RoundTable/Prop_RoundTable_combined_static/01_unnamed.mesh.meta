@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4b335b8328956304a9b80659a5bbaa7d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_RoundTable/Prop_RoundTable_combined_static/01_unnamed.mesh
+  uploadId: 717042

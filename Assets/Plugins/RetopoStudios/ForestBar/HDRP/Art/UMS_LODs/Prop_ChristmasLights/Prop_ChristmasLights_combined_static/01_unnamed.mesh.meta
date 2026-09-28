@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5fcc3a7f741624a4eb818ed181c7d964
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_ChristmasLights/Prop_ChristmasLights_combined_static/01_unnamed.mesh
+  uploadId: 717042

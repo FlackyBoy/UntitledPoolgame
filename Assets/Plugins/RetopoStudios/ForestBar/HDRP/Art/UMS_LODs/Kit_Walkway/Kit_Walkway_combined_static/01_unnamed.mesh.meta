@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1b9917636f6b03c4da0015a4de7268a4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Kit_Walkway/Kit_Walkway_combined_static/01_unnamed.mesh
+  uploadId: 717042

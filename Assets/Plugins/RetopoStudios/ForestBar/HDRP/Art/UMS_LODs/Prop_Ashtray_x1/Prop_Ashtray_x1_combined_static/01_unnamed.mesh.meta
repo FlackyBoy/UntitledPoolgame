@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3d54ba7ef68217d46b42497b9bac2c57
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: UnityMeshSimplifierLODAsset
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 244910
+  packageName: Forest Bar MODULAR
+  packageVersion: 1.4
+  assetPath: Assets/RetopoStudios/ForestBar/HDRP/Art/UMS_LODs/Prop_Ashtray_x1/Prop_Ashtray_x1_combined_static/01_unnamed.mesh
+  uploadId: 717042
