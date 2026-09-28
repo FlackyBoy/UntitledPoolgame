@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: VisionImpairPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.VisionImpairPower
   powerName: 'is it too much ? '
+  requiresOwnTurn: 0
   sensitivityMultiplier: 0.838

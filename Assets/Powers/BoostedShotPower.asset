@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: BoostedShotPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.BoostedShotPower
   powerName: Boost
+  requiresOwnTurn: 1
   shotPowerMultiplier: 3

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: PoolPowerSpawnSettings
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnSettings
   availablePowers:
+  - {fileID: 11400000, guid: 6c5cef1506611b64583efac5c14837e6, type: 2}
   - {fileID: 11400000, guid: 666a3d0e16192ed48b4d0255b861ae7c, type: 2}
   - {fileID: 11400000, guid: 269747528ad48034793f0f02716520b9, type: 2}
   - {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
@@ -22,7 +23,13 @@ MonoBehaviour:
   activeCrateCount: 3
   crateRespawnMinDelay: 15
   crateRespawnMaxDelay: 30
+  attackCratePrefab: {fileID: 0}
+  defenseCratePrefab: {fileID: 0}
+  effectCratePrefab: {fileID: 0}
   ballRotationMinInterval: 20
   ballRotationMaxInterval: 40
   ballGlowIntensity: 4
   ballGlowRange: 0.3
+  attackBallMaterial: {fileID: 0}
+  defenseBallMaterial: {fileID: 0}
+  effectBallMaterial: {fileID: 0}

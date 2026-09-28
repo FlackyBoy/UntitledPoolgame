@@ -21,5 +21,8 @@ MonoBehaviour:
   risingAuraFadeOutBuffer: 0.5
   risingAuraScale: 0.2
   risingAuraSpeedMultiplier: 5
+  selectionHighlightIntensity: 6
+  closedPocketCapPrefab: {fileID: 4899273314697128760, guid: dcd777c5328a7674497f0ec45ff2e000, type: 3}
+  closedPocketCapScale: 0.5
   potSlowMotionScale: 1
   potSlowMotionDuration: 0.12

@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: InvertedControlsPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.InvertedControlsPower
   powerName: What is happening ?!
+  requiresOwnTurn: 0
   sensitivityMultiplier: 1.8
