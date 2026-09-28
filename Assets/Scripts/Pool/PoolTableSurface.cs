@@ -55,5 +55,37 @@ namespace UntitledPoolGame.Pool
             offset.y = 0f;
             return transform.position + transform.rotation * offset;
         }
+
+        // Opposite of ClampToPlayArea: how far a point walking along direction
+        // (from origin) has to travel before it's outside the table's
+        // rectangle (this object's local X/Z, inflated by margin) — used to
+        // stand a player behind the cue without ending up on top of/inside
+        // the table when the cue ball sits well inside the rails. Returns 0
+        // if origin is already outside. Same rotation-only local frame as
+        // ClampToPlayArea (never divides by Surface's own non-uniform scale).
+        public float DistanceToClearPlayArea(Vector3 origin, Vector3 direction, float margin)
+        {
+            Quaternion inverseRotation = Quaternion.Inverse(transform.rotation);
+            Vector3 localOrigin = inverseRotation * (origin - transform.position);
+            Vector3 localDirection = inverseRotation * direction;
+
+            float exitViaX = AxisExitDistance(localOrigin.x, localDirection.x, halfLength + margin);
+            float exitViaZ = AxisExitDistance(localOrigin.z, localDirection.z, halfWidth + margin);
+            float distance = Mathf.Min(exitViaX, exitViaZ);
+            return float.IsInfinity(distance) ? 0f : distance;
+        }
+
+        // Distance along dir (from pos, on a single axis) until |coordinate|
+        // reaches bound. 0 if already at/past the bound; +infinity if moving
+        // parallel to it or away from it (never reaches it going forward).
+        private static float AxisExitDistance(float pos, float dir, float bound)
+        {
+            if (Mathf.Abs(pos) >= bound) return 0f;
+            if (Mathf.Approximately(dir, 0f)) return float.PositiveInfinity;
+
+            float target = dir > 0f ? bound : -bound;
+            float distance = (target - pos) / dir;
+            return distance > 0f ? distance : float.PositiveInfinity;
+        }
     }
 }

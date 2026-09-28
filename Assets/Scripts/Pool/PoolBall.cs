@@ -81,8 +81,10 @@ namespace UntitledPoolGame.Pool
 
         // Raised right before a pocketed ball deactivates/respawns — subscribe
         // here for scoring, turn rules, or (later) special-ball powers, instead
-        // of modifying this class directly.
-        public static event Action<PoolBall> Pocketed;
+        // of modifying this class directly. The PoolPocket is null when the
+        // ball didn't actually go in a pocket (e.g. it fell off the table —
+        // see the off-table check in FixedUpdate()).
+        public static event Action<PoolBall, PoolPocket> Pocketed;
 
         // Raised once, the first time the cue ball touches another ball after
         // ArmContactTracking() was called for the current shot — the "first
@@ -248,9 +250,9 @@ namespace UntitledPoolGame.Pool
             rb.angularVelocity -= rollAxis * (deltaSpeed / radius);
         }
 
-        public void OnPocketed()
+        public void OnPocketed(PoolPocket pocket = null)
         {
-            Pocketed?.Invoke(this);
+            Pocketed?.Invoke(this, pocket);
 
             if (isCueBall)
             {
@@ -266,6 +268,24 @@ namespace UntitledPoolGame.Pool
             }
 
             gameObject.SetActive(false);
+        }
+
+        // Full reset to rack position — used by PoolMatchRules' "Rejouer"
+        // restart, for every ball regardless of whether it's currently
+        // pocketed (inactive) or still in play. spawnPosition/spawnRotation
+        // were already being captured for every ball at Awake() (originally
+        // just for the cue ball's own respawn-on-scratch above), so no new
+        // per-ball state is needed here.
+        public void ResetToSpawn()
+        {
+            gameObject.SetActive(true);
+            rb.isKinematic = false;
+            sphereCollider.enabled = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.position = spawnPosition;
+            rb.rotation = spawnRotation;
+            transform.SetPositionAndRotation(spawnPosition, spawnRotation);
         }
     }
 }

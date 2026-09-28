@@ -16,6 +16,34 @@ namespace UntitledPoolGame.Interaction
         public Quaternion HoldLocalRotation => Quaternion.Euler(holdLocalEulerAngles);
         public bool IsHeld { get; private set; }
 
+        // Cue-only: PickUpCue/InteractionSystem owns the cue's actual
+        // attachment (parenting, kinematic, collider, reach animation) —
+        // calling PickUp()/Drop() here as well would fight that (snap to
+        // holdLocalPosition, then get overridden by the reach animation
+        // next frame). This only keeps IsHeld in sync so it still reads
+        // correctly everywhere else (this method's own guard included).
+        public void MarkExternallyHeld(bool held)
+        {
+            IsHeld = held;
+
+            // With the collider off (below) and gravity still on, the cue
+            // would fall through the floor during the hands' approach —
+            // PickUp2Handed only makes it kinematic later, once they arrive —
+            // and its grip points, which the hands chase, would drag the
+            // body down through the floor with it. Released again by
+            // PickUp2Handed.OnDrop on the way out.
+            if (held && rb != null) rb.isKinematic = true;
+
+            // PickUp()/Drop() turn the collider off/on; this path skips them,
+            // so without this the cue's solid collider stays live while it's
+            // in the hands and shoves the balls (and climbs onto them) when
+            // it moves. Triggers (e.g. the pickup zone) are left alone.
+            foreach (Collider solid in GetComponents<Collider>())
+            {
+                if (!solid.isTrigger) solid.enabled = !held;
+            }
+        }
+
         private Rigidbody rb;
         private Collider col;
 
@@ -48,8 +76,22 @@ namespace UntitledPoolGame.Interaction
             transform.position += Vector3.up * 0.1f;
 
             rb.isKinematic = false;
+            // A thin object (e.g. the cue) released with any speed can
+            // tunnel through the floor in a single physics step.
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             col.enabled = true;
             IsHeld = false;
+        }
+
+        // Drop, then give it a shove — impulse is already a full world-space
+        // force vector (direction * power), computed by the thrower (who
+        // knows their own look direction), not this object.
+        public void Throw(Vector3 impulse)
+        {
+            if (!IsHeld) return;
+
+            Drop();
+            rb.AddForce(impulse, ForceMode.Impulse);
         }
     }
 }

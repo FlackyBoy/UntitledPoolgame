@@ -40,6 +40,31 @@ namespace UntitledPoolGame.Pool
         public float risingAuraScale = 0.4f;
         public float risingAuraSpeedMultiplier = 1.8f;
 
+        [Header("8-ball call-shot selection (top-down pocket picker)")]
+        // Steady (no decay) intensity for whichever pocket is currently
+        // nearest the selector while calling a shot on the 8 — reuses
+        // haloColor/haloRange above rather than a separate color/range pair,
+        // since it's the same light and the same "this pocket matters right
+        // now" visual language as the pot halo, just held steady instead of
+        // fired-and-decaying.
+        public float selectionHighlightIntensity = 6f;
+
+        [Header("Closed pocket (ClosePocketPower)")]
+        // Optional — a prefab to show over a pocket while ClosePocketPower
+        // has it blocked, instead of the auto-generated flat red cylinder
+        // placeholder (same "prefab optional, falls back to a placeholder"
+        // convention as PoolPowerSpawnSettings' crate prefabs). Instantiated
+        // as-is (not tinted) — positioned by the prefab itself, since it's
+        // expected to already look like a cap/plug.
+        public GameObject closedPocketCapPrefab;
+        // Multiplies the prefab's own scale (same idea as risingAuraScale
+        // above) — a model authored at some arbitrary real-world size won't
+        // generally already match a given pocket's radius, so this is the
+        // knob to fit it without needing a rescaled duplicate prefab. Not
+        // applied to the auto-generated placeholder, which is already sized
+        // off the pocket's own radius directly.
+        public float closedPocketCapScale = 1f;
+
         [Header("Slow motion")]
         public float potSlowMotionScale = 0.3f;
         // Real-world (unscaled) seconds — how long the dip itself lasts,

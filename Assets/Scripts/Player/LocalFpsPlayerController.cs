@@ -1,3 +1,4 @@
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UntitledPoolGame.Pool;
@@ -65,6 +66,21 @@ namespace UntitledPoolGame.Player
                 AudioListener audioListener = cameraPivot.GetComponentInChildren<AudioListener>(true);
                 if (audioListener != null) audioListener.enabled = playerInput.playerIndex == 0;
             }
+
+            // A CinemachineBrain's ChannelMask defaults to "Everything" — in
+            // split-screen, every player's Brain would then follow whichever
+            // CinemachineCamera in the WHOLE scene currently has priority,
+            // not just this player's own, so all screens snap to the same
+            // (usually most-recently-joined) player's view. Give this
+            // player's own Brain and every CinemachineCamera under its own
+            // hierarchy (CM_FPS, and CM_Ragdoll if/when the ragdoll is added
+            // to this prefab) a dedicated channel per player index, so each
+            // Brain only ever looks at its own player's vcams.
+            OutputChannels channel = (OutputChannels)(1 << (playerInput.playerIndex + 1));
+            CinemachineBrain brain = GetComponentInChildren<CinemachineBrain>(true);
+            if (brain != null) brain.ChannelMask = channel;
+            foreach (CinemachineVirtualCameraBase vcam in GetComponentsInChildren<CinemachineVirtualCameraBase>(true))
+                vcam.OutputChannel = channel;
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;

@@ -33,6 +33,7 @@ namespace UntitledPoolGame.Pool
 
         private LocalFpsPlayerController fpsController;
         private LocalPoolAimController aimController;
+        private LocalPlayerRagdollController ragdollController;
         private PlayerInput playerInput;
         private Camera playerCamera;
         // The camera's local position at rest, relative to its parent
@@ -62,6 +63,7 @@ namespace UntitledPoolGame.Pool
         {
             fpsController = GetComponent<LocalFpsPlayerController>();
             aimController = GetComponent<LocalPoolAimController>();
+            ragdollController = GetComponent<LocalPlayerRagdollController>();
             playerInput = GetComponent<PlayerInput>();
             playerCamera = GetComponentInChildren<Camera>(true);
             if (playerCamera != null) cameraRestLocalPosition = playerCamera.transform.localPosition;
@@ -96,7 +98,7 @@ namespace UntitledPoolGame.Pool
         // shake here: the flash side of this moved into a world-space light
         // halo at the actual pocket (see PoolPocket.cs) instead of a flat
         // screen-space tint, so no RequestFlash call anymore.
-        private void HandleBallPocketed(PoolBall ball)
+        private void HandleBallPocketed(PoolBall ball, PoolPocket pocket)
         {
             RequestShake(settings.potShakeMagnitude, settings.potShakeDuration);
         }
@@ -186,6 +188,11 @@ namespace UntitledPoolGame.Pool
             // localPosition or world position from this script while it's
             // active would fight/override that positioning.
             if (aimController != null && aimController.IsPlacementViewActive) return;
+
+            // A fourth camera state: the ragdoll's own 3rd-person follow
+            // cam, driven fresh every frame by LocalPlayerRagdollController
+            // — same no-op-entirely treatment as the placement view above.
+            if (ragdollController != null && ragdollController.IsRagdollCameraActive) return;
 
             PoolMatchRules rules = PoolMatchRules.Instance;
             float strength = rules != null

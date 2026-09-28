@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UntitledPoolGame.Pool
@@ -20,6 +21,73 @@ namespace UntitledPoolGame.Pool
         // often enough over a match that the churn isn't worth it.
         private Light haloLight;
         private Coroutine haloRoutine;
+
+        // Live registry of every pocket on the table (same pattern as
+        // PoolBall.Active) — lets the 8-ball call-shot prompt list the
+        // available pockets without a hand-wired Inspector reference.
+        private static readonly List<PoolPocket> active = new List<PoolPocket>();
+        public static IReadOnlyList<PoolPocket> Active => active;
+
+        private void OnEnable() => active.Add(this);
+        private void OnDisable() => active.Remove(this);
+
+        public float Radius => GetComponent<SphereCollider>().radius * transform.lossyScale.x;
+
+        // Ball-in-hand placement (and the 8-ball pocket selector) only clamp
+        // to the table's outer rectangle (PoolTableSurface.ClampToPlayArea) —
+        // nothing stopped a ball from being placed directly on/inside a
+        // pocket's own trigger radius. Its collider is disabled the whole
+        // time it's being placed (PoolBall.BeginBallInHand), so nothing
+        // fires while sliding it around — but the instant the collider is
+        // re-enabled on confirm, physics discovers the overlap and pockets
+        // it AGAIN, this time via a path that never calls
+        // PoolMatchRules.RegisterFoul(): PoolBall.OnPocketed()'s cue-ball
+        // branch just re-kinematic-izes it directly. The match-level
+        // BallInHand flag never gets set, so nothing ever offers the player
+        // a way to place it again — a permanently frozen cue ball that
+        // ignores every future shot. Pushing placement candidates out of
+        // every pocket's radius (plus clearance, typically the ball's own
+        // radius) up front avoids the scenario entirely.
+        public static Vector3 AvoidAllPockets(Vector3 position, float clearance)
+        {
+            foreach (PoolPocket pocket in active)
+            {
+                Vector3 pocketPosition = pocket.transform.position;
+                Vector3 offset = position - pocketPosition;
+                offset.y = 0f;
+
+                float minDistance = pocket.Radius + clearance;
+                float distance = offset.magnitude;
+                if (distance >= minDistance) continue;
+
+                Vector3 direction = distance > 0.0001f ? offset / distance : Vector3.forward;
+                Vector3 pushed = pocketPosition + direction * minDistance;
+                position = new Vector3(pushed.x, position.y, pushed.z);
+            }
+            return position;
+        }
+
+        // Human-readable location for the call-shot UI ("Coin haut-gauche",
+        // "Milieu droite"...) computed from this pocket's position relative
+        // to PoolTableSurface rather than a stored index — works regardless
+        // of scene load order, and regardless of which table asset/rotation
+        // generated these pockets. Mirrors the "haut/bas" (table's long
+        // axis) vs. "gauche/droite" (short axis) vocabulary already used
+        // elsewhere for this table (see PoolTableBuilder/CHANGELOG).
+        public string DescribeLocation()
+        {
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            if (surface == null) return "Poche";
+
+            Vector3 local = Quaternion.Inverse(surface.transform.rotation) * (transform.position - surface.transform.position);
+            string side = local.z >= 0f ? "droite" : "gauche";
+
+            bool isMiddle = Mathf.Abs(local.x) < surface.HalfLength * 0.5f;
+            if (isMiddle) return $"Milieu {side}";
+
+            string end = local.x >= 0f ? "haut" : "bas";
+            return $"Coin {end}-{side}";
+        }
 
         private void Awake()
         {
@@ -49,15 +117,87 @@ namespace UntitledPoolGame.Pool
             haloLight.enabled = false;
         }
 
+        // While the current player is calling a pocket for the 8 (see
+        // LocalPoolAimController/PoolAimController's top-down HandleCallPocket),
+        // whichever pocket is nearest the selector lights up steadily — reuses
+        // this same haloLight rather than a second one, but skipped while a
+        // real pot's decay/aura (PlayHalo/HaloRoutine) is already running on
+        // it so the two never fight over the same light's intensity.
+        public void SetSelectionHighlight(bool highlighted)
+        {
+            if (haloRoutine != null) return;
+            haloLight.enabled = highlighted;
+            haloLight.intensity = highlighted ? settings.selectionHighlightIntensity : 0f;
+        }
+
         private void Reset()
         {
             GetComponent<SphereCollider>().isTrigger = true;
         }
 
+        // ClosePocketPower: a solid (non-trigger) collider co-located with
+        // the trigger sphere above, so a ball rolling toward a closed
+        // pocket bounces off it instead of ever reaching deep enough to
+        // overlap the trigger — plus a plain placeholder cap so the closure
+        // is visible, and an explicit guard in OnTriggerEnter below as a
+        // second line of defense in case a fast shot ever tunnels through
+        // the blocker in one physics step.
+        private SphereCollider closedBlocker;
+        private GameObject closedVisual;
+
+        public bool IsClosed { get; private set; }
+
+        public void SetClosed(bool closed)
+        {
+            if (IsClosed == closed) return;
+            IsClosed = closed;
+
+            if (closedBlocker == null)
+            {
+                SphereCollider trigger = GetComponent<SphereCollider>();
+                closedBlocker = gameObject.AddComponent<SphereCollider>();
+                closedBlocker.isTrigger = false;
+                closedBlocker.radius = trigger.radius;
+                closedBlocker.center = trigger.center;
+            }
+            closedBlocker.enabled = closed;
+
+            if (closedVisual == null) closedVisual = CreateClosedVisual();
+            closedVisual.SetActive(closed);
+        }
+
+        // A custom prefab (settings.closedPocketCapPrefab) is used as-is —
+        // not tinted, not rescaled, trusted to already look like a cap —
+        // same convention as PoolPowerSpawnSettings' crate prefabs. Falls
+        // back to a flat red placeholder cylinder sized off this pocket's
+        // own radius when none is assigned.
+        private GameObject CreateClosedVisual()
+        {
+            if (settings.closedPocketCapPrefab != null)
+            {
+                GameObject visual = Instantiate(settings.closedPocketCapPrefab, transform);
+                visual.name = "ClosedCap";
+                visual.transform.localPosition = Vector3.zero;
+                visual.transform.localScale = settings.closedPocketCapPrefab.transform.localScale * settings.closedPocketCapScale;
+                return visual;
+            }
+
+            GameObject placeholder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            placeholder.name = "ClosedCap";
+            placeholder.transform.SetParent(transform, worldPositionStays: false);
+            placeholder.transform.localPosition = Vector3.zero;
+            float diameter = GetComponent<SphereCollider>().radius * 2f;
+            placeholder.transform.localScale = new Vector3(diameter, diameter * 0.075f, diameter);
+            Destroy(placeholder.GetComponent<Collider>()); // purely visual — closedBlocker above handles the actual physics
+            placeholder.GetComponent<Renderer>().material.color = Color.red;
+            return placeholder;
+        }
+
         private void OnTriggerEnter(Collider other)
         {
+            if (IsClosed) return;
             if (!other.TryGetComponent(out PoolBall ball)) return;
-            ball.OnPocketed();
+            ball.OnPocketed(this);
             PlayHalo();
         }
 

@@ -59,6 +59,10 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private float cueTipGap = 0.05f; // resting distance from the ball surface
         [SerializeField] private float cuePullbackPerPower = 0.25f; // visual charge feedback
 
+        [Header("Body positioning while aiming")]
+        [SerializeField] private float standDistance = 1f;
+        [SerializeField] private float tableClearanceMargin = 0.5f;
+
         [Header("Ball-in-hand placement (top-down view)")]
         // Plain manual height above the table — set this directly in the
         // Inspector until the framing looks right for your setup (an
@@ -77,6 +81,7 @@ namespace UntitledPoolGame.Pool
 
         private FpsPlayerController fpsController;
         private PlayerHandController handController;
+        private CharacterController characterController;
         private InputAction lookAction;
         private InputAction moveAction;
         private InputAction interactAction;
@@ -84,6 +89,10 @@ namespace UntitledPoolGame.Pool
 
         private Rigidbody currentCueBall;
         private bool isAiming;
+        // Read by CharacterAnimationController for an optional "IsAiming"
+        // animator bool — same public accessor LocalPoolAimController
+        // already has for the same reason.
+        public bool IsAiming => isAiming;
         private float aimYaw;
         private float chargedPower;
         private Vector2 contactOffset; // -1..1 on each axis, x=right, y=up
@@ -94,6 +103,7 @@ namespace UntitledPoolGame.Pool
         {
             fpsController = GetComponent<FpsPlayerController>();
             handController = GetComponent<PlayerHandController>();
+            characterController = GetComponent<CharacterController>();
 
             InputActionMap map = inputActions.FindActionMap(actionMapName, throwIfNotFound: true);
             lookAction = map.FindAction(lookActionName, throwIfNotFound: true);
@@ -138,6 +148,7 @@ namespace UntitledPoolGame.Pool
         {
             if (isAiming) return true;
             if (IsBallInHandActive()) return true;
+            if (IsCallingPocketActive()) return true;
             return IsCue(heldObject) && FindNearbyCueBall() != null;
         }
 
@@ -157,8 +168,25 @@ namespace UntitledPoolGame.Pool
             return rules != null && rules.BallInHand;
         }
 
+        // 8-ball call-shot — same lack of per-client turn restriction as
+        // ball-in-hand above and for the same reason (no networked player
+        // identity yet, see TODO.md): gates only on the shared match state
+        // (group cleared, no call made yet), not on whose client this is.
+        private static bool IsCallingPocketActive()
+        {
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            return rules != null && rules.CalledEightBallPocket == null && rules.IsShootingForEightBall(rules.CurrentPlayer);
+        }
+
         private PoolBall placingCueBall;
-        private bool placementViewActive;
+        // Own flag per top-down interaction (ball placement vs. pocket call
+        // below) — see LocalPoolAimController for why sharing one flag
+        // between them was a bug (each handler's cleanup would tear down
+        // the OTHER one's active view every frame, resetting the pocket
+        // selector back to table center before its movement could
+        // accumulate).
+        private bool ballPlacementActive;
+        private bool callPocketActive;
         private Vector3 placementCameraRestLocalPosition;
         private Quaternion placementCameraRestLocalRotation;
 
@@ -169,12 +197,12 @@ namespace UntitledPoolGame.Pool
         {
             if (!IsBallInHandActive())
             {
-                if (placementViewActive) EndPlacementView();
+                if (ballPlacementActive) { EndPlacementView(); ballPlacementActive = false; }
                 placingCueBall = null;
                 return false;
             }
 
-            if (!placementViewActive) StartPlacementView();
+            if (!ballPlacementActive) { StartPlacementView(); ballPlacementActive = true; }
 
             if (placingCueBall == null)
             {
@@ -194,8 +222,9 @@ namespace UntitledPoolGame.Pool
                 Vector3 delta = (cameraTransform.right * moveInput.x + cameraTransform.up * moveInput.y)
                     * placementMoveSpeed * Time.deltaTime;
                 Vector3 rawTarget = placingCueBall.transform.position + delta;
-                Vector3 clamped = surface.ClampToPlayArea(rawTarget, placingCueBall.Radius) + Vector3.up * placingCueBall.Radius;
-                placingCueBall.PlaceAt(clamped);
+                Vector3 clamped = surface.ClampToPlayArea(rawTarget, placingCueBall.Radius);
+                clamped = PoolPocket.AvoidAllPockets(clamped, placingCueBall.Radius);
+                placingCueBall.PlaceAt(clamped + Vector3.up * placingCueBall.Radius);
             }
 
             if (InteractPressedThisFrame())
@@ -204,14 +233,149 @@ namespace UntitledPoolGame.Pool
                 PoolMatchRules.Instance.ConfirmBallPlaced();
                 placingCueBall = null;
                 EndPlacementView();
+                ballPlacementActive = false;
             }
 
             return true;
         }
 
+        private PoolPocket highlightedPocket;
+        // Edge-detected, not held-down — see LocalPoolAimController for the
+        // full reasoning (the continuous drag-a-selector version still felt
+        // sluggish even scaled to table size). One tap of a direction jumps
+        // straight to the next pocket; true while the stick/keys are past
+        // the threshold, so one physical press only fires one jump no
+        // matter how long it's held.
+        private bool directionHeldLastFrame;
+        private const float DirectionPressThreshold = 0.5f;
+
+        // 8-ball call-shot: same top-down table view as ball-in-hand above
+        // (reuses StartPlacementView/EndPlacementView as-is). Each tap of
+        // Move jumps the highlight to whichever OTHER pocket best matches
+        // that on-screen direction from the currently highlighted one — see
+        // LocalPoolAimController for the full reasoning (not a fixed cycle
+        // order, so "right" always means "the pocket that's actually to the
+        // right on screen"). Confirmed with Interact. Consumes the frame so
+        // normal aim-entry below doesn't also run.
+        private bool HandleCallPocket()
+        {
+            if (!IsCallingPocketActive())
+            {
+                if (callPocketActive) EndCallPocketView();
+                return false;
+            }
+
+            if (!callPocketActive) StartCallPocketView();
+
+            Vector2 moveInput = moveAction.ReadValue<Vector2>();
+            bool directionHeldNow = moveInput.magnitude > DirectionPressThreshold;
+            if (directionHeldNow && !directionHeldLastFrame)
+            {
+                Vector3 screenDirection = cameraTransform.right * moveInput.x + cameraTransform.up * moveInput.y;
+                StepHighlightedPocketTowards(screenDirection);
+            }
+            directionHeldLastFrame = directionHeldNow;
+
+            if (InteractPressedThisFrame() && highlightedPocket != null)
+            {
+                PoolMatchRules.Instance.CallEightBallPocket(highlightedPocket);
+                EndCallPocketView();
+            }
+
+            return true;
+        }
+
+        // A pocket only "counts" as being in the pressed direction once its
+        // offset is at least this well aligned with it (1 = dead-on, 0 =
+        // perpendicular) — see LocalPoolAimController for the full reasoning.
+        private const float MinDirectionAlignment = 0.3f;
+
+        // Picks whichever OTHER pocket best matches screenDirection from the
+        // current one — see LocalPoolAimController for why this scores by
+        // alignment/distance rather than alignment alone (a corner, its
+        // same-side middle pocket, and the opposite corner sit exactly on
+        // one line on this table's layout, so direction alone can't tell a
+        // near one from a far one that's just as aligned).
+        private void StepHighlightedPocketTowards(Vector3 screenDirection)
+        {
+            if (highlightedPocket == null) return;
+
+            screenDirection.y = 0f;
+            if (screenDirection.sqrMagnitude < 0.0001f) return;
+            screenDirection.Normalize();
+
+            PoolPocket best = null;
+            float bestScore = float.NegativeInfinity;
+            foreach (PoolPocket pocket in PoolPocket.Active)
+            {
+                if (pocket == highlightedPocket) continue;
+
+                Vector3 offset = pocket.transform.position - highlightedPocket.transform.position;
+                offset.y = 0f;
+                float distance = offset.magnitude;
+                if (distance < 0.0001f) continue;
+
+                float alignment = Vector3.Dot(offset / distance, screenDirection);
+                if (alignment < MinDirectionAlignment) continue;
+
+                float score = alignment / distance;
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = pocket;
+                }
+            }
+
+            if (best != null) SetHighlightedPocket(best);
+        }
+
+        private void SetHighlightedPocket(PoolPocket pocket)
+        {
+            if (pocket == highlightedPocket) return;
+            highlightedPocket?.SetSelectionHighlight(false);
+            highlightedPocket = pocket;
+            highlightedPocket?.SetSelectionHighlight(true);
+        }
+
+        private static PoolPocket FindNearestPocket(Vector3 position)
+        {
+            PoolPocket nearest = null;
+            float nearestDistanceSqr = float.MaxValue;
+            foreach (PoolPocket pocket in PoolPocket.Active)
+            {
+                float distanceSqr = (pocket.transform.position - position).sqrMagnitude;
+                if (distanceSqr < nearestDistanceSqr)
+                {
+                    nearestDistanceSqr = distanceSqr;
+                    nearest = pocket;
+                }
+            }
+            return nearest;
+        }
+
+        private void StartCallPocketView()
+        {
+            StartPlacementView();
+            callPocketActive = true;
+            directionHeldLastFrame = false;
+
+            SetHighlightedPocket(FindNearestPocket(transform.position));
+        }
+
+        private void EndCallPocketView()
+        {
+            highlightedPocket?.SetSelectionHighlight(false);
+            highlightedPocket = null;
+            EndPlacementView();
+            callPocketActive = false;
+        }
+
+        // Pure camera plumbing shared by both top-down interactions above —
+        // doesn't track which one is active itself (see ballPlacementActive/
+        // callPocketActive), just moves the camera and hands FPS control
+        // back and forth.
         private void StartPlacementView()
         {
-            placementViewActive = true;
             fpsController.enabled = false;
 
             placementCameraRestLocalPosition = cameraTransform.localPosition;
@@ -240,7 +404,6 @@ namespace UntitledPoolGame.Pool
 
         private void EndPlacementView()
         {
-            placementViewActive = false;
             fpsController.enabled = true;
             cameraTransform.localPosition = placementCameraRestLocalPosition;
             cameraTransform.localRotation = placementCameraRestLocalRotation;
@@ -249,6 +412,7 @@ namespace UntitledPoolGame.Pool
         private void Update()
         {
             if (HandleBallInHand()) return;
+            if (HandleCallPocket()) return;
 
             if (!isAiming)
             {
@@ -275,6 +439,15 @@ namespace UntitledPoolGame.Pool
 
         private void OnGUI()
         {
+            // highlightedPocket is only ever non-null while the call-pocket
+            // top-down view (HandleCallPocket) is active and has already
+            // found a nearest pocket.
+            if (highlightedPocket != null)
+            {
+                GUI.Box(new Rect(Screen.width / 2f - 160f, 20f, 320f, 40f),
+                    $"Bille 8 — {highlightedPocket.DescribeLocation()} (Interact pour valider)");
+            }
+
             if (!isAiming) return;
 
             const int size = 90;
@@ -315,6 +488,43 @@ namespace UntitledPoolGame.Pool
             return null;
         }
 
+        // CharacterController resolves movement incrementally through Move();
+        // reassigning transform.position directly while it's enabled fights
+        // that internal state on a jump this large (it can report a bogus
+        // collision against whatever the capsule swept through on the way),
+        // so it's briefly disabled for the teleport — the standard trick for
+        // relocating a CharacterController outside of Move(). Only the owner
+        // ever runs this (see OnNetworkSpawn), so the resulting position is
+        // picked up and replicated by NetworkTransform exactly like normal
+        // owner-driven movement.
+        private void TeleportBody(Vector3 position, float yaw)
+        {
+            characterController.enabled = false;
+            transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+            characterController.enabled = true;
+        }
+
+        // Where the body should stand for a shot along aimDirection (which
+        // points from the standing spot THROUGH the ball, same convention as
+        // UpdateAim's local aimDirection): standDistance behind the ball,
+        // pushed back further if that's not already clear of the table
+        // itself (DistanceToClearPlayArea) — otherwise a cue ball resting
+        // well inside the rails (small standDistance relative to the table)
+        // would put the player on top of/inside the table rather than beside
+        // it.
+        private Vector3 ComputeStandPosition(Vector3 ballPos, Vector3 aimDirection)
+        {
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            float clearDistance = surface != null
+                ? surface.DistanceToClearPlayArea(ballPos, -aimDirection, tableClearanceMargin)
+                : 0f;
+            float distance = Mathf.Max(standDistance, clearDistance + tableClearanceMargin);
+
+            Vector3 position = ballPos - aimDirection * distance;
+            position.y = transform.position.y;
+            return position;
+        }
+
         private void EnterAim()
         {
             isAiming = true;
@@ -333,12 +543,29 @@ namespace UntitledPoolGame.Pool
             aimYaw = toBall.sqrMagnitude > 0.001f
                 ? Quaternion.LookRotation(toBall).eulerAngles.y
                 : transform.eulerAngles.y;
+
+            // Stand behind the cue ball on the shooting side, facing it —
+            // previously only the camera moved to orbit the ball while the
+            // body stayed wherever it happened to be within interactRange
+            // when Interact was pressed, leaving the visible body completely
+            // detached from the shot being lined up (see TODO.md). Re-applied
+            // every frame in UpdateAim() too, so the body keeps following
+            // the cue around as the aim direction is adjusted, instead of
+            // freezing at the angle it happened to have on entry.
+            Vector3 aimDirectionOnEnter = toBall.sqrMagnitude > 0.001f ? toBall.normalized : transform.forward;
+            TeleportBody(ComputeStandPosition(currentCueBall.position, aimDirectionOnEnter), aimYaw);
         }
 
         private void ExitAim()
         {
             isAiming = false;
             fpsController.enabled = true;
+
+            // Keep facing the direction of the shot just taken (or backed out
+            // of) instead of snapping back to whatever the body happened to
+            // be facing before aiming started — aimYaw already tracks
+            // wherever the player was last looking while aiming.
+            transform.rotation = Quaternion.Euler(0f, aimYaw, 0f);
 
             cameraTransform.localPosition = cameraRestLocalPosition;
             cameraTransform.localRotation = cameraRestLocalRotation;
@@ -365,6 +592,13 @@ namespace UntitledPoolGame.Pool
 
             Vector3 aimDirection = Quaternion.Euler(0f, aimYaw, 0f) * Vector3.forward;
             Vector3 ballPos = currentCueBall.position;
+
+            // Keeps the body standing behind the cue (and facing it) as the
+            // aim direction is adjusted — a plain direct set rather than
+            // TeleportBody's disable/enable dance, since the per-frame delta
+            // here is small (driven by look input) rather than the one big
+            // jump EnterAim() makes.
+            transform.SetPositionAndRotation(ComputeStandPosition(ballPos, aimDirection), Quaternion.Euler(0f, aimYaw, 0f));
 
             cameraTransform.position = ballPos - aimDirection * orbitDistance + Vector3.up * orbitHeight;
             cameraTransform.LookAt(ballPos + Vector3.up * (orbitHeight * 0.3f));

@@ -47,3 +47,9 @@ Thumbs.db
 
 # Claude Code local-only settings (machine-specific permission rules, not shared project config)
 .claude/settings.local.json
+
+# Accidental nested Unity project copies found at repo root (2026-09-25) —
+# each is a full duplicate project (own Assets/Library/Logs/etc.), not meant
+# to be tracked.
+/My project/
+/My project (1)/

@@ -4,12 +4,14 @@ using UnityEngine.InputSystem;
 namespace UntitledPoolGame.Pool
 {
     // Lets a player activate their stored power (see PoolMatchRules.
-    // GrantPower/TryActivatePower) with a button press, gated to their own
-    // turn (same PlayerInput.playerIndex check used elsewhere). Reuses the
-    // existing "Next" action — bound to Keyboard 2 / Gamepad D-pad right in
-    // the default asset, and not used by anything else in this project —
-    // instead of adding a brand new input binding; rename it to something
-    // clearer in the input asset later if desired.
+    // GrantPower/TryActivatePower) with a button press. Only Effect powers
+    // are actually gated to the holder's own turn — see PoolPower.
+    // RequiresOwnTurn — Attack/Defense can be triggered whenever, since
+    // they target/react to the opponent instead of the holder's own next
+    // shot. Reuses the existing "Next" action — bound to Keyboard 2 /
+    // Gamepad D-pad right in the default asset, and not used by anything
+    // else in this project — instead of adding a brand new input binding;
+    // rename it to something clearer in the input asset later if desired.
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPoolPowerController : MonoBehaviour
     {
@@ -35,16 +37,25 @@ namespace UntitledPoolGame.Pool
 
             // GetEffectivePlayerIndex, NOT the raw PlayerInput.playerIndex:
             // in real split-screen it resolves to the same physical player
-            // every time, so this strict check still only lets a held power
-            // be triggered by whoever it actually belongs to (a plain
-            // CanPlayerShoot() check would let a press meant for one player's
-            // index activate/consume the OTHER player's power via its
-            // solo-testing fallback). In hot-seat solo (one PlayerInput
-            // playing both sides), it resolves to whichever side is
-            // currently up instead, so activation isn't permanently stuck to
-            // slot 0.
+            // every time, so a held power can only ever be triggered by
+            // whoever it actually belongs to (a plain CanPlayerShoot() check
+            // would let a press meant for one player's index activate/
+            // consume the OTHER player's power via its solo-testing
+            // fallback). In hot-seat solo (one PlayerInput playing both
+            // sides), it resolves to whichever side is currently up instead.
             int effectivePlayer = rules.GetEffectivePlayerIndex(playerInput.playerIndex);
-            if (rules.CurrentPlayer != effectivePlayer) return;
+
+            PoolPower power = rules.GetHeldPower(effectivePlayer);
+            if (power == null) return;
+
+            // Only Effect powers (change the holder's own next shot) are
+            // actually restricted to their own turn — see PoolPower.
+            // RequiresOwnTurn. Attack/Defense stay activatable regardless of
+            // whose turn it is. In hot-seat solo this check can never
+            // trigger either way: effectivePlayer already collapses to
+            // CurrentPlayer above, so there's nothing meaningfully
+            // "off-turn" to block with a single shared device.
+            if (power.RequiresOwnTurn && rules.CurrentPlayer != effectivePlayer) return;
 
             rules.TryActivatePower(effectivePlayer);
         }

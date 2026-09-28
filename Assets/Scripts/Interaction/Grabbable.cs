@@ -84,5 +84,26 @@ namespace UntitledPoolGame.Interaction
             isHeld.Value = false;
             NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
         }
+
+        // Same as RequestDropServerRpc, plus a shove — impulse is a full
+        // world-space force vector (direction * power) computed by the
+        // owning client (only they know their own look direction; pitch in
+        // particular is never replicated, only body yaw is), executed here
+        // on the server since it's the one authoritative for physics on a
+        // free object. isHeld.Value's OnValueChanged callback runs
+        // synchronously on the server the moment it's set, so rb is already
+        // non-kinematic by the time AddForce runs below.
+        [ServerRpc(RequireOwnership = false)]
+        public void RequestThrowServerRpc(Vector3 impulse)
+        {
+            if (!isHeld.Value) return;
+
+            NetworkObject.TryRemoveParent();
+            transform.position += Vector3.up * 0.1f;
+            isHeld.Value = false;
+            NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
+
+            rb.AddForce(impulse, ForceMode.Impulse);
+        }
     }
 }
