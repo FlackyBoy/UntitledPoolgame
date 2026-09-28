@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 8f5ed17cc8fef7f478d8ef71f1cbc4e1
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137246
+  packageName: Eyes Animator
+  packageVersion: 2.0.4
+  assetPath: Assets/FImpossible Creations/Editor/Plugins - Editor - Animating/Eyes Animator/CheckForLookAnimatorImport.cs
+  uploadId: 988952

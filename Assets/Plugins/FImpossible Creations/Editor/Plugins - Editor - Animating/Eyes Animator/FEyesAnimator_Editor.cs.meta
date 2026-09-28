@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 2b40d06335bc84e4ab481911a640045f
+timeCreated: 1547824880
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137246
+  packageName: Eyes Animator
+  packageVersion: 2.0.4
+  assetPath: Assets/FImpossible Creations/Editor/Plugins - Editor - Animating/Eyes Animator/FEyesAnimator_Editor.cs
+  uploadId: 988952
