@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synthèse — Prototype UI</title>
+<meta name="description" content="Prototype d'interface qui assemble les éléments retenus : menus de la Table Vivante, interjections, replay et pouvoirs du Grand Show, ardoise et trophées en fin de partie.">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Caveat+Brush&family=Nunito:wght@700;900&display=swap">
+<style>
+  .stage { --felt: #1d7f4b; --felt-d: #125c35; --wood: #6b3a1e; --wood-l: #8d5330; --chalk: #eaf6ff; --cube: #3d8fe0;
+           font-family: "Nunito", sans-serif; color: var(--chalk); background: var(--felt-d); }
+  .felt { position: absolute; inset: 0; background:
+      radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.10), transparent 60%),
+      repeating-radial-gradient(circle at 20% 30%, rgba(0,0,0,.035) 0 .08em, transparent .08em .22em),
+      radial-gradient(ellipse at 50% 50%, var(--felt), var(--felt-d)); }
+  .rail { position: absolute; inset: 0; border: 1.6em solid var(--wood); border-radius: .8em;
+          box-shadow: inset 0 0 0 .25em #3e200f, inset 0 0 2.5em rgba(0,0,0,.55); pointer-events: none;
+          background: linear-gradient(var(--wood-l), var(--wood-l)) padding-box; background: none; }
+  .rail::before { content: ""; position: absolute; inset: -1.6em; border-radius: .8em; pointer-events: none;
+          background: repeating-linear-gradient(90deg, transparent 0 11.8%, rgba(255,255,255,.75) 11.8% 12.2%, transparent 12.2% 12.5%) top / 100% .5em no-repeat,
+                      repeating-linear-gradient(90deg, transparent 0 11.8%, rgba(255,255,255,.75) 11.8% 12.2%, transparent 12.2% 12.5%) bottom / 100% .5em no-repeat; opacity: .5; }
+  .pocket { position: absolute; width: 3.6em; height: 3.6em; border-radius: 50%; background: radial-gradient(#000 55%, #1b0f07); transform: translate(-50%, -50%); box-shadow: 0 0 0 .3em #3e200f; }
+  .chalk { font-family: "Caveat Brush", cursive; color: var(--chalk); text-shadow: 0 0 .08em rgba(255,255,255,.6), .04em .04em 0 rgba(0,0,0,.25); }
+  .bowl { font-family: "Bowlby One", sans-serif; letter-spacing: .02em; }
+
+  /* balls */
+  .pb { position: absolute; width: 4.4em; height: 4.4em; border-radius: 50%; transform: translate(-50%, -50%);
+        background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.9) 0 7%, transparent 8%), radial-gradient(circle at 50% 50%, var(--c) 60%, color-mix(in srgb, var(--c) 70%, #000));
+        box-shadow: inset -.35em -.45em .7em rgba(0,0,0,.35), 0 .45em .5em rgba(0,0,0,.4); transition: transform .25s cubic-bezier(.3,1.6,.5,1), box-shadow .25s; }
+  .pb.st { background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.9) 0 7%, transparent 8%), linear-gradient(#f6f1e4 0 26%, var(--c) 26% 74%, #f6f1e4 74%); }
+  .pb[data-n]::after { content: attr(data-n); position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; transform: translate(-50%, -50%); border-radius: 50%; background: #f6f1e4; color: #222; font: 900 1.05em/1 "Nunito"; display: grid; place-items: center; }
+  .pb.inline { position: relative; display: inline-block; transform: none; width: .78em; height: .78em; vertical-align: -.02em; margin: 0 .02em; }
+  .pb.inline::after { font-size: .22em; }
+  .pb.cue { --c: #f6f1e4; }
+  .pb.mini { width: 1.25em; height: 1.25em; position: relative; transform: none; display: inline-block; box-shadow: inset -.15em -.2em .3em rgba(0,0,0,.35); }
+  .pb.mini::after { font-size: .45em; }
+  .f.pb.focus { transform: translate(-50%, -62%) scale(1.18); box-shadow: inset -.35em -.45em .7em rgba(0,0,0,.35), 0 1.3em 1em rgba(0,0,0,.35), 0 0 0 .25em rgba(255,255,255,.6); }
+  .lab { position: absolute; transform: translate(-50%, 0); font-size: 1.7em; white-space: nowrap; transition: transform .2s; }
+  .focus + .lab, .lab.on { transform: translate(-50%, 0) scale(1.15); }
+
+  .cue-stick { position: absolute; height: .75em; width: 24em; transform-origin: 0 50%; border-radius: .4em;
+               background: linear-gradient(90deg, #3a80c8 0 2%, #f4ecd6 2% 5%, #c8914f 5% 60%, #2b1a0f 60% 100%); box-shadow: 0 .4em .4em rgba(0,0,0,.35); transition: transform .25s ease; pointer-events: none; }
+  .aim { position: absolute; height: 0; border-top: .18em dashed rgba(255,255,255,.55); transform-origin: 0 50%; pointer-events: none; transition: all .25s ease; }
+
+  /* title */
+  .logo { position: absolute; left: 50%; top: 11%; transform: translateX(-50%); text-align: center; }
+  .logo .small { font-size: 2.2em; display: block; margin-bottom: -.2em; }
+  .logo .big { font-size: 5.2em; line-height: 1; color: #fff7e3; text-shadow: 0 .06em 0 #0d4527, 0 .12em .2em rgba(0,0,0,.35); }
+  .blink { animation: blink 1.4s steps(2, jump-none) infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+
+  /* chalk cube card */
+  .cube { position: absolute; background: var(--cube); color: #fff; border-radius: .5em; padding: 1em 1.2em;
+          background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,.25), transparent 40%), repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 .2em, transparent .2em .5em);
+          box-shadow: 0 .5em 0 #1f5c99, 0 1em 1.5em rgba(0,0,0,.4); }
+  .cube h3 { margin: 0 0 .2em; font: 1.9em "Bowlby One"; }
+  .cube p { margin: .2em 0; font-size: 1.05em; }
+  .cube .opt { display: inline-block; margin-top: .4em; padding: .15em .6em; border-radius: .4em; background: rgba(0,0,0,.2); }
+
+  /* lobby slots */
+  .slot { position: absolute; width: 8em; height: 8em; border-radius: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; }
+  .slot.empty { border: .3em dashed rgba(255,255,255,.55); animation: pulse 1.4s ease-in-out infinite; }
+  .slot.empty.focus { border-color: #fff; background: rgba(255,255,255,.08); }
+  @keyframes pulse { 50% { transform: translate(-50%, -50%) scale(1.06); } }
+  .slot .pb { width: 7em; height: 7em; position: relative; left: auto; top: auto; transform: none; }
+  .slot .pb::after { font-size: 1.4em; }
+  .btn-ball { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: .6em; padding: .45em 1.2em .45em .45em; border-radius: 3em;
+              background: rgba(0,0,0,.28); font: 1.5em "Bowlby One"; transition: transform .2s, background .2s; }
+  .btn-ball .pb { position: relative; left: auto; top: auto; transform: none; width: 1.6em; height: 1.6em; }
+  .btn-ball .pb::after { font-size: .45em; }
+  .btn-ball.focus { background: rgba(255,255,255,.18); transform: translate(-50%, -50%) scale(1.08); }
+  .btn-ball.dim { opacity: .45; }
+
+  /* ---------- game (new pop HUD) ---------- */
+  .stage { --ink: #1c1510; --cream: #fff6e3; --yel: #ffd23f; --red: #ff4d3d; --p1: #2f7cf6; --p2: #ef4a3c; }
+  .halves { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .3em; background: var(--ink); }
+  .half { position: relative; overflow: hidden; background: linear-gradient(#2b1c14 0 42%, #3a2519 42%); }
+  .half .tbl { position: absolute; left: 6%; right: 6%; top: 40%; bottom: 6%; clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%); background: var(--wood); }
+  .half .tbl::after { content: ""; position: absolute; inset: 6% 5% 7%; clip-path: polygon(17% 0, 83% 0, 100% 100%, 0 100%); background: radial-gradient(ellipse at 50% 60%, var(--felt), var(--felt-d)); }
+  .half .gb { position: absolute; width: 2.2em; height: 2.2em; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1;
+              background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.9) 0 7%, transparent 8%), var(--c); box-shadow: inset -.2em -.25em .4em rgba(0,0,0,.35); }
+  .half.idle::after { content: ""; position: absolute; inset: 0; background: rgba(10,6,4,.28); pointer-events: none; }
+  .pop-card { background: var(--cream); color: var(--ink); border: .18em solid var(--ink); border-radius: .8em; box-shadow: 0 .3em 0 var(--ink); }
+  .plate { position: absolute; left: 3%; top: 4%; display: flex; align-items: center; gap: .5em; padding: .3em .7em .3em .3em; z-index: 2; }
+  .plate .who { width: 2.6em; height: 2.6em; border-radius: .55em; display: grid; place-items: center; font: 1.1em "Bowlby One"; color: #fff; border: .15em solid var(--ink); }
+  .plate .balls { display: flex; gap: .15em; }
+  .plate .pb.mini { width: 1.2em; height: 1.2em; }
+  .plate .pb.mini.gone { opacity: .25; filter: grayscale(1); transform: scale(.8); }
+  .turn-tag { position: absolute; left: 4%; top: 17%; z-index: 2; font: 1.5em "Bowlby One"; padding: .15em .6em; border-radius: .4em; transform: rotate(-4deg); border: .12em solid var(--ink); box-shadow: 0 .2em 0 var(--ink); }
+  .half.act .turn-tag { background: var(--yel); color: var(--ink); animation: bob 1.2s ease-in-out infinite; }
+  .half.idle .turn-tag { background: rgba(255,255,255,.15); color: #fff; border-color: transparent; box-shadow: none; font-size: 1.1em; }
+  @keyframes bob { 50% { transform: rotate(-4deg) translateY(-.2em); } }
+  .pslot { position: absolute; right: 3%; top: 4%; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: .2em; }
+  .pslot .ring { width: 3.6em; height: 3.6em; border-radius: 50%; display: grid; place-items: center; background: var(--pc, transparent); border: .18em solid var(--ink); box-shadow: 0 .25em 0 var(--ink); }
+  .pslot .ring svg { width: 2em; height: 2em; }
+  .pslot.empty .ring { background: rgba(255,255,255,.08); border: .18em dashed rgba(255,255,255,.45); box-shadow: none; }
+  .pslot .nm { font: 900 .95em "Nunito"; color: #fff; text-shadow: 0 .1em 0 var(--ink); white-space: nowrap; }
+  .pslot .key { font: 900 .8em "Nunito"; background: #fff; color: var(--ink); border-radius: .3em; padding: 0 .35em; border: .12em solid var(--ink); }
+  .pslot.idleuse .ring { filter: grayscale(.8) brightness(.8); }
+  .power { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); width: 58%; z-index: 2; display: flex; align-items: center; gap: .6em; }
+  .power .spin { width: 2.8em; height: 2.8em; border-radius: 50%; flex: none; background: radial-gradient(circle at 35% 30%, #fff, #ddd 55%, #aaa); border: .15em solid var(--ink); position: relative; }
+  .power .spin i { position: absolute; width: .6em; height: .6em; border-radius: 50%; background: var(--red); left: 62%; top: 32%; transform: translate(-50%, -50%); }
+  .power .bar { flex: 1; height: 1.6em; border-radius: 1em; background: var(--cream); border: .18em solid var(--ink); box-shadow: 0 .25em 0 var(--ink); padding: .18em; display: flex; gap: .15em; }
+  .power .bar i { flex: 1; border-radius: .3em; background: rgba(0,0,0,.1); }
+  .power .bar i.on { background: var(--seg); }
+  .power.max .bar { animation: jitter .08s linear infinite; }
+  @keyframes jitter { 50% { transform: translate(.08em, -.05em); } }
+  .power .lbl { font: 1em "Bowlby One"; color: #fff; text-shadow: 0 .12em 0 var(--ink); }
+  .half.idle .power { display: none; }
+
+  .pop { position: absolute; transform: translate(-50%, -50%); font-size: 3em; pointer-events: none; animation: pop 1.2s ease-out forwards; z-index: 5; }
+  @keyframes pop { 0% { transform: translate(-50%, -30%) scale(.4); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(-50%, -110%) scale(1); opacity: 0; } }
+  .shake { animation: shake .35s ease; }
+  @keyframes shake { 20% { transform: translate(.3em, -.2em); } 40% { transform: translate(-.3em, .2em); } 60% { transform: translate(.2em, .1em); } 80% { transform: translate(-.1em, -.1em); } }
+
+  /* interjections (Grand Show) */
+  .shout { position: absolute; left: 50%; top: 40%; z-index: 6; pointer-events: none; white-space: nowrap; font: 3.6em "Bowlby One"; color: var(--sc, var(--yel));
+           -webkit-text-stroke: .06em var(--ink); paint-order: stroke fill; text-shadow: .06em .08em 0 var(--ink); animation: shout 1.3s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes shout { 0% { transform: translate(-50%, -50%) scale(.2) rotate(-18deg); opacity: 0; } 22% { transform: translate(-50%, -50%) scale(1.12) rotate(-6deg); opacity: 1; } 35% { transform: translate(-50%, -50%) scale(1) rotate(-6deg); } 80% { opacity: 1; } 100% { transform: translate(-50%, -70%) scale(1) rotate(-6deg); opacity: 0; } }
+  .burstbg { position: absolute; left: 50%; top: 40%; width: 18em; height: 18em; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; border-radius: 50%;
+             background: repeating-conic-gradient(rgba(255,210,63,.55) 0 8deg, transparent 8deg 20deg); -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%); mask: radial-gradient(circle, #000 20%, transparent 65%); animation: burst 1.1s ease-out forwards; }
+  @keyframes burst { 0% { transform: translate(-50%, -50%) scale(.2) rotate(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.3) rotate(60deg); opacity: 0; } }
+
+  /* replay picture-in-picture (Grand Show TV) */
+  .pip { position: absolute; left: 58%; top: 21%; width: 44%; transform: translateX(-50%); z-index: 4; background: #111; border-radius: 1em; padding: .5em; border: .18em solid var(--ink); box-shadow: 0 .35em 0 var(--ink); animation: pipin .35s cubic-bezier(.2,1.4,.4,1) both; }
+  .pip.out { animation: pipout .3s ease-in forwards; }
+  @keyframes pipin { from { transform: translateX(-50%) scale(.3) rotate(-8deg); opacity: 0; } }
+  @keyframes pipout { to { transform: translateX(-50%) scale(.3); opacity: 0; } }
+  .pip .scr-in { position: relative; aspect-ratio: 16/9; border-radius: .5em; overflow: hidden; background: radial-gradient(#3fb36f, #22804a); box-shadow: inset 0 0 0 .5em #7b4a2a; }
+  .pip .scr-in::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 .18em, rgba(0,0,0,.18) .18em .28em); }
+  .pip .hole { position: absolute; right: 6%; top: 10%; width: 1.4em; height: 1.4em; border-radius: 50%; background: #000; }
+  .pip .rb { position: absolute; width: 1.1em; height: 1.1em; border-radius: 50%; background: var(--c); left: 20%; top: 65%; animation: roll 1.8s cubic-bezier(.3,.6,.4,1) forwards; }
+  @keyframes roll { 70% { left: calc(94% - 1.2em); top: 14%; transform: scale(1); } 100% { left: calc(94% - 1.2em); top: 14%; transform: scale(0); } }
+  .pip .rec { position: absolute; left: 1em; top: .9em; z-index: 1; display: flex; align-items: center; gap: .3em; background: var(--red); color: #fff; font: .9em "Bowlby One"; padding: .05em .5em; border-radius: .3em; }
+  .pip .rec::before { content: ""; width: .5em; height: .5em; border-radius: 50%; background: #fff; animation: blink .8s steps(2, jump-none) infinite; }
+  .pip .slow { position: absolute; right: 1em; bottom: .8em; z-index: 1; color: #fff; font: 900 .85em "Nunito"; opacity: .85; }
+
+  /* power as sponsor (Grand Show) */
+  .sponsor { position: absolute; left: 4%; bottom: 20%; width: 60%; z-index: 4; overflow: hidden; animation: spin .45s cubic-bezier(.2,1.4,.4,1) both; }
+  .sponsor.out { animation: spout .3s ease-in forwards; }
+  @keyframes spin { from { transform: translateX(-120%) rotate(-6deg); } }
+  @keyframes spout { to { transform: translateX(-130%); } }
+  .sponsor .hd { background: var(--pc); color: #fff; font: 900 .78em "Nunito"; letter-spacing: .06em; white-space: nowrap; padding: .25em .8em; border-bottom: .15em solid var(--ink); display: flex; align-items: center; gap: .4em; }
+  .sponsor .hd svg { width: 1.1em; height: 1.1em; }
+  .sponsor .bd { padding: .4em .8em .5em; }
+  .sponsor b { display: block; font: 1.5em "Bowlby One"; }
+  .sponsor small { font-size: .95em; opacity: .75; }
+  .fog { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(circle at 50% 55%, rgba(255,255,255,.35), rgba(255,255,255,.85)); animation: fog 3s ease-out forwards; }
+  @keyframes fog { 0% { opacity: 0; } 12% { opacity: 1; } 80% { opacity: .95; } 100% { opacity: 0; } }
+
+  /* ---------- end: ardoise + trophies ---------- */
+  .slate { position: absolute; left: 5%; top: 21%; width: 43%; bottom: 25%; background: #243029; border: .7em solid #7a4a28; border-radius: .5em; box-shadow: inset 0 0 2em rgba(0,0,0,.5), 0 .5em 1em rgba(0,0,0,.4); padding: .8em 1.2em; z-index: 1; }
+  .slate h3 { margin: 0 0 .2em; font: 2.2em "Caveat Brush"; color: var(--chalk); text-align: center; }
+  .slate table { width: 100%; border-collapse: collapse; font: 1.35em "Caveat Brush"; color: var(--chalk); }
+  .slate th { font-weight: 400; text-align: right; opacity: .8; }
+  .slate td { padding: .05em 0; } .slate td + td { text-align: right; }
+  .slate tr.tot td { border-top: .08em dashed rgba(234,246,255,.6); padding-top: .2em; font-size: 1.15em; }
+  .slate .ln { opacity: 0; animation: write .35s ease-out forwards; }
+  @keyframes write { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+  .trophies { position: absolute; left: 52%; right: 5%; top: 21%; bottom: 25%; display: grid; grid-template-columns: 1fr 1fr; gap: 1em; z-index: 1; }
+  .tcol { display: flex; flex-direction: column; gap: .45em; align-items: stretch; }
+  .tcol .head { display: flex; align-items: center; gap: .5em; font: 1.5em "Bowlby One"; color: #fff; text-shadow: 0 .1em 0 rgba(0,0,0,.4); }
+  .tcol .head .who { width: 1.8em; height: 1.8em; border-radius: .4em; display: grid; place-items: center; font-size: .8em; border: .12em solid var(--ink); }
+  .tcol .crown { font-size: .9em; }
+  .award-cube { display: flex; align-items: center; gap: .4em; padding: .45em .7em; border-radius: .45em; font: 900 1.05em "Nunito"; color: #fff; border: .15em solid var(--ink); box-shadow: 0 .25em 0 var(--ink); opacity: 0; animation: drop .45s cubic-bezier(.2,1.5,.4,1) forwards; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-2em) rotate(-8deg); } to { opacity: 1; transform: none; } }
+  .rain .pb { animation: fall 1.4s cubic-bezier(.3, 0, .6, 1) both; }
+  @keyframes fall { 0% { top: -10%; } 70% { top: var(--y); } 82% { top: calc(var(--y) - 3%); } 100% { top: var(--y); } }
+</style>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div><h1>Synthèse</h1><p>Ce que tu as retenu, réuni dans une seule identité « billard pop » : les menus de la Table Vivante (on tire sur les billes), une UI en partie refaite avec les interjections, le replay en incrustation façon écran TV et les pouvoirs façon sponsor du Grand Show, et une fin qui combine l'ardoise récapitulative et les trophées des joueurs.</p></div>
+    <a href="../ui.html">← Toutes les propositions</a>
+  </div>
+
+  <div class="stage-box"><div class="stage">
+
+    <!-- TITLE -->
+    <section class="scr" id="title" data-label="Titre">
+      <div class="felt"></div><div class="rail"></div>
+      <span class="pocket" style="left:4.2%;top:7.5%"></span><span class="pocket" style="left:50%;top:5%"></span><span class="pocket" style="left:95.8%;top:7.5%"></span>
+      <span class="pocket" style="left:4.2%;top:92.5%"></span><span class="pocket" style="left:50%;top:95%"></span><span class="pocket" style="left:95.8%;top:92.5%"></span>
+      <div class="logo anim"><span class="chalk small">Untitled</span><span class="big bowl">P<span class="pb inline" style="--c:#111"></span><span class="pb inline" style="--c:#f4c20d"></span>L GAME</span></div>
+      <span class="pb f default" style="--c:#f4c20d;left:26%;top:58%" data-n="1" data-go="lobby"></span><span class="lab chalk" style="left:26%;top:66%">Jouer</span>
+      <span class="pb st f" style="--c:#6a2c91;left:42%;top:58%" data-n="12" data-go="lobby"></span><span class="lab chalk" style="left:42%;top:66%">Party</span>
+      <span class="pb f" style="--c:#138a3a;left:58%;top:58%" data-n="6" data-action="soon"></span><span class="lab chalk" style="left:58%;top:66%">Réglages</span>
+      <span class="pb f" style="--c:#111;left:74%;top:58%" data-n="8" data-action="soon"></span><span class="lab chalk" style="left:74%;top:66%">Quitter</span>
+      <div class="aim"></div><div class="cue-stick"></div>
+      <span class="pb cue" style="left:50%;top:85%"></span>
+      <div class="chalk blink" style="position:absolute;right:5%;bottom:9%;font-size:1.5em">vise une bille, tire !</div>
+    </section>
+
+    <!-- LOBBY -->
+    <section class="scr" id="lobby" data-label="Joueurs" data-back="title">
+      <div class="felt"></div><div class="rail"></div>
+      <div class="chalk" style="position:absolute;left:50%;top:12%;transform:translateX(-50%);font-size:3.4em">Qui joue ce soir ?</div>
+      <div class="slot" style="left:32%;top:48%"><span class="pb" style="--c:#2f7cf6" data-n="J1"></span></div>
+      <div class="chalk" style="position:absolute;left:32%;top:66%;transform:translateX(-50%);font-size:1.6em;text-align:center">Clavier &amp; souris ✓</div>
+      <div class="slot empty f default" id="p2slot" style="left:68%;top:48%" data-action="join"><span class="chalk" style="font-size:1.6em;text-align:center">J2<br>appuie !</span></div>
+      <div class="chalk" id="p2lab" style="position:absolute;left:68%;top:66%;transform:translateX(-50%);font-size:1.6em;text-align:center">E / A pour rejoindre</div>
+      <div class="btn-ball f" id="go-mode" style="left:50%;top:84%" data-go="mode"><span class="pb" style="--c:#f07b12" data-n="5"></span>C'est parti</div>
+      <span class="pb cue" style="left:12%;top:84%;width:2.6em;height:2.6em"></span><div class="aim"></div><div class="cue-stick"></div>
+    </section>
+
+    <!-- MODE -->
+    <section class="scr" id="mode" data-label="Mode" data-back="lobby">
+      <div class="felt"></div><div class="rail"></div>
+      <div class="chalk" style="position:absolute;left:6%;top:9%;font-size:3em">On joue à quoi ?</div>
+      <span class="pb f" style="--c:#111;left:18%;top:42%" data-n="8" data-go="game" data-mode="8-ball" data-rules="Pleines contre rayées. La 8 en dernier, dans la poche annoncée." data-opt="Classique"></span><span class="lab chalk" style="left:18%;top:51%">8-ball</span>
+      <span class="pb st f" style="--c:#f4c20d;left:34%;top:42%" data-n="9" data-go="game" data-mode="9-ball" data-rules="Touche toujours la plus petite bille. Qui rentre la 9 gagne." data-opt="Classique"></span><span class="lab chalk" style="left:34%;top:51%">9-ball</span>
+      <span class="pb f" style="--c:#d8261c;left:18%;top:70%" data-n="3" data-go="game" data-mode="14.1" data-rules="Chaque bille rentrée rapporte 1 point." data-opt="Premier à 25 ◀ ▶"></span><span class="lab chalk" style="left:18%;top:79%">14.1</span>
+      <span class="pb st f default" style="--c:#6a2c91;left:34%;top:70%" data-n="12" data-go="game" data-mode="Party" data-rules="Les règles du 8-ball, plus des caisses et une bille à pouvoir sur la table." data-opt="Pouvoirs : Attaque · Défense · Effet"></span><span class="lab chalk" style="left:34%;top:79%">Party</span>
+      <div class="cube" style="left:52%;top:26%;width:38%;transform:rotate(2deg)"><h3 id="m-name">Party</h3><p id="m-rules"></p><span class="opt" id="m-opt"></span></div>
+      <span class="pb cue" style="left:50%;top:86%;width:2.6em;height:2.6em"></span><div class="aim"></div><div class="cue-stick"></div>
+    </section>
+
+    <!-- GAME -->
+    <section class="scr" id="game" data-label="En jeu" data-back="mode">
+      <div class="halves">
+        <div class="half act" id="h1"><div class="tbl"></div>
+          <span class="gb" style="--c:#f5f5f5;left:48%;top:68%"></span><span class="gb" style="--c:#d8261c;left:58%;top:58%"></span><span class="gb" style="--c:#111;left:66%;top:64%"></span>
+          <div class="plate pop-card"><span class="who" style="background:var(--p1)">J1</span><div class="balls" id="b1"></div></div>
+          <div class="turn-tag" id="t1">À toi !</div>
+          <div class="pslot empty" id="ps1"><div class="ring"></div><span class="nm">—</span></div>
+          <div class="power" id="pw"><div class="spin"><i></i></div><div class="bar"></div><span class="lbl">Puissance</span></div></div>
+        <div class="half idle" id="h2"><div class="tbl"></div>
+          <span class="gb" style="--c:#f5f5f5;left:40%;top:62%"></span><span class="gb" style="--c:#f07b12;left:55%;top:72%"></span>
+          <div class="plate pop-card"><span class="who" style="background:var(--p2)">J2</span><div class="balls" id="b2"></div></div>
+          <div class="turn-tag" id="t2">Tour de J1</div>
+          <div class="pslot empty" id="ps2"><div class="ring"></div><span class="nm">—</span></div></div>
+      </div>
+    </section>
+
+    <!-- END -->
+    <section class="scr" id="end" data-label="Fin" data-back="game">
+      <div class="felt"></div><div class="rail"></div>
+      <div class="rain" id="rain"></div>
+      <div class="chalk anim" style="position:absolute;left:50%;top:5%;transform:translateX(-50%);font-size:4.2em;white-space:nowrap;z-index:1">J1 gagne !</div>
+      <div class="slate"><h3>L'ardoise de la partie</h3>
+        <table><tr><th></th><th>J1</th><th>J2</th></tr>
+          <tr class="ln" style="animation-delay:.3s"><td>Billes rentrées</td><td>8</td><td>5</td></tr>
+          <tr class="ln" style="animation-delay:.5s"><td>Plus longue série</td><td>4</td><td>2</td></tr>
+          <tr class="ln" style="animation-delay:.7s"><td>Fautes</td><td>1</td><td>3</td></tr>
+          <tr class="ln" style="animation-delay:.9s"><td>Pouvoirs lancés</td><td>2</td><td>1</td></tr>
+          <tr class="ln tot" style="animation-delay:1.1s"><td>Manches</td><td>2</td><td>1</td></tr></table></div>
+      <div class="trophies">
+        <div class="tcol"><div class="head"><span class="who" style="background:var(--p1)">J1</span><span class="crown">👑</span></div>
+          <div class="award-cube" style="background:#3d8fe0;animation-delay:1.3s">🎯 Sniper des bandes</div>
+          <div class="award-cube" style="background:#3d8fe0;animation-delay:1.45s">🔥 Série de 4</div>
+          <div class="award-cube" style="background:#3d8fe0;animation-delay:1.6s">✨ Magicien de l'effet</div></div>
+        <div class="tcol"><div class="head"><span class="who" style="background:var(--p2)">J2</span></div>
+          <div class="award-cube" style="background:#e5484d;animation-delay:1.75s">🙃 Roi de la faute</div>
+          <div class="award-cube" style="background:#e5484d;animation-delay:1.9s">🍀 Chanceux</div>
+          <div class="award-cube" style="background:#e5484d;animation-delay:2.05s">🌫️ Maître du brouillard</div></div>
+      </div>
+      <div class="btn-ball f default" style="left:36%;top:83%;z-index:2" data-go="game"><span class="pb" style="--c:#f4c20d" data-n="1"></span>Revanche</div>
+      <div class="btn-ball f" style="left:64%;top:83%;z-index:2" data-go="title"><span class="pb" style="--c:#111" data-n="8"></span>Menu</div>
+    </section>
+
+  </div></div>
+
+  <div class="proto-notes">
+    <div><b>Ce qui vient d'où</b>Menus : Table Vivante (on vise et on tire). En partie : interjections, replay en incrustation façon écran TV et pouvoirs présentés comme des sponsors, repris du Grand Show sans son thème. Fin : l'ardoise récapitulative de Happy Hour, écrite à la craie, et les trophées de la Table Vivante.</div>
+    <div><b>Nouvelle UI en partie</b>Une plaque par joueur (couleur, billes restantes), une étiquette « À toi ! » qui bouge chez celui qui joue, le pouvoir en stock dans un rond en haut à droite, et une jauge de puissance épaisse en bas qui tremble quand elle est pleine. La moitié de l'écran du joueur qui attend est légèrement assombrie.</div>
+    <div><b>Dans Unity</b>Menus en 3D (vraies billes, caméra au-dessus du tapis) ; HUD en Canvas, un par joueur ; replay = seconde caméra rendue dans une texture affichée dans l'incrustation ; interjections et cartes animées (Feel, sur l'UI uniquement) déclenchées par les événements de <code>PoolMatchRules</code>.</div>
+  </div>
+  </div>
+</div>
+
+<script>
+Site.renderHeader('ui', '../');
+const ICON = {
+  attack: '<svg viewBox="0 0 20 20"><path d="M10 2 19 18H1Z" fill="#fff"/></svg>',
+  effect: '<svg viewBox="0 0 20 20"><path d="m10 1 2.6 6 6.4.5-4.9 4.2 1.5 6.3L10 14.6 4.4 18l1.5-6.3L1 7.5 7.4 7Z" fill="#fff"/></svg>',
+};
+const stageEl = document.querySelector('.stage');
+const rel = el => { const s = stageEl.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height / 2, w: r.width }; };
+
+// Aim the cue of a screen at a target ball.
+function aim(scr, target) {
+  const cue = scr.querySelector('.pb.cue'), stick = scr.querySelector('.cue-stick'), line = scr.querySelector('.aim');
+  if (!cue || !stick || !target) return;
+  const c = rel(cue), t = rel(target.matches('.pb') ? target : target.querySelector('.pb') || target);
+  const ang = Math.atan2(t.y - c.y, t.x - c.x), deg = ang * 180 / Math.PI, dist = Math.hypot(t.x - c.x, t.y - c.y);
+  stick.style.left = (c.x - Math.cos(ang) * c.w * .7) + 'px'; stick.style.top = (c.y - Math.sin(ang) * c.w * .7) + 'px';
+  stick.style.transform = `translateY(-50%) rotate(${deg + 180}deg)`;
+  line.style.left = c.x + 'px'; line.style.top = c.y + 'px'; line.style.width = Math.max(0, dist - t.w / 2) + 'px';
+  line.style.transform = `rotate(${deg}deg)`;
+}
+// Shot animation: stick draws back and strikes, cue ball rolls to the target, target drops in the nearest pocket.
+function shoot(scr, target, done) {
+  const cue = scr.querySelector('.pb.cue'), stick = scr.querySelector('.cue-stick');
+  const ball = target.matches('.pb') ? target : target.querySelector('.pb');
+  if (!cue || !stick || !ball) return done();
+  const c = rel(cue), t = rel(ball);
+  const base = stick.style.transform;
+  stick.animate([{ transform: base }, { transform: base + ' translateX(2.5em)' }, { transform: base + ' translateX(-1.2em)' }], { duration: 420, easing: 'ease-in' });
+  setTimeout(() => {
+    cue.animate([{ transform: 'translate(-50%,-50%)' }, { transform: `translate(calc(-50% + ${t.x - c.x}px), calc(-50% + ${t.y - c.y}px))` }], { duration: 260, easing: 'ease-in', fill: 'forwards' });
+    const pockets = [...scr.querySelectorAll('.pocket')].map(rel);
+    const p = pockets.length ? pockets.sort((a, b) => Math.hypot(a.x - t.x, a.y - t.y) - Math.hypot(b.x - t.x, b.y - t.y))[0] : { x: t.x, y: -200 };
+    setTimeout(() => {
+      ball.animate([{ transform: 'translate(-50%,-50%) scale(1.1)' }, { transform: `translate(calc(-50% + ${p.x - t.x}px), calc(-50% + ${p.y - t.y}px)) scale(.3)`, opacity: .2 }], { duration: 520, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' });
+      setTimeout(done, 600);
+    }, 240);
+  }, 400);
+}
+function resetShots(scr) { scr.querySelectorAll('.pb').forEach(b => b.getAnimations().forEach(a => a.cancel())); }
+
+// ---- In-game state ----
+const $ = id => document.getElementById(id);
+const G = { turn: 1, left: [7, 7], charging: null, power: [null, null] };
+const BC = ['#f4c20d', '#1f4fd1', '#d8261c', '#6a2c91', '#f07b12', '#138a3a', '#7a1f1f'];
+const POWERS = {
+  vision: { name: 'Vision brouillée', col: '#e5484d', icon: ICON.attack, slogan: '« Parce que viser, c\'est surfait. »' },
+  boost: { name: 'Tir boosté', col: '#30b566', icon: ICON.effect, slogan: '« Tape fort, réfléchis après. »' },
+};
+const half = n => $(n === 1 ? 'h1' : 'h2');
+const cur = () => half(G.turn);
+
+function balls() {
+  $('b1').innerHTML = BC.map((c, i) => `<span class="pb mini${i >= G.left[0] ? ' gone' : ''}" style="--c:${c}" data-n="${i + 1}"></span>`).join('');
+  $('b2').innerHTML = BC.map((c, i) => `<span class="pb mini st${i >= G.left[1] ? ' gone' : ''}" style="--c:${c}" data-n="${i + 9}"></span>`).join('');
+}
+function bar() { $('pw').querySelector('.bar').innerHTML = Array.from({ length: 12 }, (_, i) => `<i style="--seg:${i < 7 ? '#30b566' : i < 10 ? '#ffb300' : '#ff4d3d'}"></i>`).join(''); }
+function setCharge(c) { const is = $('pw').querySelectorAll('.bar i'); is.forEach((e, i) => e.classList.toggle('on', i < Math.round(c * is.length))); $('pw').classList.toggle('max', c >= 1); }
+function setTurn(n) {
+  G.turn = n;
+  [1, 2].forEach(p => { half(p).classList.toggle('act', p === n); half(p).classList.toggle('idle', p !== n); $('t' + p).textContent = p === n ? 'À toi !' : `Tour de J${n}`; });
+  cur().appendChild($('pw'));
+  [1, 2].forEach(p => $('ps' + p).classList.toggle('idleuse', p !== n));
+}
+function setPower(p, key) {
+  G.power[p - 1] = key; const s = $('ps' + p), pw = POWERS[key];
+  s.classList.toggle('empty', !pw); s.style.setProperty('--pc', pw ? pw.col : 'transparent');
+  s.innerHTML = `<div class="ring">${pw ? pw.icon : ''}</div><span class="nm">${pw ? pw.name : '—'}</span>${pw ? '<span class="key">F / Y</span>' : ''}`;
+  if (pw) s.querySelector('.ring').animate([{ transform: 'scale(.2) rotate(-180deg)' }, { transform: 'scale(1.25) rotate(10deg)', offset: .7 }, { transform: 'none' }], { duration: 600, easing: 'ease-out' });
+}
+function shout(parent, text, color, burst) {
+  if (burst) { const b = document.createElement('div'); b.className = 'burstbg'; parent.appendChild(b); setTimeout(() => b.remove(), 1150); }
+  const d = document.createElement('div'); d.className = 'shout'; d.textContent = text; if (color) d.style.setProperty('--sc', color);
+  parent.appendChild(d); setTimeout(() => d.remove(), 1350);
+}
+function replay(parent, color) {
+  parent.querySelectorAll('.pip').forEach(x => x.remove());
+  const p = document.createElement('div'); p.className = 'pip';
+  p.innerHTML = `<span class="rec">REPLAY</span><div class="scr-in"><span class="hole"></span><span class="rb" style="--c:${color}"></span></div><span class="slow">×0,25</span>`;
+  parent.appendChild(p); setTimeout(() => { p.classList.add('out'); setTimeout(() => p.remove(), 320); }, 2300);
+}
+function sponsor(parent, key) {
+  parent.querySelectorAll('.sponsor').forEach(x => x.remove());
+  const pw = POWERS[key]; const s = document.createElement('div'); s.className = 'sponsor pop-card'; s.style.setProperty('--pc', pw.col);
+  s.innerHTML = `<div class="hd">${pw.icon} CE TOUR VOUS EST OFFERT PAR</div><div class="bd"><b>${pw.name}™</b><small>${pw.slogan}</small></div>`;
+  parent.appendChild(s); setTimeout(() => { s.classList.add('out'); setTimeout(() => s.remove(), 320); }, 2800);
+}
+function popAt(parent, text, x, y, color) {
+  const d = document.createElement('div'); d.className = 'pop chalk'; d.textContent = text; d.style.left = x; d.style.top = y; if (color) d.style.color = color;
+  parent.appendChild(d); setTimeout(() => d.remove(), 1300);
+}
+
+window.PROTO = {
+  enter: {
+    title: s => { resetShots(s); },
+    mode: s => { resetShots(s); },
+    lobby: s => { resetShots(s); },
+    game: () => { G.left = [7, 7]; balls(); bar(); setCharge(0); setTurn(1); setPower(1); setPower(2); },
+    end: () => {
+      const cols = ['#f4c20d', '#1f4fd1', '#d8261c', '#6a2c91', '#f07b12', '#138a3a', '#7a1f1f', '#111'];
+      $('rain').innerHTML = Array.from({ length: 16 }, (_, i) =>
+        `<span class="pb${i > 7 && i < 15 ? ' st' : ''}"${i < 15 ? ` data-n="${i + 1}"` : ''} style="--c:${i === 15 ? '#f6f1e4' : cols[i % 8]};left:${6 + i * 5.8}%;--y:${i % 2 ? 92 : 94}%;top:${i % 2 ? 92 : 94}%;width:1.5em;height:1.5em;animation-delay:${i * .07}s"></span>`).join('');
+    },
+  },
+  focus: (el, scr) => {
+    if (scr.querySelector('.cue-stick')) aim(scr, el);
+    if (scr.id === 'mode' && el.dataset.mode) {
+      $('m-name').textContent = el.dataset.mode; $('m-rules').textContent = el.dataset.rules; $('m-opt').textContent = el.dataset.opt;
+      document.querySelector('#mode .cube').animate([{ transform: 'rotate(2deg) scale(.95)' }, { transform: 'rotate(2deg) scale(1)' }], { duration: 200 });
+    }
+  },
+  beforeGo: (el, scr, done) => { if (scr.querySelector('.cue-stick') && el.matches('.pb, .btn-ball')) shoot(scr, el, done); else done(); },
+  actions: {
+    soon: (el, scr) => popAt(scr, 'bientôt !', el.style.left, '44%'),
+    join: (el, scr) => {
+      if (!el.classList.contains('empty')) return;
+      el.classList.remove('empty');
+      el.innerHTML = '<span class="pb" style="--c:#e8453c" data-n="J2"></span>';
+      el.firstChild.animate([{ transform: 'translateX(20em) rotate(720deg)' }, { transform: 'translateX(-.6em) rotate(-20deg)' }, { transform: 'none' }], { duration: 700, easing: 'cubic-bezier(.2,.8,.3,1)' });
+      $('p2lab').textContent = 'Manette ✓';
+      popAt(scr, 'Salut J2 !', '68%', '30%');
+      setTimeout(() => Proto.setFocus($('go-mode')), 500);
+    },
+  },
+  events: {
+    shot: { label: 'Tirer', on: 'game', run: () => {
+      if (G.charging) return; let c = 0;
+      G.charging = setInterval(() => {
+        c = Math.min(1, c + .035); setCharge(c);
+        if (c >= 1) { clearInterval(G.charging); G.charging = null;
+          setTimeout(() => { setCharge(0); const h = cur(); h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake'); shout(h, 'OHHH !', '#ffd23f', true); }, 350); }
+      }, 30);
+    } },
+    pot: { label: 'Bille rentrée (replay)', on: 'game', run: () => {
+      const p = G.turn; if (G.left[p - 1] > 0) G.left[p - 1]--; balls();
+      const h = cur(); shout(h, ['Dans le mille !', 'Quel coup !', 'Et hop !'][G.left[p - 1] % 3], '#ffd23f', true);
+      setTimeout(() => replay(h, BC[6 - G.left[p - 1]] || '#d8261c'), 700);
+    } },
+    foul: { label: 'Faute', on: 'game', run: () => {
+      const h = cur(); h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake');
+      shout(h, 'FAUTE !', '#ff4d3d');
+      setTimeout(() => { setTurn(G.turn === 1 ? 2 : 1); shout(cur(), 'Main libre !', '#ffffff'); }, 1300);
+    } },
+    power: { label: 'Pouvoir ramassé', on: 'game', run: () => {
+      const key = G.turn === 1 ? 'vision' : 'boost'; setPower(G.turn, key); sponsor(cur(), key);
+    } },
+    use: { label: 'J1 lance son pouvoir sur J2', on: 'game', run: () => {
+      if (!G.power[0]) { shout(half(1), 'Pas de pouvoir…', '#ffffff'); return; }
+      const key = G.power[0]; setPower(1);
+      shout(half(1), 'Envoyé !', '#ffd23f');
+      const h2 = half(2); const f = document.createElement('div'); f.className = 'fog'; h2.appendChild(f); setTimeout(() => f.remove(), 3000);
+      setTimeout(() => shout(h2, 'AÏE ! ' + POWERS[key].name, '#ff4d3d'), 250);
+    } },
+    win: { label: 'Fin de partie', on: 'game', run: () => Proto.show('end') },
+  },
+};
+addEventListener('resize', () => { const s = Proto.current, f = s && s.querySelector('.f.focus'); if (s && f && s.querySelector('.cue-stick')) aim(s, f); });
+</script>
+<script src="proto.js"></script>
+</body>
+</html>

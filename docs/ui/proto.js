@@ -103,6 +103,10 @@
   }
 
   window.Proto = { show, go, setFocus, get current() { return current; }, stage };
-  const start = location.hash.replace(/^#\/?/, '');
+  // "#/game?run=pot,power" opens a screen and plays demo events one after the
+  // other — to share a link to a given state, or to screenshot it headless.
+  const [start, query] = location.hash.replace(/^#\/?/, '').split('?');
   show(screens.some(s => s.id === start) ? start : screens[0].id);
+  const run = new URLSearchParams(query || '').get('run');
+  if (run) run.split(',').forEach((ev, i) => setTimeout(() => P.events && P.events[ev] && P.events[ev].run(current), 300 + i * 900));
 })();

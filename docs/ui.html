@@ -58,6 +58,7 @@
 <main>
   <h1>Propositions UI</h1>
   <p class="lead">Quatre concepts originaux, chacun tiré de l'univers du jeu (le bar, le billard, les dimensions, le chaos entre amis) plutôt que d'un autre jeu. Chacun a son <b>prototype interactif</b> : on navigue au clavier ou à la souris, les écrans s'enchaînent (titre → joueurs → mode → partie → fin), et une barre de démo permet de déclencher un tir, une bille rentrée, une faute ou un pouvoir.</p>
+  <p class="note"><b>Retours du 29/09 :</b> gardés — le menu de la Table Vivante (tirer sur les billes) et sa fin avec récap et trophées ; du Grand Show l'effet écran TV / replay, les interjections et l'affichage des pouvoirs ; de Happy Hour l'ardoise récapitulative. Écartés — l'UI en partie de la Table Vivante, le menu et le thème du Grand Show, le thème de Happy Hour. Le prototype <b>Synthèse</b> assemble ce qui a été gardé.</p>
   <p class="note">Tes références (Astro Bot, What the Golf?, Moving Out, Boomerang Fu…) restent la barre de qualité : couleurs franches, formes épaisses, animations qui rebondissent, humour. Les concepts s'en inspirent pour l'énergie, pas pour la forme.</p>
 
   <div class="concepts" id="concepts"></div>
@@ -79,6 +80,10 @@
 <script>
 Site.renderHeader('ui');
 const CONCEPTS = [
+  { id: 'synthese', name: 'Synthèse (d\'après tes retours)', hero: `<div class="hero h-table"><span class="t" style="font-size:3.6em">À toi !</span><span class="ch" style="top:52%">Replay · Sponsor · Ardoise</span>
+      <span class="b" style="--c:#f4c20d;left:60%;top:20%"></span><span class="b" style="--c:#2f7cf6;left:74%;top:44%"></span><span class="b" style="--c:#ef4a3c;left:84%;top:16%"></span><div class="cue"></div>`,
+    pitch: 'Les éléments que tu as gardés, réunis : menus de la Table Vivante, nouvelle UI en partie avec les interjections, le replay et les pouvoirs du Grand Show, fin avec l\'ardoise et les trophées.',
+    points: ['Menus : on vise et on tire sur les billes (Table Vivante)', 'En partie, UI refaite : plaque par joueur, « À toi ! », pouvoir en stock, jauge épaisse qui tremble', 'Interjections (« FAUTE ! », « Dans le mille ! »), replay en incrustation façon écran TV, pouvoirs en carte « sponsor »', 'Fin : ardoise de la partie écrite à la craie + trophées de chaque joueur'] },
   { id: 'table-vivante', name: 'La Table Vivante', hero: `<div class="hero h-table"><span class="t">P<span style="font-size:.8em">●●</span>L GAME</span><span class="ch">vise une bille, tire !</span>
       <span class="b" style="--c:#f4c20d;left:56%;top:22%"></span><span class="b" style="--c:#6a2c91;left:70%;top:40%"></span><span class="b" style="--c:#111;left:82%;top:20%"></span><span class="b" style="--c:#f6f1e4;left:62%;top:66%"></span><div class="cue"></div>`,
     pitch: 'Toute l\'interface est la table : on choisit dans les menus en tirant sur des billes.',
