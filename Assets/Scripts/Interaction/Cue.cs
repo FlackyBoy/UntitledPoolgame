@@ -2,10 +2,10 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Marker: "this Grabbable (online) or LocalGrabbable (offline split-screen)
-    // is a pool cue" — checked by PoolAimController/LocalPoolAimController
-    // before allowing the player to enter aim mode. Not tied to a specific
-    // Grabbable variant so the same marker works in both modes.
+    // Marker: "this LocalGrabbable is a pool cue" — checked by
+    // LocalPoolAimController before allowing the player to enter aim mode,
+    // and by LocalPlayerHandController to route its pickup through
+    // LocalCuePickupTrigger.
     public class Cue : MonoBehaviour
     {
     }

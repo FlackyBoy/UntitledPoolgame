@@ -92,14 +92,7 @@ namespace UntitledPoolGame.Pool
         private void Awake()
         {
             if (settings == null)
-            {
-                settings = Resources.Load<PoolPotEffectSettings>("PoolPotEffectSettings");
-                if (settings == null)
-                {
-                    Debug.LogWarning("PoolPotEffectSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Ensure Config Assets Exist to create it.");
-                    settings = ScriptableObject.CreateInstance<PoolPotEffectSettings>();
-                }
-            }
+                settings = PoolSettingsLoader.LoadOrDefault<PoolPotEffectSettings>("PoolPotEffectSettings");
 
             haloLight = GetComponentInChildren<Light>(true);
             if (haloLight == null)
@@ -118,7 +111,7 @@ namespace UntitledPoolGame.Pool
         }
 
         // While the current player is calling a pocket for the 8 (see
-        // LocalPoolAimController/PoolAimController's top-down HandleCallPocket),
+        // LocalPoolAimController's top-down HandleCallPocket),
         // whichever pocket is nearest the selector lights up steadily — reuses
         // this same haloLight rather than a second one, but skipped while a
         // real pot's decay/aura (PlayHalo/HaloRoutine) is already running on

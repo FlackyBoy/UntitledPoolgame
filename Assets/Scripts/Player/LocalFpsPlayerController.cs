@@ -5,12 +5,11 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Player
 {
-    // Offline split-screen counterpart to FpsPlayerController — same movement
-    // math (body yaw driven directly by mouse/stick, so strafe stays correct
-    // by construction), but a plain MonoBehaviour instead of a NetworkBehaviour:
-    // no Netcode involved at all for local split-screen play. Reads its actions
-    // from this player's own PlayerInput instance (assigned/paired by
-    // PlayerInputManager), not a shared asset reference.
+    // Minimal FPS controller: movement is always relative to the body's own
+    // transform, and the body's yaw IS the mouse/stick look yaw — so there's
+    // no separate camera reference to fall out of sync, and strafe stays
+    // correct by construction. Reads its actions from this player's own
+    // PlayerInput instance (assigned/paired by PlayerInputManager).
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(PlayerInput))]
     public class LocalFpsPlayerController : MonoBehaviour
@@ -56,8 +55,8 @@ namespace UntitledPoolGame.Player
             moveAction = map.FindAction(moveActionName, throwIfNotFound: true);
             lookAction = map.FindAction(lookActionName, throwIfNotFound: true);
 
-            // Unlike the online controller, both split-screen players' cameras
-            // stay active (each renders its own half of the screen) — but only
+            // Both split-screen players' cameras stay active (each renders
+            // its own half of the screen) — but only
             // one AudioListener may be enabled at a time, or Unity warns every
             // frame ("There are 2 audio listeners in the scene"), flooding the
             // console. Arbitrarily always player 0's.

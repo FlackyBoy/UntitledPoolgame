@@ -69,14 +69,7 @@ namespace UntitledPoolGame.Pool
             if (playerCamera != null) cameraRestLocalPosition = playerCamera.transform.localPosition;
 
             if (settings == null)
-            {
-                settings = Resources.Load<PoolScreenJuiceSettings>("PoolScreenJuiceSettings");
-                if (settings == null)
-                {
-                    Debug.LogWarning("PoolScreenJuiceSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Ensure Config Assets Exist to create it.");
-                    settings = ScriptableObject.CreateInstance<PoolScreenJuiceSettings>();
-                }
-            }
+                settings = PoolSettingsLoader.LoadOrDefault<PoolScreenJuiceSettings>("PoolScreenJuiceSettings");
         }
 
         private void OnEnable()

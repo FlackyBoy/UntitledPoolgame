@@ -101,7 +101,7 @@ namespace UntitledPoolGame.Player
         [SerializeField] private float ragdollCameraDistance = 2.5f;
         [SerializeField] private float ragdollCameraHeight = 1.5f;
 
-        // AimIK/LookAtIK/LimbIK (cue grip) — solving toward their targets
+        // FBBIK, Look At IK, etc. — solving toward their targets
         // while PuppetMaster physically owns the bones would just fight the
         // ragdoll, so these are disabled for the same window as the other
         // controllers above and re-enabled once control is handed back.
@@ -305,7 +305,7 @@ namespace UntitledPoolGame.Player
 
         // LateUpdate — same reasoning as LocalPoolPowerEffectReceiver: runs
         // after whatever else might have touched the camera this frame.
-        // Everything else (FpsPlayerController, PoolAimController) is
+        // Everything else (LocalFpsPlayerController, LocalPoolAimController) is
         // already disabled for the whole ragdoll duration, so this is the
         // sole writer of the ragdoll camera's transform while active.
         private void LateUpdate()

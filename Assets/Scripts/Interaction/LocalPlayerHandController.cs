@@ -5,10 +5,9 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Offline counterpart to PlayerHandController — detects nearby
-    // LocalGrabbable objects and picks them up / drops them with Interact,
-    // deferring to LocalPoolAimController when it wants Interact instead
-    // (entering/exiting aim mode with the cue in hand). No networking.
+    // Detects nearby LocalGrabbable objects and picks them up / drops them
+    // with Interact, deferring to LocalPoolAimController when it wants
+    // Interact instead (entering/exiting aim mode with the cue in hand).
     [RequireComponent(typeof(LocalFpsPlayerController))]
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPlayerHandController : MonoBehaviour
@@ -18,20 +17,13 @@ namespace UntitledPoolGame.Interaction
         [SerializeField] private string interactActionName = "Interact";
         [SerializeField] private string attackActionName = "Attack";
 
-        // The cue specifically attaches to this hand bone instead of the
-        // root (see GetHolderFor) — its Aim IK/Limb IK targets are fixed
-        // sockets parented under this same bone in the prefab, so whichever
-        // physical cue instance is currently attached here lines up with
-        // them without any extra runtime rewiring. Every other Grabbable
-        // still attaches to the root (see the field below), unaffected.
-        [SerializeField] private Animator animator;
-
-        // Optional — this player's own cue, already sitting parented under
-        // the hand bone in the prefab (rest pose set by hand to match). Runs
-        // through the exact same PickUp() as a normal pickup (see Awake)
+        // Optional — an object this player starts the game holding. Runs
+        // through the exact same PickUp() as a normal pickup (see Start)
         // rather than a separate "already held" code path, so it ends up in
         // an identical state (kinematic, collider off, IsHeld true) to one
         // picked up mid-game — including being droppable/re-pickable later.
+        // Not for the cue, which is only ever picked up through
+        // LocalCuePickupTrigger.
         [SerializeField] private LocalGrabbable startingHeldObject;
 
         [Header("Throw (any held object except the cue)")]
@@ -76,7 +68,7 @@ namespace UntitledPoolGame.Interaction
             if (startingHeldObject != null && !startingHeldObject.IsHeld)
             {
                 heldObject = startingHeldObject;
-                heldObject.PickUp(GetHolderFor(heldObject));
+                heldObject.PickUp(transform);
             }
         }
 
@@ -97,7 +89,7 @@ namespace UntitledPoolGame.Interaction
         }
 
         // Holding Attack charges throw power, releasing throws — same
-        // charge/release gesture as PoolAimController's cue shot, just
+        // charge/release gesture as LocalPoolAimController's cue shot, just
         // applied to whatever's currently in hand instead of the cue ball.
         // Excludes the cue itself: it's not meant to be thrown away, and
         // this frees Attack up for LocalPoolAimController.UpdateAim() to
@@ -143,11 +135,10 @@ namespace UntitledPoolGame.Interaction
 
         private void TryPickUp()
         {
-            // The cue's own pickup (FBBIK reach-and-grab, gated on distance
-            // AND facing) is tried first, through this same call chain —
-            // see LocalCuePickupTrigger's class comment for why it isn't a
-            // separate Update() reading Interact independently (that raced
-            // against Drop() on the same button press).
+            // The cue's own pickup (FBBIK reach-and-grab, gated by its
+            // InteractionTrigger) is tried first, through this same call
+            // chain rather than a separate Update() reading Interact
+            // independently (that raced against Drop() on the same press).
             if (cuePickupTrigger != null && cuePickupTrigger.TryStartPickup())
                 return;
 
@@ -157,26 +148,14 @@ namespace UntitledPoolGame.Interaction
                 if (!hit.TryGetComponent(out LocalGrabbable grabbable) || grabbable.IsHeld)
                     continue;
 
-                // The cue is handled exclusively by LocalCuePickupTrigger
-                // (FBBIK reach-and-grab, gated on distance AND facing, not
-                // just plain proximity like every other Grabbable here).
+                // The cue is handled exclusively by LocalCuePickupTrigger.
                 if (grabbable.TryGetComponent(out Cue _))
                     continue;
 
                 heldObject = grabbable;
-                grabbable.PickUp(GetHolderFor(grabbable));
+                grabbable.PickUp(transform);
                 return;
             }
-        }
-
-        public Transform GetHolderFor(LocalGrabbable grabbable)
-        {
-            if (animator != null && grabbable.TryGetComponent(out Cue _))
-            {
-                Transform rightHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
-                if (rightHand != null) return rightHand;
-            }
-            return transform;
         }
 
         // Was private — still used internally (see below), but
@@ -190,9 +169,8 @@ namespace UntitledPoolGame.Interaction
 
         private void Drop()
         {
-            // The cue releases through PickUp2Handed's own interaction
-            // (Resume) instead of a plain LocalGrabbable.Drop() — see
-            // LocalCuePickupTrigger's class comment.
+            // The cue releases through its InteractionSystem interaction
+            // (PickUpCue.ReleaseCue) instead of a plain LocalGrabbable.Drop().
             if (cuePickupTrigger == null || !cuePickupTrigger.TryReleaseIfCue(heldObject))
                 heldObject.Drop();
 
@@ -208,9 +186,8 @@ namespace UntitledPoolGame.Interaction
             if (heldObject != null) Drop();
         }
 
-        // Called by LocalCuePickupTrigger once its FBBIK reach-and-grab
-        // finishes and it has already called LocalGrabbable.PickUp() on the
-        // cue itself — this only updates the bookkeeping (HeldObject,
+        // Called by LocalCuePickupTrigger as soon as its FBBIK reach-and-grab
+        // starts — this only updates the bookkeeping (HeldObject,
         // read by IsHoldingCue/turn-gating/ExitAim/etc., and so this
         // script's own Update() correctly routes the next Interact press to
         // Drop() instead of TryPickUp()), it does not touch the cue's

@@ -1,6 +1,4 @@
 #if UNITY_EDITOR
-using Unity.Netcode;
-using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEngine;
 using UntitledPoolGame.Interaction;
@@ -22,11 +20,8 @@ namespace UntitledPoolGame.PoolEditor
         // model doesn't need a code edit.
         private static PoolTableAssetSettings settings;
 
-        [MenuItem("Tools/Pool/Build Table (Online)")]
-        public static void BuildTableOnline() => BuildTable(networked: true);
-
-        [MenuItem("Tools/Pool/Build Table (Offline / Split-Screen)")]
-        public static void BuildTableOffline() => BuildTable(networked: false);
+        [MenuItem("Tools/Pool/Build Table")]
+        public static void BuildTableMenu() => BuildTable();
 
         // For a custom table asset (a purchased/imported model) instead of our
         // placeholder cubes: builds the exact same invisible physics scaffold
@@ -56,11 +51,8 @@ namespace UntitledPoolGame.PoolEditor
         // size is off, change Play Length/Play Width/Table Surface Y on
         // PoolTableAssetSettings instead (real-world meters) and regenerate;
         // PoolPhysics itself should always stay at scale (1,1,1).
-        [MenuItem("Tools/Pool/Attach Physics To Custom Table (Online)")]
-        public static void AttachPhysicsToCustomTableOnline() => BuildTable(networked: true, hideVisuals: true, parentToSelection: true);
-
-        [MenuItem("Tools/Pool/Attach Physics To Custom Table (Offline / Split-Screen)")]
-        public static void AttachPhysicsToCustomTableOffline() => BuildTable(networked: false, hideVisuals: true, parentToSelection: true);
+        [MenuItem("Tools/Pool/Attach Physics To Custom Table")]
+        public static void AttachPhysicsToCustomTable() => BuildTable(hideVisuals: true, parentToSelection: true);
 
         [MenuItem("Tools/Pool/Select Custom Table Settings")]
         public static void SelectCustomTableSettings() => Selection.activeObject = GetOrCreateTableAssetSettings();
@@ -129,7 +121,7 @@ namespace UntitledPoolGame.PoolEditor
             Debug.Log($"[PoolTableBuilder] Power spawn system added — PowerBall added to {addedTo} ball(s) that didn't already have one.");
         }
 
-        private static void BuildTable(bool networked, bool hideVisuals = false, bool parentToSelection = false)
+        private static void BuildTable(bool hideVisuals = false, bool parentToSelection = false)
         {
             settings = GetOrCreateTableAssetSettings();
 
@@ -201,7 +193,7 @@ namespace UntitledPoolGame.PoolEditor
             }
             else
             {
-                root = new GameObject(networked ? "PoolTable" : "PoolTable (Offline)");
+                root = new GameObject("PoolTable");
             }
             Undo.RegisterCreatedObjectUndo(root, "Build Pool Table");
 
@@ -209,11 +201,10 @@ namespace UntitledPoolGame.PoolEditor
             BuildRails(root.transform, railMaterial, hideVisuals);
             BuildPockets(root.transform);
             RackBalls(root.transform, ballMaterial);
-            // Two cues, not one — with split-screen (or a second player just
-            // joining online), each player needs their own to pick up instead
-            // of having to fight over/wait for a single shared one.
-            CreateCue(root.transform, networked, "Cue_P1", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, -0.2f));
-            CreateCue(root.transform, networked, "Cue_P2", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, 0.2f));
+            // Two cues, not one — each player needs their own to pick up
+            // instead of having to fight over/wait for a single shared one.
+            CreateCue(root.transform, "Cue_P1", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, -0.2f));
+            CreateCue(root.transform, "Cue_P2", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, 0.2f));
             root.AddComponent<PoolMatchRules>();
             BuildPowerSpawnPoints(root.transform);
             root.AddComponent<PoolPowerCrateManager>();
@@ -277,7 +268,7 @@ namespace UntitledPoolGame.PoolEditor
             }
         }
 
-        private static void CreateCue(Transform parent, bool networked, string name, Vector3 localPosition)
+        private static void CreateCue(Transform parent, string name, Vector3 localPosition)
         {
             GameObject cue = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             cue.name = name;
@@ -292,22 +283,7 @@ namespace UntitledPoolGame.PoolEditor
             rb.mass = 0.6f;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; // guards against tunneling through the floor on drop
 
-            if (networked)
-            {
-                cue.AddComponent<NetworkObject>();
-
-                NetworkTransform networkTransform = cue.AddComponent<NetworkTransform>();
-                SerializedObject transformSo = new SerializedObject(networkTransform);
-                transformSo.FindProperty("AuthorityMode").enumValueIndex = 1; // Owner
-                transformSo.ApplyModifiedPropertiesWithoutUndo();
-
-                cue.AddComponent<Grabbable>();
-            }
-            else
-            {
-                cue.AddComponent<LocalGrabbable>();
-            }
-
+            cue.AddComponent<LocalGrabbable>();
             cue.AddComponent<Cue>();
         }
 

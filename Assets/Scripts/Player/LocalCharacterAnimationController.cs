@@ -4,16 +4,14 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Player
 {
-    // Offline/split-screen counterpart to CharacterAnimationController — same
-    // locomotion-from-CharacterController logic, but no networking at all:
-    // each local player's own copy just always drives its own Animator
-    // directly, since both split-screen players are meant to see each other
-    // (no owner/other-client distinction to make here).
+    // Drives the visible character's Animator from its own CharacterController
+    // (locomotion) and from what it's doing (holding, aiming).
     [RequireComponent(typeof(CharacterController))]
     public class LocalCharacterAnimationController : MonoBehaviour
     {
-        // See CharacterAnimationController for why this is a hand-assigned
-        // field rather than GetComponentInChildren.
+        // Assigned by hand rather than found via GetComponentInChildren, so
+        // it can't silently grab the wrong Animator if the rig ever has more
+        // than one (e.g. a held prop with its own).
         [SerializeField] private Animator animator;
 
         // Optional — see the Awake existence checks below. Our own simple
@@ -25,8 +23,8 @@ namespace UntitledPoolGame.Player
         // no separate gating needed.
         [SerializeField] private string speedParameterName = "Speed";
 
-        // Optional bonus — see CharacterAnimationController; harmless if the
-        // assigned Animator Controller has no such bool parameter.
+        // Optional — harmless if the assigned Animator Controller has no
+        // such bool parameter.
         [SerializeField] private string isAimingParameterName = "IsAiming";
 
         // Optional — true whenever the held object is the pool cue,
@@ -43,13 +41,11 @@ namespace UntitledPoolGame.Player
         // empty-handed idle and holding-the-cue idle.
         [SerializeField] private string isHoldingObjectParameterName = "IsHoldingObject";
 
-        // AimIK/LimbIK/SecondHandOnGun (FinalIK) — these solve toward the
-        // cue's grip sockets every frame regardless of whether anything's
-        // actually there, so left enabled while empty-handed they yank the
-        // arms toward wherever those sockets sit. Disabled outright
-        // (enabled = false) whenever isHoldingCue is false, using Behaviour
-        // as the common base type since FinalIK's IK components and
-        // SecondHandOnGun aren't related by any narrower shared base.
+        // Any IK component that should only run while the cue is held —
+        // IK solving toward cue-mounted targets would otherwise yank the
+        // arms toward wherever those targets sit while empty-handed.
+        // Disabled outright (enabled = false) whenever isHoldingCue is
+        // false. Typed Behaviour so non-IK helpers can be listed too.
         [SerializeField] private Behaviour[] cueOnlyIkComponents;
 
         // Optional — mirrors LocalPoolAimController.ChargeFraction (0 at

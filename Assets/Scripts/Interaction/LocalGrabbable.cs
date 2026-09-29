@@ -2,9 +2,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Offline counterpart to Grabbable — same pickup/carry/drop behaviour, but
-    // no networking at all: everything happens directly and locally, since
-    // split-screen has no server to be authoritative through.
+    // Generic pickup/carry/drop for any physical object. While held:
+    // kinematic, collider off, parented to the holder.
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
     public class LocalGrabbable : MonoBehaviour
@@ -28,11 +27,12 @@ namespace UntitledPoolGame.Interaction
 
             // With the collider off (below) and gravity still on, the cue
             // would fall through the floor during the hands' approach —
-            // PickUp2Handed only makes it kinematic later, once they arrive —
+            // PickUpCue only makes it kinematic later, once they arrive —
             // and its grip points, which the hands chase, would drag the
-            // body down through the floor with it. Released again by
-            // PickUp2Handed.OnDrop on the way out.
-            if (held && rb != null) rb.isKinematic = true;
+            // body down through the floor with it. Undone on release: a
+            // normal release already did it (PickUpCue.OnDrop), but a reach
+            // cut short never got that far.
+            if (rb != null) rb.isKinematic = held;
 
             // PickUp()/Drop() turn the collider off/on; this path skips them,
             // so without this the cue's solid collider stays live while it's

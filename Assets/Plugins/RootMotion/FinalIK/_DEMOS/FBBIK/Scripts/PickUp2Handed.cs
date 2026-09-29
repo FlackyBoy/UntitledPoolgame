@@ -12,14 +12,8 @@ namespace RootMotion.Demos {
 		
 		// GUI for testing
 		public int GUIspace;
-		// Added for UntitledPoolGame: lets a subclass (see PickUpCue) hide
-		// this demo's test buttons for real gameplay use, without touching
-		// its actual pickup/drop logic (OnStart/OnPause/OnDrop, unaffected
-		// by this flag).
-		public bool showDebugGUI = true;
 
 		void OnGUI() {
-			if (!showDebugGUI) return;
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(GUIspace);
@@ -64,15 +58,6 @@ namespace RootMotion.Demos {
 		public Transform holdPoint; // The point where the object will lerp to when picked up
 		public float pickUpTime = 0.3f; // Maximum lerp speed of the object. Decrease this value to give the object more weight
 
-		// Added for UntitledPoolGame: which effector's Start/Pause events
-		// drive the object's shared state (parenting/kinematic/holdPoint
-		// sync, in OnPause/OnStart below) — originally hardcoded to
-		// LeftHand, since this demo always starts both hands together and
-		// it doesn't matter which one is treated as the trigger. Exposed so
-		// a single-hand pickup (e.g. RightHand only) still attaches the
-		// object correctly instead of silently doing nothing.
-		public FullBodyBipedEffector primaryEffector = FullBodyBipedEffector.LeftHand;
-
 		private float holdWeight, holdWeightVel;
 		private Vector3 pickUpPosition;
 		private Quaternion pickUpRotation;
@@ -86,7 +71,7 @@ namespace RootMotion.Demos {
 		
 		// Called by the InteractionSystem when an interaction is paused (on trigger)
 		private void OnPause(FullBodyBipedEffector effectorType, InteractionObject interactionObject) {
-			if (effectorType != primaryEffector) return;
+			if (effectorType != FullBodyBipedEffector.LeftHand) return;
 			if (interactionObject != obj) return;
 
 			// Make the object inherit the character's movement
@@ -105,7 +90,7 @@ namespace RootMotion.Demos {
 		
 		// Called by the InteractionSystem when an interaction starts
 		private void OnStart(FullBodyBipedEffector effectorType, InteractionObject interactionObject) {
-			if (effectorType != primaryEffector) return;
+			if (effectorType != FullBodyBipedEffector.LeftHand) return;
 			if (interactionObject != obj) return;
 
 			// Rotate the hold point so it matches the current rotation of the object
@@ -128,22 +113,7 @@ namespace RootMotion.Demos {
 		}
 		
 		void LateUpdate() {
-			// Added for UntitledPoolGame: originally ran the Lerp below
-			// unconditionally for as long as `holding` was true — not just
-			// during the pickup transition, but for the ENTIRE time the
-			// object was held. holdPoint is a child of the character's
-			// spine, so it drifts slightly with body sway/lean while
-			// walking or turning — and since the Lerp target was always
-			// holdPoint's CURRENT pose, the held object kept re-snapping to
-			// it every single frame, slowly wandering away from its correct
-			// orientation the longer it was carried (reported: cue rotation
-			// completely different after walking around with it than right
-			// when it was picked up). Fixed by freezing the object's LOCAL
-			// pose once the pickup transition has converged — it's already
-			// parented to interactionSystem.transform (see OnPause), so it
-			// still moves/turns rigidly with the player from then on, just
-			// without continuing to chase holdPoint specifically.
-			if (holding && holdWeight < 0.999f) {
+			if (holding) {
 				// Smoothing in the hold weight
 				holdWeight = Mathf.SmoothDamp(holdWeight, 1f, ref holdWeightVel, pickUpTime);
 

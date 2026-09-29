@@ -25,9 +25,9 @@ namespace UntitledPoolGame.Interaction
         // reference rather than a runtime lookup.
         [SerializeField] private LocalPoolAimController aimController;
 
-        // Which local axis of the cue points along its own length (toward
-        // the tip) — tune in Play Mode (charge a shot, see which way it
-        // slides) same as every other axis/offset guessed blind today.
+        // Direction the mesh slides back while charging, in the cue's local
+        // space — only used when Auto Detect Tip Axis is off or fails (then
+        // it's -TipAxis).
         [SerializeField] private Vector3 slideAxis = Vector3.forward;
 
         [SerializeField] private float slideDistance = 0.15f;
@@ -59,14 +59,6 @@ namespace UntitledPoolGame.Interaction
             Vector3 detected = Vector3.forward;
             detectedOk = autoDetectTipAxis && TryDetectTipAxis(out detected);
             TipAxis = detectedOk ? detected : reachAxis.normalized;
-            // TEMP diagnostic (2026-09-24) — remove once the tip detection is trusted.
-            MeshFilter dbgFilter = cueMesh != null ? cueMesh.GetComponentInChildren<MeshFilter>() : null;
-            SkinnedMeshRenderer dbgSkinned = cueMesh != null ? cueMesh.GetComponentInChildren<SkinnedMeshRenderer>() : null;
-            Mesh dbgMesh = dbgFilter != null ? dbgFilter.sharedMesh : null;
-            Debug.Log($"[CueChargeSlide] cueMesh={(cueMesh != null ? cueMesh.name : "NULL")} meshFilter={(dbgFilter != null ? dbgFilter.name : "NONE")} " +
-                $"skinned={(dbgSkinned != null)} mesh={(dbgMesh != null ? dbgMesh.name : "NONE")} readable={(dbgMesh != null && dbgMesh.isReadable)} " +
-                $"boundsSize={(dbgMesh != null ? dbgMesh.bounds.size.ToString() : "-")} autoDetect={autoDetectTipAxis} detectedOk={detectedOk} " +
-                $"TipAxis(cue space)={TipAxis} TipDistance={TipDistance:F3}", this);
         }
 
         private bool detectedOk;

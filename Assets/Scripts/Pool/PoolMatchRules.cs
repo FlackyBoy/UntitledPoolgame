@@ -43,7 +43,7 @@ namespace UntitledPoolGame.Pool
         // One held power per player at a time (Mario Kart-style — picking up
         // another one while already holding one overwrites it). See
         // PowerBall/PoolPowerCrate for how a power gets granted, and
-        // PoolPowerController/LocalPoolPowerController for activation input.
+        // LocalPoolPowerController for activation input.
         private readonly PoolPower[] heldPower = new PoolPower[2];
         // Consumed by the aim controllers' Shoot() — set by powers like
         // BoostedShotPower, reset back to 1 the moment it's read so it only
@@ -101,14 +101,7 @@ namespace UntitledPoolGame.Pool
             Instance = this;
 
             if (potEffectSettings == null)
-            {
-                potEffectSettings = Resources.Load<PoolPotEffectSettings>("PoolPotEffectSettings");
-                if (potEffectSettings == null)
-                {
-                    Debug.LogWarning("PoolPotEffectSettings asset not found in Assets/Resources — using fallback defaults. Run Tools > Pool > Ensure Config Assets Exist to create it.");
-                    potEffectSettings = ScriptableObject.CreateInstance<PoolPotEffectSettings>();
-                }
-            }
+                potEffectSettings = PoolSettingsLoader.LoadOrDefault<PoolPotEffectSettings>("PoolPotEffectSettings");
         }
 
         private void OnDestroy()
@@ -534,7 +527,7 @@ namespace UntitledPoolGame.Pool
         {
             if (!MatchStarted || GameOver)
             {
-                // FpsPlayerController/LocalFpsPlayerController lock and hide the
+                // LocalFpsPlayerController locks and hides the
                 // cursor as soon as the player spawns, which happens before this
                 // menu is even shown — without this, the cursor stays pinned to
                 // the screen center and none of the buttons below are reachable.
@@ -738,7 +731,7 @@ namespace UntitledPoolGame.Pool
             // 8-ball call-shot: once a player's group is cleared, potting the
             // 8 in an uncalled (or wrong) pocket doesn't win — see
             // EightBallRuleSet.ResolveShot. The actual declaring happens in
-            // a top-down table view (LocalPoolAimController/PoolAimController's
+            // a top-down table view (LocalPoolAimController's
             // HandleCallPocket, mirrors ball-in-hand placement) rather than
             // buttons here — this is just a status line so it's clear from
             // the regular HUD whether a call is still needed.
