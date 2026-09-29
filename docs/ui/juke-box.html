@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Juke-box — Prototype UI</title>
+<meta name="description" content="Prototype d'interface : un juke-box de bar, les modes sont des disques, J1 et J2 sont la face A et la face B.">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Righteous&family=VT323&display=swap">
+<style>
+  .stage { --ink: #16121c; --cream: #fbf0d9; --red: #e63b2e; --orange: #ff8a00; --pink: #ff3d7f; --purple: #8a3cff; --cyan: #22d3ee;
+           font-family: "Righteous", sans-serif; color: var(--cream); background: var(--ink); }
+  .room { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 60%, #3a2448, var(--ink) 70%); }
+  .room::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; background: repeating-linear-gradient(90deg, #1e1826 0 3em, #2a2233 3em 6em); }
+  .digital { font-family: "VT323", monospace; color: #ff5a4a; text-shadow: 0 0 .25em #ff2a1a; }
+  .bubble { background: linear-gradient(0deg, var(--orange), var(--pink), var(--purple), var(--cyan), var(--orange)); background-size: 100% 300%; animation: flow 4s linear infinite; box-shadow: 0 0 1.2em rgba(255,61,127,.6); }
+  @keyframes flow { to { background-position: 0 300%; } }
+  .neon { font-family: "Monoton", cursive; font-weight: 400; color: #ffe9f4; text-shadow: 0 0 .1em #fff, 0 0 .3em var(--pink), 0 0 .7em var(--pink); }
+
+  /* jukebox body */
+  .jb { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); width: 38%; height: 76%; }
+  .jb .arch { position: absolute; inset: 0; border-radius: 50% 50% 1.2em 1.2em / 34% 34% 1.2em 1.2em; padding: 1em; }
+  .jb .inner { position: absolute; inset: 1em; border-radius: 50% 50% .8em .8em / 34% 34% .8em .8em; background: linear-gradient(#2b1f35, #140f1a); overflow: hidden; }
+  .jb .window { position: absolute; left: 12%; right: 12%; top: 10%; height: 30%; border-radius: 50% 50% .5em .5em / 60% 60% .5em .5em; background: radial-gradient(ellipse at 50% 90%, #3a2a50, #0d0a12); display: grid; place-items: center; overflow: hidden; }
+  .vinyl { width: 9em; height: 9em; border-radius: 50%; background: repeating-radial-gradient(circle, #111 0 .2em, #1d1d1d .2em .35em); position: relative; animation: spin 3s linear infinite; box-shadow: 0 0 0 .2em #000; }
+  .vinyl::after { content: ""; position: absolute; left: 50%; top: 50%; width: 34%; height: 34%; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, #000 0 8%, var(--lab, var(--red)) 9%); }
+  .vinyl.fast { animation-duration: .8s; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .strips { position: absolute; left: 10%; right: 10%; top: 45%; display: grid; grid-template-columns: 1fr 1fr; gap: .5em; }
+  .strip { background: var(--cream); color: var(--ink); border-radius: .25em; padding: .35em .5em; display: flex; gap: .5em; align-items: center; font-size: 1.15em; border-top: .25em solid var(--red); border-bottom: .25em solid var(--red); transition: transform .2s; }
+  .strip b { font-family: "VT323", monospace; font-size: 1.3em; color: var(--red); }
+  .strip.focus { transform: scale(1.08); background: #fff; box-shadow: 0 0 1em rgba(255,255,255,.6); }
+  .jb .grill { position: absolute; left: 14%; right: 14%; bottom: 6%; height: 18%; border-radius: .6em; background: repeating-linear-gradient(90deg, #3b3040 0 .3em, #1a141f .3em .9em); box-shadow: inset 0 0 0 .2em #8a7f94; }
+  .jb .side { position: absolute; top: 20%; bottom: 8%; width: 1.4em; border-radius: 1em; }
+  .logo { position: absolute; left: 50%; top: 2.5%; transform: translateX(-50%); font-size: 2.6em; white-space: nowrap; }
+  .press { position: absolute; left: 50%; top: 13%; transform: translateX(-50%); font-size: 1.1em; letter-spacing: .3em; z-index: 1; animation: blink 1.2s steps(2, jump-none) infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  /* lobby */
+  .coinbox { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 56%; display: grid; grid-template-columns: 1fr 1fr; gap: 2em; }
+  .slotcard { background: linear-gradient(#e7e1ea, #9e94a8); color: var(--ink); border-radius: 1em; padding: 1.2em; text-align: center; box-shadow: 0 .4em 0 #5e536b; }
+  .slotcard h3 { margin: 0 0 .3em; font-size: 2em; }
+  .slotcard .coin-slot { width: .6em; height: 3.2em; margin: .6em auto; border-radius: .3em; background: #111; box-shadow: 0 0 0 .3em #6d6275, 0 0 0 .5em #c9c1d0; position: relative; }
+  .slotcard .coin { position: absolute; left: 50%; top: -5em; width: 2.6em; height: 2.6em; border-radius: 50%; transform: translateX(-50%); background: radial-gradient(circle at 35% 35%, #fff4b0, #e6b422 55%, #a67c00); opacity: 0; }
+  .slotcard.f.focus { outline: .25em solid var(--cyan); outline-offset: .3em; }
+  .slotcard .digital { font-size: 2em; }
+  .chase { position: absolute; inset: 6% 18%; border-radius: 1.5em; background: repeating-linear-gradient(90deg, var(--orange) 0 .6em, transparent .6em 1.8em) top / 100% .5em no-repeat, repeating-linear-gradient(90deg, var(--pink) 0 .6em, transparent .6em 1.8em) bottom / 100% .5em no-repeat; animation: chase .6s linear infinite; opacity: .8; }
+  @keyframes chase { to { background-position: 1.8em 0, -1.8em 100%; } }
+  .rbtn { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); background: var(--red); color: #fff; padding: .35em 1.4em; border-radius: 2em; font-size: 1.6em; box-shadow: 0 .3em 0 #8a1a12, 0 0 1em rgba(230,59,46,.5); transition: transform .2s; }
+  .rbtn.focus { transform: translateX(-50%) scale(1.1); }
+
+  /* records */
+  .crate { position: absolute; left: 4%; right: 40%; top: 20%; height: 50%; display: flex; gap: 1em; align-items: flex-end; }
+  .rec { position: relative; flex: 1; height: 100%; transition: transform .3s cubic-bezier(.3,1.5,.5,1); }
+  .rec .sleeve { position: absolute; left: 0; right: 0; bottom: 0; aspect-ratio: 1; background: var(--sl); border-radius: .3em; display: flex; flex-direction: column; justify-content: flex-end; padding: .5em; box-shadow: 0 .4em .6em rgba(0,0,0,.5); z-index: 1; }
+  .rec .sleeve b { font-size: 1.5em; line-height: 1; }
+  .rec .sleeve small { font-size: .8em; opacity: .85; }
+  .rec .vinyl { position: absolute; left: 6%; bottom: 8%; width: 88%; height: auto; aspect-ratio: 1; transition: bottom .35s cubic-bezier(.3,1.4,.5,1); animation-play-state: paused; }
+  .rec.focus .vinyl { bottom: 62%; animation-play-state: running; }
+  .rec.focus { transform: translateY(-.4em); }
+  .rec.soon { opacity: .5; }
+  .tracklist { position: absolute; z-index: 4; right: 4%; top: 12%; width: 32%; background: var(--cream); color: var(--ink); border-radius: .5em; padding: 1em 1.2em; box-shadow: 0 .4em 0 #8a7f94; }
+  .tracklist h3 { margin: 0 0 .3em; font-size: 1.6em; }
+  .tracklist small { color: var(--red); letter-spacing: .15em; }
+  .tracklist ol { margin: .4em 0 0; padding-left: 1.3em; font-size: 1.1em; line-height: 1.5; }
+  .arm { position: absolute; right: 36%; top: 6%; width: .5em; height: 11em; background: linear-gradient(90deg, #aaa, #eee, #999); transform-origin: 50% 0; transform: rotate(-35deg); border-radius: .3em; transition: transform .5s ease-in-out; z-index: 3; }
+  .arm::after { content: ""; position: absolute; left: -.4em; bottom: -.6em; width: 1.3em; height: 1.6em; background: #ddd; border-radius: .2em; }
+  .arm.drop { transform: rotate(8deg); }
+
+  /* game */
+  .halves { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .25em; background: #000; }
+  .half { position: relative; overflow: hidden; background: linear-gradient(#2a1f33 0 44%, #3b2a22 44%); }
+  .half .tbl { position: absolute; left: 10%; right: 10%; top: 46%; bottom: 12%; border-radius: 1.2em; background: #7b4a2a; }
+  .half .tbl::after { content: ""; position: absolute; inset: 9% 5%; border-radius: .7em; background: radial-gradient(#3fb36f, #22804a); }
+  .half .gb { position: absolute; width: 2.2em; height: 2.2em; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1; box-shadow: inset -.2em -.25em .4em rgba(0,0,0,.35); }
+  .face { position: absolute; left: 3%; top: 4%; display: flex; align-items: center; gap: .6em; }
+  .face .vinyl { width: 4em; height: 4em; animation-play-state: paused; }
+  .half.act .face .vinyl { animation-play-state: running; animation-duration: 1.2s; }
+  .face b { display: block; font-size: 1.8em; line-height: 1; }
+  .face small { font-size: .9em; opacity: .8; }
+  .half:not(.act) .face { opacity: .55; }
+  .tracks { display: flex; gap: .25em; margin-top: .3em; }
+  .tracks i { width: .9em; height: .9em; border-radius: 50%; border: .15em solid var(--cream); }
+  .tracks i.done { background: var(--cream); }
+  .single { position: absolute; right: 3%; top: 4%; display: flex; align-items: center; gap: .5em; background: var(--cream); color: var(--ink); padding: .3em .7em .3em .3em; border-radius: .4em; box-shadow: 0 .3em 0 #8a7f94; }
+  .single .cov { width: 2.6em; height: 2.6em; border-radius: .2em; background: var(--sc, #999); display: grid; place-items: center; }
+  .single .cov svg { width: 1.5em; height: 1.5em; }
+  .single small { display: block; font-size: .75em; color: var(--red); letter-spacing: .1em; }
+  .single.empty { opacity: .45; }
+  .eq { position: absolute; left: 3%; bottom: 5%; display: flex; gap: .2em; align-items: flex-end; height: 3.5em; }
+  .eq i { width: .55em; background: linear-gradient(0deg, var(--cyan), var(--pink)); border-radius: .2em .2em 0 0; animation: eq .6s ease-in-out infinite alternate; }
+  .eq i:nth-child(2n) { animation-duration: .45s; } .eq i:nth-child(3n) { animation-duration: .7s; }
+  @keyframes eq { from { height: 15%; } to { height: 70%; } }
+  .eq.spike i { animation: spike .5s ease-out 1; }
+  @keyframes spike { 30% { height: 100%; } }
+  .vu { position: absolute; right: 3%; bottom: 5%; width: 9em; height: 5.2em; background: var(--cream); border-radius: 5em 5em .5em .5em; overflow: hidden; box-shadow: 0 .3em 0 #8a7f94; }
+  .vu::before { content: ""; position: absolute; left: 10%; right: 10%; top: 18%; height: 150%; border-radius: 50%; background: conic-gradient(from -60deg at 50% 50%, #2c9a5e 0 70deg, #ffb300 70deg 95deg, var(--red) 95deg 120deg, transparent 120deg); -webkit-mask: radial-gradient(circle, transparent 60%, #000 61% 70%, transparent 71%); mask: radial-gradient(circle, transparent 60%, #000 61% 70%, transparent 71%); }
+  .vu .needle { position: absolute; left: 50%; bottom: .6em; width: .2em; height: 3.8em; background: var(--ink); transform-origin: 50% 100%; transform: translateX(-50%) rotate(calc(-60deg + var(--c, 0) * 120deg)); transition: transform .06s linear; }
+  .vu small { position: absolute; left: 0; right: 0; bottom: .1em; text-align: center; font-size: .7em; color: var(--ink); letter-spacing: .2em; }
+  .shout { position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%); font: 4.2em "Monoton"; color: #fff; text-shadow: 0 0 .15em var(--pink), 0 0 .4em var(--pink); pointer-events: none; white-space: nowrap; animation: shout 1.2s ease-out forwards; z-index: 4; }
+  @keyframes shout { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+  .scratch { animation: scr .08s linear 10; }
+  @keyframes scr { 50% { transform: translateX(.4em) skewX(-4deg); filter: hue-rotate(90deg); } }
+  .stutter { animation: stut .12s steps(2) 14; }
+  @keyframes stut { 0% { clip-path: inset(0 0 0 0); transform: translate(0); } 50% { clip-path: inset(30% 0 40% 0); transform: translate(-.6em, 0); } }
+
+  /* end */
+  .chart { position: absolute; left: 6%; top: 18%; width: 52%; display: flex; flex-direction: column; gap: .7em; }
+  .entry { display: flex; align-items: center; gap: .8em; background: var(--cream); color: var(--ink); border-radius: .5em; padding: .5em .8em; box-shadow: 0 .3em 0 #8a7f94; animation: slide .5s cubic-bezier(.2,.9,.3,1) both; }
+  .entry .rank { font: 2.6em "VT323", monospace; color: var(--red); width: 1.2em; text-align: center; }
+  .entry b { font-size: 1.5em; display: block; }
+  .entry small { font-size: .95em; opacity: .75; }
+  .entry .mv { margin-left: auto; font-size: 1.4em; }
+  @keyframes slide { from { transform: translateX(-120%); } }
+  .gold { position: absolute; right: 12%; top: 22%; width: 13em; height: 13em; border-radius: 50%; background: repeating-radial-gradient(circle, #c9a227 0 .25em, #f5d76e .25em .45em); animation: spin 4s linear infinite; box-shadow: 0 0 2em rgba(245,215,110,.6); }
+  .gold::after { content: "J1"; position: absolute; left: 50%; top: 50%; width: 34%; height: 34%; transform: translate(-50%, -50%); border-radius: 50%; background: var(--red); display: grid; place-items: center; font-size: 1.6em; color: #fff; }
+  .endbtns { position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); display: flex; gap: 1em; }
+  .endbtns .rbtn { position: static; transform: none; white-space: nowrap; font-size: 1.4em; }
+  .endbtns .rbtn.focus { transform: scale(1.1); }
+</style>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div><h1>Juke-box</h1><p>Le juke-box du bar sert de menu : on choisit une sélection (A1, A2…), les modes sont des disques qu'on sort de leur pochette, J2 rejoint en glissant une pièce. En partie, J1 est la face A, J2 la face B, la jauge est un VU-mètre, une faute fait rayer le disque.</p></div>
+    <a href="../ui.html">← Toutes les propositions</a>
+  </div>
+
+  <div class="stage-box"><div class="stage">
+
+    <section class="scr" id="title" data-label="Titre">
+      <div class="room"></div>
+      <div class="neon logo">Untitled Pool</div><div class="press">PRESS PLAY</div>
+      <div class="jb"><div class="arch bubble"></div><div class="inner">
+        <div class="window"><div class="vinyl" id="tv"></div></div>
+        <div class="strips">
+          <div class="strip f default" data-go="lobby" data-lab="#e63b2e"><b>A1</b>Jouer</div>
+          <div class="strip f" data-go="lobby" data-lab="#8a3cff"><b>A2</b>Party</div>
+          <div class="strip f" data-action="soon" data-lab="#22d3ee"><b>B1</b>Réglages</div>
+          <div class="strip f" data-action="soon" data-lab="#555"><b>B2</b>Quitter</div>
+        </div>
+        <div class="grill"></div></div>
+        <div class="side bubble" style="left:-1.8em"></div><div class="side bubble" style="right:-1.8em"></div></div>
+    </section>
+
+    <section class="scr" id="lobby" data-label="Joueurs" data-back="title">
+      <div class="room"></div><div class="chase"></div>
+      <div class="neon" style="position:absolute;left:50%;top:9%;transform:translateX(-50%);font-size:2.6em;white-space:nowrap">Crédits</div>
+      <div class="coinbox">
+        <div class="slotcard"><h3>Face A</h3><div>J1 · clavier</div><div class="coin-slot"><span class="coin" style="opacity:1;top:.3em;transform:translateX(-50%) scale(.4)"></span></div><div class="digital">CRÉDIT 1</div></div>
+        <div class="slotcard f default" id="slot2" data-action="join"><h3>Face B</h3><div id="s2t">J2 : insère une pièce</div><div class="coin-slot"><span class="coin" id="coin"></span></div><div class="digital" id="s2c">CRÉDIT 0</div></div>
+      </div>
+      <div class="rbtn f" data-go="mode">Choisir le disque ▶</div>
+    </section>
+
+    <section class="scr" id="mode" data-label="Disques" data-back="lobby">
+      <div class="room"></div>
+      <div class="neon" style="position:absolute;left:4%;top:4%;font-size:2.2em">Choisis ton disque</div>
+      <div class="crate">
+        <div class="rec f" data-go="game" data-t="8-ball" data-f="Face A · classique" data-tr="Pleines contre rayées|Premier groupe rentré, groupe gagné|La 8 en dernier, poche annoncée" style="--sl:#16121c"><div class="vinyl" style="--lab:#e63b2e"></div><div class="sleeve" style="color:#fff"><b>8-BALL</b><small>le grand classique</small></div></div>
+        <div class="rec f" data-go="game" data-t="9-ball" data-f="Face A · rapide" data-tr="La plus petite bille d'abord|Qui rentre la 9 gagne|Attention à la blanche" style="--sl:#f4c20d"><div class="vinyl" style="--lab:#f4c20d"></div><div class="sleeve" style="color:#16121c"><b>9-BALL</b><small>version courte</small></div></div>
+        <div class="rec f" data-go="game" data-t="14.1" data-f="Face B · marathon" data-tr="Chaque bille : 1 point|Premier à 25|Aucune pitié" style="--sl:#2c9a5e"><div class="vinyl" style="--lab:#2c9a5e"></div><div class="sleeve" style="color:#fff"><b>14.1</b><small>longue durée</small></div></div>
+        <div class="rec f default" data-go="game" data-t="Party" data-f="Maxi 45 tours" data-tr="Les règles du 8-ball|Caisses de pouvoirs sur la table|Une bille qui brille donne un pouvoir|Attaque · Défense · Effet" style="--sl:#ff3d7f"><div class="vinyl" style="--lab:#8a3cff"></div><div class="sleeve" style="color:#fff"><b>PARTY</b><small>remix avec pouvoirs</small></div></div>
+        <div class="rec f soon" data-action="soon" data-t="Maison hantée" data-f="Face cachée · bientôt" data-tr="Une dimension à venir|Les billes ont peur du noir" style="--sl:#333"><div class="vinyl" style="--lab:#555"></div><div class="sleeve" style="color:#aaa"><b>???</b><small>face cachée</small></div></div>
+      </div>
+      <div class="arm" id="arm"></div>
+      <div class="tracklist"><small id="tf"></small><h3 id="tt"></h3><ol id="tl"></ol></div>
+    </section>
+
+    <section class="scr" id="game" data-label="En jeu" data-back="mode">
+      <div class="halves">
+        <div class="half act" id="h1"><div class="tbl"></div><span class="gb" style="left:46%;top:62%;background:#f5f5f5"></span><span class="gb" style="left:60%;top:56%;background:#d8261c"></span><span class="gb" style="left:68%;top:70%;background:#111"></span>
+          <div class="face"><div class="vinyl" style="--lab:#2f7cf6"></div><div><b>Face A</b><small>J1</small><div class="tracks" id="t1"></div></div></div>
+          <div class="single empty" id="s1"><div class="cov">♪</div><div><small>PROCHAIN TITRE</small>—</div></div>
+          <div class="eq" id="eq1"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="vu" id="vu"><div class="needle"></div><small>VU</small></div></div>
+        <div class="half" id="h2"><div class="tbl"></div><span class="gb" style="left:42%;top:62%;background:#f5f5f5"></span><span class="gb" style="left:57%;top:72%;background:#f07b12"></span>
+          <div class="face"><div class="vinyl" style="--lab:#e8453c"></div><div><b>Face B</b><small>J2</small><div class="tracks" id="t2"></div></div></div>
+          <div class="single empty" id="s2"><div class="cov">♪</div><div><small>PROCHAIN TITRE</small>—</div></div>
+          <div class="eq" id="eq2"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      </div>
+    </section>
+
+    <section class="scr" id="end" data-label="Hit-parade" data-back="game">
+      <div class="room"></div>
+      <div class="neon" style="position:absolute;left:6%;top:5%;font-size:2.6em">Hit-parade</div>
+      <div class="chart">
+        <div class="entry anim"><span class="rank">1</span><div><b>J1 — « Sniper des bandes »</b><small>feat. la bille 8 · 8 billes rentrées</small></div><span class="mv">▲</span></div>
+        <div class="entry anim" style="animation-delay:.15s"><span class="rank">2</span><div><b>J2 — « Roi de la faute »</b><small>remix main libre · 3 fautes</small></div><span class="mv">▼</span></div>
+        <div class="entry anim" style="animation-delay:.3s"><span class="rank">★</span><div><b>Tube de la soirée</b><small>J1 · double bande sur la 8</small></div></div>
+      </div>
+      <div class="gold"></div><div class="digital" style="position:absolute;right:13%;top:68%;font-size:2em">DISQUE D'OR</div>
+      <div class="endbtns"><div class="rbtn f default" data-go="game">Rejouer le disque</div><div class="rbtn f" style="background:#8a3cff;box-shadow:0 .3em 0 #4a1a8a" data-go="title">Retour au juke-box</div></div>
+    </section>
+
+  </div></div>
+
+  <div class="proto-notes">
+    <div><b>L'idée</b>Un objet iconique du bar qui fait tout : menus, arrivée des joueurs (la pièce), choix des modes (les disques). Le vocabulaire musical rend les modes et les dimensions amusants à parcourir : faces, maxi, face cachée pour les dimensions à débloquer.</div>
+    <div><b>En partie</b>Face A / face B pour les joueurs, disque qui tourne quand c'est ton tour, billes restantes comme une liste de titres, pouvoir en stock = « prochain titre », VU-mètre pour la puissance ; le son peut suivre (égaliseur qui réagit, scratch à la faute).</div>
+    <div><b>Dans Unity</b>Un vrai juke-box 3D dans le bar pour le menu principal (caméra qui s'en approche), HUD en Canvas ; l'égaliseur peut lire le spectre audio de la musique du bar (<code>AudioSource.GetSpectrumData</code>).</div>
+  </div>
+</div>
+
+<script>
+Site.renderHeader('ui', '../');
+const $ = id => document.getElementById(id);
+function shout(parent, text) { const d = document.createElement('div'); d.className = 'shout'; d.textContent = text; parent.appendChild(d); setTimeout(() => d.remove(), 1300); }
+const ICON = { attack: '<svg viewBox="0 0 20 20"><path d="M10 2 19 18H1Z" fill="#fff"/></svg>', effect: '<svg viewBox="0 0 20 20"><path d="m10 1 2.6 6 6.4.5-4.9 4.2 1.5 6.3L10 14.6 4.4 18l1.5-6.3L1 7.5 7.4 7Z" fill="#fff"/></svg>' };
+const G = { turn: 1, left: [7, 7], charging: null };
+const half = () => $(G.turn === 1 ? 'h1' : 'h2');
+function tracks() { [1, 2].forEach(p => { $('t' + p).innerHTML = Array.from({ length: 7 }, (_, i) => `<i class="${i >= G.left[p - 1] ? 'done' : ''}"></i>`).join(''); }); }
+function setTurn(n) { G.turn = n; $('h1').classList.toggle('act', n === 1); $('h2').classList.toggle('act', n === 2); half().appendChild($('vu')); }
+function setSingle(p, name, col, icon) {
+  const s = $('s' + p); s.classList.toggle('empty', !name); s.style.setProperty('--sc', col || '#999');
+  s.innerHTML = `<div class="cov">${icon || '♪'}</div><div><small>PROCHAIN TITRE</small>${name || '—'}</div>`;
+  if (name) s.animate([{ transform: 'translateX(120%)' }, { transform: 'translateX(-.4em)', offset: .8 }, { transform: 'none' }], { duration: 550, easing: 'ease-out' });
+}
+function spike(p) { const e = $('eq' + p); e.classList.remove('spike'); void e.offsetWidth; e.classList.add('spike'); }
+
+window.PROTO = {
+  enter: {
+    lobby: () => { $('slot2').classList.add('f'); $('s2t').textContent = 'J2 : insère une pièce'; $('s2c').textContent = 'CRÉDIT 0'; $('coin').style.opacity = 0; },
+    mode: () => $('arm').classList.remove('drop'),
+    game: () => { G.left = [7, 7]; tracks(); setTurn(1); setSingle(1); setSingle(2); },
+  },
+  focus: (el, scr) => {
+    if (scr.id === 'title') { const v = $('tv'); v.style.setProperty('--lab', el.dataset.lab); v.classList.add('fast'); clearTimeout(v._t); v._t = setTimeout(() => v.classList.remove('fast'), 500); }
+    if (scr.id === 'mode' && el.dataset.t) { $('tf').textContent = el.dataset.f.toUpperCase(); $('tt').textContent = el.dataset.t; $('tl').innerHTML = el.dataset.tr.split('|').map(t => `<li>${t}</li>`).join(''); }
+  },
+  beforeGo: (el, scr, done) => {
+    if (scr.id === 'mode') { $('arm').classList.add('drop'); setTimeout(done, 650); }
+    else if (scr.id === 'title') { $('tv').classList.add('fast'); setTimeout(done, 350); }
+    else done();
+  },
+  actions: {
+    soon: (el, scr) => shout(scr, 'Bientôt'),
+    join: (el, scr) => {
+      if ($('s2c').textContent === 'CRÉDIT 1') return;
+      $('coin').animate([{ top: '-5em', opacity: 1, transform: 'translateX(-50%) rotateY(0)' }, { top: '.3em', opacity: 1, transform: 'translateX(-50%) rotateY(720deg) scale(.4)' }], { duration: 650, easing: 'ease-in', fill: 'forwards' });
+      setTimeout(() => { $('s2c').textContent = 'CRÉDIT 1'; $('s2t').textContent = 'J2 · manette ✓'; shout(scr, 'Cling !'); Proto.setFocus(scr.querySelector('.rbtn')); }, 680);
+    },
+  },
+  events: {
+    shot: { label: 'Tirer', on: 'game', run: () => {
+      if (G.charging) return; const vu = $('vu'); let c = 0;
+      G.charging = setInterval(() => { c = Math.min(1, c + .035); vu.style.setProperty('--c', c); if (c >= 1) { clearInterval(G.charging); G.charging = null; setTimeout(() => { vu.style.setProperty('--c', 0); spike(G.turn); }, 250); } }, 30);
+    } },
+    pot: { label: 'Bille rentrée', on: 'game', run: () => { if (G.left[G.turn - 1] > 0) G.left[G.turn - 1]--; tracks(); spike(G.turn); shout(half(), 'Hit !'); } },
+    foul: { label: 'Faute', on: 'game', run: () => {
+      const h = half(); h.classList.remove('scratch'); void h.offsetWidth; h.classList.add('scratch'); shout(h, 'Scrrratch');
+      setTimeout(() => setTurn(G.turn === 1 ? 2 : 1), 1000);
+    } },
+    power: { label: 'Pouvoir ramassé', on: 'game', run: () => G.turn === 1 ? setSingle(1, 'Disque rayé', '#e5484d', ICON.attack) : setSingle(2, 'Tir boosté', '#30b566', ICON.effect) },
+    use: { label: 'Lancer le pouvoir sur J2', on: 'game', run: () => {
+      if ($('s1').classList.contains('empty')) { shout($('h1'), 'Rien en file'); return; }
+      setSingle(1); const h = $('h2'); h.classList.remove('stutter'); void h.offsetWidth; h.classList.add('stutter'); shout(h, 'D-d-disque rayé');
+    } },
+    win: { label: 'Fin de partie', on: 'game', run: () => Proto.show('end') },
+  },
+};
+</script>
+<script src="proto.js"></script>
+</body>
+</html>

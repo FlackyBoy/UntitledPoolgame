@@ -11,7 +11,8 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
   - `docs/content/pistes.md` — idées non décidées (utilisateur) et suggestions de Claude, séparées.
   - `docs/content/tech/*.md` — documentation technique (architecture, séquences, config, plugins, rendu, performances, arborescence, annexes). **À relire avant de toucher à une partie du code, et à mettre à jour quand l'architecture change.**
   - La TODO et le changelog du site sont lus depuis `TODO.md`/`CHANGELOG.md` sur master : ne pas les recopier dans `docs/`.
-  - `docs/ui.html` — maquettes d'UI à comparer ; l'utilisateur colle son récapitulatif de choix dans la conversation.
+  - `docs/ui.html` — galerie des concepts d'UI ; `docs/ui/*.html` = un prototype interactif par concept (moteur commun `docs/ui/proto.js` + `proto.css`). L'utilisateur veut une UI pop, fun, originale (pas une copie de ses références). Il colle son récapitulatif de choix dans la conversation.
+  - Vérifier un rendu : Chrome sans interface (`chrome.exe --headless=new --screenshot=… "file:///…/docs/ui/x.html#/ecran"`) puis lire l'image.
   - `docs/content/level.md` — cahier des charges de l'outil de création de niveau (non implémenté, questions ouvertes en fin de page).
 
 ## Conventions de code

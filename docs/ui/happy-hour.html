@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Happy Hour — Prototype UI</title>
+<meta name="description" content="Prototype d'interface : les modes de jeu sont des cocktails qu'on compose au shaker, la fin de partie est l'addition.">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Nunito:wght@700;900&family=Pacifico&family=Shrikhand&display=swap">
+<style>
+  .stage { --plum: #3d2b56; --plum-d: #26183a; --coral: #ff6f59; --mint: #43c59e; --lemon: #ffd23f; --cream: #fff4e0; --wood: #8a4b2a;
+           font-family: "Nunito", sans-serif; color: var(--cream); background: var(--plum-d); }
+  .shr { font-family: "Shrikhand", cursive; }
+  .bar-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 20%, #6b4a8f, var(--plum) 45%, var(--plum-d)); }
+  .shelf { position: absolute; left: 6%; right: 6%; height: .5em; background: #2a1a12; box-shadow: 0 .3em .4em rgba(0,0,0,.4); }
+  .bottle { position: absolute; bottom: .5em; width: 1.6em; border-radius: .5em .5em .2em .2em; opacity: .75; }
+  .bottle::before { content: ""; position: absolute; left: 30%; right: 30%; top: -1em; height: 1.1em; background: inherit; border-radius: .2em .2em 0 0; }
+  .counter { position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: linear-gradient(#a55d35, var(--wood) 30%, #5d2f19); box-shadow: 0 -.3em 0 #c47a4a; }
+  .neon { position: absolute; left: 50%; top: 9%; transform: translateX(-50%) rotate(-4deg); font: 5.4em/1 "Pacifico", cursive; color: #ffd6f0; white-space: nowrap;
+          text-shadow: 0 0 .05em #fff, 0 0 .15em #ff5fc0, 0 0 .4em #ff2fa0, 0 0 .8em #ff2fa0; animation: flick 5s infinite; }
+  .neon small { display: block; font: .38em "Shrikhand"; color: #c9fff0; text-align: center; margin-top: .1em; text-shadow: 0 0 .15em #43c59e, 0 0 .4em #43c59e; }
+  @keyframes flick { 0%, 42%, 44%, 100% { opacity: 1; } 43% { opacity: .4; } }
+
+  /* glasses */
+  .glass { position: absolute; transform: translate(-50%, -100%); transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+  .glass .cup { position: absolute; inset: 0; border: .28em solid rgba(255,255,255,.85); border-top: none; overflow: hidden; background: rgba(255,255,255,.08); }
+  .glass .liq { position: absolute; left: 0; right: 0; bottom: 0; height: var(--fill, 18%); background: var(--lc); transition: height .45s cubic-bezier(.3,1.3,.5,1); }
+  .glass .liq::before, .glass .liq::after { content: ""; position: absolute; bottom: 10%; width: .4em; height: .4em; border-radius: 50%; background: rgba(255,255,255,.6); animation: bub 1.6s linear infinite; }
+  .glass .liq::before { left: 30%; } .glass .liq::after { left: 62%; animation-delay: -.8s; }
+  @keyframes bub { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-5em); opacity: 0; } }
+  .g-high { width: 4.2em; height: 8em; } .g-high .cup { border-radius: 0 0 .7em .7em; }
+  .g-coupe { width: 6.4em; height: 7.4em; } .g-coupe .cup { bottom: 45%; border-radius: 0 0 50% 50% / 0 0 100% 100%; }
+  .g-coupe::after { content: ""; position: absolute; left: 50%; bottom: 0; width: .35em; height: 45%; background: rgba(255,255,255,.85); transform: translateX(-50%); box-shadow: 0 0 0 0 transparent; }
+  .g-coupe::before { content: ""; position: absolute; left: 50%; bottom: -.1em; width: 3em; height: .35em; border-radius: 1em; background: rgba(255,255,255,.85); transform: translateX(-50%); }
+  .g-shot { width: 3.2em; height: 4.2em; } .g-shot .cup { border-radius: 0 0 .4em .4em; }
+  .g-tumb { width: 5em; height: 5em; } .g-tumb .cup { border-radius: 0 0 .6em .6em; }
+  .glass.focus { transform: translate(-50%, -106%) scale(1.12); }
+  #title .glass.focus { --fill: 82% !important; }
+  .umb { position: absolute; left: 62%; top: -2.4em; width: 3.2em; transform: rotate(18deg); transform-origin: 20% 100%; }
+  .coaster { position: absolute; transform: translate(-50%, 0); width: 7.5em; padding: .35em 0; text-align: center; border-radius: 50%/60%; background: var(--cream); color: var(--plum); font: 1.25em "Shrikhand"; box-shadow: 0 .25em 0 rgba(0,0,0,.3); transition: transform .2s; }
+  .focus ~ .coaster.lbl-on, .coaster.on { transform: translate(-50%, 0) scale(1.1) rotate(-3deg); background: var(--lemon); }
+
+  .burst { position: absolute; transform: translate(-50%, -50%); font: 3.6em "Shrikhand"; color: var(--lemon); text-shadow: .05em .05em 0 var(--coral), .1em .1em 0 var(--plum-d); pointer-events: none; animation: burst 1.3s ease-out forwards; white-space: nowrap; z-index: 5; }
+  @keyframes burst { 0% { transform: translate(-50%, -50%) scale(.2) rotate(-20deg); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.15) rotate(-6deg); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-50%, -80%) scale(1) rotate(-6deg); opacity: 0; } }
+  .pill { position: absolute; transform: translate(-50%, -50%); background: var(--coral); color: #fff; font: 1.5em "Shrikhand"; padding: .25em 1em; border-radius: 2em; box-shadow: 0 .25em 0 #b8412f; transition: transform .2s; }
+  .pill.focus { transform: translate(-50%, -50%) scale(1.1) rotate(-2deg); background: var(--lemon); color: var(--plum-d); box-shadow: 0 .25em 0 #b88f10; }
+
+  /* mixing station */
+  .card-recipe { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); width: 58%; background: var(--cream); color: var(--plum); border-radius: .6em; padding: .6em 1em; text-align: center; box-shadow: 0 .35em 0 rgba(0,0,0,.3); }
+  .card-recipe small { display: block; font-weight: 900; letter-spacing: .2em; color: var(--coral); font-size: .9em; }
+  .card-recipe b { font: 1.7em "Shrikhand"; display: block; }
+  .card-recipe span { font-size: 1.1em; }
+  .base { position: absolute; transform: translate(-50%, -100%); width: 4.4em; height: 9em; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+  .base .body { position: absolute; left: 0; right: 0; bottom: 0; height: 70%; border-radius: 1.2em 1.2em .5em .5em; background: var(--bc); box-shadow: inset -.4em 0 0 rgba(0,0,0,.2); }
+  .base .neck { position: absolute; left: 32%; right: 32%; top: 0; height: 34%; border-radius: .3em .3em 0 0; background: var(--bc); }
+  .base .lbl { position: absolute; left: 8%; right: 8%; top: 48%; background: var(--cream); color: var(--plum); border-radius: .3em; font: 1.05em "Shrikhand"; text-align: center; padding: .15em 0; }
+  .base.focus { transform: translate(-50%, -106%) rotate(-6deg); }
+  .base.sel .lbl { background: var(--lemon); }
+  .base.sel::after { content: "✓"; position: absolute; top: -1.3em; left: 50%; transform: translateX(-50%); font: 1.4em "Shrikhand"; color: var(--lemon); }
+  .ing { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: .5em; padding: .35em .9em .35em .4em; border-radius: 2em; background: rgba(255,255,255,.1); font-size: 1.2em; font-weight: 900; transition: transform .2s, background .2s; }
+  .ing .ico { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; background: var(--ic); }
+  .ing .ico svg { width: 1.2em; height: 1.2em; }
+  .ing.on { background: var(--cream); color: var(--plum); }
+  .ing.focus { transform: translate(-50%, -50%) scale(1.08); outline: .15em solid var(--lemon); }
+  .ing.soon { opacity: .45; }
+  .shaker { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); width: 6em; height: 12em; }
+  .shaker .cap { position: absolute; left: 22%; right: 22%; top: 0; height: 18%; border-radius: .8em .8em .2em .2em; background: linear-gradient(90deg, #9aa4ad, #f4f7fa 40%, #7c8791); }
+  .shaker .mid { position: absolute; left: 12%; right: 12%; top: 16%; height: 20%; background: linear-gradient(90deg, #9aa4ad, #f4f7fa 40%, #7c8791); clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%); }
+  .shaker .body { position: absolute; left: 4%; right: 4%; top: 35%; bottom: 0; border-radius: .5em .5em 1.2em 1.2em; background: linear-gradient(90deg, #9aa4ad, #f4f7fa 40%, #7c8791); }
+  .shaker.go { animation: shake .12s linear 8; }
+  @keyframes shake { 0%, 100% { transform: translate(-50%, -50%) rotate(-12deg); } 50% { transform: translate(-50%, -55%) rotate(12deg); } }
+  .drops { position: absolute; left: 50%; top: 18%; font-size: 1.5em; transform: translateX(-50%); display: flex; gap: .2em; }
+  .drops span { animation: drop .5s ease-in forwards; }
+  @keyframes drop { from { transform: translateY(-2em); opacity: 0; } to { transform: translateY(3em); opacity: 0; } 40% { opacity: 1; } }
+
+  /* game */
+  .halves { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .25em; background: #000; }
+  .half { position: relative; overflow: hidden; background: linear-gradient(#4a3060 0 44%, #5a3a28 44%); }
+  .half .tbl { position: absolute; left: 10%; right: 10%; top: 46%; bottom: 10%; border-radius: 1.2em; background: #7b4a2a; }
+  .half .tbl::after { content: ""; position: absolute; inset: 9% 5%; border-radius: .7em; background: radial-gradient(#3fb36f, #22804a); }
+  .half .gb { position: absolute; width: 2.2em; height: 2.2em; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1; box-shadow: inset -.2em -.25em .4em rgba(0,0,0,.35); }
+  .tourn { position: absolute; left: 3%; top: 4%; width: 7.5em; height: 7.5em; border-radius: 50%; background: var(--cream); color: var(--plum); display: grid; place-items: center; text-align: center; box-shadow: 0 .3em 0 rgba(0,0,0,.3); transform: rotate(-8deg); }
+  .tourn small { display: block; font-weight: 900; font-size: .85em; letter-spacing: .1em; color: var(--coral); }
+  .tourn b { font: 1.6em/1 "Shrikhand"; }
+  .half.idle .tourn { filter: grayscale(1) brightness(.8); transform: rotate(-8deg) scale(.85); }
+  .icecup { position: absolute; left: 3%; bottom: 6%; width: 5em; height: 6.5em; border: .25em solid rgba(255,255,255,.85); border-top: none; border-radius: 0 0 .7em .7em; background: rgba(255,255,255,.08); display: flex; flex-wrap: wrap-reverse; align-content: flex-start; gap: .15em; padding: .25em; }
+  .icecup i { width: 1.35em; height: 1.35em; border-radius: 50%; box-shadow: inset -.12em -.15em .25em rgba(0,0,0,.35); }
+  .icecup + .cnt { position: absolute; left: 10%; bottom: 2%; font: 1.1em "Shrikhand"; }
+  .umbcard { position: absolute; right: 3%; top: 4%; display: flex; align-items: center; gap: .4em; background: var(--cream); color: var(--plum); padding: .3em .8em .3em .3em; border-radius: 2em; font-weight: 900; box-shadow: 0 .25em 0 rgba(0,0,0,.3); }
+  .umbcard svg { width: 2.4em; height: 2.4em; }
+  .umbcard.empty { opacity: .45; }
+  .gglass { position: absolute; right: 4%; bottom: 8%; width: 3.2em; height: 9em; border: .25em solid rgba(255,255,255,.85); border-top: none; border-radius: 0 0 .6em .6em; background: rgba(255,255,255,.06); }
+  .gglass .liq { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--c, 0) * 100%); background: linear-gradient(0deg, var(--coral), var(--lemon)); transition: height .06s linear; }
+  .gglass .foam { position: absolute; left: -.5em; right: -.5em; top: -1.2em; height: 1.6em; border-radius: 1em; background: #fff; opacity: 0; transition: opacity .2s; }
+  .gglass.over .foam { opacity: 1; animation: foam .4s ease-in-out infinite alternate; }
+  @keyframes foam { to { transform: translateY(-.3em) scaleX(1.1); } }
+  .gglass small { position: absolute; left: 50%; bottom: -1.5em; transform: translateX(-50%); font: .9em "Shrikhand"; white-space: nowrap; }
+  .splash { position: absolute; left: 50%; top: 55%; width: 16em; height: 7em; transform: translate(-50%, -50%); background: radial-gradient(circle at 30% 40%, var(--coral) 0 28%, transparent 29%), radial-gradient(circle at 62% 55%, var(--coral) 0 30%, transparent 31%), radial-gradient(circle at 48% 30%, var(--lemon) 0 16%, transparent 17%); animation: splash 1.4s ease-out forwards; pointer-events: none; }
+  @keyframes splash { 0% { transform: translate(-50%, -50%) scale(.1); opacity: 1; } 30% { transform: translate(-50%, -50%) scale(1.1); } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+  .swirl { position: absolute; inset: -30%; background: repeating-conic-gradient(from 0deg, rgba(255,111,89,.35) 0 10deg, rgba(67,197,158,.35) 10deg 20deg); animation: swirl 2.4s linear forwards; pointer-events: none; }
+  @keyframes swirl { 0% { opacity: 0; transform: rotate(0); } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: rotate(240deg); } }
+
+  /* bill */
+  .receipt { position: absolute; left: 50%; top: 0; width: 38%; transform: translateX(-50%); background: #fbfaf5; color: #333; font: .82em/1.3 "Courier Prime", monospace; padding: 1em 1.3em 1.8em;
+             box-shadow: 0 1em 2em rgba(0,0,0,.4); clip-path: polygon(0 0, 100% 0, 100% 97%, 95% 100%, 90% 97%, 85% 100%, 80% 97%, 75% 100%, 70% 97%, 65% 100%, 60% 97%, 55% 100%, 50% 97%, 45% 100%, 40% 97%, 35% 100%, 30% 97%, 25% 100%, 20% 97%, 15% 100%, 10% 97%, 5% 100%, 0 97%);
+             animation: print 1.8s steps(14) both; }
+  @keyframes print { from { transform: translate(-50%, -100%); } to { transform: translate(-50%, 0); } }
+  .receipt h3 { margin: 0; text-align: center; font: 700 1.5em "Courier Prime"; letter-spacing: .2em; }
+  .receipt .ln { display: flex; justify-content: space-between; gap: .5em; }
+  .receipt hr { border: 0; border-top: .12em dashed #999; margin: .5em 0; }
+  .receipt .tot { font-weight: 700; font-size: 1.2em; }
+  .stamp { position: absolute; right: 25%; top: 66%; transform: rotate(-14deg); border: .25em solid var(--coral); color: var(--coral); font: 2em "Shrikhand"; padding: .1em .5em; border-radius: .3em; opacity: 0; animation: stamp .4s ease-out 1.9s forwards; }
+  @keyframes stamp { from { transform: rotate(-14deg) scale(2.2); opacity: 0; } to { transform: rotate(-14deg) scale(1); opacity: .9; } }
+</style>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div><h1>Happy Hour</h1><p>Le jeu se passe au bar, l'interface aussi : les menus sont des verres sur le comptoir, les modes sont des cocktails qu'on compose (une base + des pouvoirs en ingrédients), la jauge est un verre à ne pas faire déborder, la fin de partie est l'addition.</p></div>
+    <a href="../ui.html">← Toutes les propositions</a>
+  </div>
+
+  <div class="stage-box"><div class="stage">
+
+    <section class="scr" id="title" data-label="Titre">
+      <div class="bar-bg"></div>
+      <div class="shelf" style="top:40%"></div>
+      <div class="neon">Happy Hour<small>billard · pouvoirs · mauvaise foi</small></div>
+      <div class="counter"></div>
+      <div class="glass g-high f default" style="left:24%;top:78%;--lc:#43c59e" data-go="lobby"><div class="cup"><div class="liq"></div></div></div>
+      <div class="glass g-coupe f" style="left:41%;top:78%;--lc:#ff6f59" data-go="lobby"><div class="cup"><div class="liq"></div></div><svg class="umb" viewBox="0 0 40 40"><path d="M2 18a18 14 0 0 1 36 0Z" fill="#ffd23f"/><path d="M2 18a18 14 0 0 1 36 0" fill="none" stroke="#ff6f59" stroke-width="2"/><path d="M20 18v20" stroke="#fff4e0" stroke-width="2"/></svg></div>
+      <div class="glass g-shot f" style="left:58%;top:78%;--lc:#ffd23f" data-action="soon"><div class="cup"><div class="liq"></div></div></div>
+      <div class="glass g-tumb f" style="left:75%;top:78%;--lc:#8a4b2a;--fill:0%" data-action="soon"><div class="cup"><div class="liq"></div></div></div>
+      <div class="coaster" style="left:24%;top:83%">Jouer</div><div class="coaster" style="left:41%;top:83%">Party</div><div class="coaster" style="left:58%;top:83%">Réglages</div><div class="coaster" style="left:75%;top:83%">Quitter</div>
+    </section>
+
+    <section class="scr" id="lobby" data-label="Joueurs" data-back="title">
+      <div class="bar-bg"></div><div class="counter"></div>
+      <div class="shr" style="position:absolute;left:50%;top:9%;transform:translateX(-50%);font-size:3.4em;color:var(--lemon);white-space:nowrap">Qui trinque ce soir ?</div>
+      <div class="glass g-high" id="gj1" style="left:40%;top:78%;--lc:#2f7cf6;--fill:80%"><div class="cup"><div class="liq"></div></div></div>
+      <div class="glass g-high f default" id="gj2" style="left:60%;top:78%;--lc:#e8453c;--fill:0%" data-action="join"><div class="cup"><div class="liq"></div></div></div>
+      <div class="coaster on" style="left:40%;top:83%">J1 ✓</div><div class="coaster" id="cj2" style="left:60%;top:83%">J2 : trinque !</div>
+      <div class="pill f" style="left:50%;top:40%" data-go="mode">On commande !</div>
+    </section>
+
+    <section class="scr" id="mode" data-label="Shaker" data-back="lobby">
+      <div class="bar-bg"></div><div class="counter" style="height:34%"></div>
+      <div class="shr" style="position:absolute;left:4%;top:5%;font-size:2.4em;color:var(--lemon)">1. La base</div>
+      <div class="base f sel" style="left:9%;top:62%;--bc:#2a2a2a" data-action="base" data-b="8-ball" data-n="Huit Tonic"><div class="neck"></div><div class="body"></div><div class="lbl">8-ball</div></div>
+      <div class="base f" style="left:19%;top:62%;--bc:#c49a17" data-action="base" data-b="9-ball" data-n="Neuf Mojito"><div class="neck"></div><div class="body"></div><div class="lbl">9-ball</div></div>
+      <div class="base f" style="left:29%;top:62%;--bc:#b3261e" data-action="base" data-b="14.1" data-n="Quatorze Spritz"><div class="neck"></div><div class="body"></div><div class="lbl">14.1</div></div>
+      <div class="shaker" id="shaker"><div class="cap"></div><div class="mid"></div><div class="body"></div></div><div class="drops" id="drops"></div>
+      <div class="shr" style="position:absolute;right:4%;top:5%;font-size:2.4em;color:var(--lemon)">2. Les ingrédients</div>
+      <div class="ing f on" style="left:78%;top:21%;--ic:#e5484d" data-action="ing" data-i="un zeste d'Attaque"><span class="ico"><svg viewBox="0 0 20 20"><path d="M10 2 19 18H1Z" fill="#fff"/></svg></span>Attaque</div>
+      <div class="ing f" style="left:78%;top:31%;--ic:#3e8bff" data-action="ing" data-i="un glaçon de Défense"><span class="ico"><svg viewBox="0 0 20 20"><path d="M10 1 18 4v6c0 5-4 8-8 9-4-1-8-4-8-9V4Z" fill="#fff"/></svg></span>Défense</div>
+      <div class="ing f on" style="left:78%;top:41%;--ic:#30b566" data-action="ing" data-i="un sirop d'Effet"><span class="ico"><svg viewBox="0 0 20 20"><path d="m10 1 2.6 6 6.4.5-4.9 4.2 1.5 6.3L10 14.6 4.4 18l1.5-6.3L1 7.5 7.4 7Z" fill="#fff"/></svg></span>Effet</div>
+      <div class="ing f soon" style="left:78%;top:51%;--ic:#7a5cff" data-action="soon"><span class="ico">🌀</span>Chaos (bientôt)</div>
+      <div class="pill f default" style="left:50%;top:64%" data-action="shake">Secouer !</div>
+      <div class="card-recipe"><small>VOTRE COCKTAIL</small><b id="rname"></b><span id="rdesc"></span></div>
+    </section>
+
+    <section class="scr" id="game" data-label="En jeu" data-back="mode">
+      <div class="halves">
+        <div class="half" id="h1"><div class="tbl"></div><span class="gb" style="left:46%;top:62%;background:#f5f5f5"></span><span class="gb" style="left:60%;top:56%;background:#d8261c"></span><span class="gb" style="left:68%;top:70%;background:#111"></span>
+          <div class="tourn"><div><small>TOURNÉE DE</small><b>J1</b></div></div>
+          <div class="umbcard empty" id="u1"><svg viewBox="0 0 40 40"><path d="M2 18a18 14 0 0 1 36 0Z" fill="#ccc"/><path d="M20 18v20" stroke="#999" stroke-width="2"/></svg><span>—</span></div>
+          <div class="icecup" id="c1"></div><div class="cnt" id="n1"></div>
+          <div class="gglass" id="gg"><div class="foam"></div><div class="liq"></div><small>puissance</small></div></div>
+        <div class="half idle" id="h2"><div class="tbl"></div><span class="gb" style="left:42%;top:62%;background:#f5f5f5"></span><span class="gb" style="left:57%;top:72%;background:#f07b12"></span>
+          <div class="tourn"><div><small>TOURNÉE DE</small><b>J1</b></div></div>
+          <div class="umbcard empty" id="u2"><svg viewBox="0 0 40 40"><path d="M2 18a18 14 0 0 1 36 0Z" fill="#ccc"/><path d="M20 18v20" stroke="#999" stroke-width="2"/></svg><span>—</span></div>
+          <div class="icecup" id="c2"></div><div class="cnt" id="n2"></div></div>
+      </div>
+    </section>
+
+    <section class="scr" id="end" data-label="L'addition" data-back="game">
+      <div class="bar-bg"></div><div class="counter"></div>
+      <div class="receipt anim"><h3>L'ADDITION</h3><div style="text-align:center">Table n°8 · serveur : Coco</div><hr>
+        <div class="ln"><span>J1 billes rentrées x8</span><span>8,00</span></div>
+        <div class="ln"><span>J1 série de 4</span><span>2,00</span></div>
+        <div class="ln"><span>J1 pouvoir lancé x1</span><span>0,50</span></div>
+        <div class="ln"><span>J2 billes rentrées x5</span><span>5,00</span></div>
+        <div class="ln"><span>J2 fautes x3</span><span>-3,00</span></div><hr>
+        <div class="ln tot"><span>TOTAL J1</span><span>10,50</span></div>
+        <div class="ln tot"><span>TOTAL J2</span><span>2,00</span></div><hr>
+        <div>Pourboire : « Sniper des bandes » (J1)</div><div>Offert par la maison : « Roi de la faute » (J2)</div>
+        <div style="text-align:center;margin-top:.4em">*** MERCI, À LA PROCHAINE ***</div></div>
+      <div class="stamp anim">J1 GAGNE</div>
+      <div class="pill f default" style="left:18%;top:62%" data-go="game">Remettre ça !</div>
+      <div class="pill f" style="left:82%;top:62%;background:var(--mint);box-shadow:0 .25em 0 #2a8a6c" data-go="title">Fermer l'ardoise</div>
+    </section>
+
+  </div></div>
+
+  <div class="proto-notes">
+    <div><b>L'idée</b>Le décor du bar devient l'interface : verres, sous-bocks, néon, addition. Composer son mode au shaker prépare le futur système de « modificateurs » (dimensions, règles loufoques) : on ajoute des ingrédients et le cocktail prend un nom.</div>
+    <div><b>En partie</b>Tournée (à qui le tour) sur un sous-bock, billes restantes comme des glaçons dans un verre, pouvoir en stock sur une ombrelle à cocktail, jauge = verre qui se remplit — trop chargé, ça mousse.</div>
+    <div><b>Dans Unity</b>Menus en 3D sur un vrai comptoir (les verres se remplissent via un shader de liquide), HUD en Canvas avec les mêmes formes. L'addition récapitule les statistiques déjà suivies par <code>PoolMatchRules</code>.</div>
+  </div>
+</div>
+
+<script>
+Site.renderHeader('ui', '../');
+const $ = id => document.getElementById(id);
+function burst(parent, text, x = '50%', y = '40%') { const d = document.createElement('div'); d.className = 'burst'; d.textContent = text; d.style.left = x; d.style.top = y; parent.appendChild(d); setTimeout(() => d.remove(), 1400); }
+function recipe() {
+  const base = document.querySelector('#mode .base.sel');
+  const ings = [...document.querySelectorAll('#mode .ing.on')].map(i => i.dataset.i);
+  $('rname').textContent = base.dataset.n + (ings.length ? ' Party' : ' sec');
+  $('rdesc').textContent = `Base ${base.dataset.b}` + (ings.length ? ', avec ' + ings.join(', ').replace(/, ([^,]*)$/, ' et $1') : ', sans pouvoirs') + '.';
+}
+const BC = ['#f4c20d', '#1f4fd1', '#d8261c', '#6a2c91', '#f07b12', '#138a3a', '#7a1f1f'];
+const G = { turn: 1, left: [7, 7], charging: null };
+const half = () => $(G.turn === 1 ? 'h1' : 'h2');
+function cups() {
+  [1, 2].forEach(p => { $('c' + p).innerHTML = BC.slice(0, G.left[p - 1]).map(c => `<i style="background:${p === 2 ? `linear-gradient(#fff 0 28%, ${c} 28% 72%, #fff 72%)` : c}"></i>`).join(''); $('n' + p).textContent = G.left[p - 1] + ' à rentrer'; });
+}
+function setTurn(n) {
+  G.turn = n; $('h1').classList.toggle('idle', n !== 1); $('h2').classList.toggle('idle', n !== 2);
+  document.querySelectorAll('.tourn b').forEach(b => b.textContent = 'J' + n);
+  half().appendChild($('gg'));
+}
+function setUmb(p, name, col) {
+  const u = $('u' + p); u.classList.toggle('empty', !name);
+  u.innerHTML = `<svg viewBox="0 0 40 40"><path d="M2 18a18 14 0 0 1 36 0Z" fill="${name ? col : '#ccc'}"/><path d="M2 18a18 14 0 0 1 36 0" fill="none" stroke="#fff4e0" stroke-width="2"/><path d="M20 18v20" stroke="${name ? '#3d2b56' : '#999'}" stroke-width="2"/></svg><span>${name || '—'}</span>`;
+  if (name) u.animate([{ transform: 'scale(.2) rotate(-90deg)' }, { transform: 'scale(1.2) rotate(10deg)', offset: .7 }, { transform: 'none' }], { duration: 600, easing: 'ease-out' });
+}
+
+window.PROTO = {
+  enter: {
+    lobby: () => { $('gj2').style.setProperty('--fill', '0%'); $('gj2').classList.add('f'); $('cj2').textContent = 'J2 : trinque !'; $('cj2').classList.remove('on'); ['gj1', 'gj2'].forEach(id => $(id).getAnimations().forEach(a => a.cancel())); },
+    mode: () => recipe(),
+    game: () => { G.left = [7, 7]; cups(); setTurn(1); setUmb(1); setUmb(2); },
+  },
+  focus: (el, scr) => {
+    if (scr.id === 'title') scr.querySelectorAll('.coaster').forEach((c, i) => c.classList.toggle('on', [...scr.querySelectorAll('.glass')][i] === el));
+  },
+  actions: {
+    soon: (el, scr) => burst(scr, 'Bientôt !', el.style.left || '50%', '40%'),
+    join: (el, scr) => {
+      if (el.style.getPropertyValue('--fill') !== '0%') return;
+      el.style.setProperty('--fill', '80%'); $('cj2').textContent = 'J2 ✓'; $('cj2').classList.add('on');
+      setTimeout(() => {
+        $('gj1').animate([{ transform: 'translate(-50%,-100%)' }, { transform: 'translate(-20%,-104%) rotate(14deg)' }, { transform: 'translate(-50%,-100%)' }], { duration: 500, easing: 'ease-in-out' });
+        el.animate([{ transform: 'translate(-50%,-100%)' }, { transform: 'translate(-80%,-104%) rotate(-14deg)' }, { transform: 'translate(-50%,-100%)' }], { duration: 500, easing: 'ease-in-out' });
+        setTimeout(() => burst(scr, 'Santé !', '50%', '48%'), 230);
+        setTimeout(() => Proto.setFocus(scr.querySelector('.pill')), 700);
+      }, 450);
+    },
+    base: (el, scr) => { scr.querySelectorAll('.base').forEach(b => b.classList.toggle('sel', b === el)); recipe(); },
+    ing: el => { el.classList.toggle('on'); recipe(); },
+    shake: (el, scr) => {
+      const s = $('shaker'); s.classList.remove('go'); void s.offsetWidth; s.classList.add('go');
+      $('drops').innerHTML = [...scr.querySelectorAll('.ing.on .ico')].map(i => `<span>${i.innerHTML}</span>`).join('');
+      setTimeout(() => burst(scr, $('rname').textContent + ' !', '50%', '30%'), 950);
+      setTimeout(() => Proto.show('game'), 2100);
+    },
+  },
+  events: {
+    shot: { label: 'Tirer (jusqu\'à déborder)', on: 'game', run: () => {
+      if (G.charging) return; const gg = $('gg'); let c = 0;
+      G.charging = setInterval(() => { c = Math.min(1.15, c + .03); gg.style.setProperty('--c', Math.min(c, 1)); gg.classList.toggle('over', c > .95);
+        if (c >= 1.15) { clearInterval(G.charging); G.charging = null; setTimeout(() => { gg.style.setProperty('--c', 0); gg.classList.remove('over'); burst(half(), 'Ça déborde !', '50%', '30%'); }, 300); } }, 30);
+    } },
+    pot: { label: 'Bille rentrée', on: 'game', run: () => {
+      if (G.left[G.turn - 1] > 0) G.left[G.turn - 1]--; cups();
+      $('c' + G.turn).animate([{ transform: 'rotate(-6deg)' }, { transform: 'rotate(6deg)' }, { transform: 'none' }], { duration: 300 });
+      burst(half(), 'Cul sec !', '50%', '32%');
+    } },
+    foul: { label: 'Faute', on: 'game', run: () => {
+      const h = half(); const s = document.createElement('div'); s.className = 'splash'; h.appendChild(s); setTimeout(() => s.remove(), 1400);
+      burst(h, 'Oups, renversé !', '50%', '30%'); setTimeout(() => setTurn(G.turn === 1 ? 2 : 1), 1300);
+    } },
+    power: { label: 'Pouvoir ramassé', on: 'game', run: () => setUmb(G.turn, G.turn === 1 ? 'Commandes inversées' : 'Tir boosté', G.turn === 1 ? '#e5484d' : '#30b566') },
+    use: { label: 'Lancer le pouvoir sur J2', on: 'game', run: () => {
+      if ($('u1').classList.contains('empty')) { burst($('h1'), 'Pas d\'ombrelle !', '50%', '35%'); return; }
+      setUmb(1); const w = document.createElement('div'); w.className = 'swirl'; $('h2').appendChild(w); setTimeout(() => w.remove(), 2400);
+      burst($('h2'), 'La tête qui tourne…', '50%', '40%');
+    } },
+    win: { label: 'Fin de partie', on: 'game', run: () => Proto.show('end') },
+  },
+};
+</script>
+<script src="proto.js"></script>
+</body>
+</html>

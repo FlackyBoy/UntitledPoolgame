@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Grand Show — Prototype UI</title>
+<meta name="description" content="Prototype d'interface : chaque partie est une émission de télé en direct, les dimensions sont des chaînes.">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;800&family=VT323&display=swap">
+<style>
+  .stage { --navy: #0b1640; --royal: #1c3fb4; --gold: #ffc83d; --red: #ff3b3b; font-family: "Barlow Condensed", sans-serif; font-weight: 600; color: #fff; background: var(--navy); }
+  .studio { position: absolute; inset: 0; background:
+      radial-gradient(ellipse at 50% 110%, rgba(255,200,61,.35), transparent 45%),
+      radial-gradient(ellipse at 50% 20%, #24338a, var(--navy) 65%); }
+  .studio::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 32%; background: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 .1em, transparent .1em 4em), linear-gradient(transparent, rgba(0,0,0,.45)); }
+  .beam { position: absolute; top: -10%; width: 22%; height: 130%; background: linear-gradient(rgba(255,240,200,.35), transparent 80%); clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%); transform-origin: 50% 0; mix-blend-mode: screen; animation: sweep 5s ease-in-out infinite alternate; }
+  .beam.b2 { animation-delay: -2.5s; }
+  @keyframes sweep { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
+  .anton { font-family: "Anton", sans-serif; font-weight: 400; letter-spacing: .01em; text-transform: uppercase; }
+  .live { position: absolute; right: 2.5%; top: 4%; display: flex; align-items: center; gap: .4em; background: var(--red); padding: .2em .7em; font: 800 1.1em "Barlow Condensed"; letter-spacing: .08em; }
+  .live i { width: .6em; height: .6em; border-radius: 50%; background: #fff; animation: blink 1s steps(2, jump-none) infinite; }
+  .bug { position: absolute; right: 2.5%; top: 12%; font: 1.3em "Anton"; opacity: .75; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .ticker { position: absolute; left: 0; right: 0; bottom: 0; height: 2.6em; background: #fff; color: var(--navy); display: flex; align-items: center; overflow: hidden; z-index: 3; }
+  .ticker b { background: var(--red); color: #fff; height: 100%; display: grid; place-items: center; padding: 0 1em; font: 1.3em "Anton"; z-index: 1; }
+  .ticker span { white-space: nowrap; font: 800 1.3em "Barlow Condensed"; padding-left: 100%; animation: tick 26s linear -9s infinite; }
+  @keyframes tick { to { transform: translateX(-100%); } }
+  .logo { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); text-align: center; }
+  .logo .t1 { font: 1.6em "Barlow Condensed"; font-weight: 800; letter-spacing: .3em; color: var(--gold); }
+  .logo .t2 { font: 4.4em/0.9 "Anton"; text-transform: uppercase; color: #fff; text-shadow: .03em .03em 0 var(--royal), .06em .06em 0 var(--gold), .09em .09em 0 #7a1010; }
+  .logo .t3 { font-size: 1.2em; opacity: .8; margin-top: .3em; }
+  .applause { position: absolute; left: 50%; top: 3%; transform: translateX(-50%); border: .15em solid var(--red); color: var(--red); padding: .1em .8em; font: 1.4em "Anton"; letter-spacing: .1em; border-radius: .3em; box-shadow: 0 0 1em rgba(255,59,59,.6), inset 0 0 .6em rgba(255,59,59,.5); animation: blink 1.2s steps(2, jump-none) infinite; }
+  .menu { position: absolute; left: 50%; top: 49%; transform: translateX(-50%); display: flex; flex-direction: column; gap: .35em; width: 34%; }
+  .l3btn { position: relative; display: flex; align-items: stretch; height: 2.25em; transition: transform .2s; }
+  .l3btn .k { width: 2.6em; display: grid; place-items: center; background: var(--royal); font: 1.3em "Anton"; }
+  .l3btn .v { flex: 1; display: flex; align-items: center; padding: 0 1em; background: rgba(255,255,255,.12); font: 800 1.35em "Barlow Condensed"; text-transform: uppercase; letter-spacing: .04em; }
+  .l3btn.focus { transform: translateX(1em); }
+  .l3btn.focus .k { background: var(--gold); color: var(--navy); }
+  .l3btn.focus .v { background: #fff; color: var(--navy); }
+
+  /* lower thirds */
+  .l3 { position: absolute; left: 3%; bottom: 16%; display: flex; flex-direction: column; animation: l3in .45s cubic-bezier(.2,.9,.3,1) both; z-index: 2; }
+  .l3 .a { align-self: flex-start; background: var(--gold); color: var(--navy); font: 1.8em "Anton"; text-transform: uppercase; padding: .05em .5em; }
+  .l3 .b { align-self: flex-start; background: #fff; color: var(--navy); font: 800 1.3em "Barlow Condensed"; padding: .15em .7em; }
+  .l3.red .a { background: var(--red); color: #fff; }
+  .l3.out { animation: l3out .35s ease-in forwards; }
+  @keyframes l3in { from { transform: translateX(-120%); } }
+  @keyframes l3out { to { transform: translateX(-120%); } }
+
+  /* lobby */
+  .podium { position: absolute; bottom: 19%; width: 20%; transform: translateX(-50%); text-align: center; }
+  .podium .light { height: 9em; margin: 0 auto -1em; width: 70%; background: linear-gradient(var(--pc), transparent); opacity: .0; transition: opacity .5s; clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%); }
+  .podium.on .light { opacity: .55; }
+  .podium .desk { height: 8em; clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%); background: linear-gradient(#26358f, #121c52); border-top: .4em solid var(--pc); display: flex; flex-direction: column; align-items: center; justify-content: center; filter: grayscale(.8) brightness(.6); transition: filter .5s; }
+  .podium.on .desk { filter: none; }
+  .podium .plate { font: 2.2em "Anton"; }
+  .podium .sub { font-size: 1.1em; opacity: .85; }
+  .podium.f { cursor: pointer; }
+  .podium.focus .desk { outline: .2em solid #fff; outline-offset: .2em; }
+  .meter { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); width: 34%; text-align: center; }
+  .meter .bar { height: 1.2em; background: rgba(255,255,255,.12); border-radius: .2em; overflow: hidden; display: flex; gap: .15em; padding: .15em; }
+  .meter .bar i { flex: 1; background: rgba(255,255,255,.15); transition: background .1s; }
+  .meter .bar i.on { background: var(--gold); }
+  .meter .bar i.on.hot { background: var(--red); }
+  .gbtn { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); background: var(--gold); color: var(--navy); font: 1.6em "Anton"; text-transform: uppercase; padding: .2em 1.2em; border-radius: .2em; transition: transform .2s; }
+  .gbtn.focus { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 1.2em rgba(255,200,61,.8); }
+
+  /* zapping */
+  .tv { position: absolute; left: 50%; top: 8%; transform: translateX(-50%); width: 62%; aspect-ratio: 16/9.6; background: #111; border-radius: 1.4em; padding: 1.2em; box-shadow: 0 0 0 .4em #2a2a2a, 0 1.5em 2em rgba(0,0,0,.6); }
+  .tv .scr-in { position: relative; width: 100%; height: 100%; border-radius: .8em; overflow: hidden; background: var(--prog, #134); }
+  .tv .osd { position: absolute; left: 4%; top: 5%; font: 3.2em/1 "VT323", monospace; color: #6dff7a; text-shadow: 0 0 .2em #6dff7a; z-index: 2; }
+  .tv .prog { position: absolute; left: 4%; bottom: 8%; right: 4%; z-index: 2; }
+  .tv .prog h3 { margin: 0; font: 3em "Anton"; text-transform: uppercase; text-shadow: .05em .05em 0 rgba(0,0,0,.4); }
+  .tv .prog p { margin: .2em 0 0; font-size: 1.3em; max-width: 80%; }
+  .tv .art { position: absolute; right: 6%; top: 18%; width: 34%; aspect-ratio: 1.8; border-radius: 1em; background: radial-gradient(#3fb36f, #22804a); box-shadow: 0 0 0 .6em #7b4a2a; }
+  .scan::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 .2em, rgba(0,0,0,.18) .2em .3em); pointer-events: none; z-index: 3; }
+  .noise { position: absolute; inset: 0; z-index: 4; opacity: 0; pointer-events: none;
+           background: repeating-radial-gradient(circle at 17% 32%, #fff 0 .05em, #000 .05em .12em), repeating-radial-gradient(circle at 71% 64%, #999 0 .07em, #111 .07em .15em); background-blend-mode: difference; }
+  .noise.on { animation: snow .28s steps(6) 1; }
+  @keyframes snow { 0% { opacity: 1; background-position: 0 0, 0 0; } 100% { opacity: 1; background-position: 3em 1em, -2em 3em; } }
+  .remote { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); display: flex; gap: .8em; }
+  .remote .f { width: 7.5em; padding: .5em 0; text-align: center; border-radius: .5em; background: #2a2a2a; box-shadow: 0 .35em 0 #111; font: 800 1.2em "Barlow Condensed"; text-transform: uppercase; transition: transform .15s; }
+  .remote .f b { display: block; font: 1.4em "VT323", monospace; color: #6dff7a; }
+  .remote .f.focus { transform: translateY(-.3em); background: var(--gold); color: var(--navy); }
+  .remote .f.focus b { color: var(--navy); }
+
+  /* game */
+  .halves { position: absolute; left: 0; right: 0; top: 0; bottom: 2.6em; display: grid; grid-template-columns: 1fr 1fr; gap: .25em; background: #000; }
+  .half { position: relative; overflow: hidden; background: linear-gradient(#35231b 0 45%, #4a3022 45%); }
+  .half .tbl { position: absolute; left: 10%; right: 10%; top: 45%; bottom: 10%; border-radius: 1.2em; background: #7b4a2a; }
+  .half .tbl::after { content: ""; position: absolute; inset: 9% 5%; border-radius: .7em; background: radial-gradient(#3fb36f, #22804a); }
+  .half .gb { position: absolute; width: 2.2em; height: 2.2em; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1; box-shadow: inset -.2em -.25em .4em rgba(0,0,0,.35); }
+  .scorebug { position: absolute; left: 3%; top: 5%; display: flex; font: 1.4em "Anton"; box-shadow: 0 .2em .6em rgba(0,0,0,.4); z-index: 2; }
+  .scorebug > * { padding: .15em .6em; }
+  .scorebug .ch { background: var(--gold); color: var(--navy); }
+  .scorebug .p { background: var(--navy); display: flex; gap: .5em; align-items: center; }
+  .scorebug .p.act { background: var(--royal); }
+  .scorebug .p.act::before { content: "▶"; font-size: .6em; color: var(--gold); }
+  .applaudi { position: absolute; right: 3%; top: 17%; width: 40%; z-index: 2; }
+  .applaudi small { display: block; font: 800 .95em "Barlow Condensed"; letter-spacing: .15em; margin-bottom: .2em; }
+  .applaudi .bar { height: 1.3em; background: rgba(0,0,0,.5); display: flex; gap: .12em; padding: .15em; border-radius: .2em; }
+  .applaudi .bar i { flex: 1; background: rgba(255,255,255,.12); }
+  .applaudi .bar i.on { background: var(--gold); } .applaudi .bar i.on.hot { background: var(--red); }
+  .crowd { position: absolute; left: 50%; top: 35%; transform: translate(-50%, -50%); font: 4em "Anton"; color: var(--gold); text-shadow: .05em .05em 0 #7a1010; animation: crowd 1.2s ease-out forwards; z-index: 3; pointer-events: none; }
+  @keyframes crowd { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+  .wipe { position: absolute; inset: 0; z-index: 4; pointer-events: none; display: grid; place-items: center; }
+  .wipe::before { content: ""; position: absolute; inset: -20% -40%; background: linear-gradient(100deg, transparent 30%, var(--gold) 30% 45%, var(--royal) 45% 70%, transparent 70%); animation: wipe .9s ease-in-out forwards; }
+  .wipe span { position: relative; font: 4em "Anton"; letter-spacing: .1em; opacity: 0; animation: rep .9s ease-in-out forwards; }
+  @keyframes wipe { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  @keyframes rep { 30%, 70% { opacity: 1; } 100% { opacity: 0; } }
+  .sponsor { position: absolute; right: 3%; top: 16%; width: 44%; background: #fff; color: var(--navy); padding: .6em .9em; border-left: .5em solid var(--gold); z-index: 3; animation: l3in .4s cubic-bezier(.2,.9,.3,1) both; }
+  .sponsor small { display: block; font-size: .95em; opacity: .7; }
+  .sponsor b { font: 1.6em "Anton"; text-transform: uppercase; }
+  .bars { position: absolute; inset: 0; z-index: 4; display: grid; grid-template-columns: repeat(7, 1fr); animation: bars 2s steps(1) forwards; }
+  .bars i:nth-child(1) { background: #c0c0c0; } .bars i:nth-child(2) { background: #c0c000; } .bars i:nth-child(3) { background: #00c0c0; } .bars i:nth-child(4) { background: #00c000; } .bars i:nth-child(5) { background: #c000c0; } .bars i:nth-child(6) { background: #c00000; } .bars i:nth-child(7) { background: #0000c0; }
+  .bars span { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #000; padding: .3em .8em; font: 1.6em "VT323", monospace; white-space: nowrap; }
+  @keyframes bars { 0%, 99% { opacity: 1; } 100% { opacity: 0; } }
+
+  /* end */
+  .reveal { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%); text-align: center; white-space: nowrap; }
+  .reveal .q { font: 2.6em "Anton"; text-transform: uppercase; letter-spacing: .05em; }
+  .reveal .w { font: 6.5em/1 "Anton"; color: var(--gold); text-shadow: .03em .03em 0 var(--royal), .06em .06em 0 #7a1010; opacity: 0; transform: scale(.3); transition: all .5s cubic-bezier(.3,1.6,.5,1); }
+  .reveal.done .w { opacity: 1; transform: none; }
+  .dots i { animation: blink .6s infinite; } .dots i:nth-child(2) { animation-delay: .2s; } .dots i:nth-child(3) { animation-delay: .4s; }
+  .prize { position: absolute; left: 50%; top: 57%; transform: translateX(-50%); display: flex; gap: 1em; white-space: nowrap; }
+  .prize div { background: rgba(255,255,255,.1); border-top: .3em solid var(--gold); padding: .35em .9em; text-align: center; font-size: 1.05em; }
+  .prize b { display: block; font: 1.4em "Anton"; }
+  .confetti { position: absolute; top: -5%; width: .7em; height: .35em; animation: conf 2.6s linear forwards; }
+  @keyframes conf { to { transform: translateY(40em) rotate(900deg); } }
+  .endbtns { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); display: flex; gap: 1em; }
+  .endbtns .gbtn { position: static; transform: none; }
+  .endbtns .gbtn.focus { transform: scale(1.1); }
+  .endbtns .gbtn.alt { background: #fff; }
+</style>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div><h1>Le Grand Show</h1><p>Chaque partie est une émission de télé en direct : bandeaux, score façon retransmission sportive, bande d'infos qui défile, faux sponsors pour les pouvoirs. Les modes et les dimensions sont des chaînes qu'on zappe.</p></div>
+    <a href="../ui.html">← Toutes les propositions</a>
+  </div>
+
+  <div class="stage-box"><div class="stage">
+
+    <section class="scr" id="title" data-label="Titre">
+      <div class="studio"></div><div class="beam" style="left:12%"></div><div class="beam b2" style="right:12%"></div>
+      <div class="applause">APPLAUDISSEZ</div>
+      <div class="live"><i></i>EN DIRECT</div>
+      <div class="logo anim"><div class="t1">CE SOIR</div><div class="t2">Le Grand<br>Billard</div><div class="t3">l'émission où tout est permis</div></div>
+      <div class="menu">
+        <div class="l3btn f default" data-go="lobby"><span class="k">1</span><span class="v">Entrer sur le plateau</span></div>
+        <div class="l3btn f" data-go="lobby"><span class="k">2</span><span class="v">Spéciale Party</span></div>
+        <div class="l3btn f" data-action="soon"><span class="k">3</span><span class="v">Régie (réglages)</span></div>
+        <div class="l3btn f" data-action="soon"><span class="k">4</span><span class="v">Fin des programmes</span></div>
+      </div>
+      <div class="ticker"><b>INFO</b><span>La bille 8 porte plainte pour harcèlement · Un joueur affirme avoir « vu la bande bouger » · Météo : risque d'effet rétro en fin de soirée · Le barman annonce une happy hour pour chaque faute</span></div>
+    </section>
+
+    <section class="scr" id="lobby" data-label="Joueurs" data-back="title">
+      <div class="studio"></div><div class="beam" style="left:30%"></div>
+      <div class="live"><i></i>EN DIRECT</div>
+      <div class="anton" style="position:absolute;left:50%;top:5%;transform:translateX(-50%);font-size:2.6em">Nos candidats ce soir</div>
+      <div class="meter"><small style="font-weight:800;letter-spacing:.15em">APPLAUDIMÈTRE</small><div class="bar" id="clap"></div></div>
+      <div class="podium on" style="left:30%;--pc:#2f7cf6"><div class="light"></div><div class="desk"><span class="plate">J1</span><span class="sub">Candidat n°1 · clavier</span></div></div>
+      <div class="podium f default" id="pod2" style="left:70%;--pc:#ff3b3b" data-action="join"><div class="light"></div><div class="desk"><span class="plate">J2 ?</span><span class="sub">appuie sur E / A pour monter</span></div></div>
+      <div class="gbtn f" data-go="mode">Lancer l'émission</div>
+    </section>
+
+    <section class="scr" id="mode" data-label="Zapping" data-back="lobby">
+      <div class="studio"></div>
+      <div class="tv"><div class="scr-in scan" id="tvin"><div class="osd" id="osd">CH 04</div><div class="art"></div>
+        <div class="prog"><h3 id="ptitle">Spéciale Party</h3><p id="pdesc"></p></div><div class="noise" id="noise"></div></div></div>
+      <div class="remote">
+        <div class="f" data-go="game" data-ch="01" data-t="Le 8-ball du soir" data-d="Pleines contre rayées, la 8 pour conclure. Annonce de poche obligatoire." data-c="#12345a"><b>CH 01</b>8-ball</div>
+        <div class="f" data-go="game" data-ch="02" data-t="9-ball Express" data-d="La plus petite bille d'abord. Qui rentre la 9 gagne." data-c="#3a1a4a"><b>CH 02</b>9-ball</div>
+        <div class="f" data-go="game" data-ch="03" data-t="Marathon 14.1" data-d="Chaque bille vaut un point. Premier à 25." data-c="#1a3a2a"><b>CH 03</b>14.1</div>
+        <div class="f default" data-go="game" data-ch="04" data-t="Spéciale Party" data-d="Les règles du 8-ball, des caisses de pouvoirs et zéro pitié." data-c="#5a1a1a"><b>CH 04</b>Party</div>
+        <div class="f" data-action="soon" data-ch="13" data-t="Maison hantée" data-d="Prochainement sur votre écran : une dimension où les billes ont peur du noir." data-c="#1a1a1a"><b>CH 13</b>Bientôt</div>
+      </div>
+    </section>
+
+    <section class="scr" id="game" data-label="En jeu" data-back="mode">
+      <div class="halves">
+        <div class="half" id="h1"><div class="tbl"></div><span class="gb" style="left:44%;top:62%;background:#f5f5f5"></span><span class="gb" style="left:58%;top:55%;background:#d8261c"></span><span class="gb" style="left:66%;top:68%;background:#111"></span>
+          <div class="scorebug"><span class="ch">UPG</span><span class="p act" id="s1a">J1 <b id="sc1">0</b></span><span class="p" id="s1b">J2 <b class="sc2">0</b></span></div>
+          <div class="live" style="top:5%"><i></i>DIRECT</div>
+          <div class="applaudi" id="ap1"><small>APPLAUDIMÈTRE</small><div class="bar"></div></div></div>
+        <div class="half" id="h2"><div class="tbl"></div><span class="gb" style="left:40%;top:60%;background:#f5f5f5"></span><span class="gb" style="left:55%;top:70%;background:#f07b12"></span>
+          <div class="scorebug"><span class="ch">UPG</span><span class="p act">J1 <b class="sc1">0</b></span><span class="p">J2 <b class="sc2">0</b></span></div>
+          <div class="live" style="top:5%"><i></i>DIRECT</div></div>
+      </div>
+      <div class="ticker"><b>DIRECT</b><span id="tick">J1 ouvre la partie · Les pronostics donnent J2 favori · Un spectateur réclame un remboursement · Rappel : les pouvoirs sont offerts par nos sponsors</span></div>
+    </section>
+
+    <section class="scr" id="end" data-label="Fin" data-back="game">
+      <div class="studio"></div><div class="beam" style="left:40%"></div>
+      <div class="live"><i></i>EN DIRECT</div>
+      <div class="reveal" id="reveal"><div class="q">Et le gagnant est<span class="dots"><i>.</i><i>.</i><i>.</i></span></div><div class="w">J1 !</div></div>
+      <div class="prize" id="prize" style="opacity:0;transition:opacity .5s"><div><small>Coup de la soirée</small><b>J1</b>double bande sur la 8</div><div><small>Prix du public</small><b>J2</b>Roi de la faute</div><div><small>Record</small><b>4</b>billes d'affilée</div></div>
+      <div id="conf"></div>
+      <div class="endbtns"><div class="gbtn f default" data-go="game">Rediffusion</div><div class="gbtn alt f" data-go="mode">Changer de chaîne</div></div>
+    </section>
+
+  </div></div>
+
+  <div class="proto-notes">
+    <div><b>L'idée</b>Le « friend slop » devient un jeu télévisé absurde : présentateur, public, sponsors. Chaque événement de la partie a un habillage télé (ralenti « REPLAY », bandeau de faute, pubs), ce qui donne du rythme sans gêner la lecture de la table.</div>
+    <div><b>Dimensions = chaînes</b>Changer de dimension, c'est zapper : neige, numéro de chaîne, nouveau programme. Le système de dimensions trouve une mise en scène naturelle, et « Prochainement sur votre écran » annonce les dimensions à venir.</div>
+    <div><b>Dans Unity</b>Bandeaux et score en Canvas animés (entrées latérales), la bande d'infos alimentée par les événements de <code>PoolMatchRules</code> (fautes, séries, pouvoirs), neige et mire en shader plein écran lors des pouvoirs d'attaque.</div>
+  </div>
+</div>
+
+<script>
+Site.renderHeader('ui', '../');
+const $ = id => document.getElementById(id);
+const bars = (el, n) => { el.innerHTML = Array.from({ length: n }, () => '<i></i>').join(''); };
+function fill(el, frac) { const is = [...el.querySelectorAll('i')]; is.forEach((i, k) => { const on = k < Math.round(frac * is.length); i.classList.toggle('on', on); i.classList.toggle('hot', on && k >= is.length * .8); }); }
+function lower(parent, a, b, red) {
+  parent.querySelectorAll('.l3').forEach(x => x.remove());
+  const d = document.createElement('div'); d.className = 'l3' + (red ? ' red' : ''); d.innerHTML = `<span class="a">${a}</span><span class="b">${b}</span>`;
+  parent.appendChild(d); setTimeout(() => { d.classList.add('out'); setTimeout(() => d.remove(), 400); }, 2400);
+}
+function crowd(parent, text) { const d = document.createElement('div'); d.className = 'crowd'; d.textContent = text; parent.appendChild(d); setTimeout(() => d.remove(), 1300); }
+const G = { turn: 1, s: [0, 0] };
+const half = () => $(G.turn === 1 ? 'h1' : 'h2');
+function setTurn(n) {
+  G.turn = n;
+  document.querySelectorAll('.scorebug').forEach(sb => { const ps = sb.querySelectorAll('.p'); ps[0].classList.toggle('act', n === 1); ps[1].classList.toggle('act', n === 2); });
+  half().appendChild($('ap1'));
+}
+function score() { document.querySelectorAll('#sc1, .sc1').forEach(e => e.textContent = G.s[0]); document.querySelectorAll('.sc2').forEach(e => e.textContent = G.s[1]); }
+function tick(text) { const t = $('tick'); t.textContent = text; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = ''; }
+
+window.PROTO = {
+  enter: {
+    lobby: () => { bars($('clap'), 20); fill($('clap'), .25); const p = $('pod2'); p.classList.remove('on'); p.querySelector('.plate').textContent = 'J2 ?'; p.querySelector('.sub').textContent = 'appuie sur E / A pour monter'; },
+    game: () => { bars($('ap1').querySelector('.bar'), 16); G.s = [0, 0]; score(); setTurn(1); },
+    end: () => {
+      const r = $('reveal'); r.classList.remove('done'); $('prize').style.opacity = 0; $('conf').innerHTML = '';
+      setTimeout(() => { r.classList.add('done'); $('prize').style.opacity = 1;
+        $('conf').innerHTML = Array.from({ length: 60 }, (_, i) => `<span class="confetti" style="left:${(i * 17) % 100}%;background:${['#ffc83d', '#ff3b3b', '#fff', '#1c3fb4'][i % 4]};animation-delay:${(i % 12) * .08}s"></span>`).join(''); }, 1500);
+    },
+  },
+  focus: (el, scr) => {
+    if (scr.id !== 'mode' || !el.dataset.ch) return;
+    const n = $('noise'); n.classList.remove('on'); void n.offsetWidth; n.classList.add('on');
+    setTimeout(() => { $('osd').textContent = 'CH ' + el.dataset.ch; $('ptitle').textContent = el.dataset.t; $('pdesc').textContent = el.dataset.d; $('tvin').style.setProperty('--prog', el.dataset.c); }, 140);
+  },
+  actions: {
+    soon: (el, scr) => { if (scr.id === 'mode') return; crowd(scr, 'Bientôt !'); },
+    join: el => {
+      if (el.classList.contains('on')) return;
+      el.classList.add('on'); el.querySelector('.plate').textContent = 'J2'; el.querySelector('.sub').textContent = 'Candidate n°2 · manette';
+      let f = .25; const t = setInterval(() => { f += .06; fill($('clap'), Math.min(f, 1)); if (f >= 1) { clearInterval(t); setTimeout(() => fill($('clap'), .5), 600); } }, 40);
+      crowd(Proto.current, 'Ouaaais !');
+      setTimeout(() => Proto.setFocus(document.querySelector('#lobby .gbtn')), 400);
+    },
+  },
+  beforeGo: (el, scr, done) => {
+    if (scr.id === 'mode') { const n = $('noise'); n.classList.remove('on'); void n.offsetWidth; n.classList.add('on'); setTimeout(done, 280); }
+    else done();
+  },
+  events: {
+    shot: { label: 'Tirer', on: 'game', run: () => {
+      const bar = $('ap1').querySelector('.bar'); let f = 0;
+      const t = setInterval(() => { f += .05; fill(bar, Math.min(f, 1)); if (f >= 1) { clearInterval(t); setTimeout(() => { fill(bar, 0); crowd(half(), 'OHHHH !'); }, 200); } }, 35);
+    } },
+    pot: { label: 'Bille rentrée', on: 'game', run: () => {
+      const h = half(); const w = document.createElement('div'); w.className = 'wipe'; w.innerHTML = '<span>REPLAY</span>'; h.appendChild(w); setTimeout(() => w.remove(), 950);
+      G.s[G.turn - 1]++; setTimeout(() => { score(); lower(h, `J${G.turn} rentre la 3 !`, 'Série en cours : ' + G.s[G.turn - 1]); }, 700);
+      tick(`J${G.turn} marque · Le public est debout · Le barman offre une tournée de craie`);
+    } },
+    foul: { label: 'Faute', on: 'game', run: () => {
+      lower(half(), 'Faute !', `Main libre pour J${G.turn === 1 ? 2 : 1} · wah wah waaah`, true);
+      tick(`FAUTE de J${G.turn} · La régie envisage un ralenti de la honte · J${G.turn === 1 ? 2 : 1} reprend la main`);
+      setTimeout(() => setTurn(G.turn === 1 ? 2 : 1), 1500);
+    } },
+    power: { label: 'Pouvoir ramassé', on: 'game', run: () => {
+      const h = half(); h.querySelectorAll('.sponsor').forEach(x => x.remove());
+      const s = document.createElement('div'); s.className = 'sponsor'; s.innerHTML = '<small>Ce tour vous est offert par</small><b>Vision brouillée™</b><small>« Parce que viser, c\'est surfait. »</small>'; h.appendChild(s);
+      setTimeout(() => s.remove(), 3200);
+    } },
+    use: { label: 'Lancer le pouvoir sur J2', on: 'game', run: () => {
+      const b = document.createElement('div'); b.className = 'bars'; b.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><span>INTERRUPTION DES PROGRAMMES</span>';
+      $('h2').appendChild(b); setTimeout(() => b.remove(), 2100);
+      tick('Incident technique chez J2 · Nous prions nos candidats de nous excuser pour la gêne occasionnée');
+    } },
+    win: { label: 'Fin de partie', on: 'game', run: () => Proto.show('end') },
+  },
+};
+</script>
+<script src="proto.js"></script>
+</body>
+</html>

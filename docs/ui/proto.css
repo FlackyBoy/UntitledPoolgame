@@ -1,0 +1,33 @@
+/* Shared shell for the interactive UI prototypes (docs/ui/*.html). */
+.proto-wrap { max-width: 1240px; margin: 0 auto; padding: 20px 16px 60px; }
+.proto-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.proto-head h1 { margin: 0; }
+.proto-head p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.proto-head a { font-size: 14px; }
+
+.stage-box { background: #000; border-radius: 14px; overflow: hidden; }
+.stage { position: relative; aspect-ratio: 16 / 9; width: 100%; margin: 0 auto; overflow: hidden; container-type: inline-size; line-height: 1.2; user-select: none; -webkit-user-select: none; }
+/* cqw resolves against the nearest container ancestor, not the element itself:
+   the size unit goes on the stage's children (screens and flying effects). */
+.stage > * { font-size: 1.6cqw; }
+.stage-box:fullscreen { display: grid; place-items: center; border-radius: 0; }
+.stage-box:fullscreen .stage { width: min(100vw, 177.78vh); }
+.scr { position: absolute; inset: 0; visibility: hidden; opacity: 0; transition: opacity .35s ease, visibility 0s linear .35s; }
+.scr.active { visibility: visible; opacity: 1; transition: opacity .35s ease; }
+.f { cursor: pointer; }
+
+.proto-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 12px; font-size: 14px; }
+.proto-bar .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.proto-bar .lbl { color: var(--muted); font-size: 13px; margin-right: 2px; }
+.proto-bar button { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 6px 11px; font: inherit; font-size: 13px; cursor: pointer; }
+.proto-bar button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.proto-bar button.ev { border-style: dashed; }
+.proto-keys { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.proto-keys kbd { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--text); }
+.proto-notes { margin-top: 28px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.proto-notes div { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; font-size: 14px; }
+.proto-notes b { display: block; margin-bottom: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stage *, .stage *::before, .stage *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

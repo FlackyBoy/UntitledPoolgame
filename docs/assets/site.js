@@ -14,13 +14,14 @@
     { key: 'level', href: 'level.html', label: 'Outil de niveau' },
   ];
 
-  function renderHeader(active) {
+  // base: path prefix back to docs/ for pages in a subfolder (e.g. '../').
+  function renderHeader(active, base = '') {
     const header = document.createElement('header');
     header.className = 'site-header';
     const links = PAGES.map(p => p.soon
       ? `<span class="soon" title="Page à venir">${p.label}<small>bientôt</small></span>`
-      : `<a href="${p.href}"${p.key === active ? ' aria-current="page"' : ''}>${p.label}</a>`).join('');
-    header.innerHTML = `<div class="bar"><a class="brand" href="index.html">Untitled<span>Pool</span>Game</a><nav class="nav">${links}</nav></div>`;
+      : `<a href="${base}${p.href}"${p.key === active ? ' aria-current="page"' : ''}>${p.label}</a>`).join('');
+    header.innerHTML = `<div class="bar"><a class="brand" href="${base}index.html">Untitled<span>Pool</span>Game</a><nav class="nav">${links}</nav></div>`;
     document.body.prepend(header);
   }
 
