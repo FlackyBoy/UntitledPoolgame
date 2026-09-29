@@ -56,6 +56,11 @@ namespace UntitledPoolGame.Interaction
             interactionSystem.GetInteractionObject(primaryEffector) == obj &&
             (interactionSystem.IsPaused(primaryEffector) || interactionSystem.IsInInteraction(primaryEffector));
 
+        // Held AND done moving into the held pose — from then on LateUpdate
+        // no longer writes the cue's transform, so another script
+        // (LocalCueMelee's swing) can move it without being overwritten.
+        public bool IsSettled => interactionSystem != null && obj != null && Holding && holdWeight >= 0.999f;
+
         private Quaternion HeldRotation => interactionSystem.transform.rotation * Quaternion.Euler(holdRotationOffset);
 
         private bool Holding =>

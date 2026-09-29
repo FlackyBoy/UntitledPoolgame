@@ -186,6 +186,10 @@ namespace UntitledPoolGame.Pool
 
         private LocalFpsPlayerController fpsController;
         private LocalPlayerHandController handController;
+        // Optional: aim can't start mid-swing (EnterAim snapshots the cue's
+        // held pose, which the swing is temporarily moving).
+        private LocalCueMelee cueMelee;
+        private LocalUnarmedMelee unarmedMelee;
         private CharacterController characterController;
         private PlayerInput playerInput;
         // CinemachineBrain overwrites the actual camera's Transform every
@@ -223,6 +227,8 @@ namespace UntitledPoolGame.Pool
         {
             fpsController = GetComponent<LocalFpsPlayerController>();
             handController = GetComponent<LocalPlayerHandController>();
+            cueMelee = GetComponent<LocalCueMelee>();
+            unarmedMelee = GetComponent<LocalUnarmedMelee>();
             cinemachineBrain = GetComponentInChildren<CinemachineBrain>(true);
             characterController = GetComponent<CharacterController>();
             playerInput = GetComponent<PlayerInput>();
@@ -555,7 +561,8 @@ namespace UntitledPoolGame.Pool
             if (!isAiming)
             {
                 currentCueBall = FindNearbyCueBall();
-                if (currentCueBall != null && IsCue(handController.HeldObject) && CanShootNow() && InteractPressedThisFrame())
+                if (currentCueBall != null && IsCue(handController.HeldObject) && CanShootNow() && InteractPressedThisFrame()
+                    && (cueMelee == null || !cueMelee.IsSwinging) && (unarmedMelee == null || !unarmedMelee.IsAttacking))
                     EnterAim();
                 return;
             }

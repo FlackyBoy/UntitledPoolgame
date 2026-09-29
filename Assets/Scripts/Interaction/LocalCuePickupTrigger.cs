@@ -24,6 +24,7 @@ namespace UntitledPoolGame.Interaction
         private LocalPlayerHandController handController;
 
         public LocalGrabbable CueGrabbable => cueGrabbable;
+        public PickUpCue PickUpCue => pickUpCue;
 
         private void Awake()
         {

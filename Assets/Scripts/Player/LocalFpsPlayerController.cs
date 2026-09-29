@@ -46,6 +46,19 @@ namespace UntitledPoolGame.Player
         // care why it's been set.
         public bool InvertLook { get; set; }
 
+        // Degrees, positive = looking down (camera pivot's local X).
+        public float Pitch => pitch;
+
+        // Turns the view from code (LocalCueMelee swings it back toward the
+        // target on a strike), on top of the player's own look input.
+        public void AddLook(float yawDegrees, float pitchDegrees)
+        {
+            transform.Rotate(Vector3.up * yawDegrees);
+            pitch = Mathf.Clamp(pitch + pitchDegrees, minPitch, maxPitch);
+            if (cameraPivot != null)
+                cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        }
+
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
