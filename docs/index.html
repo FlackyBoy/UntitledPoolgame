@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UntitledPoolGame — Projet</title>
+<meta name="description" content="Documentation du projet UntitledPoolGame : TODO, GDD, documentation technique, propositions d'UI et outil de niveau.">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main>
+  <h1>UntitledPoolGame</h1>
+  <p class="lead">Jeu de billard « friend slop » multi-dimensionnel en vue FPS : de vraies règles et une vraie physique de billard, détournées par des pouvoirs, des objets à lancer et des dimensions aux règles loufoques. Deux joueurs en écran partagé, en ligne plus tard.</p>
+
+  <div class="stats" id="stats" aria-live="polite">
+    <div class="stat"><b>…</b><span>à faire</span></div>
+    <div class="stat"><b>…</b><span>en cours</span></div>
+    <div class="stat"><b>…</b><span>faits</span></div>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="gdd.html#todo"><h3>TODO</h3><p>La liste des tâches, filtrable, toujours synchronisée avec <code>TODO.md</code>.</p></a>
+    <a class="card" href="gdd.html#gdd"><h3>GDD</h3><p>Concept, boucle de jeu, contrôles, modes, pouvoirs, dimensions.</p></a>
+    <a class="card" href="gdd.html#pistes"><h3>Pistes &amp; suggestions</h3><p>Ce qui est envisagé mais pas décidé, et les propositions de Claude.</p></a>
+    <div class="card disabled"><h3>Documentation technique</h3><p>UML, séquences, briques techniques, rendu, performances, arborescence… — à venir.</p></div>
+    <div class="card disabled"><h3>Propositions UI</h3><p>Maquettes d'interface à comparer — à venir.</p></div>
+    <div class="card disabled"><h3>Outil de niveau</h3><p>Aide à la construction de niveaux dans l'éditeur — à venir.</p></div>
+  </div>
+
+  <h2 style="margin-top:40px">Dernières modifications</h2>
+  <div class="prose" id="changelog"><p class="loading">Chargement du changelog…</p></div>
+</main>
+<footer class="site-footer">Contenu lu depuis le dépôt <a href="https://github.com/FlackyBoy/UntitledPoolgame">FlackyBoy/UntitledPoolgame</a> (branche master).</footer>
+<script>
+  Site.renderHeader('home');
+
+  Site.fetchRoot('TODO.md').then(md => {
+    const c = Site.countStatuses(Site.parseTodo(md));
+    const s = document.querySelectorAll('#stats .stat b');
+    s[0].textContent = c.todo; s[1].textContent = c.wip; s[2].textContent = c.done;
+  }).catch(err => Site.showError(document.getElementById('stats'), err));
+
+  const changelog = document.getElementById('changelog');
+  Site.fetchRoot('CHANGELOG.md')
+    .then(md => Site.renderMarkdown(Site.latestChangelogEntry(md), changelog))
+    .catch(err => Site.showError(changelog, err));
+</script>
+</body>
+</html>

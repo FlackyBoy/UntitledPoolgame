@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TODO & GDD — UntitledPoolGame</title>
+<meta name="description" content="TODO, Game Design Document et pistes envisagées pour UntitledPoolGame.">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main>
+  <h1>TODO &amp; GDD</h1>
+  <p class="lead">Ce qui reste à faire, le document de game design qui en découle, et les idées pas encore tranchées.</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-todo" aria-controls="todo" data-tab="todo">TODO</button>
+    <button role="tab" id="tab-gdd" aria-controls="gdd" data-tab="gdd">GDD</button>
+    <button role="tab" id="tab-pistes" aria-controls="pistes" data-tab="pistes">Pistes &amp; suggestions</button>
+  </div>
+
+  <section class="tabpanel" id="todo" role="tabpanel" aria-labelledby="tab-todo">
+    <p class="loading">Chargement de TODO.md…</p>
+  </section>
+  <section class="tabpanel" id="gdd" role="tabpanel" aria-labelledby="tab-gdd" hidden>
+    <div class="with-toc"><article class="prose" id="gdd-body"><p class="loading">Chargement…</p></article><nav class="toc" id="gdd-toc"></nav></div>
+  </section>
+  <section class="tabpanel" id="pistes" role="tabpanel" aria-labelledby="tab-pistes" hidden>
+    <div class="with-toc"><article class="prose" id="pistes-body"><p class="loading">Chargement…</p></article><nav class="toc" id="pistes-toc"></nav></div>
+  </section>
+</main>
+<footer class="site-footer">Sources : <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/TODO.md">TODO.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/gdd.md">docs/content/gdd.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/pistes.md">docs/content/pistes.md</a></footer>
+<script>
+  Site.renderHeader('gdd');
+
+  const loaders = {
+    todo: () => Site.fetchRoot('TODO.md')
+      .then(md => Site.renderTodo(Site.parseTodo(md), document.getElementById('todo')))
+      .catch(err => Site.showError(document.getElementById('todo'), err)),
+    gdd: () => Site.fetchText('content/gdd.md')
+      .then(md => Site.renderMarkdown(md, document.getElementById('gdd-body'), document.getElementById('gdd-toc')))
+      .catch(err => Site.showError(document.getElementById('gdd-body'), err)),
+    pistes: () => Site.fetchText('content/pistes.md')
+      .then(md => Site.renderMarkdown(md, document.getElementById('pistes-body'), document.getElementById('pistes-toc')))
+      .catch(err => Site.showError(document.getElementById('pistes-body'), err)),
+  };
+  const loaded = {};
+
+  // Only the tab's own hash selects it; a heading anchor inside a tab keeps
+  // whichever tab is already open.
+  function select(tab, updateHash) {
+    document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    document.querySelectorAll('.tabpanel').forEach(p => { p.hidden = p.id !== tab; });
+    if (!loaded[tab]) { loaded[tab] = true; loaders[tab](); }
+    if (updateHash) history.replaceState(null, '', '#' + tab);
+  }
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => select(b.dataset.tab, true)));
+  const initial = location.hash.slice(1);
+  select(loaders[initial] ? initial : 'todo', false);
+  addEventListener('hashchange', () => { const t = location.hash.slice(1); if (loaders[t]) select(t, false); });
+</script>
+</body>
+</html>
