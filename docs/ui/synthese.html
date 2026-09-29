@@ -8,7 +8,18 @@
 <link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="proto.css">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Caveat+Brush&family=Nunito:wght@700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Bowlby+One&family=Caveat+Brush&family=Fredoka:wght@700&family=Lilita+One&family=Nunito:wght@700;900&family=Titan+One&display=swap">
+<style>
+  /* Menu typeface picker (the end-screen slate keeps its chalk). */
+  .fontpick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; font-size: 14px; }
+  .fontpick span { color: var(--muted); font-size: 13px; margin-right: 4px; }
+  .fontpick button { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 5px 12px; cursor: pointer; font-size: 17px; }
+  .fontpick button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .stage.mf #title .chalk, .stage.mf #lobby .chalk, .stage.mf #mode .chalk { font-family: var(--mfont); font-weight: var(--mweight, 400); letter-spacing: .01em;
+    color: #fff7e3; text-shadow: 0 .08em 0 #0d4527, 0 .14em .2em rgba(0,0,0,.3); }
+  .stage.mf #title .lab, .stage.mf #mode .lab { font-size: 1.45em; }
+  .stage.mf #title .logo .small { font-size: 1.8em; }
+</style>
 <style>
   .stage { --felt: #1d7f4b; --felt-d: #125c35; --wood: #6b3a1e; --wood-l: #8d5330; --chalk: #eaf6ff; --cube: #3d8fe0;
            font-family: "Nunito", sans-serif; color: var(--chalk); background: var(--felt-d); }
@@ -179,6 +190,7 @@
     <a href="../ui.html">← Toutes les propositions</a>
   </div>
 
+  <div class="fontpick" id="fontpick" role="group" aria-label="Typo des menus"><span>Typo des menus :</span></div>
   <div class="stage-box"><div class="stage">
 
     <!-- TITLE -->
@@ -275,6 +287,32 @@
 
 <script>
 Site.renderHeader('ui', '../');
+
+// Menu typeface picker — remembered per viewer; the choice is also shown so
+// it can be pasted back in the conversation.
+const FONTS = [
+  { id: 'fredoka', label: 'Fredoka', family: '"Fredoka", sans-serif', weight: 700 },
+  { id: 'lilita', label: 'Lilita One', family: '"Lilita One", sans-serif', weight: 400 },
+  { id: 'baloo', label: 'Baloo 2', family: '"Baloo 2", sans-serif', weight: 800 },
+  { id: 'titan', label: 'Titan One', family: '"Titan One", sans-serif', weight: 400 },
+  { id: 'bowlby', label: 'Bowlby One', family: '"Bowlby One", sans-serif', weight: 400 },
+  { id: 'chalk', label: 'Craie (actuelle)', family: '"Caveat Brush", cursive', weight: 400 },
+];
+(function () {
+  const box = document.getElementById('fontpick'), stage = document.querySelector('.stage');
+  box.insertAdjacentHTML('beforeend', FONTS.map(f => `<button data-f="${f.id}" style="font-family:${f.family.replace(/"/g, "'")};font-weight:${f.weight}">${f.label}</button>`).join(''));
+  function pick(id) {
+    const f = FONTS.find(x => x.id === id) || FONTS[0];
+    stage.classList.toggle('mf', f.id !== 'chalk');
+    stage.style.setProperty('--mfont', f.family); stage.style.setProperty('--mweight', f.weight);
+    box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === f.id)));
+    try { localStorage.setItem('untitledpool-menu-font', f.id); } catch (e) {}
+    setTimeout(() => { const s = window.Proto && Proto.current, el = s && s.querySelector('.f.focus'); if (el && s.querySelector('.cue-stick')) aim(s, el); }, 50);
+  }
+  box.addEventListener('click', e => { const b = e.target.closest('button'); if (b) pick(b.dataset.f); });
+  let saved = null; try { saved = localStorage.getItem('untitledpool-menu-font'); } catch (e) {}
+  pick(saved || 'fredoka');
+})();
 const ICON = {
   attack: '<svg viewBox="0 0 20 20"><path d="M10 2 19 18H1Z" fill="#fff"/></svg>',
   effect: '<svg viewBox="0 0 20 20"><path d="m10 1 2.6 6 6.4.5-4.9 4.2 1.5 6.3L10 14.6 4.4 18l1.5-6.3L1 7.5 7.4 7Z" fill="#fff"/></svg>',
