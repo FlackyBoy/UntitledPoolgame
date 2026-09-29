@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propositions UI — UntitledPoolGame</title>
+<meta name="description" content="Maquettes d'interface à comparer pour UntitledPoolGame : direction artistique, menus, HUD, visée, pouvoirs, fin de partie.">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=DM+Serif+Display&family=Rajdhani:wght@500;700&display=swap">
+<style>
+  /* ---------- Page chrome ---------- */
+  .controls { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin: 0 0 8px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
+  .seg button { border: 0; background: none; padding: 7px 14px; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .ctl-label { font-size: 13px; color: var(--muted); margin-right: 6px; }
+  .sticky-controls { position: sticky; top: 53px; z-index: 5; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .screen { margin: 0 0 48px; }
+  .screen > h2 { font-size: 22px; margin: 0 0 4px; }
+  .screen > .why { color: var(--muted); margin: 0 0 14px; max-width: 75ch; }
+  .variants { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .variants button { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  .variants button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .variants button .star { color: var(--wip); margin-left: 4px; }
+  .variant-desc { font-size: 14px; color: var(--muted); margin: 10px 0 0; max-width: 80ch; }
+  .pick { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; margin-top: 12px; }
+  .pick label { font-size: 14px; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .pick textarea { flex: 1 1 320px; min-height: 42px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 14px; resize: vertical; }
+  .summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .summary pre { white-space: pre-wrap; font-size: 13px; margin: 10px 0 0; }
+  .btn { border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 8px; padding: 8px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn.ghost { background: none; color: var(--accent); }
+  .principles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .principles div { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; font-size: 14px; }
+  .principles b { display: block; margin-bottom: 4px; font-size: 15px; }
+
+  /* ---------- Mock skins (driven by the art-direction toggle) ---------- */
+  .mock {
+    --ui-font: "Rajdhani", system-ui, sans-serif; --ui-title: "Rajdhani", system-ui, sans-serif;
+    --ui-bg: rgba(8, 12, 28, .78); --ui-fg: #e6f7ff; --ui-muted: #8fb3c8;
+    --ui-accent: #35e8ff; --ui-accent2: #ff3fa4; --ui-radius: 6px;
+    --ui-border: 1px solid rgba(53, 232, 255, .55); --ui-shadow: 0 0 1.2em rgba(53, 232, 255, .35);
+    --ui-btn-bg: rgba(53, 232, 255, .15); --ui-btn-fg: #e6f7ff; --ui-title-case: uppercase; --ui-title-spacing: .08em;
+  }
+  body.skin-party .mock {
+    --ui-font: system-ui, "Segoe UI", sans-serif; --ui-title: "Bungee", system-ui, sans-serif;
+    --ui-bg: #fff4d6; --ui-fg: #2a1a0a; --ui-muted: #7a5a30;
+    --ui-accent: #ff5a2e; --ui-accent2: #1fa8ff; --ui-radius: 1em;
+    --ui-border: .18em solid #2a1a0a; --ui-shadow: 0 .25em 0 #2a1a0a;
+    --ui-btn-bg: #ffd23f; --ui-btn-fg: #2a1a0a; --ui-title-case: none; --ui-title-spacing: 0;
+  }
+  body.skin-diegetic .mock {
+    --ui-font: Georgia, "Times New Roman", serif; --ui-title: "DM Serif Display", Georgia, serif;
+    --ui-bg: rgba(46, 27, 14, .82); --ui-fg: #f3e5c6; --ui-muted: #c7ab7c;
+    --ui-accent: #dca544; --ui-accent2: #86b8a3; --ui-radius: .25em;
+    --ui-border: 1px solid rgba(220, 165, 68, .6); --ui-shadow: 0 .3em 1em rgba(0, 0, 0, .45);
+    --ui-btn-bg: rgba(220, 165, 68, .18); --ui-btn-fg: #f3e5c6; --ui-title-case: none; --ui-title-spacing: .01em;
+  }
+
+  .frame { position: relative; aspect-ratio: 16 / 9; width: 100%; border-radius: 12px; overflow: hidden; container-type: inline-size; background: #101418; border: 1px solid var(--border); }
+  .mock { position: absolute; inset: 0; font-family: var(--ui-font); color: var(--ui-fg); font-size: 1.55cqw; line-height: 1.3; }
+  .halves { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .25%; background: #000; }
+  .half { position: relative; overflow: hidden; }
+  .scene { position: absolute; inset: 0; background:
+      radial-gradient(ellipse at 50% 18%, rgba(255, 214, 140, .28), transparent 55%),
+      linear-gradient(#2a1d16 0 52%, #3b2a1e 52%); }
+  .scene .table { position: absolute; left: 12%; right: 12%; top: 50%; height: 34%; border-radius: 1.4em; background: #5a3a22; box-shadow: 0 1em 2em rgba(0,0,0,.5); }
+  .scene .felt { position: absolute; inset: 9% 5%; border-radius: .6em; background: radial-gradient(#2f8a57, #1c5a36); }
+  .scene .ball { position: absolute; width: 3.2%; aspect-ratio: 1; border-radius: 50%; box-shadow: inset -.15em -.15em .3em rgba(0,0,0,.35); }
+  .scene.top { background: #1d130d; }
+  .scene.top .table { left: 8%; right: 8%; top: 12%; height: 76%; }
+  .scene.top .pocket { position: absolute; width: 5%; aspect-ratio: 1; border-radius: 50%; background: #0b0b0b; transform: translate(-50%, -50%); }
+  .scene.top .pocket.hl { box-shadow: 0 0 0 .25em var(--ui-accent), 0 0 1.4em var(--ui-accent); }
+  .crosshair { position: absolute; left: 50%; top: 50%; width: .5em; height: .5em; border-radius: 50%; background: rgba(255,255,255,.8); transform: translate(-50%, -50%); }
+
+  .panel { background: var(--ui-bg); border: var(--ui-border); border-radius: var(--ui-radius); box-shadow: var(--ui-shadow); padding: .6em .8em; }
+  .ttl { font-family: var(--ui-title); text-transform: var(--ui-title-case); letter-spacing: var(--ui-title-spacing); }
+  .muted { color: var(--ui-muted); }
+  .acc { color: var(--ui-accent); }
+  .ubtn { display: inline-flex; align-items: center; gap: .4em; background: var(--ui-btn-bg); color: var(--ui-btn-fg); border: var(--ui-border); border-radius: var(--ui-radius); padding: .35em .8em; font-family: var(--ui-title); text-transform: var(--ui-title-case); letter-spacing: var(--ui-title-spacing); }
+  .key { display: inline-grid; place-items: center; min-width: 1.5em; height: 1.5em; padding: 0 .3em; border-radius: .3em; background: var(--ui-fg); color: #111; font-family: system-ui, sans-serif; font-weight: 700; font-size: .8em; }
+  .key.pad { border-radius: 50%; }
+  .pos { position: absolute; }
+  .row { display: flex; align-items: center; gap: .5em; }
+  .col { display: flex; flex-direction: column; gap: .35em; }
+  .chip { display: inline-flex; align-items: center; gap: .35em; padding: .15em .55em; border-radius: 999px; background: rgba(255,255,255,.12); font-size: .85em; }
+  body.skin-party .chip { background: rgba(42,26,10,.08); }
+  .mini-ball { display: inline-block; width: 1.1em; height: 1.1em; border-radius: 50%; vertical-align: middle; box-shadow: inset -.1em -.1em .2em rgba(0,0,0,.35); }
+  .stripe { background: linear-gradient(#fff 0 28%, var(--c) 28% 72%, #fff 72%) !important; }
+  .gauge-v { width: .9em; height: 8em; border: var(--ui-border); border-radius: var(--ui-radius); background: rgba(0,0,0,.35); position: relative; overflow: hidden; }
+  .gauge-v i { position: absolute; left: 0; right: 0; bottom: 0; height: 68%; background: linear-gradient(0deg, var(--ui-accent2), var(--ui-accent)); }
+  .strike { width: 5em; height: 5em; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #d9d9d9 60%, #aaa); position: relative; border: var(--ui-border); }
+  .strike i { position: absolute; width: .7em; height: .7em; border-radius: 50%; background: #e0312a; left: 58%; top: 30%; transform: translate(-50%, -50%); box-shadow: 0 0 0 .15em #fff; }
+  .strike::before, .strike::after { content: ""; position: absolute; background: rgba(0,0,0,.18); }
+  .strike::before { left: 50%; top: 8%; bottom: 8%; width: 1px; }
+  .strike::after { top: 50%; left: 8%; right: 8%; height: 1px; }
+  .ring { position: absolute; left: 50%; top: 50%; width: 7em; height: 7em; transform: translate(-50%, -50%); border-radius: 50%;
+          background: conic-gradient(var(--ui-accent) 0 68%, rgba(255,255,255,.12) 68% 100%);
+          -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%); mask: radial-gradient(circle, transparent 58%, #000 60%); }
+  .veil { position: absolute; inset: 0; background: rgba(255,255,255,.55); }
+  .big { font-size: 2.2em; line-height: 1.1; }
+  .huge { font-size: 3.2em; line-height: 1; }
+  .card-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8em; }
+  .mode-card { min-height: 12em; display: flex; flex-direction: column; gap: .4em; }
+  .mode-card.sel { outline: .2em solid var(--ui-accent); outline-offset: .15em; }
+  .board { background: #1f2a24; border: .6em solid #6b4526; border-radius: .3em; box-shadow: 0 1em 2em rgba(0,0,0,.6); color: #f1f1e6; font-family: "DM Serif Display", Georgia, serif; }
+  .toast { font-size: .95em; }
+  .dim { opacity: .55; }
+  .blur { filter: blur(.12em); }
+</style>
+<script src="assets/site.js"></script>
+</head>
+<body class="skin-neon">
+<main>
+  <h1>Propositions UI</h1>
+  <p class="lead">Des maquettes à comparer pour chaque écran du jeu. Choisis une direction artistique et un type de manette en haut : toutes les maquettes s'adaptent. Pour chaque écran, marque ta variante préférée et ajoute un commentaire, puis copie le récapitulatif en bas de page pour me le coller dans la conversation.</p>
+
+  <div class="sticky-controls">
+    <div class="controls">
+      <div><span class="ctl-label">Direction artistique</span>
+        <div class="seg" id="skin-seg" role="group" aria-label="Direction artistique">
+          <button data-skin="neon" aria-pressed="true">Bar néon</button>
+          <button data-skin="party" aria-pressed="false">Cartoon party</button>
+          <button data-skin="diegetic" aria-pressed="false">Bar d'époque</button>
+        </div></div>
+      <div><span class="ctl-label">Commandes affichées</span>
+        <div class="seg" id="device-seg" role="group" aria-label="Commandes affichées">
+          <button data-device="kb" aria-pressed="true">Clavier / souris</button>
+          <button data-device="pad" aria-pressed="false">Manette</button>
+        </div></div>
+    </div>
+  </div>
+
+  <section class="screen" id="direction">
+    <h2>0. Direction artistique</h2>
+    <p class="why">Trois pistes pour le ton de toute l'interface. Elles changent les couleurs, les polices et les formes de toutes les maquettes de la page.</p>
+    <div class="principles">
+      <div><b>Bar néon</b>Nuit, néons cyan et rose, texte fin en capitales. Colle au décor de bar, lisible sur fond sombre, ambiance compétitive.</div>
+      <div><b>Cartoon party</b>Formes rondes, contours épais, couleurs saturées, grosse typo. Le ton « friend slop » le plus assumé, très lisible à distance d'une télé.</div>
+      <div><b>Bar d'époque</b>Bois, laiton, typo à empattements, ardoises : une interface qui semble faire partie du bar. Plus sobre, plus élégant, moins « jeu vidéo ».</div>
+    </div>
+  </section>
+
+  <div id="screens"></div>
+
+  <section class="screen" id="principes">
+    <h2>Principes communs, quelle que soit la variante</h2>
+    <div class="principles">
+      <div><b>Écran partagé d'abord</b>Chaque joueur n'a qu'une moitié d'écran, souvent vue de loin sur une télé : textes grands, peu d'éléments, rien de crucial au bord central.</div>
+      <div><b>Forme + couleur</b>Catégories de pouvoir et groupes de billes reconnaissables sans la couleur (daltonisme) : triangle pour Attaque, bouclier pour Défense, étoile pour Effet ; pleines rondes, rayées à bande.</div>
+      <div><b>Bonne touche affichée</b>Les invites suivent l'appareil du joueur (clavier ou manette), détecté par son <code>PlayerInput</code>.</div>
+      <div><b>Une info, un endroit</b>Le tour, le pouvoir en stock et la jauge de charge ont chacun une place fixe ; les messages temporaires ne les recouvrent pas.</div>
+      <div><b>Implémentation</b>Remplacer l'<code>OnGUI</code> actuel par une UI Canvas (ou UI Toolkit) : un canvas par joueur attaché à sa caméra, plus un canvas commun pour ce qui concerne les deux (menus, fin de partie).</div>
+    </div>
+  </section>
+
+  <section class="screen" id="recap">
+    <h2>Mes choix</h2>
+    <div class="summary">
+      <div class="row" style="gap:10px;flex-wrap:wrap">
+        <button class="btn" id="copy">Copier le récapitulatif</button>
+        <button class="btn ghost" id="reset">Tout effacer</button>
+        <span id="copy-status" class="muted" style="font-size:13px"></span>
+      </div>
+      <pre id="summary-text"></pre>
+      <p style="font-size:13px;color:var(--muted);margin:8px 0 0">Tes choix restent enregistrés dans ce navigateur uniquement. Pour me les transmettre, copie le récapitulatif et colle-le dans la conversation.</p>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">Maquettes indicatives (HTML/CSS), pas des captures du jeu.</footer>
+
+<script>
+Site.renderHeader('ui');
+
+/* ---------- Small helpers ---------- */
+const DEVICE = { kb: { interact: 'E', attack: 'Clic', power: 'F', move: 'ZQSD', look: 'Souris' },
+                 pad: { interact: 'Y', attack: 'X', power: 'X', move: 'L', look: 'R' } };
+let device = 'kb';
+const key = a => `<span class="key${device === 'pad' ? ' pad' : ''}">${DEVICE[device][a]}</span>`;
+const BALL = { 1: '#f4c20d', 2: '#1f4fd1', 3: '#d8261c', 4: '#6a2c91', 5: '#f07b12', 6: '#138a3a', 7: '#7a1f1f', 8: '#111' };
+const ball = (n, striped) => striped
+  ? `<span class="mini-ball stripe" style="--c:${BALL[n - 8] || '#999'}"></span>`
+  : `<span class="mini-ball" style="background:${n === 0 ? '#f5f5f5' : BALL[n]}"></span>`;
+const ICON = {
+  attack: '<svg viewBox="0 0 20 20" width="1.1em" height="1.1em" aria-label="Attaque"><path d="M10 2 19 18H1Z" fill="#e5484d"/></svg>',
+  defense: '<svg viewBox="0 0 20 20" width="1.1em" height="1.1em" aria-label="Défense"><path d="M10 1 18 4v6c0 5-4 8-8 9-4-1-8-4-8-9V4Z" fill="#3e8bff"/></svg>',
+  effect: '<svg viewBox="0 0 20 20" width="1.1em" height="1.1em" aria-label="Effet"><path d="m10 1 2.6 6 6.4.5-4.9 4.2 1.5 6.3L10 14.6 4.4 18l1.5-6.3L1 7.5 7.4 7Z" fill="#30b566"/></svg>',
+};
+
+function scene(opts = {}) {
+  const balls = opts.balls !== false ? `
+    <span class="ball" style="left:44%;top:40%;background:#f5f5f5"></span>
+    <span class="ball" style="left:58%;top:30%;background:${BALL[3]}"></span>
+    <span class="ball" style="left:62%;top:52%;background:${BALL[5]}"></span>
+    <span class="ball" style="left:70%;top:38%;background:#111"></span>` : '';
+  return `<div class="scene"><div class="table"><div class="felt">${balls}</div></div></div>`;
+}
+function topScene(hl = 2) {
+  const P = [[8, 12], [50, 9], [92, 12], [8, 88], [50, 91], [92, 88]];
+  return `<div class="scene top"><div class="table"><div class="felt"></div></div>
+    ${P.map(([x, y], i) => `<span class="pocket${i === hl ? ' hl' : ''}" style="left:${x}%;top:${y}%"></span>`).join('')}
+    <span class="ball" style="left:30%;top:50%;width:2.4%;background:#f5f5f5"></span>
+    <span class="ball" style="left:66%;top:40%;width:2.4%;background:#111"></span></div>`;
+}
+const split = (a, b) => `<div class="halves"><div class="half">${a}</div><div class="half">${b}</div></div>`;
+const full = inner => `<div style="position:absolute;inset:0">${inner}</div>`;
+
+/* ---------- Screens and their variants ---------- */
+const SCREENS = [
+  {
+    id: 'menu', title: '1. Choix du mode',
+    why: 'Aujourd\'hui : une colonne de boutons texte (« Choisir les règles de la partie », 8-ball, 9-ball, 14.1, Party, Score cible, Commencer). Écran partagé par les deux joueurs.',
+    variants: [
+      { name: 'Cartes', desc: 'Quatre cartes côte à côte avec un résumé des règles ; la carte choisie est entourée. Party ouvre ses sous-modes dans la carte. Rapide à parcourir à la manette (gauche / droite).',
+        html: () => full(scene({ balls: false }) + `<div class="pos" style="inset:8% 6%;display:flex;flex-direction:column;gap:1.2em">
+          <div class="ttl big" style="text-align:center">Choisis ta partie</div>
+          <div class="card-grid">
+            ${[['8-ball', 'Pleines contre rayées, la 8 pour finir. Annonce de poche sur la 8.', ball(1) + ball(9, 1) + ball(8)],
+               ['9-ball', 'Touche toujours la plus petite bille. Qui rentre la 9 gagne.', ball(1) + ball(2) + ball(9, 1)],
+               ['14.1', 'Chaque bille rapporte 1 point. Premier à <b>25</b>.', '<span class="chip">◀ 25 ▶</span>'],
+               ['Party', 'Règles du 8-ball + pouvoirs.<br><span class="chip">Classique</span>', ICON.attack + ICON.defense + ICON.effect]]
+              .map(([t, d, v], i) => `<div class="panel mode-card${i === 3 ? ' sel' : ''}"><div class="ttl" style="font-size:1.4em">${t}</div><div class="muted" style="flex:1">${d}</div><div class="row">${v}</div></div>`).join('')}
+          </div>
+          <div style="text-align:center"><span class="ubtn">${key('interact')} Commencer</span></div></div>`) },
+      { name: 'Liste + détail', desc: 'Liste des modes à gauche, détail et options à droite (score cible, sous-mode Party, pouvoirs actifs). Plus de place pour expliquer les règles et, plus tard, les dimensions.',
+        html: () => full(scene({ balls: false }) + `<div class="pos row" style="inset:10% 8%;gap:1.2em;align-items:stretch">
+          <div class="panel col" style="width:32%;gap:.5em">
+            ${['8-ball', '9-ball', '14.1 continu', 'Party'].map((t, i) => `<div class="row" style="padding:.4em .5em;border-radius:var(--ui-radius);${i === 3 ? 'background:var(--ui-btn-bg);' : ''}"><span class="ttl" style="font-size:1.2em">${t}</span>${i === 3 ? '<span class="acc" style="margin-left:auto">▶</span>' : ''}</div>`).join('')}
+          </div>
+          <div class="panel col" style="flex:1;gap:.6em">
+            <div class="ttl big">Party</div>
+            <div class="muted">Les règles du 8-ball, avec des caisses et une bille à pouvoir sur la table. Un pouvoir en stock par joueur.</div>
+            <div class="row"><span class="muted">Sous-mode</span><span class="chip">◀ Classique ▶</span></div>
+            <div class="row"><span class="muted">Pouvoirs</span>${ICON.attack} Attaque ${ICON.defense} Défense ${ICON.effect} Effet</div>
+            <div style="margin-top:auto" class="row"><span class="ubtn">${key('interact')} Commencer</span><span class="muted">${key('move')} changer</span></div>
+          </div></div>`) },
+      { name: 'Ardoise du bar', desc: 'Le choix se fait dans le décor : les modes sont écrits à la craie sur une ardoise au mur, le joueur la regarde et valide. Très immersif, mais plus long à produire et moins pratique pour les options.',
+        html: () => full(`<div class="scene" style="background:linear-gradient(#3a271b,#241810)"></div>
+          <div class="pos board" style="left:22%;right:22%;top:10%;bottom:14%;padding:1.2em 1.6em">
+            <div style="text-align:center;font-size:1.8em">— Ce soir au billard —</div>
+            <div class="col" style="margin-top:.8em;font-size:1.3em;gap:.5em">
+              <div>8-ball <span style="opacity:.6;font-size:.7em">· pleines contre rayées</span></div>
+              <div>9-ball <span style="opacity:.6;font-size:.7em">· la plus petite d'abord</span></div>
+              <div>14.1 <span style="opacity:.6;font-size:.7em">· premier à 25</span></div>
+              <div style="color:#ffd76a">➜ Party <span style="opacity:.8;font-size:.7em">· avec pouvoirs</span></div>
+            </div></div>
+          <div class="crosshair"></div>
+          <div class="pos" style="left:50%;bottom:5%;transform:translateX(-50%)"><span class="ubtn">${key('interact')} Choisir</span></div>`) },
+    ],
+  },
+  {
+    id: 'hud', title: '2. HUD en partie (écran partagé)',
+    why: 'Aujourd\'hui : un bloc de texte en haut à gauche (tour, description de chaque joueur, pouvoir de chacun, messages). Il faut voir d\'un coup d\'œil : à qui le tour, son groupe, ce qu\'il reste, le pouvoir en stock.',
+    variants: [
+      { name: 'Bandeau central', desc: 'Un seul tableau des scores à cheval sur la séparation, visible des deux joueurs ; le côté dont c\'est le tour est mis en avant. Pouvoir en stock en bas de chaque moitié.',
+        html: () => split(scene() + `<div class="pos" style="left:4%;bottom:5%"><div class="panel row">${ICON.attack}<span>Vision brouillée</span><span class="muted">${key('power')}</span></div></div>`,
+                          scene() + `<div class="pos" style="right:4%;bottom:5%"><div class="panel row dim"><span class="muted">Pas de pouvoir</span></div></div>`)
+          + `<div class="pos" style="left:50%;top:3%;transform:translateX(-50%)"><div class="panel row" style="gap:1.2em;padding:.5em 1.2em">
+              <div class="col" style="align-items:flex-end"><span class="ttl acc">J1 · à toi</span><span>${ball(1)}${ball(2)}${ball(3)}${ball(5)} <span class="muted">4</span></span></div>
+              <span class="ttl" style="font-size:1.4em">VS</span>
+              <div class="col dim"><span class="ttl">J2</span><span><span class="muted">6</span> ${ball(9, 1)}${ball(10, 1)}${ball(12, 1)}…</span></div></div></div>` },
+      { name: 'Coin par joueur', desc: 'Chaque moitié a sa propre carte en haut à gauche : son groupe, ses billes restantes, son pouvoir. Le tour s\'affiche en grand chez celui qui joue ; l\'autre voit « Tour de J1 ».',
+        html: () => split(scene() + `<div class="pos panel col" style="left:3%;top:4%;min-width:34%"><span class="ttl acc" style="font-size:1.3em">À toi de jouer</span>
+              <span>${ball(1)}${ball(2)}${ball(3)}${ball(5)} <span class="muted">pleines · 4 restantes</span></span>
+              <span class="row">${ICON.attack} Vision brouillée <span class="muted">${key('power')}</span></span></div>`,
+                          scene() + `<div class="pos panel col" style="left:3%;top:4%;min-width:34%"><span class="ttl muted" style="font-size:1.3em">Tour de J1</span>
+              <span>${ball(9, 1)}${ball(10, 1)}${ball(12, 1)} <span class="muted">rayées · 6 restantes</span></span>
+              <span class="row muted">Pas de pouvoir</span></div>`) },
+      { name: 'Minimal', desc: 'Presque rien à l\'écran : une pastille de tour et le pouvoir en stock près du réticule. Le détail (groupes, billes, score) apparaît en maintenant une touche. Maximum d\'immersion, mais l\'information est cachée.',
+        html: () => split(scene() + `<div class="crosshair"></div><div class="pos" style="left:50%;top:4%;transform:translateX(-50%)"><span class="chip ttl" style="background:var(--ui-accent);color:#111;font-size:1em">À toi</span></div>
+              <div class="pos" style="left:53%;top:53%">${ICON.attack}</div>
+              <div class="pos panel col" style="right:4%;top:18%;opacity:.9"><span class="muted" style="font-size:.8em">maintenir Tab</span><span>${ball(1)}${ball(2)}${ball(3)}${ball(5)}</span><span class="dim">${ball(9, 1)}${ball(10, 1)}${ball(12, 1)}…</span></div>`,
+                          scene() + `<div class="crosshair"></div><div class="pos" style="left:50%;top:4%;transform:translateX(-50%)"><span class="chip">Tour de J1</span></div>`) },
+    ],
+  },
+  {
+    id: 'aim', title: '3. Visée et tir',
+    why: 'Aujourd\'hui : un carré « Strike point » avec un point rouge ; la puissance ne se voit qu\'au zoom et à la secousse de la caméra (aucune jauge). Message « Trop loin de la bille » au centre.',
+    variants: [
+      { name: 'Bille + jauge', desc: 'En bas à droite : la bille blanche vue de face avec le point de frappe, et une jauge verticale de puissance. Lecture directe, proche des jeux de billard classiques.',
+        html: () => full(scene() + `<div class="pos row" style="right:3%;bottom:5%;gap:.8em;align-items:flex-end"><div class="strike"><i></i></div><div class="col" style="align-items:center"><div class="gauge-v"><i></i></div><span class="muted" style="font-size:.8em">68 %</span></div></div>
+          <div class="pos panel row" style="left:3%;bottom:5%"><span class="muted">${key('move')} effet</span><span class="muted">${key('look')} viser</span><span class="muted">${key('attack')} maintenir pour charger</span></div>`) },
+      { name: 'Anneau au centre', desc: 'La puissance remplit un anneau autour du centre de l\'écran, là où le regard est déjà ; petite bille d\'effet juste à côté. Rien à chercher dans les coins.',
+        html: () => full(scene() + `<div class="ring"></div><div class="pos" style="left:57%;top:40%;font-size:.6em"><div class="strike"><i></i></div></div>
+          <div class="pos" style="left:50%;bottom:6%;transform:translateX(-50%)" ><span class="muted">${key('attack')} relâcher pour tirer</span></div>`) },
+      { name: 'Dans le monde', desc: 'Pas de jauge : la queue qui recule et le zoom suffisent, avec une fine ligne de puissance sous la trajectoire. La bille d\'effet n\'apparaît que quand on déplace le point de frappe.',
+        html: () => full(scene() + `<div class="pos" style="left:45%;top:58%;width:22%;height:.35em;background:linear-gradient(90deg,var(--ui-accent) 68%,rgba(255,255,255,.2) 68%);border-radius:1em;transform:rotate(-18deg)"></div>
+          <div class="pos" style="left:3%;top:4%;font-size:.7em;opacity:.85"><div class="strike"><i></i></div></div>`) },
+      { name: 'Hors de portée', desc: 'Même écran quand la bille est trop loin pour tirer : la jauge est grisée et un message indique quoi faire, sans masquer la table.',
+        html: () => full(scene() + `<div class="pos row dim" style="right:3%;bottom:5%;gap:.8em;align-items:flex-end"><div class="strike"><i></i></div><div class="gauge-v"></div></div>
+          <div class="pos panel" style="left:50%;top:8%;transform:translateX(-50%)"><span class="acc">Trop loin</span> — contourne la table pour tirer</div>`) },
+    ],
+  },
+  {
+    id: 'power', title: '4. Pouvoirs',
+    why: 'Aujourd\'hui : « Pouvoir J1 : nom » dans le bloc de texte, rien au moment du ramassage ni de l\'activation (hors secousse et flash). Il faut savoir ce qu\'on a, quand on peut l\'utiliser, et ce que l\'adversaire vient de lancer.',
+    variants: [
+      { name: 'Slot façon Mario Kart', desc: 'Une case en haut de chaque moitié ; au ramassage, les icônes défilent puis s\'arrêtent sur le pouvoir obtenu. Grisée quand il n\'est pas utilisable (pas son tour).',
+        html: () => split(scene() + `<div class="pos col" style="left:50%;top:4%;transform:translateX(-50%);align-items:center"><div class="panel" style="font-size:2.2em;padding:.25em .4em">${ICON.effect}</div><span class="ttl">Tir boosté</span><span class="muted">${key('power')}</span></div>`,
+                          scene() + `<div class="pos col" style="left:50%;top:4%;transform:translateX(-50%);align-items:center"><div class="panel dim" style="font-size:2.2em;padding:.25em .4em">${ICON.attack}</div><span class="muted">pas ton tour</span></div>`) },
+      { name: 'Carte descriptive', desc: 'Une carte en bas à gauche avec le nom, la catégorie et une phrase d\'effet. Plus explicite pour découvrir les pouvoirs, prend plus de place.',
+        html: () => split(scene() + `<div class="pos panel col" style="left:3%;bottom:5%;width:48%"><div class="row">${ICON.attack}<span class="ttl" style="font-size:1.2em">Commandes inversées</span></div><span class="muted" style="font-size:.85em">Le regard de l'adversaire est inversé pendant son tour.</span><span>${key('power')} lancer</span></div>`, scene()) },
+      { name: 'Alerte à la cible', desc: 'Quand un pouvoir vise un joueur, un bandeau apparaît chez lui : qui l\'a lancé, quoi, combien de temps. Complète les deux autres variantes.',
+        html: () => split(scene(), scene() + `<div class="veil" style="background:rgba(255,255,255,.35)"></div><div class="pos panel row" style="left:50%;top:10%;transform:translateX(-50%);white-space:nowrap">${ICON.attack}<span><b>J1</b> t'a lancé <span class="acc">Vision brouillée</span> — jusqu'à la fin de ton tour</span></div>`) },
+    ],
+  },
+  {
+    id: 'topdown', title: '5. Vue de dessus : main libre et annonce de poche',
+    why: 'Aujourd\'hui : « Faute ! Joueur 2 a la main libre — … valide avec Interact » dans le bloc de texte, et « Bille 8 — coin haut droit (Interact pour valider) » en haut.',
+    variants: [
+      { name: 'Bandeau + invites', desc: 'Un bandeau en haut dit ce qu\'il faut faire, des invites de touches en bas. La poche choisie brille et une flèche la désigne.',
+        html: () => full(topScene(2) + `<div class="pos panel" style="left:50%;top:3%;transform:translateX(-50%)"><span class="ttl acc">Annonce ta poche</span> pour la bille 8</div>
+          <div class="pos row" style="left:50%;bottom:3%;transform:translateX(-50%);gap:1em"><span>${key('move')} changer</span><span>${key('interact')} valider</span></div>`) },
+      { name: 'Étiquette sur la table', desc: 'Les consignes sont posées au plus près de l\'action : une étiquette à côté de la poche choisie ou de la bille blanche à placer, sans bandeau.',
+        html: () => full(topScene(2) + `<div class="pos panel" style="left:78%;top:18%"><span class="ttl">Coin haut droit</span><br><span class="muted">${key('interact')} valider</span></div>
+          <div class="pos panel" style="left:4%;top:4%"><span class="acc">Faute de J1</span> — à toi de placer la blanche</div>`) },
+    ],
+  },
+  {
+    id: 'end', title: '6. Fin de partie',
+    why: 'Aujourd\'hui : « Partie terminée / Joueur 1 gagne ! », une ligne de score et un bouton « Rejouer ».',
+    variants: [
+      { name: 'Grand vainqueur', desc: 'Nom du gagnant en très grand, raison de la victoire en dessous, deux boutons : Rejouer et Changer de mode.',
+        html: () => full(scene() + `<div class="veil" style="background:rgba(0,0,0,.5)"></div><div class="pos col" style="inset:0;justify-content:center;align-items:center;gap:.6em;text-align:center">
+          <span class="muted ttl">Victoire</span><span class="ttl huge acc">Joueur 1</span><span>a rentré la 8 dans la poche annoncée</span>
+          <div class="row" style="margin-top:.6em"><span class="ubtn">${key('interact')} Rejouer</span><span class="ubtn">Changer de mode</span></div></div>`) },
+      { name: 'Récap de la partie', desc: 'Le gagnant plus quelques statistiques fun pour chambrer : billes rentrées, fautes, pouvoirs lancés, plus long coup. Donne envie de rejouer.',
+        html: () => full(scene() + `<div class="veil" style="background:rgba(0,0,0,.55)"></div><div class="pos panel col" style="left:22%;right:22%;top:10%;bottom:10%;gap:.5em">
+          <div class="ttl big" style="text-align:center">J1 gagne</div>
+          <table style="width:100%;border-collapse:collapse;font-size:1em">${[['Billes rentrées', '8', '5'], ['Fautes', '1', '3'], ['Pouvoirs lancés', '2', '1'], ['Plus longue série', '4', '2']]
+            .map(([l, a, b]) => `<tr><td class="muted" style="padding:.2em 0">${l}</td><td class="acc" style="text-align:right">${a}</td><td style="text-align:right">${b}</td></tr>`).join('')}</table>
+          <div class="row" style="margin-top:auto;justify-content:center"><span class="ubtn">${key('interact')} Rejouer</span><span class="ubtn">Menu</span></div></div>`) },
+    ],
+  },
+  {
+    id: 'events', title: '7. Messages ponctuels (faute, bille rentrée, pouvoir ramassé)',
+    why: 'Aujourd\'hui : secousse, flash coloré et halo à la poche, plus du texte dans le bloc en haut à gauche pour la faute.',
+    variants: [
+      { name: 'Notifications empilées', desc: 'Petits messages qui arrivent sur le côté et disparaissent après 2 à 3 s. Discrets, ne cachent jamais la table.',
+        html: () => full(scene() + `<div class="pos col" style="right:3%;top:6%;align-items:flex-end">
+          <div class="panel toast row">${ball(3)} Bille 3 rentrée</div><div class="panel toast row">${ICON.effect} Pouvoir ramassé : <b>Tir boosté</b></div><div class="panel toast row"><span style="color:#e5484d">●</span> Faute : blanche rentrée</div></div>`) },
+      { name: 'Gros mot au centre', desc: 'Un mot énorme qui claque au centre (« FAUTE ! », « DOUBLÉ ! ») pendant une demi-seconde, façon jeu de combat. Très party, à réserver aux moments forts.',
+        html: () => full(scene() + `<div class="pos" style="left:50%;top:40%;transform:translate(-50%,-50%) rotate(-6deg)"><span class="ttl huge" style="color:#ff4d4d;text-shadow:0 .08em 0 #000, 0 0 .4em rgba(255,77,77,.6)">FAUTE !</span></div>`) },
+    ],
+  },
+];
+
+/* ---------- State (per viewer, browser storage) ---------- */
+const STORE = 'untitledpool-ui-proposals-v1';
+let state = { skin: 'neon', device: 'kb', picks: {}, notes: {}, shown: {} };
+try { Object.assign(state, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} };
+
+/* ---------- Rendering ---------- */
+const root = document.getElementById('screens');
+root.innerHTML = SCREENS.map(s => `
+  <section class="screen" id="${s.id}">
+    <h2>${s.title}</h2>
+    <p class="why">${s.why}</p>
+    <div class="variants" role="group" aria-label="Variantes">${s.variants.map((v, i) =>
+      `<button data-screen="${s.id}" data-i="${i}">${String.fromCharCode(65 + i)} · ${v.name}<span class="star" hidden>★</span></button>`).join('')}</div>
+    <div class="frame"><div class="mock" data-mock="${s.id}"></div></div>
+    <p class="variant-desc" data-desc="${s.id}"></p>
+    <div class="pick">
+      <label><input type="radio" name="pick-${s.id}" value="" data-pick="${s.id}"> Pas d'avis</label>
+      ${s.variants.map((v, i) => `<label><input type="radio" name="pick-${s.id}" value="${i}" data-pick="${s.id}"> Je préfère ${String.fromCharCode(65 + i)}</label>`).join('')}
+      <textarea data-note="${s.id}" placeholder="Commentaire (ce qui te plaît, ce qu'il faudrait mélanger ou changer)…"></textarea>
+    </div>
+  </section>`).join('');
+
+function renderScreen(id) {
+  const s = SCREENS.find(x => x.id === id);
+  const i = state.shown[id] ?? 0;
+  root.querySelector(`[data-mock="${id}"]`).innerHTML = s.variants[i].html();
+  root.querySelector(`[data-desc="${id}"]`).textContent = s.variants[i].desc;
+  root.querySelectorAll(`.variants [data-screen="${id}"]`).forEach(b => {
+    b.setAttribute('aria-pressed', String(+b.dataset.i === i));
+    b.querySelector('.star').hidden = String(state.picks[id]) !== b.dataset.i;
+  });
+}
+function renderAll() { SCREENS.forEach(s => renderScreen(s.id)); renderSummary(); }
+
+function renderSummary() {
+  const skinName = { neon: 'Bar néon', party: 'Cartoon party', diegetic: "Bar d'époque" }[state.skin];
+  const lines = [`Propositions UI — mes choix`, `Direction artistique : ${skinName}`];
+  SCREENS.forEach(s => {
+    const p = state.picks[s.id];
+    const pick = p === undefined || p === '' ? 'pas d\'avis' : `${String.fromCharCode(65 + +p)} (${s.variants[+p].name})`;
+    lines.push(`- ${s.title} : ${pick}${state.notes[s.id] ? ` — ${state.notes[s.id].trim()}` : ''}`);
+  });
+  document.getElementById('summary-text').textContent = lines.join('\n');
+}
+
+/* ---------- Events ---------- */
+root.addEventListener('click', e => {
+  const b = e.target.closest('.variants button'); if (!b) return;
+  state.shown[b.dataset.screen] = +b.dataset.i; save(); renderScreen(b.dataset.screen);
+});
+root.addEventListener('change', e => {
+  const r = e.target.closest('[data-pick]'); if (!r) return;
+  state.picks[r.dataset.pick] = r.value; if (r.value !== '') state.shown[r.dataset.pick] = +r.value;
+  save(); renderScreen(r.dataset.pick); renderSummary();
+});
+root.addEventListener('input', e => {
+  const t = e.target.closest('[data-note]'); if (!t) return;
+  state.notes[t.dataset.note] = t.value; save(); renderSummary();
+});
+
+function setSkin(skin) {
+  state.skin = skin; save();
+  document.body.classList.remove('skin-neon', 'skin-party', 'skin-diegetic');
+  document.body.classList.add('skin-' + skin);
+  document.querySelectorAll('#skin-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.skin === skin)));
+  renderSummary();
+}
+function setDevice(d) {
+  device = state.device = d; save();
+  document.querySelectorAll('#device-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.device === d)));
+  SCREENS.forEach(s => renderScreen(s.id));
+}
+document.querySelectorAll('#skin-seg button').forEach(b => b.addEventListener('click', () => setSkin(b.dataset.skin)));
+document.querySelectorAll('#device-seg button').forEach(b => b.addEventListener('click', () => setDevice(b.dataset.device)));
+
+document.getElementById('copy').addEventListener('click', async () => {
+  const text = document.getElementById('summary-text').textContent;
+  const status = document.getElementById('copy-status');
+  try { await navigator.clipboard.writeText(text); status.textContent = 'Copié — colle-le dans la conversation.'; }
+  catch (e) { status.textContent = 'Copie impossible : sélectionne le texte ci-dessous à la main.'; }
+});
+document.getElementById('reset').addEventListener('click', () => {
+  state.picks = {}; state.notes = {}; state.shown = {}; save();
+  root.querySelectorAll('[data-pick]').forEach(r => { r.checked = r.value === ''; });
+  root.querySelectorAll('[data-note]').forEach(t => { t.value = ''; });
+  renderAll();
+});
+
+/* ---------- Restore saved choices ---------- */
+root.querySelectorAll('[data-pick]').forEach(r => { r.checked = String(state.picks[r.dataset.pick] ?? '') === r.value; });
+root.querySelectorAll('[data-note]').forEach(t => { t.value = state.notes[t.dataset.note] || ''; });
+device = state.device || 'kb';
+setSkin(state.skin || 'neon');
+setDevice(device);
+renderAll();
+</script>
+</body>
+</html>

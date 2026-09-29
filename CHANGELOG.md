@@ -9,6 +9,7 @@ chronologique inverse (les plus récentes en haut).
 - Ajout à la TODO : créateur de niveau (outil simplifié).
 - **Documentation technique** sur le site (`docs/tech.html`, contenus dans `docs/content/tech/`) : architecture et diagrammes de classes, diagrammes de séquence (ramassage de la queue, tir, faute, pouvoirs, ragdoll), chaîne fichiers de configuration (ScriptableObjects) → rendu, briques et plugins, rendu (réglages URP réels), performances (relevé à confirmer au Profiler), arborescence, acronymes, sources, changelog, historique des prompts consolidé (sessions du 3 au 29/09).
 - `CLAUDE.md` ajouté : carte du projet, conventions et façon de travailler, chargé automatiquement par Claude à chaque session.
+- **Page Propositions UI** (`docs/ui.html`) : maquettes HTML/CSS de 7 écrans (choix du mode, HUD en écran partagé, visée et tir, pouvoirs, vue de dessus, fin de partie, messages ponctuels), 2 à 4 variantes chacun, dans 3 directions artistiques (Bar néon, Cartoon party, Bar d'époque) et avec les invites clavier ou manette. Choix et commentaires enregistrés dans le navigateur, récapitulatif à copier pour Claude. Constat au passage : aucune jauge de puissance n'existe aujourd'hui en visée.
 
 ## 2026-09-28
 - **Passe de revue / refacto du code** (testée en jeu par l'utilisateur, OK) :

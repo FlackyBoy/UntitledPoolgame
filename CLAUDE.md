@@ -11,7 +11,8 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
   - `docs/content/pistes.md` — idées non décidées (utilisateur) et suggestions de Claude, séparées.
   - `docs/content/tech/*.md` — documentation technique (architecture, séquences, config, plugins, rendu, performances, arborescence, annexes). **À relire avant de toucher à une partie du code, et à mettre à jour quand l'architecture change.**
   - La TODO et le changelog du site sont lus depuis `TODO.md`/`CHANGELOG.md` sur master : ne pas les recopier dans `docs/`.
-  - Pages à venir : propositions UI, outil de niveau.
+  - `docs/ui.html` — maquettes d'UI à comparer ; l'utilisateur colle son récapitulatif de choix dans la conversation.
+  - Page à venir : outil de niveau.
 
 ## Conventions de code
 

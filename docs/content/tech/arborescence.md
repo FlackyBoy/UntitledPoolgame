@@ -10,7 +10,7 @@ UntitledPoolgame/
 ├── Packages/               manifest des packages Unity
 ├── ProjectSettings/        réglages du projet (physique, qualité, input, couches…)
 ├── docs/                   site GitHub Pages (cette documentation)
-│   ├── index.html, gdd.html, tech.html   pages du site
+│   ├── index.html, gdd.html, tech.html, ui.html   pages du site
 │   ├── assets/             site.css, site.js (menu, Markdown, diagrammes)
 │   └── content/            textes en Markdown (gdd.md, pistes.md, tech/*.md)
 ├── TODO.md                 tâches + notes techniques détaillées
