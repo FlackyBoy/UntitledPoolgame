@@ -3,6 +3,21 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-09-29
+- **Site du projet** (GitHub Pages, dossier `docs/`) : https://flackyboy.github.io/UntitledPoolgame/ — accueil, onglets TODO / GDD / Pistes & suggestions. La TODO et le changelog sont lus directement depuis `TODO.md`/`CHANGELOG.md` sur master (pas de copie) ; le GDD et les pistes sont écrits en Markdown dans `docs/content/`. Pages à venir : documentation technique, propositions UI, outil de niveau.
+- Identifié en rédigeant le GDD : sur manette, **Attaque et Utiliser le pouvoir partagent le même bouton** (X/□) dans `InputSystem_Actions_Local` — ajouté à la TODO.
+- Ajout à la TODO : créateur de niveau (outil simplifié).
+
+## 2026-09-28
+- **Passe de revue / refacto du code** (testée en jeu par l'utilisateur, OK) :
+  - Bug : un KO (ragdoll) pendant la visée ou le placement laissait le `CinemachineBrain` désactivé (caméra ragdoll cassée) puis faisait pivoter le corps vers l'ancien angle de visée au relevé — `LocalPoolAimController.OnDisable()` sort maintenant proprement de la visée/du placement.
+  - Bug : un 2e appui sur Interact (ou un lâcher forcé) pendant le geste de ramassage de la queue la laissait dans la main sans être suivie — le geste est maintenant annulé (`InteractionSystem.StopAll`), la queue retrouve physique et collisions.
+  - `PickUpCue` n'hérite plus du script de démo FinalIK `PickUp2Handed` : logique intégrée directement (mêmes noms de champs, valeurs Inspector conservées) ; les 3 modifications faites dans le fichier du plugin sont annulées.
+  - Nettoyage : logs/gizmos/affichages de réglage temporaires retirés, commentaires obsolètes corrigés, `ClearBoolOnStateExit.cs` (inutilisé) et le champ `animator` de `LocalPlayerHandController` supprimés.
+  - Nouveau `PoolSettingsLoader.LoadOrDefault<T>()` : remplace le même bloc « Resources.Load ou valeurs par défaut » copié dans 5 scripts.
+  - `LocalPoolAimController` : bille blanche typée `PoolBall` (rayon via `PoolBall.Radius`), calcul du point de frappe partagé entre l'orientation de la queue et le tir.
+- **Architecture : un seul jeu de scripts joueur de référence.** Les 6 scripts online en double (`FpsPlayerController`, `PlayerHandController`, `Grabbable`, `PoolAimController`, `CharacterAnimationController`, `PoolPowerController`), restés au stade prototype, sont conservés mais figés (plus maintenus). `PoolTableBuilder` : menus « (Online) » retirés, plus qu'un seul **Tools > Pool > Build Table** / **Attach Physics To Custom Table**. L'online sera construit par-dessus les scripts `Local*` (voir TODO, Backlog).
+
 ## 2026-09-22
 - **Ramassage de la queue — orientation, suite et abandon pour cette session** (voir CHANGELOG 2026-09-21 pour le début). Corrections confirmées bonnes et gardées :
   - `Hold Rotation Offset` sur `Pick Up Cue` : remis à `(0,0,75)` — à 0 la queue reste verticale au repos (son axe long au repos est l'axe Y local de l'objet, pas Z), 75° sur Z est ce qui la couche à l'horizontale.
