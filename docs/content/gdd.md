@@ -153,4 +153,13 @@ Déjà en place, à calibrer en jeu : secousse et zoom pendant la charge, recul 
 
 ## 12. Interface actuelle
 
-Toute l'interface est encore provisoire (dessinée avec l'`OnGUI` d'Unity) : écran de choix du mode, tableau des scores, indicateur du point de frappe, messages (poche à annoncer, hors de portée, fin de partie). Elle sera repensée sur la page **Propositions UI**.
+Toute l'interface est encore provisoire (dessinée avec l'`OnGUI` d'Unity) : écran de choix du mode, tableau des scores, indicateur du point de frappe, messages (poche à annoncer, hors de portée, fin de partie).
+
+### Direction retenue 📌
+
+Validée le 29/09/2026 sur le prototype [Synthèse](../ui/synthese.html) (page **Propositions UI**) :
+
+- **Style « billard pop »** : cartes crème à contour sombre et ombre pleine, couleurs de joueur (J1 bleu, J2 rouge), jaune pour ce qui est commun, typo épaisse (Bowlby One ; typo des menus encore à choisir).
+- **Menus** (titre, joueurs, mode) : la table de billard posée dans le bar, éclairée par sa lampe ; on choisit en **visant une bille et en tirant**.
+- **En partie** : l'UI se superpose directement à l'image du jeu — une plaque par joueur (couleur, billes restantes), « À toi ! » chez celui qui joue, pouvoir en stock en haut à droite, jauge de puissance segmentée qui tremble au maximum ; **interjections** sur les événements (« FAUTE ! », « Dans le mille ! »), **replay** en incrustation façon petit écran TV, **pouvoirs présentés comme des sponsors** (« Ce tour vous est offert par… »).
+- **Fin de partie** : sur l'image du jeu floutée, vainqueur en bandeau, **ardoise de la partie** en tableau face à face (une barre par statistique) et **trophées** de chaque joueur.
