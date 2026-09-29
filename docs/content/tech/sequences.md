@@ -137,6 +137,79 @@ sequenceDiagram
   FX->>FX: voile à l'écran, sensibilité, inversion
 ```
 
+## Coup de queue sur l'autre joueur
+
+```mermaid
+sequenceDiagram
+  actor J as Joueur (attaquant)
+  participant M as LocalCueMelee
+  participant Q as Queue tenue
+  participant B as MuscleCollisionBroadcaster (muscle adverse)
+  participant BP as BehaviourPuppet (adversaire)
+  participant RC as LocalPlayerRagdollController (adversaire)
+
+  J->>M: appuie sur Attaque (queue en main, hors visée)
+  M->>M: mémorise l'orientation de la vue
+  loop tant qu'Attaque est maintenue
+    J->>M: tourne (Regarder)
+    M->>M: 1re rotation nette fixe le coup (droite → balayage vers la gauche, gauche → vers la droite, haut → vertical ; sinon estoc)
+    M->>Q: armé de plus en plus loin (charge 0 → 1), dans le repère de la caméra
+    Note over Q: FBBIK : les mains suivent
+  end
+  J->>M: relâche Attaque
+  M->>M: cible = vue de l'appui, ou adversaire dans le cône d'assistance
+  loop frappe puis retour
+    M->>M: LocalFpsPlayerController.AddLook : la vue revient vers la cible
+    M->>Q: arc vers la fin du geste (estoc : pointe en avant, position de tir)
+    M->>M: capsule mains → pointe (OverlapCapsule, sous-pas)
+  end
+  M->>B: Hit(unPin, force selon la charge, point)
+  opt charge ≥ 90 %
+    M->>BP: SetState(Unpinned) : chute garantie
+  end
+  B->>BP: OnMuscleHit : dépose le muscle et ses voisins, applique la force
+  alt coup léger
+    BP-->>BP: titube puis se rééquilibre
+  else coup avec élan
+    BP-->>RC: perte d'équilibre (OnKnockedDown)
+    Note over RC: suite identique à la chute ci-dessous
+  end
+```
+
+## Poing, pied et coup de pied spartiate
+
+```mermaid
+sequenceDiagram
+  actor J as Joueur (attaquant)
+  participant U as LocalUnarmedMelee
+  participant IK as FBBIK (effecteur main / pied)
+  participant B as MuscleCollisionBroadcaster (muscle adverse)
+  participant BP as BehaviourPuppet (adversaire)
+  participant CAM as Caméra Cinemachine FPS (attaquant)
+
+  J->>U: appuie sur Poing (mains vides) ou Pied
+  loop tant que le bouton est maintenu
+    U->>IK: OnPreUpdate : garde / genou levé, buste armé
+    Note over U: < 0,18 s = coup simple, au-delà la charge monte
+  end
+  J->>U: relâche
+  loop frappe
+    U->>IK: pose tendue (épaule/hanche + regard)
+    U->>U: capsule balayée autour du poing / pied
+  end
+  U->>B: Hit(unPin, force selon la charge, point)
+  alt pied chargé ≥ 80 % (spartiate)
+    U->>BP: SetState(Unpinned)
+    U->>BP: pas physique suivant : vitesse vers l'arrière sur tous les muscles
+    U->>U: ralenti global 0,45 s
+    U->>CAM: zoom (champ de vision réduit) puis retour
+  else poing chargé ≥ 95 %
+    U->>BP: SetState(Unpinned)
+  else coup simple
+    Note over BP: titube (dépend de la résistance)
+  end
+```
+
 ## Chute en ragdoll et relevé
 
 ```mermaid

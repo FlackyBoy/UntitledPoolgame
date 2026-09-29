@@ -9,7 +9,7 @@ Le code est découpé en quatre espaces de noms (namespaces) :
 | Namespace | Rôle | Scripts principaux |
 |---|---|---|
 | `UntitledPoolGame.Player` | Déplacement, caméra, animation, ragdoll du joueur | `LocalFpsPlayerController`, `LocalCharacterAnimationController`, `LocalPlayerRagdollController`, `RagdollHitRelay`, `LocalCharacterModelFollow` |
-| `UntitledPoolGame.Interaction` | Ramasser, porter, lancer ; la queue | `LocalPlayerHandController`, `LocalGrabbable`, `Cue`, `LocalCuePickupTrigger`, `PickUpCue`, `CueChargeSlide` |
+| `UntitledPoolGame.Interaction` | Ramasser, porter, lancer ; la queue ; les coups (queue, poing, pied) | `LocalPlayerHandController`, `LocalGrabbable`, `Cue`, `LocalCuePickupTrigger`, `PickUpCue`, `CueChargeSlide`, `LocalCueMelee`, `LocalUnarmedMelee`, `MeleeHit` |
 | `UntitledPoolGame.Pool` | Billard : billes, table, règles, visée, pouvoirs, réglages | `PoolBall`, `PoolPocket`, `PoolTableSurface`, `PoolMatchRules`, `IPoolRuleSet` et ses règles, `LocalPoolAimController`, `PoolPower` et ses pouvoirs, config ScriptableObjects |
 | `UntitledPoolGame.Core` | Outils transverses et triches de test | `PhysicsLayerSetup`, `SplitScreenCheatSpawner`, `EightBallEndgameCheat`, `RagdollDummySpawner`, `ScenePlayerSpawner`, `NetworkBootstrap` |
 
@@ -114,7 +114,31 @@ classDiagram
     <<FinalIK>>
   }
   class LocalCuePickupTrigger
+  class LocalCueMelee {
+    +bool IsSwinging
+    -BeginSwing()
+    -DetectHits()
+  }
+  class LocalUnarmedMelee {
+    +bool IsAttacking
+    -Begin(Punch | Kick)
+    -ApplyBody()
+    -Launch()
+  }
+  class MeleeHit {
+    <<static>>
+    +TryGetTarget()
+    +Hitstop()
+  }
+  class MuscleCollisionBroadcaster {
+    <<PuppetMaster>>
+    +Hit(unPin, force, position)
+  }
 
+  LocalCueMelee --> PickUpCue : IsSettled
+  LocalCueMelee ..> MeleeHit
+  LocalUnarmedMelee ..> MeleeHit
+  MeleeHit ..> MuscleCollisionBroadcaster : muscle d'un autre joueur
   Cue ..> LocalGrabbable : marque « c'est la queue »
   LocalCuePickupTrigger --> PickUpCue
   LocalCuePickupTrigger --> LocalGrabbable : MarkExternallyHeld
@@ -125,6 +149,8 @@ classDiagram
 
 - Les objets ordinaires passent par `LocalGrabbable.PickUp/Drop/Throw` (collé devant le joueur).
 - La queue passe par **FinalIK InteractionSystem** : les mains vont chercher des cibles placées sur la queue, puis `PickUpCue` l'attache au personnage. `LocalGrabbable` ne sert alors qu'à tenir l'état « tenu » à jour.
+- `LocalCueMelee` gère le coup de queue « armer en tournant » : charge tant qu'Attaque est maintenue, direction donnée par la rotation faite pendant la charge, arc posé dans le repère de la caméra, vue ramenée vers la cible à la frappe (`LocalFpsPlayerController.AddLook`, assistance vers l'adversaire le plus proche dans un cône) ; la queue tenue pivote autour du point entre les deux prises (pour l'estoc, elle s'aligne sur le regard en position de tir puis avance le long de son axe : la pointe frappe) et les muscles des autres ragdolls touchés reçoivent `MuscleCollisionBroadcaster.Hit`.
+- `LocalUnarmedMelee` gère le poing (mains vides) et le pied : clic bref = coup simple, maintenu = coup chargé. Juste avant la résolution FBBIK, il tire l'effecteur de la main ou du pied droit vers la garde puis le long de la frappe (cibles recalculées depuis l'épaule ou la hanche animée et la caméra) : crochet en courbe de Bézier pour le poing avec le coude écarté, pied tendu semelle face à la cible avec le genou vers l'avant (bend goals FBBIK créés à l'exécution, réglages d'origine des chaînes remis ensuite). Il tourne aussi le buste et penche le corps. Les poings s'enchaînent : le bras précédent se relâche seul pendant que l'autre frappe. Le pied chargé (coup de pied spartiate) met la cible en ragdoll, donne une vitesse à tous ses muscles, déclenche un ralenti global et zoome la caméra Cinemachine FPS de l'attaquant. `MeleeHit` regroupe ce qui est commun aux coups (identifier le muscle et le joueur touchés, hitstop).
 - `CueChargeSlide` ne déplace que le **mesh** de la queue (recul pendant la charge, allongement quand le joueur est loin de la bille), jamais les points de prise — sinon les mains, et le corps avec, suivraient.
 
 ## Billard et règles

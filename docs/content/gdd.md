@@ -54,21 +54,9 @@ Voyager d'une **dimension** à l'autre, chacune avec sa salle, ses règles et se
 
 ## 3. Contrôles
 
-Tels que configurés dans `InputSystem_Actions_Local` (asset d'input du mode local) :
+Le récapitulatif complet des touches clavier / manette, général et selon la situation, est dans l'onglet **[Contrôles](gdd.html#controles)**.
 
-| Action | Clavier / souris | Manette | Usage |
-|---|---|---|---|
-| Se déplacer | ZQSD/WASD, flèches | Stick gauche | Marcher · en visée : déplacer le point de frappe · vue du dessus : déplacer la bille / changer de poche |
-| Regarder | Souris | Stick droit | Caméra FPS · en visée : tourner autour de la bille |
-| Interagir | E | Y / △ | Ramasser / poser · entrer / sortir de la visée · valider le placement ou la poche |
-| Attaque | Clic gauche, Entrée | X / □ | Maintenir pour charger un tir ou un lancer, relâcher pour tirer |
-| Utiliser le pouvoir | F | X / □ | Active le pouvoir en stock |
-
-> ⚠️ Sur manette, **Attaque et Utiliser le pouvoir sont sur le même bouton** (X / □) : charger un tir active aussi le pouvoir. La TODO mentionne « touche 2 / croix droite » pour le pouvoir, ce qui ne correspond plus à l'asset. À corriger.
-
-Sauter, Sprint, S'accroupir et Précédent sont définis dans l'asset mais non utilisés par le jeu.
-
-**Raccourcis de test** : maintenir **C+P** fait rejoindre un second joueur ; **C+W** saute directement à la fin d'une partie de 8-ball (groupes vidés).
+En bref : ZQSD + souris (sticks) pour bouger et regarder, **E / Y** pour interagir, **clic gauche / X** pour le tir, le lancer et le coup de queue, **clic gauche / RB** pour le poing (mains vides), **clic droit / RT** pour le pied, **F** pour le pouvoir. ⚠️ Sur manette, Attaque et pouvoir partagent X / □ : à corriger.
 
 ## 4. Le joueur
 
@@ -137,9 +125,11 @@ Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoir
   3. une dimension **« shooter miniature »** : le joueur est réduit sur la table, la queue devient une arme et les billes des ennemis.
 - La caméra de visée devra s'adapter à ces changements d'échelle et de vue.
 
-## 9. Combat et PNJ 📌
+## 9. Combat et PNJ
 
-- La **queue comme arme de mêlée** entre joueurs.
+- **Coup de queue** 🔄 (code écrit, à tester), **« armer en tournant »** : queue en main et hors visée, **maintenir Attaque** charge le coup, **relâcher** frappe. La **direction** vient de la rotation faite pendant la charge : tourner à droite arme la queue à droite (le coup balaie vers la gauche), et inversement ; lever la tête = coup vertical ; sans rotation = estoc de la pointe, en position de tir. On voit pendant la charge le coup qui va partir. À la frappe, la vue revient vers là où l'on regardait à l'appui, ou vers l'adversaire proche (assistance légère), pour que le coup tombe sur la cible. Un coup léger fait tituber, un coup chargé fait **tomber en ragdoll** (chute garantie à pleine charge). Possible à tout moment, dans tous les modes.
+- **Mains nues** 🔄 (code écrit, à tester) : **poing** (mains vides) et **pied** (à tout moment). Esprit **Gang Beasts** : les poings partent en crochet dès le clic et s'enchaînent en spammant, en alternant les mains ; ils font tituber (pas de poing chargé). Le pied : clic bref = coup de pied, appui maintenu = coup chargé ; le **pied chargé est un coup de pied spartiate** façon *300* : la cible est projetée loin en arrière, avec un ralenti et un zoom sur la vue de l'attaquant.
+- **Jauge d'encaissement** 📌 (pour plus tard) : les coups reçus remplissent une jauge ; tant qu'elle n'est pas pleine, le joueur titube seulement ; pleine, il tombe en ragdoll. Elle redescend avec le temps.
 - **PNJ** de base (déplacement, détection du joueur) et **combat FPS** contre eux.
 
 ## 10. Multijoueur

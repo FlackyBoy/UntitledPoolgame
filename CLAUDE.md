@@ -8,6 +8,7 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 - `CHANGELOG.md` — historique, plus récent en haut, une section `## AAAA-MM-JJ` par jour.
 - `docs/` — site GitHub Pages (https://flackyboy.github.io/UntitledPoolgame/).
   - `docs/content/gdd.md` — GDD (statuts ✅ / 🔄 / 📌 par partie).
+  - `docs/content/controles.md` — récapitulatif des touches ; `docs/content/reglages-combat.md` — réglages de game design du combat (effet de chaque champ de l'Inspector). Onglets de la page TODO & GDD, **pas** dans la doc technique. À tenir à jour quand une touche ou un réglage change.
   - `docs/content/pistes.md` — idées non décidées (utilisateur) et suggestions de Claude, séparées.
   - `docs/content/tech/*.md` — documentation technique (architecture, séquences, config, plugins, rendu, performances, arborescence, annexes). **À relire avant de toucher à une partie du code, et à mettre à jour quand l'architecture change.**
   - La TODO et le changelog du site sont lus depuis `TODO.md`/`CHANGELOG.md` sur master : ne pas les recopier dans `docs/`.

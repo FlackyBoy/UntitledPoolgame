@@ -14,11 +14,13 @@
 <body>
 <main>
   <h1>TODO &amp; GDD</h1>
-  <p class="lead">Ce qui reste à faire, le document de game design qui en découle, et les idées pas encore tranchées.</p>
+  <p class="lead">Ce qui reste à faire, le document de game design qui en découle, les contrôles, les réglages de game design, et les idées pas encore tranchées.</p>
 
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-todo" aria-controls="todo" data-tab="todo">TODO</button>
     <button role="tab" id="tab-gdd" aria-controls="gdd" data-tab="gdd">GDD</button>
+    <button role="tab" id="tab-controles" aria-controls="controles" data-tab="controles">Contrôles</button>
+    <button role="tab" id="tab-combat" aria-controls="combat" data-tab="combat">Réglages combat</button>
     <button role="tab" id="tab-pistes" aria-controls="pistes" data-tab="pistes">Pistes &amp; suggestions</button>
   </div>
 
@@ -28,11 +30,17 @@
   <section class="tabpanel" id="gdd" role="tabpanel" aria-labelledby="tab-gdd" hidden>
     <div class="with-toc"><article class="prose" id="gdd-body"><p class="loading">Chargement…</p></article><nav class="toc" id="gdd-toc"></nav></div>
   </section>
+  <section class="tabpanel" id="controles" role="tabpanel" aria-labelledby="tab-controles" hidden>
+    <div class="with-toc"><article class="prose" id="controles-body"><p class="loading">Chargement…</p></article><nav class="toc" id="controles-toc"></nav></div>
+  </section>
+  <section class="tabpanel" id="combat" role="tabpanel" aria-labelledby="tab-combat" hidden>
+    <div class="with-toc"><article class="prose" id="combat-body"><p class="loading">Chargement…</p></article><nav class="toc" id="combat-toc"></nav></div>
+  </section>
   <section class="tabpanel" id="pistes" role="tabpanel" aria-labelledby="tab-pistes" hidden>
     <div class="with-toc"><article class="prose" id="pistes-body"><p class="loading">Chargement…</p></article><nav class="toc" id="pistes-toc"></nav></div>
   </section>
 </main>
-<footer class="site-footer">Sources : <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/TODO.md">TODO.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/gdd.md">docs/content/gdd.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/pistes.md">docs/content/pistes.md</a></footer>
+<footer class="site-footer">Sources : <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/TODO.md">TODO.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/gdd.md">docs/content/gdd.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/controles.md">docs/content/controles.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/reglages-combat.md">docs/content/reglages-combat.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/pistes.md">docs/content/pistes.md</a></footer>
 <script>
   Site.renderHeader('gdd');
 
@@ -43,6 +51,12 @@
     gdd: () => Site.fetchText('content/gdd.md')
       .then(md => Site.renderMarkdown(md, document.getElementById('gdd-body'), document.getElementById('gdd-toc')))
       .catch(err => Site.showError(document.getElementById('gdd-body'), err)),
+    controles: () => Site.fetchText('content/controles.md')
+      .then(md => Site.renderMarkdown(md, document.getElementById('controles-body'), document.getElementById('controles-toc')))
+      .catch(err => Site.showError(document.getElementById('controles-body'), err)),
+    combat: () => Site.fetchText('content/reglages-combat.md')
+      .then(md => Site.renderMarkdown(md, document.getElementById('combat-body'), document.getElementById('combat-toc')))
+      .catch(err => Site.showError(document.getElementById('combat-body'), err)),
     pistes: () => Site.fetchText('content/pistes.md')
       .then(md => Site.renderMarkdown(md, document.getElementById('pistes-body'), document.getElementById('pistes-toc')))
       .catch(err => Site.showError(document.getElementById('pistes-body'), err)),

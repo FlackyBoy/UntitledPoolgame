@@ -80,6 +80,9 @@ Assets/Scripts/
 │   ├── LocalCuePickupTrigger.cs    ramassage de la queue via InteractionSystem
 │   ├── PickUpCue.cs                attache / détache la queue (FinalIK)
 │   ├── CueChargeSlide.cs           glissement du mesh de la queue (charge, allonge)
+│   ├── LocalCueMelee.cs            coup de queue sur l'autre joueur (IK + PuppetMaster Hit)
+│   ├── LocalUnarmedMelee.cs        poing / pied, coup de pied spartiate (IK + PuppetMaster Hit)
+│   ├── MeleeHit.cs                 commun aux coups : cible touchée, hitstop
 │   └── Grabbable.cs, PlayerHandController.cs   versions online (figées)
 ├── Player/
 │   ├── LocalFpsPlayerController.cs     déplacement, regard, canaux Cinemachine
