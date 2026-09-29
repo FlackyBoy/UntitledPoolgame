@@ -9,7 +9,7 @@
   const PAGES = [
     { key: 'home', href: 'index.html', label: 'Accueil' },
     { key: 'gdd', href: 'gdd.html', label: 'TODO & GDD' },
-    { key: 'tech', label: 'Doc technique', soon: true },
+    { key: 'tech', href: 'tech.html', label: 'Doc technique' },
     { key: 'ui', label: 'Propositions UI', soon: true },
     { key: 'level', label: 'Outil de niveau', soon: true },
   ];

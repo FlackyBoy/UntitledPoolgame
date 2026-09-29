@@ -7,6 +7,8 @@ chronologique inverse (les plus récentes en haut).
 - **Site du projet** (GitHub Pages, dossier `docs/`) : https://flackyboy.github.io/UntitledPoolgame/ — accueil, onglets TODO / GDD / Pistes & suggestions. La TODO et le changelog sont lus directement depuis `TODO.md`/`CHANGELOG.md` sur master (pas de copie) ; le GDD et les pistes sont écrits en Markdown dans `docs/content/`. Pages à venir : documentation technique, propositions UI, outil de niveau.
 - Identifié en rédigeant le GDD : sur manette, **Attaque et Utiliser le pouvoir partagent le même bouton** (X/□) dans `InputSystem_Actions_Local` — ajouté à la TODO.
 - Ajout à la TODO : créateur de niveau (outil simplifié).
+- **Documentation technique** sur le site (`docs/tech.html`, contenus dans `docs/content/tech/`) : architecture et diagrammes de classes, diagrammes de séquence (ramassage de la queue, tir, faute, pouvoirs, ragdoll), chaîne fichiers de configuration (ScriptableObjects) → rendu, briques et plugins, rendu (réglages URP réels), performances (relevé à confirmer au Profiler), arborescence, acronymes, sources, changelog, historique des prompts consolidé (sessions du 3 au 29/09).
+- `CLAUDE.md` ajouté : carte du projet, conventions et façon de travailler, chargé automatiquement par Claude à chaque session.
 
 ## 2026-09-28
 - **Passe de revue / refacto du code** (testée en jeu par l'utilisateur, OK) :

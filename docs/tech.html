@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation technique — UntitledPoolGame</title>
+<meta name="description" content="Documentation technique d'UntitledPoolGame : architecture, séquences, configuration, plugins, rendu, performances, arborescence, annexes.">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .doc { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; align-items: start; }
+  .doc-nav { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+  .doc-nav .group { margin: 14px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .doc-nav .group:first-child { margin-top: 0; }
+  .doc-nav a { padding: 6px 10px; border-radius: 8px; color: var(--muted); text-decoration: none; }
+  .doc-nav a:hover { background: var(--surface-2); color: var(--text); }
+  .doc-nav a[aria-current="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .doc-nav select { display: none; }
+  @media (max-width: 900px) {
+    .doc { grid-template-columns: 1fr; gap: 16px; }
+    .doc-nav { position: static; }
+    .doc-nav a, .doc-nav .group { display: none; }
+    .doc-nav select { display: block; width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main>
+  <h1>Documentation technique</h1>
+  <p class="lead">Comment le jeu est construit : architecture du code, flux entre composants, configuration, briques utilisées, rendu, performances. Chaque section est un fichier Markdown de <code>docs/content/tech/</code>.</p>
+
+  <div class="doc">
+    <nav class="doc-nav" id="doc-nav" aria-label="Sections"></nav>
+    <div class="with-toc"><article class="prose" id="doc-body"><p class="loading">Chargement…</p></article><nav class="toc" id="doc-toc"></nav></div>
+  </div>
+</main>
+<footer class="site-footer">Sources : <a href="https://github.com/FlackyBoy/UntitledPoolgame/tree/master/docs/content/tech">docs/content/tech</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/CHANGELOG.md">CHANGELOG.md</a></footer>
+<script>
+  Site.renderHeader('tech');
+
+  const SECTIONS = [
+    { group: 'Conception' },
+    { id: 'architecture', label: 'Architecture & classes', file: 'content/tech/architecture.md' },
+    { id: 'sequences', label: 'Séquences', file: 'content/tech/sequences.md' },
+    { id: 'config', label: 'Configuration → rendu', file: 'content/tech/config.md' },
+    { group: 'Technique' },
+    { id: 'technos', label: 'Briques & plugins', file: 'content/tech/technos.md' },
+    { id: 'rendu', label: 'Rendu', file: 'content/tech/rendu.md' },
+    { id: 'performances', label: 'Performances', file: 'content/tech/performances.md' },
+    { id: 'arborescence', label: 'Arborescence', file: 'content/tech/arborescence.md' },
+    { group: 'Annexes' },
+    { id: 'acronymes', label: 'Acronymes', file: 'content/tech/acronymes.md' },
+    { id: 'sources', label: 'Sources', file: 'content/tech/sources.md' },
+    { id: 'changelog', label: 'Changelog', root: 'CHANGELOG.md' },
+    { id: 'prompts', label: 'Historique des prompts', file: 'content/tech/prompts.md' },
+  ];
+  const pages = SECTIONS.filter(s => s.id);
+
+  const nav = document.getElementById('doc-nav');
+  nav.innerHTML =
+    SECTIONS.map(s => s.group
+      ? `<div class="group">${s.group}</div>`
+      : `<a href="#${s.id}" data-id="${s.id}">${s.label}</a>`).join('') +
+    `<select aria-label="Section">${pages.map(s => `<option value="${s.id}">${s.label}</option>`).join('')}</select>`;
+  nav.querySelector('select').addEventListener('change', e => { location.hash = e.target.value; });
+
+  const body = document.getElementById('doc-body');
+  const toc = document.getElementById('doc-toc');
+  const cache = {};
+
+  async function show(id) {
+    const section = pages.find(s => s.id === id) || pages[0];
+    nav.querySelectorAll('a').forEach(a => a.setAttribute('aria-current', String(a.dataset.id === section.id)));
+    nav.querySelector('select').value = section.id;
+    body.innerHTML = '<p class="loading">Chargement…</p>';
+    try {
+      const md = cache[section.id] ??= await (section.root ? Site.fetchRoot(section.root) : Site.fetchText(section.file));
+      await Site.renderMarkdown(md, body, toc);
+    } catch (err) {
+      Site.showError(body, err);
+      toc.innerHTML = '';
+    }
+    window.scrollTo(0, 0);
+  }
+
+  // The section is the hash itself; a heading anchor inside the current
+  // section (from the TOC) just scrolls and keeps the section loaded.
+  let current = null;
+  function route() {
+    const id = location.hash.slice(1);
+    if (pages.some(s => s.id === id)) { current = id; show(id); }
+    else if (!current) { current = pages[0].id; show(current); }
+  }
+  addEventListener('hashchange', route);
+  route();
+</script>
+</body>
+</html>
