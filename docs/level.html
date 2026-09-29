@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outil de niveau — UntitledPoolGame</title>
+<meta name="description" content="Cahier des charges de l'outil de création de niveau d'UntitledPoolGame (éditeur Unity), inspiré de BMT Building Maker Toolset.">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main>
+  <div class="with-toc"><article class="prose" id="level-body"><p class="loading">Chargement…</p></article><nav class="toc" id="level-toc"></nav></div>
+</main>
+<footer class="site-footer">Source : <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/level.md">docs/content/level.md</a></footer>
+<script>
+  Site.renderHeader('level');
+  const body = document.getElementById('level-body');
+  Site.fetchText('content/level.md')
+    .then(md => Site.renderMarkdown(md, body, document.getElementById('level-toc')))
+    .catch(err => Site.showError(body, err));
+</script>
+</body>
+</html>

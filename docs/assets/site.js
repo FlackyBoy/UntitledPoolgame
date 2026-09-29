@@ -11,7 +11,7 @@
     { key: 'gdd', href: 'gdd.html', label: 'TODO & GDD' },
     { key: 'tech', href: 'tech.html', label: 'Doc technique' },
     { key: 'ui', href: 'ui.html', label: 'Propositions UI' },
-    { key: 'level', label: 'Outil de niveau', soon: true },
+    { key: 'level', href: 'level.html', label: 'Outil de niveau' },
   ];
 
   function renderHeader(active) {
