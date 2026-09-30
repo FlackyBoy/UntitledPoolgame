@@ -21,9 +21,12 @@ namespace UntitledPoolGame.Interaction
         // hand) along with it instead of leaving it fixed.
         [SerializeField] private Transform cueMesh;
 
-        // This specific cue's owner — one cue per player, so a direct
-        // reference rather than a runtime lookup.
-        [SerializeField] private LocalPoolAimController aimController;
+        // The aim controller is the one of whoever holds the cue, found from
+        // its parent (see HolderAimController). It used to be a fixed
+        // per-scene reference, which broke as soon as another player held the
+        // cue (R&D: one cue wired to "New", played by "New (1)" → no recoil).
+        private Transform lastParent;
+        private LocalPoolAimController holderAimController;
 
         // Direction the mesh slides back while charging, in the cue's local
         // space — only used when Auto Detect Tip Axis is off or fails (then
@@ -135,6 +138,20 @@ namespace UntitledPoolGame.Interaction
             return true;
         }
 
+        // The held cue is parented under its holder's character (PickUpCue),
+        // so the holder's aim controller is up the hierarchy; looked up again
+        // only when the parent changes. Lying free (no aim controller above
+        // it): nobody is aiming with it, so no slide.
+        private LocalPoolAimController HolderAimController()
+        {
+            if (transform.parent != lastParent)
+            {
+                lastParent = transform.parent;
+                holderAimController = lastParent != null ? lastParent.GetComponentInParent<LocalPoolAimController>() : null;
+            }
+            return holderAimController;
+        }
+
         // Distance from the cue root's origin to its tip along TipAxis, or 0
         // if the mesh couldn't be analysed.
         public float TipDistance { get; private set; }
@@ -143,12 +160,13 @@ namespace UntitledPoolGame.Interaction
         {
             if (cueMesh == null) return;
 
-            bool aiming = aimController != null && aimController.IsAiming;
-            float fraction = aiming ? aimController.ChargeFraction : 0f;
+            LocalPoolAimController aim = HolderAimController();
+            bool aiming = aim != null && aim.IsAiming;
+            float fraction = aiming ? aim.ChargeFraction : 0f;
             // The hands already moved forward by AimHandShift (the held cue
             // itself moves, see LocalPoolAimController.ApplyHandShift), so the
             // mesh only slides through them for what's left.
-            float reach = aiming ? aimController.AimMeshReach : 0f;
+            float reach = aiming ? aim.AimMeshReach : 0f;
 
             Vector3 slideDirection = detectedOk ? -TipAxis : slideAxis.normalized;
             cueMesh.localPosition = meshRestLocalPosition + TipAxis * reach + slideDirection * (fraction * slideDistance);

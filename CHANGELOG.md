@@ -4,6 +4,11 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-09-30
+- **Recul de la queue en visée rétabli** (`CueChargeSlide`) : la queue trouve le joueur qui la tient (via son parent) au lieu d'une référence fixe dans la scène — dans R&D elle était reliée au joueur « New » alors qu'on joue « New (1) », d'où l'absence de recul. Le champ Aim Controller est supprimé.
+- **Visée hors de portée** (`LocalPoolAimController`) : la posture de visée est gardée (bras tendus au maximum, queue inclinée vers la bille) au lieu de ramener la queue en pose de port ; seul le tir est refusé.
+- **Diagnostic de la prise** : le log donne l'orientation exacte attendue par FinalIK (de combien tourner, et par rapport au point de prise de la queue).
+- Tout ceci : non compilé, non testé.
+- **Diagnostic de la prise de la queue** (`LocalCuePickupTrigger`, Debug Logs) : quand E ne ramasse pas la queue, la console dit pourquoi (aucune zone de prise à portée, mains occupées…) et rejoue le test de position de FinalIK sur la queue (direction de la zone mise à plat — nulle quand la queue est debout —, distance, angle). Non compilé, non testé.
 - **Bend goals des bras à 0 sans la queue** (`PickUpCue`) : le poids des bend goals des chaînes Left/Right Arm du FBBIK est à 0 quand le joueur ne tient pas la queue, monte en fondu jusqu'à Held Arm Bend Weight (1) quand les mains la saisissent, et redescend au lâcher ; écrit seulement pendant le fondu (ne gêne pas le coude du coup de poing). Non compilé, non testé.
 - **Poing : allonge** : l'épaule qui frappe avance avec le coup (effecteur d'épaule FBBIK) et le poing va plus loin d'autant ; réglage Shoulder Reach (0,1 m). Non compilé, non testé.
 - **Coup de pied spartiate sans ralenti** (demande de l'utilisateur) : le ralenti global est retiré (réglages Slow Mo Duration / Time Scale supprimés) ; restent la projection, le zoom de la vue de l'attaquant (nouvelle durée propre, Spartan Zoom Duration) et le micro-ralenti d'impact commun à tous les coups. Non compilé, non testé.

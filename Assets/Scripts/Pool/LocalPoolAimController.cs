@@ -88,9 +88,10 @@ namespace UntitledPoolGame.Pool
         public float AimHandShift { get; private set; }
 
         // True while the ball is further than the arms can reach from outside
-        // the table (needs more than maxHandShift): the cue is left held at
-        // body level, nothing stretches, and no shot can be taken until the
-        // player orbits to an angle that's within reach.
+        // the table (needs more than maxHandShift): the aiming pose is kept
+        // (arms stretched as far as they go, cue tilted at the ball) but the
+        // tip doesn't reach it and no shot can be taken until the player
+        // orbits to an angle that's within reach.
         public bool IsOutOfReach => isAiming && AimReachExtra > maxHandShift;
 
         // How far CueChargeSlide should slide the mesh through the hands:
@@ -840,15 +841,18 @@ namespace UntitledPoolGame.Pool
 
         // Moves the held cue (and with it the grip points, hence the hands)
         // forward along its own axis by AimReachExtra (never past
-        // maxHandShift), relative to the pose it was held in before aiming —
-        // or not at all while out of reach. Glides between the two so
-        // crossing the limit while orbiting doesn't snap the arms.
+        // maxHandShift), relative to the pose it was held in before aiming.
+        // Out of reach it stays at maxHandShift and keeps its tilt: dropping
+        // the cue back to its carry pose there left the body in its aiming
+        // stance with the arms pulled up, which looked broken — the pose now
+        // stays, only the shot is refused (UpdateAim) and the mesh doesn't
+        // extend to the ball (AimMeshReach).
         private void ApplyHandShift()
         {
             LocalGrabbable cue = handController.HeldObject;
             if (cue == null || !hasCueLine) return;
 
-            float targetShift = IsOutOfReach ? 0f : Mathf.Min(AimReachExtra, maxHandShift);
+            float targetShift = Mathf.Min(AimReachExtra, maxHandShift);
             AimHandShift = Mathf.MoveTowards(AimHandShift, targetShift, 1.5f * Time.deltaTime);
             Transform held = cue.transform;
             Vector3 tipAxis = CueTipAxis(cue);
@@ -864,7 +868,7 @@ namespace UntitledPoolGame.Pool
             // out-of-reach limit doesn't snap it.
             Quaternion restWorld = held.parent != null ? held.parent.rotation * cueRestLocalRotation : cueRestLocalRotation;
             Quaternion targetTilt = Quaternion.identity;
-            if (tiltCueToBall && !IsOutOfReach && currentCueBall != null)
+            if (tiltCueToBall && currentCueBall != null)
             {
                 Vector3 toBall = StrikePointWorld() - held.position;
                 if (toBall.sqrMagnitude > 0.0001f)
@@ -1011,9 +1015,8 @@ namespace UntitledPoolGame.Pool
             }
             UpdateAimIKTarget(ballPos);
 
-            // No shot from an angle the arms can't reach: the cue stays held
-            // at body level (see ApplyHandShift), so there's nothing to strike
-            // the ball with.
+            // No shot from an angle the arms can't reach: the aiming pose is
+            // kept (see ApplyHandShift) but the tip doesn't reach the ball.
             if (IsOutOfReach)
             {
                 chargedPower = 0f;
