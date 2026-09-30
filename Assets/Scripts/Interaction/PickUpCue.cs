@@ -76,6 +76,14 @@ namespace UntitledPoolGame.Interaction
 
         private Quaternion HeldRotation => interactionSystem.transform.rotation * Quaternion.Euler(holdRotationOffset);
 
+        // Read by LocalCueHolder (the procedural pickup), which reuses this
+        // component's carry pose rather than duplicating its settings: where
+        // the cue ends up once held, its fixed rotation there, and the
+        // transform it's parented to.
+        public Transform HoldPoint => holdPoint;
+        public Quaternion CarryRotation => HeldRotation;
+        public Transform CarryParent => interactionSystem != null ? interactionSystem.transform : null;
+
         private bool Holding =>
             IsHoldingWith(FullBodyBipedEffector.LeftHand) || IsHoldingWith(FullBodyBipedEffector.RightHand);
 

@@ -162,7 +162,6 @@ namespace UntitledPoolGame.Interaction
         private enum Phase { Idle, Charging, Strike, Hold, Recover }
 
         private LocalPlayerHandController handController;
-        private LocalCuePickupTrigger cueTrigger;
         private LocalPoolAimController aimController;
         private LocalPoolPowerEffectReceiver effects;
         private PuppetMaster ownPuppet;
@@ -217,7 +216,6 @@ namespace UntitledPoolGame.Interaction
         private void Awake()
         {
             handController = GetComponent<LocalPlayerHandController>();
-            cueTrigger = GetComponent<LocalCuePickupTrigger>();
             aimController = GetComponent<LocalPoolAimController>();
             effects = GetComponent<LocalPoolPowerEffectReceiver>();
             fps = GetComponent<LocalFpsPlayerController>();
@@ -304,9 +302,8 @@ namespace UntitledPoolGame.Interaction
             if (aimController != null && (aimController.IsAiming || aimController.IsPlacementViewActive)) return false;
             if (unarmedMelee != null && unarmedMelee.IsAttacking) return false;
             // Only once the pickup has finished moving the cue into the
-            // hands: before that, PickUpCue itself still writes its pose.
-            PickUpCue pickUp = cueTrigger != null ? cueTrigger.PickUpCue : null;
-            return viewTransform != null && (pickUp == null || pickUp.IsSettled);
+            // hands: before that, the pickup itself still writes its pose.
+            return viewTransform != null && handController.CueSettled;
         }
 
         // ---- Phases ----

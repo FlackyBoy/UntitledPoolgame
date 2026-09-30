@@ -435,7 +435,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3048719208018241057}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.416501, y: -0.416501, z: 0.5714254, w: 0.5714254}
+  m_LocalRotation: {x: -0.4165001, y: -0.4165001, z: 0.571426, w: 0.571426}
   m_LocalPosition: {x: -5.35, y: 0, z: -6.9}
   m_LocalScale: {x: 1.5000007, y: 1.5000004, z: 1.5000008}
   m_ConstrainProportionsScale: 0
@@ -518,6 +518,9 @@ MonoBehaviour:
   - curve: 0
     multiplier: 1
     result: 10
+  - curve: 0
+    multiplier: 1
+    result: 1
   events:
   - time: 0.5
     pause: 1
@@ -603,11 +606,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Interaction.CueChargeSlide
   cueMesh: {fileID: 7758054983050928072}
-  aimController: {fileID: 0}
   slideAxis: {x: 0, y: 0, z: 0}
   slideDistance: 0.15
   reachAxis: {x: 0, y: 0, z: 1}
   autoDetectTipAxis: 1
+  buttMargin: 0.1
 --- !u!1 &3083405731740109354
 GameObject:
   m_ObjectHideFlags: 0
@@ -690,11 +693,11 @@ MonoBehaviour:
   interactionSpeedMlp: 1
   pivot: {fileID: 8354893221376070172}
   rotationMode: 0
-  twistAxis: {x: -1, y: 0, z: -1}
+  twistAxis: {x: 0, y: 1, z: 0}
   twistWeight: 1
   swingWeight: 0
   threeDOFWeight: 1
-  rotateOnce: 0
+  rotateOnce: 1
   usePoser: 1
   bones:
   - {fileID: 1430514169793491892}
@@ -790,7 +793,7 @@ MonoBehaviour:
   twistWeight: 0.5
   swingWeight: 0
   threeDOFWeight: 1
-  rotateOnce: 0
+  rotateOnce: 1
   usePoser: 1
   bones: []
 --- !u!1 &5526995222562931649

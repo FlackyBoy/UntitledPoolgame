@@ -135,13 +135,49 @@ namespace UntitledPoolGame.Interaction
             tipInMesh[axis] = sign > 0f ? mesh.bounds.max[axis] : mesh.bounds.min[axis];
             Vector3 tipInCue = transform.InverseTransformPoint(filter.transform.TransformPoint(tipInMesh));
             TipDistance = Mathf.Max(0f, Vector3.Dot(tipInCue, axisInCueSpace));
+
+            // The other end (the butt), same axis — negative when it's behind
+            // the origin. Used by LocalCueHolder to know the cue's extent.
+            Vector3 buttInMesh = center;
+            buttInMesh[axis] = sign > 0f ? mesh.bounds.min[axis] : mesh.bounds.max[axis];
+            Vector3 buttInCue = transform.InverseTransformPoint(filter.transform.TransformPoint(buttInMesh));
+            ButtDistance = Vector3.Dot(buttInCue, axisInCueSpace);
+
+            // How far the mesh may slide forward through the hands before
+            // its butt passes the rear hand (grip nearest the butt), keeping
+            // Butt Margin of cue behind it.
+            if (grips.Length > 0)
+            {
+                float rearGrip = float.MaxValue;
+                foreach (InteractionTarget grip in grips)
+                    rearGrip = Mathf.Min(rearGrip, Vector3.Dot(transform.InverseTransformPoint(grip.transform.position), axisInCueSpace));
+                MaxMeshReach = Mathf.Max(0f, rearGrip - ButtDistance - buttMargin);
+            }
             return true;
         }
+
+        [Tooltip("Longueur de queue (mètres) qui doit toujours dépasser derrière la main arrière quand la queue glisse dans les mains pour atteindre une bille lointaine.")]
+        [SerializeField] private float buttMargin = 0.1f;
+
+        // How far the mesh can slide forward through the hands (reach) while
+        // its butt stays behind the rear hand; float.MaxValue if unknown.
+        // LocalPoolAimController caps the playable reach with it.
+        public float MaxMeshReach { get; private set; } = float.MaxValue;
+
+        // Signed distance from the cue root's origin to its butt along
+        // TipAxis (usually negative), or 0 if the mesh couldn't be analysed.
+        public float ButtDistance { get; private set; }
 
         // The held cue is parented under its holder's character (PickUpCue),
         // so the holder's aim controller is up the hierarchy; looked up again
         // only when the parent changes. Lying free (no aim controller above
         // it): nobody is aiming with it, so no slide.
+        // Diagnostic (LocalPoolAimController's aim trace): which aim
+        // controller this cue follows, and how far its mesh is currently
+        // slid from rest along the tip axis (negative = pulled back).
+        public LocalPoolAimController FollowedAimController => HolderAimController();
+        public float CurrentMeshOffset => cueMesh != null ? Vector3.Dot(cueMesh.localPosition - meshRestLocalPosition, TipAxis) : 0f;
+
         private LocalPoolAimController HolderAimController()
         {
             if (transform.parent != lastParent)

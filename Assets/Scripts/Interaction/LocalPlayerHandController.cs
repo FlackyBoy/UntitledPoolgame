@@ -39,6 +39,9 @@ namespace UntitledPoolGame.Interaction
 
         private LocalPoolAimController poolAimController;
         private LocalCuePickupTrigger cuePickupTrigger;
+        // The procedural pickup: takes over the cue whenever it's present
+        // and enabled; disable it to fall back to cuePickupTrigger.
+        private LocalCueHolder cueHolder;
         private PlayerInput playerInput;
         private InputAction interactAction;
         private InputAction attackAction;
@@ -47,10 +50,30 @@ namespace UntitledPoolGame.Interaction
 
         public LocalGrabbable HeldObject => heldObject;
 
+        private bool CueHolderActive => cueHolder != null && cueHolder.isActiveAndEnabled;
+
+        // Cue pickup state, whichever system runs it: busy from the reach
+        // until the hands have let go; settled once held and done moving
+        // into the carry pose (others may then move the cue).
+        public bool CueBusy => CueHolderActive
+            ? cueHolder.IsBusy
+            : cuePickupTrigger != null && cuePickupTrigger.PickUpCue != null && cuePickupTrigger.PickUpCue.IsBusy;
+        public bool CueSettled => CueHolderActive
+            ? cueHolder.IsSettled
+            : cuePickupTrigger == null || cuePickupTrigger.PickUpCue == null || cuePickupTrigger.PickUpCue.IsSettled;
+
         private void Awake()
         {
             poolAimController = GetComponent<LocalPoolAimController>();
             cuePickupTrigger = GetComponent<LocalCuePickupTrigger>();
+            // The procedural cue pickup needs no wiring to any cue, so it's
+            // added to every player that doesn't carry one — spawned players
+            // included (the old LocalCuePickupTrigger route needs a cue
+            // assigned per player in the scene, which a spawned player never
+            // gets). A LocalCueHolder placed on the prefab and disabled is
+            // left as is: that's the way back to the old route.
+            cueHolder = GetComponent<LocalCueHolder>();
+            if (cueHolder == null) cueHolder = gameObject.AddComponent<LocalCueHolder>();
             playerInput = GetComponent<PlayerInput>();
 
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
@@ -139,7 +162,11 @@ namespace UntitledPoolGame.Interaction
             // InteractionTrigger) is tried first, through this same call
             // chain rather than a separate Update() reading Interact
             // independently (that raced against Drop() on the same press).
-            if (cuePickupTrigger != null && cuePickupTrigger.TryStartPickup())
+            if (CueHolderActive)
+            {
+                if (cueHolder.TryStartPickup()) return;
+            }
+            else if (cuePickupTrigger != null && cuePickupTrigger.TryStartPickup())
                 return;
 
             Collider[] hits = Physics.OverlapSphere(transform.position, pickupRange);
@@ -171,7 +198,10 @@ namespace UntitledPoolGame.Interaction
         {
             // The cue releases through its InteractionSystem interaction
             // (PickUpCue.ReleaseCue) instead of a plain LocalGrabbable.Drop().
-            if (cuePickupTrigger == null || !cuePickupTrigger.TryReleaseIfCue(heldObject))
+            bool released = CueHolderActive
+                ? cueHolder.TryRelease(heldObject)
+                : cuePickupTrigger != null && cuePickupTrigger.TryReleaseIfCue(heldObject);
+            if (!released)
                 heldObject.Drop();
 
             heldObject = null;

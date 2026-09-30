@@ -211,7 +211,6 @@ namespace UntitledPoolGame.Interaction
         private enum Phase { Idle, Windup, Strike, Hold, Recover }
 
         private LocalPlayerHandController handController;
-        private LocalCuePickupTrigger cueTrigger;
         private LocalPoolAimController aimController;
         private LocalCueMelee cueMelee;
         private LocalPlayerRagdollController ragdoll;
@@ -282,7 +281,6 @@ namespace UntitledPoolGame.Interaction
         private void Awake()
         {
             handController = GetComponent<LocalPlayerHandController>();
-            cueTrigger = GetComponent<LocalCuePickupTrigger>();
             aimController = GetComponent<LocalPoolAimController>();
             cueMelee = GetComponent<LocalCueMelee>();
             ragdoll = GetComponent<LocalPlayerRagdollController>();
@@ -376,12 +374,15 @@ namespace UntitledPoolGame.Interaction
             if (rules != null && !rules.MatchStarted) return false;
             if (aimController != null && (aimController.IsAiming || aimController.IsPlacementViewActive)) return false;
             if (cueMelee != null && cueMelee.IsSwinging) return false;
+            // Not while picking the cue up or letting it go: the pickup pins
+            // the feet and drives the hands.
+            if (handController.CueBusy && !handController.CueSettled) return false;
             if (m == Move.Punch)
             {
                 // Fists only with empty hands (with the cue, the click is
                 // the cue swing; with an object, it's the throw).
                 if (handController.HeldObject != null) return false;
-                if (cueTrigger != null && cueTrigger.PickUpCue != null && cueTrigger.PickUpCue.IsBusy) return false;
+                if (handController.CueBusy) return false;
             }
             return true;
         }

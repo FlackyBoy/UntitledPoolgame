@@ -76,6 +76,33 @@ namespace UntitledPoolGame.Pool
         // targets, so a big shift is what tore the character apart earlier.
         [SerializeField] private float maxHandShift = 0.4f;
 
+        // How far the hands themselves may actually go forward, whatever
+        // Max Hand Shift allows as reach: beyond it the arms stretch and
+        // FBBIK folds the whole body over the rail after them (seen with Max
+        // Hand Shift at 1.8 m, out of reach). The rest of the reach is the
+        // cue mesh sliding through the hands (CueChargeSlide, AimMeshReach).
+        // 0.75 m: shots with the hands 0.66–0.73 m forward looked right in
+        // testing; 0.4 made most shots "too far". (Renamed from
+        // maxArmStretch so the new default replaces the saved 0.4.)
+        [Tooltip("Avancée maximale des mains (mètres), à portée comme hors de portée. Max Hand Shift reste la portée jusqu'à laquelle on peut tirer ; au-delà de cette avancée, c'est la queue qui glisse dans les mains. Trop grand = le corps se plie par-dessus la bande pour suivre les mains ; trop petit = beaucoup de coups « trop loin ».")]
+        [SerializeField] private float maxHandStretch = 0.75f;
+
+        // Reach past the arms' comfortable stretch comes from the torso
+        // leaning over the table, as a real player does on a long shot: the
+        // arms keep their pose, the body goes forward (and a little down)
+        // just before FBBIK solves. Without it, shots 1–25 cm past Max Hand
+        // Stretch were refused although a player could clearly reach them.
+        [Tooltip("Penché du buste au-dessus de la table (mètres) pour les coups plus loin que Max Hand Stretch : ajoute cette distance à la portée jouable, les bras gardant leur position.")]
+        [SerializeField] private float maxBodyLean = 0.45f;
+        [Tooltip("Flexion du buste (degrés) au penché maximal.")]
+        [SerializeField] private float bodyLeanBend = 30f;
+        [Tooltip("Full Body Biped IK du personnage, pour le penché (vide = le premier trouvé sous ce joueur).")]
+        [SerializeField] private FullBodyBipedIK leanIK;
+
+        // Current lean over the table (metres), from the hand shift beyond
+        // Max Hand Stretch; applied in ApplyLean.
+        private float bodyLean;
+
         // Where the cue sits relative to the body ONLY while aiming, added on
         // top of its normal held pose (Pivot/Hold Point, untouched), in the
         // body's own axes: x = right, y = up, z = forward. Re-read every
@@ -88,11 +115,26 @@ namespace UntitledPoolGame.Pool
         public float AimHandShift { get; private set; }
 
         // True while the ball is further than the arms can reach from outside
-        // the table (needs more than maxHandShift): the aiming pose is kept
+        // the table (needs more than MaxReach): the aiming pose is kept
         // (arms stretched as far as they go, cue tilted at the ball) but the
         // tip doesn't reach it and no shot can be taken until the player
         // orbits to an angle that's within reach.
-        public bool IsOutOfReach => isAiming && AimReachExtra > maxHandShift;
+        public bool IsOutOfReach => isAiming && AimReachExtra > MaxReach;
+
+        // The reach actually playable: Max Hand Shift, but never more than
+        // the arms (Max Arm Stretch) plus what the cue can slide through the
+        // hands without its butt leaving them (CueChargeSlide.MaxMeshReach) —
+        // with Max Hand Shift at 1.8 m the cue ended up floating ahead of
+        // the hands on long shots.
+        private float MaxReach
+        {
+            get
+            {
+                LocalGrabbable cue = handController != null ? handController.HeldObject : null;
+                float slide = cue != null && cue.TryGetComponent(out CueChargeSlide s) ? s.MaxMeshReach : 0f;
+                return Mathf.Min(maxHandShift, maxHandStretch + maxBodyLean + slide);
+            }
+        }
 
         // How far CueChargeSlide should slide the mesh through the hands:
         // whatever reach the hands' own shift didn't cover, or nothing at
@@ -116,6 +158,10 @@ namespace UntitledPoolGame.Pool
         // the grips (and so the hands) never swing far. Height of the hands
         // themselves is Aim Cue Offset's y.
         [SerializeField] private bool tiltCueToBall = true;
+
+        [Tooltip("Diagnostic : pendant la visée, écrit toutes les 0,5 s la portée demandée, le décalage des mains, l'inclinaison de la queue, la position du corps et du bassin, pour comparer à portée / limite / hors de portée.")]
+        [SerializeField] private bool traceAimPose;
+        private float traceAimNext;
         [SerializeField] private float maxCueTilt = 25f;
 
         private Vector3 cueRestLocalPosition;
@@ -230,6 +276,7 @@ namespace UntitledPoolGame.Pool
             handController = GetComponent<LocalPlayerHandController>();
             cueMelee = GetComponent<LocalCueMelee>();
             unarmedMelee = GetComponent<LocalUnarmedMelee>();
+            if (leanIK == null) leanIK = GetComponentInChildren<FullBodyBipedIK>(true);
             cinemachineBrain = GetComponentInChildren<CinemachineBrain>(true);
             characterController = GetComponent<CharacterController>();
             playerInput = GetComponent<PlayerInput>();
@@ -563,7 +610,8 @@ namespace UntitledPoolGame.Pool
             {
                 currentCueBall = FindNearbyCueBall();
                 if (currentCueBall != null && IsCue(handController.HeldObject) && CanShootNow() && InteractPressedThisFrame()
-                    && (cueMelee == null || !cueMelee.IsSwinging) && (unarmedMelee == null || !unarmedMelee.IsAttacking))
+                    && (cueMelee == null || !cueMelee.IsSwinging) && (unarmedMelee == null || !unarmedMelee.IsAttacking)
+                    && handController.CueSettled)
                     EnterAim();
                 return;
             }
@@ -842,7 +890,8 @@ namespace UntitledPoolGame.Pool
         // Moves the held cue (and with it the grip points, hence the hands)
         // forward along its own axis by AimReachExtra (never past
         // maxHandShift), relative to the pose it was held in before aiming.
-        // Out of reach it stays at maxHandShift and keeps its tilt: dropping
+        // Never more than maxHandStretch (the rest is the mesh sliding).
+        // Out of reach it stays at that and keeps its tilt: dropping
         // the cue back to its carry pose there left the body in its aiming
         // stance with the arms pulled up, which looked broken — the pose now
         // stays, only the shot is refused (UpdateAim) and the mesh doesn't
@@ -852,8 +901,13 @@ namespace UntitledPoolGame.Pool
             LocalGrabbable cue = handController.HeldObject;
             if (cue == null || !hasCueLine) return;
 
-            float targetShift = Mathf.Min(AimReachExtra, maxHandShift);
+            // The cue (so the hands) goes forward by up to the arms' stretch
+            // plus the torso lean; the lean itself is whatever the shift asks
+            // beyond the arms (ApplyLean moves the body so the arms keep
+            // their pose).
+            float targetShift = Mathf.Min(AimReachExtra, maxHandShift, maxHandStretch + maxBodyLean);
             AimHandShift = Mathf.MoveTowards(AimHandShift, targetShift, 1.5f * Time.deltaTime);
+            bodyLean = Mathf.Max(0f, AimHandShift - maxHandStretch);
             Transform held = cue.transform;
             Vector3 tipAxis = CueTipAxis(cue);
             Vector3 axisInParent = cueRestLocalRotation * tipAxis;
@@ -870,7 +924,18 @@ namespace UntitledPoolGame.Pool
             Quaternion targetTilt = Quaternion.identity;
             if (tiltCueToBall && currentCueBall != null)
             {
-                Vector3 toBall = StrikePointWorld() - held.position;
+                // Out of reach, the cue is tilted as for the farthest shot
+                // still possible (a point pulled back toward the player by
+                // the part of the distance the arms can't cover): tilting it
+                // at the real ball made a pose no in-reach shot has, and the
+                // body ended up folded over the rail.
+                Vector3 aimPoint = StrikePointWorld();
+                if (IsOutOfReach)
+                {
+                    Vector3 back = Vector3.ProjectOnPlane(aimPoint - held.position, Vector3.up);
+                    if (back.sqrMagnitude > 1e-6f) aimPoint -= back.normalized * (AimReachExtra - MaxReach);
+                }
+                Vector3 toBall = aimPoint - held.position;
                 if (toBall.sqrMagnitude > 0.0001f)
                 {
                     targetTilt = Quaternion.FromToRotation(restWorld * tipAxis, toBall.normalized);
@@ -882,6 +947,21 @@ namespace UntitledPoolGame.Pool
             }
             cueTilt = Quaternion.Slerp(cueTilt, targetTilt, 1f - Mathf.Exp(-12f * Time.deltaTime));
             held.rotation = cueTilt * restWorld;
+
+            if (traceAimPose && Time.time >= traceAimNext)
+            {
+                traceAimNext = Time.time + 0.5f;
+                cueTilt.ToAngleAxis(out float traceTilt, out _);
+                if (traceTilt > 180f) traceTilt -= 360f;
+                Vector3 toBallFlat = currentCueBall != null ? Vector3.ProjectOnPlane(currentCueBall.transform.position - transform.position, Vector3.up) : Vector3.zero;
+                Animator anim = GetComponentInChildren<Animator>();
+                Transform hips = anim != null && anim.isHuman ? anim.GetBoneTransform(HumanBodyBones.Hips) : null;
+                string slideInfo = held.TryGetComponent(out CueChargeSlide traceSlide)
+                    ? $"charge {ChargeFraction:F2} | cue follows {(traceSlide.FollowedAimController == this ? "this player" : traceSlide.FollowedAimController != null ? traceSlide.FollowedAimController.name : "nobody")} | mesh offset {traceSlide.CurrentMeshOffset:F2} m | "
+                    : "no CueChargeSlide on the held cue | ";
+                Debug.Log($"[AimTrace] {name}: {slideInfo}{(IsOutOfReach ? "OUT OF REACH" : "in reach")} | reach extra {AimReachExtra:F2} (playable max {MaxReach:F2}, Max Hand Shift {maxHandShift:F2}) | hand shift {AimHandShift:F2} | body lean {bodyLean:F2} | mesh slide {AimMeshReach:F2} | cue tilt {traceTilt:F1}° " +
+                          $"| cue local pos {held.localPosition} | body→ball {toBallFlat.magnitude:F2} m | root y {transform.position.y:F2} | hips y {(hips != null ? hips.position.y : float.NaN):F2}", this);
+            }
         }
 
         private Quaternion cueTilt = Quaternion.identity;
@@ -894,8 +974,37 @@ namespace UntitledPoolGame.Pool
         // works through the Brain, never showed — and ExitAim only ran once the
         // player was back up, snapping the recovered body to the old aim yaw.
         // FPS control and the body's facing are left to whoever disabled this.
+        private void OnEnable()
+        {
+            if (leanIK != null) leanIK.solver.OnPreUpdate += ApplyLean;
+        }
+
+        // Leans the body over the table by bodyLean, just before FBBIK
+        // solves (after the Animator): forward along the flattened cue line
+        // and a little down, with the spine bent forward to match — the
+        // hands, on the cue, keep their place relative to the shoulders.
+        private void ApplyLean()
+        {
+            if (!isAiming || bodyLean <= 0f || leanIK == null) return;
+            LocalGrabbable cue = handController.HeldObject;
+            Vector3 forward = cue != null ? Vector3.ProjectOnPlane(cue.transform.TransformDirection(CueTipAxis(cue)), Vector3.up) : transform.forward;
+            if (forward.sqrMagnitude < 1e-4f) forward = transform.forward;
+            forward.Normalize();
+
+            float k = Mathf.Clamp01(bodyLean / Mathf.Max(0.01f, maxBodyLean));
+            RootMotion.BipedReferences r = leanIK.references;
+            if (bodyLeanBend > 0f && r.spine != null && r.spine.Length > 0)
+            {
+                Quaternion perBone = Quaternion.AngleAxis(bodyLeanBend * k / r.spine.Length, Vector3.Cross(Vector3.up, forward));
+                foreach (Transform bone in r.spine)
+                    if (bone != null) bone.rotation = perBone * bone.rotation;
+            }
+            leanIK.solver.bodyEffector.positionOffset += forward * bodyLean - Vector3.up * (bodyLean * 0.3f);
+        }
+
         private void OnDisable()
         {
+            if (leanIK != null) leanIK.solver.OnPreUpdate -= ApplyLean;
             if (isAiming) LeaveAim(returnControlToPlayer: false);
 
             if (callPocketActive)

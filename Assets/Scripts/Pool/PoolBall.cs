@@ -143,8 +143,14 @@ namespace UntitledPoolGame.Pool
         // BallInHand and the aim controllers' placement mode.
         public void BeginBallInHand()
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            // Already kinematic (e.g. a second foul while the ball is still
+            // in hand): Unity warns on setting a kinematic body's velocity,
+            // and there's none to clear anyway.
+            if (!rb.isKinematic)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
             rb.isKinematic = true;
             sphereCollider.enabled = false;
         }
