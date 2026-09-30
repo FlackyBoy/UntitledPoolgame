@@ -19,8 +19,7 @@ namespace UntitledPoolGame.Interaction
     // own. A quick click on Kick is a simple kick; holding past the tap time
     // charges it, released to strike, and a charged kick is a Spartan kick
     // ("This is Sparta!", 300 / AC Odyssey): the target is knocked down and
-    // launched far backwards, with a cinematic slow-motion and a zoom on the
-    // attacker's view.
+    // launched far backwards, with a zoom on the attacker's view.
     //
     // Procedural, like LocalCueMelee: just before FBBIK solves
     // (solver.OnPreUpdate, after the Animator), the hand or foot effector is
@@ -108,6 +107,8 @@ namespace UntitledPoolGame.Interaction
         [SerializeField] private float fistRoll = 0f;
         [Tooltip("Rotation du buste (degrés) dans le coup de poing.")]
         [SerializeField] private float jabTorsoTwist = 12f;
+        [Tooltip("Avancée de l'épaule qui frappe (mètres, bras de référence) au bout du coup : donne de l'allonge. Le poing va plus loin d'autant. 0 = l'épaule ne bouge pas.")]
+        [SerializeField] private float shoulderReach = 0.1f;
         [Tooltip("Engagement du corps (mètres) dans le coup de poing.")]
         [SerializeField] private float punchLean = 0.12f;
 
@@ -180,21 +181,22 @@ namespace UntitledPoolGame.Interaction
         [SerializeField, Range(0f, 1f)] private float upwardBias = 0.15f;
 
         [Header("Spartan kick (charged kick)")]
-        [Tooltip("À partir de cette charge, le coup de pied devient un coup de pied spartiate : chute garantie, projection, ralenti.")]
+        [Tooltip("À partir de cette charge, le coup de pied devient un coup de pied spartiate : chute garantie, projection, zoom.")]
         [SerializeField, Range(0f, 1f)] private float spartanMinCharge = 0.8f;
         [Tooltip("Vitesse (m/s) donnée à tout le corps de la cible, vers l'arrière.")]
         [SerializeField] private float launchSpeed = 9f;
         [Tooltip("Vitesse (m/s) vers le haut ajoutée à la projection.")]
         [SerializeField] private float launchLift = 2.5f;
-        [Tooltip("Durée (secondes, temps réel) du ralenti. S'applique aux deux joueurs.")]
-        [SerializeField] private float slowMoDuration = 0.45f;
-        [Tooltip("Vitesse du temps pendant le ralenti.")]
-        [SerializeField] private float slowMoTimeScale = 0.2f;
-        [Tooltip("Zoom (degrés de champ de vision en moins) de la caméra de l'attaquant pendant le ralenti.")]
+        // No slow motion any more (removed on 30/09 at the user's request):
+        // only the zoom on the attacker's view remains. The field keeps its
+        // old name so the value set in the Inspector survives.
+        [Tooltip("Zoom (degrés de champ de vision en moins) de la caméra de l'attaquant au contact du coup de pied spartiate. 0 = pas de zoom.")]
         [SerializeField] private float slowMoZoom = 12f;
+        [Tooltip("Durée (secondes) du zoom du coup de pied spartiate, retour compris.")]
+        [SerializeField] private float spartanZoomDuration = 0.5f;
 
         [Header("Feel")]
-        [Tooltip("Durée (secondes, temps réel) du micro-ralenti à l'impact des autres coups. 0 = désactivé.")]
+        [Tooltip("Durée (secondes, temps réel) du micro-ralenti à l'impact de chaque coup (spartiate compris). 0 = désactivé.")]
         [SerializeField] private float hitstopDuration = 0.05f;
         [Tooltip("Vitesse du temps pendant ce micro-ralenti.")]
         [SerializeField] private float hitstopTimeScale = 0.05f;
@@ -248,6 +250,7 @@ namespace UntitledPoolGame.Interaction
         private Vector3 backInHand;
         private bool limbMeasured;       // measured on the first pre-solve frame (animated pose)
         private Vector3 punchDirection;  // shoulder → end of the punch
+        private Vector3 shoulderPush;    // how far the punching shoulder is pushed forward this frame
 
         // The previous arm while a chained punch is under way: eases back
         // on its own from where it ended.
@@ -654,6 +657,10 @@ namespace UntitledPoolGame.Interaction
                 target = PunchTarget(r, flatForward, out Vector3 elbow);
                 activeBendGoal.position = elbow;
                 activeChain.bendConstraint.weight = weight * elbowOut * reach;
+                // positionOffset is cleared by FBBIK after each solve: added
+                // every frame, nothing to undo.
+                IKEffector shoulderEffector = rightHand ? fullBodyIK.solver.rightShoulderEffector : fullBodyIK.solver.leftShoulderEffector;
+                shoulderEffector.positionOffset += shoulderPush;
                 if (fingersInHand != Vector3.zero && fistAlign > 0f)
                 {
                     // Knuckles along the punch, back of the hand up (then
@@ -721,6 +728,13 @@ namespace UntitledPoolGame.Interaction
             float armLength = LimbLength(shoulderBone, rightHand ? r.rightForearm : r.leftForearm, rightHand ? r.rightHand : r.leftHand, referenceArmLength);
             float k0 = armLength / Mathf.Max(0.01f, referenceArmLength);
             Vector3 f = flatForward * k0, u = Vector3.up * k0, rt = Vector3.Cross(Vector3.up, flatForward) * k0;
+
+            // Reach: the punching shoulder goes forward with the blow (FBBIK
+            // shoulder effector, see ApplyBody). Every point is measured from
+            // the pushed shoulder, so the fist goes further by the same amount
+            // instead of the arm just bending more.
+            shoulderPush = f * (shoulderReach * reach * weight);
+            shoulder += shoulderPush;
             float pitchLift = viewTransform.forward.y * punchReach * punchPitchFollow;
 
             Vector3 guard = shoulder + f * startForward + u * startHeight + rt * (side * startOutward);
@@ -879,17 +893,14 @@ namespace UntitledPoolGame.Interaction
             if (spartan)
             {
                 StartCoroutine(Launch(target, flatForward));
-                StartCoroutine(MeleeHit.Hitstop(slowMoDuration, slowMoTimeScale));
                 if (fpsCamera != null && slowMoZoom > 0f)
                 {
                     if (zoomRoutine != null) { StopCoroutine(zoomRoutine); RestoreFov(); }
-                    zoomRoutine = StartCoroutine(SlowMoZoom());
+                    zoomRoutine = StartCoroutine(SpartanZoom());
                 }
             }
-            else if (hitstopDuration > 0f)
-            {
+            if (hitstopDuration > 0f)
                 StartCoroutine(MeleeHit.Hitstop(hitstopDuration, hitstopTimeScale));
-            }
         }
 
         // Throws the whole ragdoll backwards. Waits one physics step so
@@ -906,12 +917,12 @@ namespace UntitledPoolGame.Interaction
             if (debugLogs) Debug.Log($"[UnarmedMelee] → {target.name} launched at {velocity.magnitude:F1} m/s", this);
         }
 
-        // Narrows the attacker's view during the slow-motion, then eases it
-        // back (real time, since the time scale is down).
-        private IEnumerator SlowMoZoom()
+        // Narrows the attacker's view on a Spartan kick, then eases it back
+        // (real time, so the hitstop doesn't stretch it).
+        private IEnumerator SpartanZoom()
         {
             baseFov = fpsCamera.Lens.FieldOfView;
-            float duration = slowMoDuration + 0.25f;
+            float duration = Mathf.Max(0.05f, spartanZoomDuration);
             for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
             {
                 float k = t / duration;

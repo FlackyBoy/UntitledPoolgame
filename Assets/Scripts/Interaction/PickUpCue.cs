@@ -39,6 +39,19 @@ namespace UntitledPoolGame.Interaction
         // Tune with the "Log held cue rotation offset" context menu below.
         [SerializeField] private Vector3 holdRotationOffset = new Vector3(0f, 0f, 90f);
 
+        // The arm bend goals (FBBIK Left/Right Arm chains) only make sense
+        // with the cue in hand: without it they kept pulling the elbows
+        // toward the cue-holding pose. Weight 0 when not holding, blended up
+        // to this value once the hands are on the cue, and back down on
+        // release. Only written while blending, so the fists' own elbow
+        // goals (LocalUnarmedMelee, hands empty) aren't overwritten.
+        [Header("Arm bend goals")]
+        [Tooltip("Poids des bend goals des bras (chaînes Left/Right Arm du FBBIK) quand la queue est tenue. Sans la queue, il est à 0.")]
+        [SerializeField] private float heldArmBendWeight = 1f;
+        [Tooltip("Durée (secondes) du fondu du poids des bend goals à la prise et au lâcher de la queue.")]
+        [SerializeField] private float armBendBlendTime = 0.2f;
+
+        private float armBend;
         private float holdWeight;
         private float holdWeightVel;
         private Vector3 pickUpPosition;
@@ -80,6 +93,27 @@ namespace UntitledPoolGame.Interaction
             interactionSystem.OnInteractionStart += OnStart;
             interactionSystem.OnInteractionPause += OnPause;
             interactionSystem.OnInteractionResume += OnDrop;
+
+            // Not holding yet: arms free of the cue's bend goals.
+            armBend = 0f;
+            SetArmBendWeight(0f);
+        }
+
+        private void SetArmBendWeight(float weight)
+        {
+            if (interactionSystem.ik == null) return;
+            interactionSystem.ik.solver.leftArmChain.bendConstraint.weight = weight;
+            interactionSystem.ik.solver.rightArmChain.bendConstraint.weight = weight;
+        }
+
+        // Blends toward 1 while the hands hold the cue, 0 otherwise; writes
+        // only while the value is changing.
+        private void UpdateArmBend()
+        {
+            float target = Holding ? 1f : 0f;
+            if (Mathf.Approximately(armBend, target)) return;
+            armBend = Mathf.MoveTowards(armBend, target, Time.deltaTime / Mathf.Max(0.01f, armBendBlendTime));
+            SetArmBendWeight(armBend * heldArmBendWeight);
         }
 
         private void OnDestroy()
@@ -143,7 +177,9 @@ namespace UntitledPoolGame.Interaction
         // LocalPoolAimController is free to move it while aiming.
         private void LateUpdate()
         {
-            if (interactionSystem == null || obj == null || holdPoint == null) return;
+            if (interactionSystem == null || obj == null) return;
+            UpdateArmBend();
+            if (holdPoint == null) return;
             if (!Holding || holdWeight >= 0.999f) return;
 
             holdWeight = Mathf.SmoothDamp(holdWeight, 1f, ref holdWeightVel, pickUpTime);
