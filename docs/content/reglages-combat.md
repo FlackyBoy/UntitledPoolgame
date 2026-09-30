@@ -1,224 +1,208 @@
-# Combat : comportement et réglages
+# Réglages combat
 
-> Les coups entre joueurs : **coup de queue** (`LocalCueMelee`) et **mains nues** — poing et pied (`LocalUnarmedMelee`). Pour chaque coup : ce qui se passe, dans l'ordre, puis chaque réglage de l'Inspector avec son effet concret. Valeurs par défaut au 29/09/2026 ; le survol d'un réglage dans l'Inspector en donne aussi la description.
->
-> ⚠️ Un composant déjà placé dans une scène ou un prefab **garde ses anciennes valeurs** quand on change les valeurs par défaut dans le code : *clic droit > Reset* sur le composant pour les reprendre.
+> Paramètres des composants de combat, dans l'ordre de l'Inspector. Un composant déjà placé garde ses valeurs quand les valeurs par défaut changent (*clic droit > Reset* pour les reprendre). Unpin = déséquilibre PuppetMaster (repère : 5 fait généralement tomber).
 
-Touches : voir l'onglet [Contrôles](gdd.html#controles).
+## Coup de queue — Local Cue Melee
 
-## Principes communs
+### Références
 
-- **Tout est procédural** : aucune animation de coup. Juste avant que FinalIK résolve le corps (`solver.OnPreUpdate`, après l'Animator), le script déplace une cible (la queue, le poing ou le pied), tourne le buste et penche le corps ; l'IK fait suivre les bras et les jambes. Les cibles sont recalculées à chaque image depuis la caméra et le squelette animé : un coup suit le regard et la marche.
-- **Appui bref / maintenu** : maintenir le bouton **charge** le coup (jauge provisoire dans la moitié d'écran du joueur), le relâcher **frappe**. La **charge** (0 → 1) fait monter la force.
-- **Touche** : pendant la frappe, une capsule suit la queue, le poing ou le pied, testée plusieurs fois par image (*Sub Steps*) pour qu'un coup rapide ne traverse pas la cible. Seuls les muscles du ragdoll d'**un autre joueur** comptent (couche `Ragdoll`), une seule fois par coup.
-- **Effet sur la cible** : `MuscleCollisionBroadcaster.Hit(unpin, force, point)` de PuppetMaster.
-  - **Unpin** (déséquilibre) : à quel point le muscle touché et ses voisins sont « lâchés ». Repère : **5 suffit en général à faire tomber**.
-  - **Force** : poussée en newtons sur le muscle touché, dans le sens du coup, un peu relevée (*Upward Bias*).
-  - En dessous du seuil de chute, la cible **titube** puis se rééquilibre ; au-dessus, elle tombe en **ragdoll** puis se relève.
-  - Certains coups font tomber **à coup sûr** (`BehaviourPuppet.SetState(Unpinned)`), quelle que soit la résistance de la cible.
-- **Impact** : secousse d'écran de l'attaquant, **hitstop** (micro-ralenti **global** : les deux moitiés d'écran le ressentent).
-- **Exclusions** : pas de coup en visée ou en placement de bille ; un seul coup à la fois (queue, poing et pied s'excluent) ; pas d'entrée en visée pendant un coup ; rien pendant qu'on est au sol.
-- **Debug Logs** (coché par défaut) : chaque coup, chaque touche (muscle, unpin, force, chute forcée) et chaque raté dans la console.
-
-## Coup de queue — « armer en tournant »
-
-**Conditions** : queue en main (prise terminée), hors visée. Bouton **Attaque** (clic gauche / X □).
-
-### Déroulé
-
-1. **Appui** : le jeu retient l'orientation de la vue.
-2. **Charge** (bouton maintenu) : la **première rotation nette** de la vue choisit le coup, qui ne change plus ensuite :
-
-   | Rotation pendant la charge | La queue s'arme… | Coup |
-   |---|---|---|
-   | vers la droite | à droite | **balayage vers la gauche** |
-   | vers la gauche | à gauche | **balayage vers la droite** |
-   | vers le haut | en haut | **coup vertical** |
-   | aucune (ou vers le bas) | en position de tir | **estoc de la pointe** |
-
-   La queue s'arme de plus en plus loin avec la charge : ce qu'on voit est le coup qui va partir. Le corps se penche en arrière.
-3. **Relâchement** : la **vue revient** vers là où on regardait à l'appui — ou vers l'**adversaire** le plus proche dans un cône autour de cette direction (assistance légère) — pendant que la queue part. Le coup retombe donc sur la cible.
-4. **Frappe** : arc (ou estoc) qui accélère, buste qui tourne ou se plie avec le coup, corps jeté en avant ; courte **pause** en fin de geste, puis **retour** à la pose de port.
-
-### Réglages
-
-**Direction**
-
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Turn Threshold | 12° | Rotation qu'il faut faire pour choisir un balayage ou un vertical. ↑ = moins de coups choisis par erreur, mais il faut tourner plus ; ↓ = plus réactif, plus d'estocs ratés en balayage. |
-| Thrust Stance Delay | 0,2 s | Temps sans rotation avant que la queue passe en position de tir. ↓ = l'estoc se prépare plus tôt (mais un balayage décidé tard « saute » plus). |
-| Pose Blend Time | 0,1 s | Fondu quand la queue passe de la position de tir à un balayage. |
+| Action Map Name | Action map du joueur dans l'asset d'input | Player |
+| Attack Action Name | Action qui charge (maintenir) et déclenche (relâcher) le coup | Attack |
+| View Transform | Caméra du joueur, dont le coup suit le repère (vide = trouvée seule) | — |
+| Full Body IK | IK du personnage (vide = trouvé seul ; sans lui, le buste ne suit pas) | — |
 
-**Retour de la vue et assistance**
+### Direction (rotation pendant la charge)
 
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Return View On Strike | 1 | 1 = la vue revient complètement vers la cible ; 0 = elle ne bouge pas (le coup part alors là où l'on regarde au relâchement). |
-| Max View Return | 120° | Limite de rotation imposée à la vue pendant la frappe. ↓ si le retour donne le tournis. |
-| Assist Angle | 40° | Demi-angle du cône dans lequel un adversaire attire la vue. 0 = pas d'assistance. |
-| Assist Range | 3 m | Distance maximale de l'adversaire visé. |
+| Turn Threshold | Rotation à faire pendant la charge pour choisir le coup : droite = balayage vers la gauche, gauche = vers la droite, haut = vertical ; en dessous = estoc | 12° |
+| Thrust Stance Delay | Temps sans rotation avant que la queue passe en position de tir (estoc) | 0,2 s |
+| Pose Blend Time | Fondu quand la pose change (position de tir → balayage) | 0,1 s |
 
-**Charge et arcs**
+### Retour de la vue à la frappe
 
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Charge Time | 0,8 s | Temps pour atteindre la charge maximale. |
-| Min Windup | 0,45 | Part de l'armé déjà là sans charge : un coup bref arme quand même la queue à 45 %. |
-| Shoulder Pivot | 1 | Centre de rotation de la queue : 1 = les épaules (grands gestes, les bras travaillent), 0 = entre les mains (seule la pointe bouge). |
-| Sweep Windup / Follow Through | 100° / 110° | Balayages : armé à pleine charge / angle atteint de l'autre côté. ↑ = coups plus amples. |
-| Overhead Windup / Follow Through | 95° / 70° | Coup vertical : armé vers le haut / angle atteint vers le bas. |
+| Return View On Strike | Retour de la vue vers la cible à la frappe : 1 = complet, 0 = la vue ne bouge pas | 1 |
+| Max View Return | Rotation maximale imposée à la vue | 120° |
+| Assist Angle | Demi-angle du cône dans lequel un adversaire attire la vue (0 = pas d'assistance) | 40° |
+| Assist Range | Distance maximale de l'adversaire visé | 3 m |
 
-**Estoc (position de tir)**
+### Charge et arcs
 
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Thrust Pull Back | 0,25 m | Recul de la queue le long de son axe à pleine charge. |
-| Thrust Reach | 0,5 m | Avancée de la queue à la frappe : la portée de l'estoc. |
-| Stance Side / Height / Forward | 0,12 / −0,25 / 0,15 m | Place du point entre les mains par rapport aux épaules, dans le repère de la caméra (droite / hauteur / devant). C'est ce qui donne la « pose de tir ». |
-| Stance Blend Time | 0,15 s | Temps pour passer de la pose de port à la position de tir. |
+| Charge Time | Temps de maintien pour la charge maximale | 0,8 s |
+| Min Windup | Part de l'armé déjà là sans charge | 0,45 |
+| Shoulder Pivot | Centre de rotation de la queue : 1 = épaules (grands gestes), 0 = entre les mains | 1 |
+| Sweep Windup | Balayages : angle d'armé à pleine charge | 100° |
+| Sweep Follow Through | Balayages : angle atteint de l'autre côté | 110° |
+| Overhead Windup | Vertical : angle d'armé vers le haut | 95° |
+| Overhead Follow Through | Vertical : angle atteint vers le bas | 70° |
 
-**Corps**
+### Estoc (position de tir)
 
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Sweep Torso Twist | 0,4 | Part de l'angle du balayage reprise par le buste. ↑ = le buste tourne plus, coup plus « engagé ». |
-| Overhead Torso Bend | 0,25 | Idem pour le coup vertical (le buste se plie). |
-| Windup Lean Back | 0,1 m | Recul du corps à pleine charge. |
-| Strike Lean | 0,18 m | Le corps se jette dans le coup à la frappe. |
+| Thrust Pull Back | Recul de la queue le long de son axe à pleine charge | 0,25 m |
+| Thrust Reach | Avancée de la queue à la frappe (portée de l'estoc) | 0,5 m |
+| Stance Side | Position de tir : décalage des mains à droite des épaules | 0,12 m |
+| Stance Height | Position de tir : hauteur des mains par rapport aux épaules | −0,25 m |
+| Stance Forward | Position de tir : distance des mains devant les épaules | 0,15 m |
+| Stance Blend Time | Temps pour passer en position de tir | 0,15 s |
 
-**Rythme**
+### Corps
 
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Strike Time | 0,13 s | Durée de la frappe. ↓ = plus sec et plus rapide. |
-| Follow Through Hold | 0,08 s | Pause en fin de geste : donne du poids au coup. |
-| Recover Time | 0,3 s | Retour à la pose de port. |
-| Cooldown | 0,25 s | Délai minimal avant le coup suivant. |
+| Sweep Torso Twist | Part de l'angle du balayage reprise par le buste | 0,4 |
+| Overhead Torso Bend | Part de l'angle du vertical reprise par le buste (il se plie) | 0,25 |
+| Windup Lean Back | Recul du corps à pleine charge | 0,1 m |
+| Strike Lean | Engagement du corps dans le coup | 0,18 m |
 
-**Touche et force**
+### Rythme
 
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Muscle Layers | Ragdoll | Couches des muscles des ragdolls. |
-| Hit Radius | 0,2 m | Épaisseur de la zone de touche le long de la queue (volontairement large). |
-| Sub Steps | 4 | Tests de touche par image. |
-| Min / Max Unpin | 1 / 8 | Déséquilibre sans charge / à pleine charge (entre les deux selon la charge). |
-| Min / Max Force | 400 / 2500 N | Poussée sans charge / à pleine charge. |
-| Guaranteed Knockdown At | 0,9 | À partir de 90 % de charge, la cible tombe à coup sûr. |
-| Upward Bias | 0,15 | Part de la force vers le haut (soulève la cible). |
-| Hitstop Duration / Time Scale | 0,06 s / 0,05 | Micro-ralenti à l'impact (0 = désactivé). |
+| Strike Time | Durée de la frappe | 0,13 s |
+| Follow Through Hold | Pause en fin de geste | 0,08 s |
+| Recover Time | Retour à la pose de port | 0,3 s |
+| Cooldown | Délai minimal entre deux coups | 0,25 s |
 
-## Mains nues — poing et pied
+### Touche et force
 
-**Conditions** : hors visée, pas pendant un coup de queue. **Poing** : clic gauche / RB, **mains vides** seulement (avec la queue, le clic gauche reste le coup de queue ; avec un objet, le lancer). **Pied** : clic droit / RT, à tout moment, même queue en main.
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Muscle Layers | Couches des muscles des ragdolls (vide = Ragdoll) | Ragdoll |
+| Hit Radius | Épaisseur de la zone de touche le long de la queue | 0,2 m |
+| Sub Steps | Tests de touche par image (évite de traverser un bras) | 4 |
+| Min Unpin / Max Unpin | Déséquilibre sans charge / à pleine charge | 1 / 8 |
+| Min Force / Max Force | Force sans charge / à pleine charge | 400 / 2500 N |
+| Guaranteed Knockdown At | Charge à partir de laquelle la cible tombe à coup sûr | 0,9 |
+| Upward Bias | Part de la force vers le haut | 0,15 |
+| Hitstop Duration | Micro-ralenti à l'impact, pour les deux joueurs (0 = désactivé) | 0,06 s |
+| Hitstop Time Scale | Vitesse du temps pendant ce ralenti | 0,05 |
+| Show Charge Indicator | Jauge et flèche de direction provisoires | oui |
+| Debug Logs | Chaque coup et chaque touche dans la console | oui |
+
+## Poing et pied — Local Unarmed Melee
+
+### Références
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Action Map Name | Action map du joueur | Player |
+| Punch Action Name | Action du coup de poing | Punch |
+| Kick Action Name | Action du coup de pied | Kick |
+| View Transform | Caméra du joueur (vide = trouvée seule) | — |
+| Full Body IK | IK du personnage, obligatoire (vide = trouvé seul) | — |
+| Fps Camera | Caméra Cinemachine FPS pour le zoom du spartiate (vide = celle dont le nom contient « FPS ») | — |
 
 ### Taille des membres
 
-Les distances du poing et du pied sont écrites **pour un bras de 0,6 m et une jambe de 0,9 m**, puis **mises à l'échelle du personnage** : à chaque coup, le script mesure le bras (épaule → coude → poignet) ou la jambe (hanche → genou → cheville) sur le squelette. Un personnage aux bras deux fois plus courts a donc des distances deux fois plus courtes. Aucune cible n'est placée plus loin que *Max Limb Extension* × la longueur du membre, pour que le bras ou la jambe ne se verrouille jamais tendu (c'était le cas avec des distances fixes sur le personnage cartoon). Avec *Debug Logs*, la console affiche à chaque coup la longueur mesurée et le facteur appliqué.
-
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Reference Arm Length | 0,6 m | Bras pour lequel les distances du poing sont écrites. ↑ = tous les gestes du poing plus petits, ↓ = plus grands. |
-| Reference Leg Length | 0,9 m | Idem pour le pied. |
-| Max Limb Extension | 0,95 | Distance maximale d'une cible, en part de la longueur du membre (1 = membre tendu à fond). |
+| Reference Arm Length | Bras pour lequel les distances du poing sont écrites ; elles sont mises à l'échelle du bras réel (↑ = gestes plus petits) | 0,6 m |
+| Reference Leg Length | Idem pour la jambe et le pied | 0,9 m |
+| Max Limb Extension | Distance maximale d'une cible, en part de la longueur du membre (1 = tendu à fond) | 0,95 |
 
-### Appui bref ou chargé
+### Appui
 
-- **Poing** : pas de charge. Le poing part dès qu'il est en garde (**Windup Time**, 0,08 s), bouton maintenu ou non. *(Le crochet chargé a été retiré le 29/09 après test.)*
-- **Pied** : relâché en moins de **Tap Time** (0,18 s) → **coup simple**, immédiat ; maintenu plus longtemps → la charge monte pendant **Charge Time** (0,7 s) → **coup chargé** au relâchement. **Windup Time** : temps pour lever le genou.
-
-### Poing — crochet
-
-1. **Départ (garde de boxe)** : le poing monte du bras pendant jusqu'à côté de la mâchoire.
-2. **Frappe** : le poing passe **un peu sur le côté**, coude plié à l'horizontale, jusqu'au point de mi-course, puis **revient vers l'avant** (courbe de Bézier : départ → mi-course → arrivée). À l'arrivée, les deux poings sont écartés de **Fist Spread × la largeur d'épaules** : à 1, chaque poing est droit devant son épaule (bras parallèles). Le coude est tiré vers l'extérieur, le buste tourne dans le coup, le corps s'engage.
-   - Le trajet est posé dans le **repère horizontal du corps** (avant = direction du regard à plat, haut = vertical) : regarder vers le bas ne fait pas plonger le coup. Le regard ne fait que remonter ou baisser un peu la hauteur (*Punch Pitch Follow*).
-   - **Régler à l'œil** : en jeu, sélectionner le joueur et regarder la vue *Scene* pendant un coup : le trajet est dessiné en jaune (départ, mi-course, arrivée) et la cible du poing en rouge.
-3. **Enchaînement (spam)** : un clic pendant un coup lance le suivant avec **l'autre main**, sans attendre le retour ; cliqué avant que le poing n'arrive, le suivant part dès qu'il touche. Le bras précédent se relâche tout seul. Les mains alternent toujours.
-4. Un coup de poing fait **tituber**, il ne fait pas tomber à lui seul.
-
-```text
-        vue de dessus (les deux poings à l'arrivée)
-
-   3. arrivée   ●<── Fist Spread × largeur d'épaules ──>●   (Punch Reach devant les épaules, End Height)
-                 \
-                  \   ← le poing revient vers l'avant
-                   ● 2. mi-course : un peu sur le côté (Mid Outward), coude plié,
-                   |                avancé de Mid Forward × Punch Reach (Mid Height)
-   1. départ     ●
-   (garde)       |  ← poing levé à côté de la mâchoire (Start Forward / Height / Outward)
-          [épaule droite]           [épaule gauche]
-```
-
-Les points 1 et 2 sont mesurés depuis l'**épaule qui frappe**, le point 3 depuis le milieu des épaules, dans le repère horizontal du corps, en mètres pour un bras de référence (voir *Taille des membres*). Pendant l'armé, le poing monte du bras pendant jusqu'à la garde.
-
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Start Forward | 0,12 m | 1. Départ (garde) : distance devant l'épaule. |
-| Start Height | 0,08 m | 1. Départ : hauteur par rapport à l'épaule (~0,1 = à hauteur de mâchoire). |
-| Start Outward | 0,05 m | 1. Départ : décalage vers l'extérieur de l'épaule. **Négatif = vers le centre** : le poing part alors de devant la poitrine. |
-| Mid Forward | 0,5 | 2. Mi-course : avancée, en part de la portée. ↓ = le poing reste sur le côté plus longtemps (crochet plus large) ; ↑ = coup plus direct. |
-| Mid Outward | 0,2 m | 2. Mi-course : écart vers l'extérieur. **Trop grand = le bras se tend sur le côté** (élévation latérale) au lieu de rester plié. |
-| Mid Height | 0,06 m | 2. Mi-course : hauteur par rapport à l'épaule. |
-| Punch Reach | 0,6 m | 3. Arrivée : distance devant les épaules. |
-| End Height | 0 m | 3. Arrivée : hauteur par rapport à l'épaule. |
-| **Fist Spread** | 1,1 | 3. Arrivée : **écart entre les deux poings bras tendus**, en part de la largeur d'épaules (mesurée sur le squelette, pas mise à l'échelle). 1 = chaque poing droit devant son épaule, bras parallèles ; < 1 = les poings se rapprochent du centre (0 = les deux au milieu, bras en diagonale) ; > 1 = plus écartés que les épaules. La console (*Debug Logs*) affiche la largeur d'épaules mesurée et l'écart obtenu en mètres. |
-| Punch Pitch Follow | 0,3 | Part du regard haut/bas reprise par la hauteur du coup. 0 = toujours à hauteur d'épaule ; 1 = suit complètement le regard (regarder un adversaire proche vers le bas fait alors frapper au ventre). |
-| Elbow Out | 0,6 | Force avec laquelle le coude est tiré sur le côté, à hauteur d'épaule (bras plié à l'horizontale, comme un vrai crochet ; 0 = libre). |
-| Fist Align | 1 | Orientation du poing : 1 = jointures vers la cible, dos de la main vers le haut (paume vers le bas) ; 0 = orientation de l'animation (la main part alors vers l'extérieur quand le bras se lève). L'orientation de la main est mesurée sur le squelette au début du coup (doigts dans le prolongement de l'avant-bras, paume vers la cuisse). |
-| Fist Roll | 0° | Rotation du poignet en plus, autour de la direction du coup, en miroir pour les deux mains : 0 = paume vers le bas ; 90 = poing vertical, paume vers l'intérieur. À ajuster si le poing reste mal tourné. |
-| Jab Torso Twist | 12° | Rotation du buste dans le coup. |
-| Punch Lean | 0,12 m | Engagement du corps (40 % de cette valeur dans le coup). |
-| Jab Strike Time | 0,09 s | Durée de la frappe. |
-| Hold Time | 0,05 s | Pause bras tendu. |
-| Recover Time | 0,2 s | Retour — aussi la durée du relâchement du bras précédent pendant un enchaînement. |
-| Cooldown | 0,05 s | Délai après un coup terminé (l'enchaînement, lui, n'attend pas). |
-| Fist Radius | 0,15 m | Zone de touche autour du poing. |
-| Jab Unpin / Force | 1,5 / 500 N | Déséquilibre et force d'un coup de poing : titube. |
+| Tap Time | Pied : relâché avant ce délai = coup simple, au-delà = chargé | 0,18 s |
+| Charge Time | Pied : temps de charge jusqu'au maximum | 0,7 s |
+| Windup Time | Temps pour mettre le poing en garde / lever le genou ; le poing part ensuite tout seul | 0,08 s |
 
-### Pied — coup de pied et coup de pied spartiate
+### Poing
 
-1. **Genou levé** : le pied monte devant la hanche, d'autant plus haut que la charge monte ; le buste recule pour l'équilibre.
-2. **Frappe** : la jambe se tend droit devant (dans l'axe horizontal du regard, la hauteur suit en partie le regard), **semelle face à la cible, orteils vers le haut**, genou vers l'avant, avec un **pas en avant** ; pause jambe tendue, puis retour.
-3. **Coup simple** : une poussée (titube).
-4. **Chargé à 80 % ou plus → coup de pied spartiate** (*300*, AC Odyssey ; jauge dorée « SPARTE ! ») :
-   - la cible tombe à coup sûr ;
-   - **tout son ragdoll** est projeté vers l'arrière (vitesse donnée à chaque muscle, un pas physique après la chute pour ne pas être freinée) ;
-   - **ralenti** global ;
-   - **zoom** de la caméra de l'attaquant pendant le ralenti.
-
-| Réglage | Défaut | Effet |
+| Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Kick Reach | 0,95 m | Distance du pied devant la hanche, jambe tendue. ↑ = plus loin (au-delà de la longueur de jambe, c'est le pas en avant qui compense). |
-| Kick Height | 0,1 m | Hauteur du pied par rapport à la hanche, jambe tendue (positif = au-dessus). |
-| Kick Pitch Follow | 0,4 | Part du regard haut/bas reprise par la hauteur du coup (0 = hauteur fixe) : regarder plus haut vise plus haut. |
-| Chamber Forward / Height | 0,12 / −0,2 m | Genou levé : position du pied par rapport à la hanche. |
-| Chamber Raise | 0,12 m | Hauteur ajoutée au pied à pleine charge (genou encore plus haut). |
-| Knee Forward | 0,6 | Force avec laquelle le genou est tiré vers l'avant (0 = libre). |
-| Foot Sole Forward | 1 | 1 = semelle face à la cible, orteils vers le haut ; 0 = orientation de l'animation. |
-| Kick Lean Back | 0,25 m | Recul du buste pendant le coup de pied. |
-| Kick Lunge / Spartan Lunge | 0,2 / 0,55 m | Pas en avant pendant la frappe, simple / pleine charge. |
-| Kick Strike Time / Charged Kick Strike Time | 0,12 / 0,15 s | Durée de la frappe. |
-| Kick Hold Time | 0,12 s | Pause jambe tendue. |
-| Foot Radius | 0,2 m | Zone de touche autour du pied. |
-| Kick Unpin / Force | 2,5 / 900 N | Coup simple. |
-| Charged Kick Unpin / Force | 8 / 2500 N | Pleine charge. |
-| Spartan Min Charge | 0,8 | Charge à partir de laquelle le coup devient spartiate. |
-| Launch Speed / Launch Lift | 9 / 2,5 m/s | Vitesse de projection vers l'arrière / vers le haut. ↑ = la cible vole plus loin. |
-| Slow Mo Duration / Time Scale | 0,45 s / 0,2 | Ralenti du spartiate (temps réel ; les deux joueurs). |
-| Slow Mo Zoom | 12° | Champ de vision retiré à la caméra de l'attaquant pendant le ralenti. |
-| Hitstop Duration / Time Scale | 0,05 s / 0,05 | Micro-ralenti des autres coups. |
+| Start Forward | Départ (garde) : distance du poing devant l'épaule | 0,12 m |
+| Start Height | Départ : hauteur du poing par rapport à l'épaule | 0,08 m |
+| Start Outward | Départ : décalage vers l'extérieur (négatif = devant la poitrine) | 0,05 m |
+| Mid Forward | Mi-course : avancée en part de la portée (↓ = crochet plus large) | 0,5 |
+| Mid Outward | Mi-course : écart vers l'extérieur (trop grand = bras tendu sur le côté) | 0,2 m |
+| Mid Height | Mi-course : hauteur par rapport à l'épaule | 0,06 m |
+| Punch Reach | Arrivée : distance du poing devant les épaules | 0,6 m |
+| End Height | Arrivée : hauteur par rapport à l'épaule | 0 m |
+| Fist Spread | Arrivée : écart entre les deux poings en largeurs d'épaules (1 = bras parallèles, < 1 = vers le centre) | 1,1 |
+| Punch Pitch Follow | Part du regard haut/bas reprise par la hauteur du coup | 0,3 |
+| Elbow Out | Force qui écarte le coude sur le côté | 0,6 |
+| Fist Align | Orientation du poing : 1 = jointures vers la cible, paume vers le bas ; 0 = celle de l'animation | 1 |
+| Fist Roll | Rotation du poignet en plus (90 = poing vertical) | 0° |
+| Jab Torso Twist | Rotation du buste dans le coup | 12° |
+| Shoulder Reach | Avancée de l'épaule qui frappe au bout du coup (allonge) ; le poing va plus loin d'autant (0 = l'épaule ne bouge pas) | 0,1 m |
+| Punch Lean | Engagement du corps | 0,12 m |
 
-## Mise en place dans l'éditeur
+### Pied
 
-- **Local Cue Melee** et **Local Unarmed Melee** sur la racine du prefab joueur.
-- Os du ragdoll sur la couche `Ragdoll` (sinon renseigner *Muscle Layers*).
-- *View Transform*, *Full Body IK* et *Fps Camera* sont trouvés automatiquement ; les renseigner si ce n'est pas le bon objet (la caméra Cinemachine FPS est cherchée par son nom : « FPS »).
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Kick Reach | Distance du pied devant la hanche, jambe tendue | 0,95 m |
+| Kick Height | Hauteur du pied par rapport à la hanche, jambe tendue | 0,1 m |
+| Kick Pitch Follow | Part du regard haut/bas reprise par la hauteur du coup | 0,4 |
+| Chamber Forward | Genou levé : distance du pied devant la hanche | 0,12 m |
+| Chamber Height | Genou levé : hauteur du pied par rapport à la hanche | −0,2 m |
+| Chamber Raise | Genou levé : hauteur ajoutée à pleine charge | 0,12 m |
+| Knee Forward | Force qui tire le genou vers l'avant | 0,6 |
+| Foot Sole Forward | 1 = semelle face à la cible, orteils vers le haut ; 0 = orientation de l'animation | 1 |
+| Kick Lean Back | Recul du buste pendant le coup de pied | 0,25 m |
+| Kick Lunge | Pas en avant pendant un coup de pied simple | 0,2 m |
+| Spartan Lunge | Pas en avant à pleine charge | 0,55 m |
 
-## Limites connues
+### Rythme
 
-- Tout est **non calibré** : valeurs par défaut à ajuster en jeu.
-- L'`InteractionSystem` (prise de la queue et des objets) utilise aussi les effecteurs des mains : le poing est coupé si on ramasse quelque chose pendant le coup.
-- Le pied d'appui n'est pas stabilisé (pas de Grounder) : léger glissement possible pendant le coup de pied.
-- Hitstop et ralenti sont **globaux** (les deux joueurs).
-- À venir : une **jauge d'encaissement** (les coups reçus la remplissent ; pleine, le joueur tombe) — voir la TODO.
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Jab Strike Time | Durée de la frappe du poing | 0,09 s |
+| Kick Strike Time | Durée de la frappe d'un coup de pied simple | 0,12 s |
+| Charged Kick Strike Time | Durée de la frappe d'un coup de pied chargé | 0,15 s |
+| Hold Time | Pause bras tendu | 0,05 s |
+| Kick Hold Time | Pause jambe tendue | 0,12 s |
+| Recover Time | Retour à la pose normale (et relâchement du bras précédent quand on enchaîne) | 0,2 s |
+| Cooldown | Délai après un coup terminé (l'enchaînement des poings n'attend pas) | 0,05 s |
+
+### Touche
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Muscle Layers | Couches des muscles des ragdolls (vide = Ragdoll) | Ragdoll |
+| Fist Radius | Zone de touche autour du poing | 0,15 m |
+| Foot Radius | Zone de touche autour du pied | 0,2 m |
+| Sub Steps | Tests de touche par image | 3 |
+
+### Force
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Jab Unpin | Déséquilibre d'un coup de poing | 1,5 |
+| Jab Force | Force d'un coup de poing | 500 N |
+| Kick Unpin | Déséquilibre d'un coup de pied simple | 2,5 |
+| Kick Force | Force d'un coup de pied simple | 900 N |
+| Charged Kick Unpin | Déséquilibre d'un coup de pied à pleine charge | 8 |
+| Charged Kick Force | Force d'un coup de pied à pleine charge | 2500 N |
+| Upward Bias | Part de la force vers le haut | 0,15 |
+
+### Coup de pied spartiate (pied chargé)
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Spartan Min Charge | Charge à partir de laquelle le coup de pied devient spartiate (chute garantie, projection, zoom) | 0,8 |
+| Launch Speed | Vitesse de projection de tout le corps de la cible vers l'arrière | 9 m/s |
+| Launch Lift | Vitesse vers le haut ajoutée à la projection | 2,5 m/s |
+| Slow Mo Zoom | Champ de vision retiré à la caméra de l'attaquant au contact (0 = pas de zoom). Le nom date de l'ancien ralenti, retiré | 12° |
+| Spartan Zoom Duration | Durée du zoom, retour compris | 0,5 s |
+
+### Divers
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Hitstop Duration | Micro-ralenti à l'impact de chaque coup, spartiate compris (0 = désactivé) | 0,05 s |
+| Hitstop Time Scale | Vitesse du temps pendant ce ralenti | 0,05 |
+| Show Charge Indicator | Jauge de charge provisoire du coup de pied | oui |
+| Debug Logs | Coups, touches, longueurs de membres mesurées dans la console | oui |
+
+> En jeu, joueur sélectionné, la vue *Scene* dessine le trajet du poing (jaune) et sa cible (rouge) pendant un coup.

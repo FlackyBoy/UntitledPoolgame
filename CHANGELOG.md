@@ -3,7 +3,13 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-09-30
+- **Bend goals des bras à 0 sans la queue** (`PickUpCue`) : le poids des bend goals des chaînes Left/Right Arm du FBBIK est à 0 quand le joueur ne tient pas la queue, monte en fondu jusqu'à Held Arm Bend Weight (1) quand les mains la saisissent, et redescend au lâcher ; écrit seulement pendant le fondu (ne gêne pas le coude du coup de poing). Non compilé, non testé.
+- **Poing : allonge** : l'épaule qui frappe avance avec le coup (effecteur d'épaule FBBIK) et le poing va plus loin d'autant ; réglage Shoulder Reach (0,1 m). Non compilé, non testé.
+- **Coup de pied spartiate sans ralenti** (demande de l'utilisateur) : le ralenti global est retiré (réglages Slow Mo Duration / Time Scale supprimés) ; restent la projection, le zoom de la vue de l'attaquant (nouvelle durée propre, Spartan Zoom Duration) et le micro-ralenti d'impact commun à tous les coups. Non compilé, non testé.
+
 ## 2026-09-29
+- **Doc** (retour : pas le contenu attendu) : onglet *Contrôles* réduit à deux tableaux touche → action, un clavier / souris et un manette ; onglet *Réglages combat* réduit à la liste des paramètres (ce qu'ils font, valeur par défaut), par composant et par section de l'Inspector.
 - **Poing orienté** : la main n'est plus laissée à la rotation de l'animation (qui la tournait vers l'extérieur bras levé) — jointures vers la cible, paume vers le bas ; réglages Fist Align et Fist Roll. Mesure du pied faite sur la pose animée de l'image. Non compilé, non testé.
 - **Poing** : coup chargé retiré (seul le coup de pied se charge) — le poing part dès qu'il est en garde ; nouveau réglage **Fist Spread** pour l'écart entre les deux poings bras tendus (en largeurs d'épaules, 1 = bras parallèles), à la place de End Inward. Non compilé, non testé.
 - **Poing et pied à l'échelle du personnage** : distances mises à l'échelle de la longueur réelle du bras / de la jambe (mesurée sur le squelette) et cibles jamais hors de portée — le bras ne se verrouille plus tendu sur le personnage cartoon aux bras courts. Non compilé, non testé.

@@ -187,27 +187,29 @@ sequenceDiagram
   participant BP as BehaviourPuppet (adversaire)
   participant CAM as Caméra Cinemachine FPS (attaquant)
 
-  J->>U: appuie sur Poing (mains vides) ou Pied
-  loop tant que le bouton est maintenu
-    U->>IK: OnPreUpdate : garde / genou levé, buste armé
-    Note over U: < 0,18 s = coup simple, au-delà la charge monte
+  alt Poing (mains vides)
+    J->>U: clic
+    U->>IK: OnPreUpdate : poing en garde (0,08 s), puis frappe en crochet
+    Note over U: un clic pendant le coup enchaîne avec l'autre main
+  else Pied
+    J->>U: appuie
+    loop tant que le bouton est maintenu
+      U->>IK: OnPreUpdate : genou levé, buste en arrière
+      Note over U: < 0,18 s = coup simple, au-delà la charge monte
+    end
+    J->>U: relâche
+    U->>IK: jambe tendue, semelle vers la cible, pas en avant
   end
-  J->>U: relâche
-  loop frappe
-    U->>IK: pose tendue (épaule/hanche + regard)
-    U->>U: capsule balayée autour du poing / pied
-  end
-  U->>B: Hit(unPin, force selon la charge, point)
+  U->>U: capsule balayée autour du poing / pied pendant la frappe
+  U->>B: Hit(unPin, force, point)
   alt pied chargé ≥ 80 % (spartiate)
     U->>BP: SetState(Unpinned)
     U->>BP: pas physique suivant : vitesse vers l'arrière sur tous les muscles
-    U->>U: ralenti global 0,45 s
     U->>CAM: zoom (champ de vision réduit) puis retour
-  else poing chargé ≥ 95 %
-    U->>BP: SetState(Unpinned)
-  else coup simple
+  else poing ou coup de pied simple
     Note over BP: titube (dépend de la résistance)
   end
+  U->>U: micro-ralenti (hitstop)
 ```
 
 ## Chute en ragdoll et relevé
