@@ -1,6 +1,28 @@
 # Outil de création de niveau
 
-> **Statut : cahier des charges, rien d'implémenté.** Décidé (TODO, 28/09) : un créateur de niveau « outil simplifié ». Ce qui reste à trancher est listé en fin de page (*Questions ouvertes*).
+> **Statut : lots 1, 2 et 3 faits et validés (01/10) ; lot 4 fait et validé (chemins de décor reportés)** — fenêtre **Tools > Pool > Level Maker**, voir *Ce qui est fait* ci-dessous. Décisions du 01/10 en fin de page.
+
+## Ce qui est fait (lots 1, 2 et 4)
+
+| Étape | Contenu |
+|---|---|
+| ① Niveau | **Créer le niveau** : scène neuve avec lumière, volume global, sol provisoire 20 × 20 m, PlayerInputManager (prefab joueur, écran partagé, 2 joueurs max), `ScenePlayerSpawner` et deux points d'apparition ; enregistrée dans `Assets/Scenes/Levels`, ajoutée au build. **Compléter le socle** fait la même chose sur la scène ouverte sans rien recréer. Réglages de l'outil affichés en dessous. |
+| ② Salle (lot 4) | **Palette** de kit (greybox généré ou Forest Bar, ou toute palette créée par *Nouvelle palette…* ou *Create > Pool > Level Maker Palette*). **Remplir depuis un dossier…** range tous les prefabs d'un pack dans la palette : par nom (wall/mur, door/porte, window/fenêtre, floor/sol, ceiling/roof/plafond, pillar/column/poteau), puis par forme mesurée ; les pièces de mur d'une autre largeur que le module partent en props, effets et decals sont ignorés, les prefabs roses (matériaux d'un autre pipeline) sont signalés ; **grille** (pas, hauteur du sol). Chaque type de pièce a ses **variantes** (listes de la palette) : chaque outil les affiche en vignettes, la sélectionnée est celle utilisée, et la salle retient l'index de ses variantes. Outils de la vue Scène : **Murs** (variantes de mur et de poteau ; la largeur du mur choisi donne le pas du tracé, et le sol et le plafond les plus proches de cette largeur sont choisis avec lui) — clic par point, aimanté à la grille, angles par 45° (Maj = libre), longueurs en modules entiers ; clic sur le premier point = salle fermée (avec son sol ; un coin est ajouté si besoin pour que chaque côté reste un nombre entier de murs, fermeture refusée si c'est impossible) ; case « Sol seul » pour tracer une zone de sol libre sans murs, aimantée sur la taille de la dalle ; une salle tracée dans une autre (pièce dans une pièce) n'a pas de sol propre et ne double pas les murs existants, Entrée = tracé ouvert, Retour arrière = annuler un point. **Ouvertures** — clic sur un module : porte, fenêtre ou mur, de la variante choisie (une pièce plus large qu'un mur prend la place des murs voisins nécessaires) ; option « Imbriquer » pour poser la pièce dans le module existant (porte de cage dans son cadre). **Sol / plafond** — clic sur une salle fermée : lui applique les variantes de sol et de plafond choisies ; une dalle proche de la largeur du mur est ajustée à une case (*Fit Tiles To Module*, *Tile Fit Tolerance*), les autres gardent leur taille et débordent sous les murs. **Props** — vignettes de la palette, clic sur une surface, rotation aléatoire ou fixe (R : +45°), échelle aléatoire, option « suivre la pente / le mur », Maj + clic = retirer. **Liste des salles** : variantes de mur, poteau, sol et plafond ; palette (reconstruit la salle dans l'autre kit en gardant portes et fenêtres), sol, plafond, retourner les murs, reconstruire, supprimer. |
+| ③ Table | **Placer** le modèle au centre de la vue Scène, posé au sol ; rotation par 90° ; **Poser au sol**. **Générer la physique** si le modèle n'a pas de `PoolMatchRules` (même échafaudage que *Attach Physics*, sans les queues-cylindres). **Gabarit du tapis** : aire de jeu (jaune), bandes (orange), poches (rouge) dessinées dans la vue Scène pour aligner `PoolPhysics` à l'œil. **Placer les queues manquantes** (prefab `Cue`) au bout de la table. |
+| ④ Joueurs | Configurer le PlayerInputManager ; créer les points J1/J2 de part et d'autre de la table ; dans la vue Scène, silhouette de joueur par point avec flèches (déplacer), cercle (orienter), collage au sol, rouge si dans la table. |
+| ⑤ Pouvoirs | Ajouter le système de pouvoirs à la table ; **pinceau** : clic sur une surface = un point de caisse (rangé sous la table si on clique dessus, sinon sous « PowerSpawnPoints (salle) »), Maj + clic = retirer le plus proche, Échap = arrêter. |
+| ⑥ Ambiance (lot 5) | **Projet** : activer APV et les scénarios d'éclairage dans les assets URP. **Préparer la scène** : contrôleur d'ambiance, volume de sondes global, réglages d'éclairage (indirect seulement), baking set avec un scénario par ambiance. **Ambiances** (`AmbiencePreset` : ciel et lumière ambiante, lumière principale, post-process et brouillard, teinte des lumières du décor) : appliquer, précalculer une ambiance ou toutes à la suite ; ambiances de départ Bar néon, Prison sombre, Jour neutre. En jeu, `AmbienceController.Apply` / `BlendTo` change d'ambiance (le scénario d'éclairage précalculé suit). |
+| ⑦ Vérification | Contrôles de la section 6, chacun avec **Voir** et **Corriger** quand la correction est sûre ; **Tout corriger** (sauf retirer un joueur posé, laissé manuel). Résumé ✓ / ⚠ / ✗ en bas de chaque étape, mis à jour à chaque changement de la scène. |
+
+**Étages** (écrit, non testé) : « Étage actif » dans l'étape Salle — le tracé se fait à la hauteur de cet étage (un étage = la hauteur des murs du kit), la salle retient son étage. Outil **Escaliers** : clic sur le sol d'une salle fermée (R pour tourner, Maj + clic pour retirer) ; l'escalier est étiré à la hauteur d'un étage, perce le sol de la salle au-dessus et reçoit une rampe invisible pour que le personnage monte sans buter. Pas de plafond sous une salle d'étage. Ouvertures **Garde-corps** et **Vide** ; une salle peut avoir un vide dans son sol (mezzanine) bordé de garde-corps. Palette : listes *Stairs* et *Railings*.
+
+**Génération procédurale** : une première version (plan de salles, thèmes et types de pièce) a été retirée le 01/10, résultat pas assez cohérent. À refaire plus tard sur le modèle de RoomGen et de Procedural Generation Grid : voir l'onglet Pistes.
+
+**Lot 3 — références automatiques** : la scène n'a plus rien à câbler sur le joueur. Table, règles et queues sont trouvées au lancement. Ce que le joueur posé dans BarSplitscreen recevait à la main, à savoir les lignes d'aperçu de trajectoire, est retrouvé parmi les enfants du joueur ou créé. Le reste qui pouvait être vide est retrouvé ou créé de la même façon : cible du regard en visée, Look At IK, caméras. Ce que le joueur ne peut pas trouver seul (ses propres composants) est contrôlé par la vérification « Prefab joueur ».
+
+Réglages de l'outil : `Assets/Editor/LevelMakerSettings.asset` (prefab joueur, modèle de table, prefab de queue, dossier des niveaux, profil de volume, sol provisoire, nombre de queues, pas de rotation), rempli automatiquement à la première ouverture. Code : `Assets/Scripts/Editor/LevelMaker/` (`LevelMakerWindow` et `LevelMakerWindow.Room`, `LevelBuilder`, `LevelValidator`, `LevelMakerSettings`, `RoomBuilder`, `KitGenerator`) ; données posées dans les scènes : `Assets/Scripts/Core/Level/` (`PrefabPalette`, `RoomOutline`, `RoomModule`). Kits : `Assets/LevelKits/`.
+
+**Principe des salles** : une salle est un tracé (`RoomOutline` : points, ouvertures, sol, plafond) ; les modules sont ses enfants et se reconstruisent à partir de lui. Chaque pièce est placée d'après ses dimensions mesurées (centrée sur sa case, base au sol), pas d'après son pivot, ce qui permet de passer d'un kit à l'autre. La largeur d'une case est celle de la variante de mur de la salle. L'axe le long duquel court un module de mur est déduit de sa forme (*Wall Axis* = Auto : le plus long de ses côtés horizontaux), forçable à X ou Z sur la palette ; *Flip Walls* si la face intérieure du kit est de l'autre côté.
 
 ## 1. Objectif
 
@@ -241,13 +263,13 @@ sequenceDiagram
 
 **Recommandation** : commencer par l'étape 1 (scène jouable + vérifications), qui règle les problèmes rencontrés jusqu'ici ; décider ensuite entre l'étape 2 maison, BMT ou ProBuilder pour la construction des salles.
 
-## 8. Questions ouvertes
+## 8. Décisions (01/10)
 
-1. **Éditeur ou en jeu ?** Recommandation : éditeur d'abord.
-2. **Qui construit les salles** : toi seul, ou d'autres personnes (niveau de simplicité attendu) ?
-3. **Kit modulaire** : existe-t-il déjà (Forest Bar ?), ou faut-il en choisir un ?
-4. **Dimensions** : une scène par dimension, ou une scène qui charge des ambiances et des règles différentes ?
-5. **Priorité** par rapport à la refonte de l'interface et au reste de la TODO.
+1. **Éditeur ou en jeu ?** Éditeur Unity.
+2. **Qui construit les salles** : l'utilisateur seul — outil pragmatique, appuyé sur les outils Unity standards.
+3. **Kit modulaire** : à choisir plus tard ; le lot 4 partira d'une palette vide à remplir.
+4. **Dimensions** : une même salle pourra recevoir plusieurs ambiances et règles, chargées au lancement (pas une scène par dimension).
+5. **Priorité** : lots 1 et 2 d'abord.
 
 ## 9. Découpage proposé
 

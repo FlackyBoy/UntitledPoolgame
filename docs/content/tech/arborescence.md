@@ -39,7 +39,7 @@ Assets/
 │   ├── PoolPhysicsSettings.asset, PoolScreenJuiceSettings.asset
 │   └── PoolPotEffectSettings.asset, PoolPowerSpawnSettings.asset
 ├── Powers/                 un asset par pouvoir (BoostedShot, VisionImpair, InvertedControls, ClosePocket)
-├── Editor/                 PoolTableAssetSettings.asset (dimensions de la table pour le générateur)
+├── Editor/                 PoolTableAssetSettings.asset (dimensions de la table), LevelMakerSettings.asset (outil de niveau)
 ├── InputManagers/          InputSystem_Actions.inputactions (online) et _Local (écran partagé)
 ├── Settings/               URP : PC/Mobile RPAsset + Renderer, Volume profiles
 ├── Animations/             animations Mixamo, packs de mouvements
@@ -67,12 +67,32 @@ Assets/Scripts/
 │   ├── EightBallEndgameCheat.cs    C+W : fin de partie 8-ball directe
 │   ├── RagdollDummySpawner.cs      G : mannequin de test pour le ragdoll
 │   ├── ScenePlayerSpawner.cs       point d'apparition du joueur dans la scène
+│   ├── Level/                      données du Level Maker posées dans les scènes
+│   │   ├── PrefabPalette.cs        kit de construction (mur, porte, fenêtre, dalles, props)
+│   │   ├── RoomOutline.cs          tracé d'une salle et ses ouvertures
+│   │   ├── RoomModule.cs           marqueur des pièces posées
+│   │   ├── AmbiencePreset.cs       ambiance : ciel, lumières, post-process, brouillard, teinte du décor
+│   │   ├── AmbienceController.cs   applique une ambiance (éditeur et jeu) et son scénario d'éclairage APV
+│   │   └── AmbienceLight.cs        couleur et intensité d'origine d'une lampe du décor
 │   ├── NetworkBootstrap.cs         F1/F2/F3 : Host / Client / Server (online)
 │   └── LocalClientRig.cs           ancien câblage Nappin (online, figé)
 ├── Editor/                         outils d'éditeur (non inclus dans le jeu)
 │   ├── PoolTableBuilder.cs         menus Tools > Pool (table, physique, config, pouvoirs)
 │   ├── PoolTableAssetSettings.cs   dimensions de la table
-│   └── PoolBallTextureGenerator.cs textures numérotées des billes
+│   ├── PoolBallTextureGenerator.cs textures numérotées des billes
+│   └── LevelMaker/                 Tools > Pool > Level Maker (outil de niveau)
+│       ├── LevelMakerWindow.cs     fenêtre en 6 étapes + outils de la vue Scène
+│       ├── LevelMakerWindow.Room.cs  étape Salle : tracé des murs, ouvertures, props
+│       ├── LevelMakerWindow.Ambience.cs  étape Ambiance : ambiances et précalcul
+│       ├── PrefabPaletteEditor.cs  inspecteur de palette : cases de dépôt par type (plusieurs prefabs, dossiers)
+│       ├── AmbienceTools.cs        APV, préparation de la scène, ambiances de départ, précalcul enchaîné
+│       ├── LevelBuilder.cs         requêtes et opérations sur la scène (Undo)
+│       ├── RoomBuilder.cs          construction des salles à partir d'un tracé et d'une palette
+│       ├── KitGenerator.cs         palettes greybox (générée) et Forest Bar, remplissage depuis un dossier
+│       ├── LevelValidator.cs       vérifications et corrections
+│       └── LevelMakerSettings.cs   prefabs et options de l'outil
+├── UI/
+│   └── SyntheseMenu.cs             menu d'avant-partie (UI Toolkit, direction Synthèse), créé tout seul
 ├── Interaction/
 │   ├── LocalPlayerHandController.cs  ramasser / poser / lancer (Interagir, Attaque)
 │   ├── LocalGrabbable.cs           objet ramassable
@@ -80,6 +100,7 @@ Assets/Scripts/
 │   ├── LocalCuePickupTrigger.cs    ramassage de la queue via InteractionSystem
 │   ├── PickUpCue.cs                attache / détache la queue (FinalIK)
 │   ├── CueChargeSlide.cs           glissement du mesh de la queue (charge, allonge)
+│   ├── LocalObjectHands.cs         objets tenus en main et lancés avec un geste (léger à une main, lourd à deux)
 │   ├── LocalCueHolder.cs           prise procédurale de la queue (en test, remplace LocalCuePickupTrigger + PickUpCue quand actif)
 │   ├── LocalCueMelee.cs            coup de queue sur l'autre joueur (IK + PuppetMaster Hit)
 │   ├── LocalUnarmedMelee.cs        poing / pied, coup de pied spartiate (IK + PuppetMaster Hit)

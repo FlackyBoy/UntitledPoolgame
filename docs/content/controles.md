@@ -1,5 +1,14 @@
 # Contrôles
 
+## Menu (avant la partie)
+
+| Clavier / souris | Manette | Action |
+|---|---|---|
+| Souris, flèches, Z Q S D | Stick gauche, croix | Viser une bille |
+| Clic, Entrée, Espace | A / ✕ | Tirer (valider) |
+| Échap, Retour arrière | B / ○ | Écran précédent |
+| Molette, - / + | LB / RB | 14.1 : changer le score cible |
+
 ## Clavier / souris
 
 | Touche | Action |
@@ -21,8 +30,9 @@
 | Stick gauche | Se déplacer · en visée : déplacer le point de frappe · vue de dessus : déplacer la bille, changer de poche |
 | Stick droit | Regarder · en visée : tourner autour de la bille |
 | Y / △ | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche |
-| X / □ | Objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** · ⚠️ utilise aussi le pouvoir |
+| X / □ | Objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
+| B / ○ | Utiliser le pouvoir (mode Party) |
 | RB / R1 | Mains vides : **coup de poing** (spammer pour enchaîner) |
 | RT / R2 | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |
 
-> ⚠️ Sur manette, l'attaque et le pouvoir sont sur le même bouton (X / □) : à corriger.
+> A / ✕ est libre (prévu pour un futur saut). B / ○ porte encore l'action « Crouch », lue par aucun script.

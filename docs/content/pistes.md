@@ -12,6 +12,7 @@
 | Ralentisseur (bille ou contrôles adverses, à préciser) | Attaque |
 | Désactiver la visée adverse | Attaque |
 | Faire exploser sa propre bille, comptée comme empochée | Effet |
+| Bille destructrice : la première bille touchée par la blanche est détruite, comptée comme empochée (dans la TODO) | Effet |
 | Mélanger toutes les billes sur la table | Attaque |
 | Bille interdite : faute si l'adversaire la touche | Attaque (piège) |
 | Trajectoire courbée pour l'adversaire | Attaque |
@@ -57,8 +58,25 @@ Autres idées autour des pouvoirs :
 
 ### Outils et confort
 
-- **Créateur de niveau** simplifié (page dédiée à venir).
+- **Créateur de niveau** : fait en grande partie (page *Outil de niveau*) ; restent les chemins de décor, les dimensions et la génération procédurale ci-dessous.
 - **Menu de réglages de sensibilité** en jeu, souris et manette, sauvegardé.
+- **Génération procédurale des salles**, à refaire plus tard (une première version maison a été retirée le 01/10). Références retenues :
+
+  | | [RoomGen](https://assetstore.unity.com/packages/tools/level-design/roomgen-procedural-generator-215804) (Angular Fox Dev) | [Procedural Generation Grid](https://assetstore.unity.com/packages/tools/utilities/procedural-generation-grid-beta-195535) (FImpossible Creations) |
+  |---|---|---|
+  | Ce que ça fait | **Une pièce à la fois**, rectangulaire, entièrement décorée : sol, murs, coins, portes, fenêtres, toit, étages | **Grille de cellules + règles par cellule** (« Field Setup » : paquets de modificateurs qui posent ou retirent des objets selon les cellules voisines), plus un **Build Planner** (graphe de nœuds) qui génère le plan : pièces et couloirs |
+  | Décor | Préréglages : chaque objet a une probabilité, un espacement minimal, décalage, rotation et échelle aléatoires, objets par étage | Règles ordonnées : murs d'abord, puis meubles alignés sous les murs (ils lisent où sont les murs), tampons, conditions sur les voisins |
+  | Limites | Pas de liaison entre pièces ni de plan, angles à 90° seulement, pas d'escaliers | Plus complexe à prendre en main (grand nombre de modificateurs), en bêta |
+  | Compatibilité | Built-in, URP, HDRP ; Unity 2022.3+ ; éditeur et exécution | Built-in, URP, HDRP ; Unity 2019.4+ ; éditeur et exécution |
+  | Prix | ≈ 37 € | ≈ 42 € |
+
+  **Faisabilité** :
+  - **Les deux sont faisables avec le projet.** Ils sont compatibles URP et Unity 6, et on achète déjà chez FImpossible Creations (Eyes Animator est dans `Assets/Plugins`).
+  - **Ce qui manquait à notre version** est justement ce qu'ils font bien. Le décor y est piloté par des règles qui lisent l'architecture déjà posée (murs, coins, portes) au lieu de jeter des objets dans un rectangle. Et les préréglages se règlent à la main, objet par objet.
+  - **Piste la plus simple** : PGG pour le plan (pièces et couloirs reliés) et l'habillage par règles de voisinage, en gardant notre Level Maker pour la table, les joueurs, les pouvoirs et la vérification.
+  - **Alternative** : RoomGen seul pour décorer une pièce tracée à la main avec nos outils, puisqu'il ne fait pas de plan.
+  - **Contrainte** : ces outils seraient des plugins, à ne pas modifier, donc à adapter depuis nos propres scripts.
+  - **À décider** : acheter l'un des deux, ou s'inspirer de leurs méthodes (règles de cellule ordonnées, préréglages par objet) pour une version maison.
 
 ## 2. Suggestions de Claude
 
@@ -79,7 +97,8 @@ Autres idées autour des pouvoirs :
 - **Tutoriel intégré** à la première partie : ramasser la queue, entrer en visée, effet, charge. Le jeu repose sur beaucoup d'interactions différentes sur un même bouton.
 - **HUD clair** : à qui le tour, pouvoir en stock (avec sa catégorie), groupe attribué, poche annoncée. Aujourd'hui ces informations sont dispersées ou absentes.
 - **Accessibilité daltonisme** : distinguer pleines, rayées et catégories de pouvoir autrement que par la couleur (motifs, icônes).
-- **Corriger le conflit de boutons** sur manette : Attaque et pouvoir partagent X / □ (voir GDD, Contrôles).
+- **Place du combat en partie** — à cadrer ; pistes : combat seulement en Party (ou réglable par mode), frapper celui qui vise lui fait rater son coup, trêve pendant la visée, un K.O. fait perdre le tour ou donne la bille en main, pouvoirs de combat (bouclier, coup renforcé, contre). *Pourquoi :* aujourd'hui on peut se battre à tout moment sans conséquence sur la partie ; ces règles donnent un enjeu au combat sans casser le billard.
+- **Le menu en vraie 3D** — la version 2D du menu Synthèse permet de valider le parcours ; la version prévue se joue sur la table du bar avec la vraie queue. *Pourquoi :* c'est le moment où le joueur apprend le geste de visée avant même la première partie.
 
 ### Technique
 
@@ -87,5 +106,10 @@ Autres idées autour des pouvoirs :
 - **Tests automatiques des règles** (tests EditMode Unity sur `EightBallRuleSet`, `NineBallRuleSet`…). *Pourquoi :* deux bugs de règles (fausse faute sur la casse) ne sont apparus qu'en jeu ; un test par cas de faute les aurait repérés.
 - **Tout réglage de gameplay dans des ScriptableObjects**, chargés comme les réglages existants (`PoolSettingsLoader`). *Pourquoi :* on règle sans toucher au code, et c'est la base de l'outil de niveau et des dimensions.
 - **Réassignation des touches** avec l'outil de l'Input System d'Unity, sauvegardée par joueur. *Pourquoi :* se combine avec le menu de sensibilité prévu.
+- **Level Maker plus sûr** — salles enregistrées par rapport à elles-mêmes (pour pouvoir les déplacer et les dupliquer), retouche du tracé avec des poignées, un seul Ctrl+Z par action, vérifications de niveau (salles qui se chevauchent, escalier sans issue, point d'apparition dans un mur). *Pourquoi :* aujourd'hui déplacer une salle ou annuler une construction peut faire perdre du travail.
+- **Level Maker plus léger en jeu** — un collider simple par mur et un seul par sol de salle au lieu d'un MeshCollider par pièce ; liste des salles et mesures des prefabs gardées en mémoire dans l'éditeur. *Pourquoi :* une salle de 10 × 10 m fait vite une centaine de colliders, et l'outil ralentit dans une grande scène.
+- **Gabarits de pièce et pièces d'angle** dans les palettes. *Pourquoi :* poser d'un clic des pièces répétées (toilettes, cages), et des angles propres sur les kits qui en ont.
+- **Prefab joueur réparé une fois pour toutes** — lui ajouter les composants qu'il reçoit aujourd'hui au lancement (pouvoirs, prise de queue, objets). *Pourquoi :* le prefab actuel avait perdu les composants des pouvoirs sans que rien ne le signale.
+- **Retirer l'ancien système de prise de queue** (`LocalCuePickupTrigger`, `PickUpCue` sauf la pose de port). *Pourquoi :* la nouvelle prise est validée, l'ancienne n'est plus qu'une source de confusion.
 - **Build automatique** sur GitHub Actions (projet GameCI). *Pourquoi :* savoir à chaque push si le projet compile encore, sans ouvrir Unity.
 - **En ligne : physique des billes calculée par le serveur**, les clients ne faisant qu'afficher. *Pourquoi :* la physique Unity ne donne pas exactement le même résultat d'une machine à l'autre, donc chaque client doit recevoir la vérité du serveur.
