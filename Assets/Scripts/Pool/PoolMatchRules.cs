@@ -91,6 +91,21 @@ namespace UntitledPoolGame.Pool
         private int pendingTargetScore;
         private bool pendingRestart;
 
+        // Set by a menu drawn elsewhere (the Synthèse menu, UI Toolkit): the
+        // provisional OnGUI mode select is then not drawn.
+        public static bool ExternalMenu { get; set; }
+
+        // Starts a match from outside (a menu), through the same deferred path
+        // as the OnGUI buttons: applied in the next Update.
+        public void RequestStart(PoolGameMode mode, PoolPartyMode partyMode, int targetScore)
+        {
+            if (MatchStarted) return;
+            pendingModeChange = mode;
+            pendingPartyModeChange = partyMode;
+            pendingTargetScore = targetScore > 0 ? targetScore : 150;
+            pendingStart = true;
+        }
+
         // Resources-loaded, shared with PoolPocket (same "what happens on a
         // pot" domain — see PoolPotEffectSettings) instead of private fields
         // here.
@@ -709,7 +724,7 @@ namespace UntitledPoolGame.Pool
         {
             if (!MatchStarted)
             {
-                DrawModeSelectGUI();
+                if (!ExternalMenu) DrawModeSelectGUI();
                 return;
             }
 
