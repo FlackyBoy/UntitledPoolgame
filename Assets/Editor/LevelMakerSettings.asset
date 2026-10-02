@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12ddf3c6a08569948b0d5dae8b88eb93, type: 3}
+  m_Name: LevelMakerSettings
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::UntitledPoolGame.PoolEditor.LevelMakerSettings
+  playerPrefab: {fileID: 5173485609117257803, guid: 5b5f9794dd1d8db4a8d98aead335e5f5, type: 3}
+  tablePrefab: {fileID: 1421917371308176336, guid: 55d4040c8e4a81248a6a9af889b3eba7, type: 3}
+  cuePrefab: {fileID: 3048719208018241057, guid: ed161a2a38f571a4da13761822612bf9, type: 3}
+  levelFolder: Assets/Scenes/Levels
+  volumeProfile: {fileID: 11400000, guid: ab09877e2e707104187f6f83e2f62510, type: 2}
+  addTemporaryFloor: 1
+  palette: {fileID: 11400000, guid: 3c1fa38ae9893af4a9d3010402711bfb, type: 2}
+  gridStep: 0.5
+  floorHeight: 0
+  cueCount: 2
+  tableRotationStep: 90

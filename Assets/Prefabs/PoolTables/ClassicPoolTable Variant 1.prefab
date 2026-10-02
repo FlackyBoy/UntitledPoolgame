@@ -705,8 +705,6 @@ GameObject:
   - component: {fileID: 1797071475454749034}
   - component: {fileID: 7738165039101928898}
   - component: {fileID: 2689361402008959147}
-  - component: {fileID: 5320236044252314405}
-  - component: {fileID: 2877501807491788368}
   m_Layer: 0
   m_Name: ClassicPoolTable Variant 1
   m_TagString: Untagged
@@ -749,30 +747,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerCrateManager
 --- !u!114 &2689361402008959147
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1421917371308176336}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 817c0802ed6cdd94bb010d750cdd7684, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerBallRotator
---- !u!114 &5320236044252314405
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1421917371308176336}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04c25923518d8ee4b8472d701c588812, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerCrateManager
---- !u!114 &2877501807491788368
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

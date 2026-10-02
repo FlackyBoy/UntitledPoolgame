@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d3ad611edb11254ab896a556a37237b, type: 3}
+  m_Name: Prison
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.PrefabPalette
+  walls:
+  - {fileID: 2402410572453614465, guid: a13aa7d06493f1d4e8904d07d4f52348, type: 3}
+  - {fileID: 1031933995, guid: abc00000000007512746013599595970, type: 3}
+  - {fileID: 7271559770221808279, guid: 22a08eeb420328a47a43da85ada35f2a, type: 3}
+  - {fileID: 1032390587, guid: abc00000000002943370556067425297, type: 3}
+  - {fileID: 1031931196, guid: abc00000000009923900151409635515, type: 3}
+  - {fileID: 1031923038, guid: abc00000000015053583758258953446, type: 3}
+  - {fileID: 1031919830, guid: abc00000000016453272432153098573, type: 3}
+  - {fileID: 5783405536512815613, guid: 4990bd0ca67d9ee4eba074389b7dfe36, type: 3}
+  - {fileID: 1031941886, guid: abc00000000000028851775069512196, type: 3}
+  - {fileID: 1031918690, guid: abc00000000002848291354173688881, type: 3}
+  - {fileID: 4675515353826551395, guid: bfcab76fc35d3dd41a2216dc9924f843, type: 3}
+  doors:
+  - {fileID: 1031926339, guid: abc00000000004129727590911923548, type: 3}
+  - {fileID: 2141608126803345113, guid: 229cfd6f2027c2844acd0cbff57657c9, type: 3}
+  - {fileID: 430149108779476458, guid: dda8cabe59c5e9a46ba3f80c0ad63ae1, type: 3}
+  - {fileID: 111762232313474206, guid: e486434fdcaa1354facb30e3b0558740, type: 3}
+  - {fileID: 8564748019643485509, guid: 0c53033d4d0ec4647a3f3a54dff5755a, type: 3}
+  - {fileID: 5719036685826195673, guid: 901a1ffe0cca7a84dbbfabf47fad74c0, type: 3}
+  - {fileID: 4485124357006903266, guid: 6f8497bf73f522c438b6e48f5321fd89, type: 3}
+  windows: []
+  pillars:
+  - {fileID: 1031942030, guid: abc00000000014767809375217269487, type: 3}
+  - {fileID: 1031938584, guid: abc00000000000702965772283236230, type: 3}
+  - {fileID: 1031946540, guid: abc00000000010363742490874893089, type: 3}
+  - {fileID: 1031938623, guid: abc00000000017401170242693226674, type: 3}
+  - {fileID: 1031939263, guid: abc00000000003554142766794990761, type: 3}
+  - {fileID: 1032382318, guid: abc00000000018193857652670660574, type: 3}
+  - {fileID: 1031918586, guid: abc00000000011372820444986505991, type: 3}
+  - {fileID: 4670371928360943721, guid: 0c30a07a1189a724bbdc712954cf1a8c, type: 3}
+  - {fileID: 4194505530046925096, guid: b2d1776a145aa2647b4e655d50702b53, type: 3}
+  - {fileID: 1031948172, guid: abc00000000010323179837244498949, type: 3}
+  wallAxis: 0
+  flipWalls: 0
+  moduleWidthOverride: 0
+  floorTiles:
+  - {fileID: 5681920025261863149, guid: 17945303efaef10478cc91c50194c1d2, type: 3}
+  - {fileID: 6354628664020803628, guid: 721d9f7f7d1fe5847aab4fd31222d7f8, type: 3}
+  - {fileID: 6004861747516852104, guid: cd4a10ac8a2755e4eafbf22b2e8321c7, type: 3}
+  - {fileID: 8338312351575607251, guid: abc00000000000217701875948794191, type: 3}
+  ceilingTiles:
+  - {fileID: 1031934511, guid: abc00000000012216104902707993554, type: 3}
+  - {fileID: 1031937648, guid: abc00000000004626037169312529801, type: 3}
+  fitTilesToModule: 1
+  tileFitTolerance: 0.25
+  stairs:
+  - {fileID: 1031936905, guid: abc00000000014652448205853505507, type: 3}
+  stairsReversed: 0
+  railings:
+  - {fileID: 1031939395, guid: abc00000000001270248383040555963, type: 3}
+  props:
+  - {fileID: 1031948608, guid: abc00000000018241557152127990318, type: 3}
+  - {fileID: 1031941340, guid: abc00000000008601924704621325563, type: 3}
+  - {fileID: 1031960653, guid: abc00000000002076454586440938228, type: 3}
+  - {fileID: 1031941362, guid: abc00000000016046054027493975012, type: 3}
+  - {fileID: 1031941326, guid: abc00000000010492407749535772638, type: 3}
+  - {fileID: 1031941326, guid: abc00000000010492407749535772638, type: 3}
+  - {fileID: 1031941432, guid: abc00000000001517254452570582117, type: 3}
+  - {fileID: 1031962754, guid: abc00000000016443944622708730434, type: 3}
+  - {fileID: 1031954574, guid: abc00000000014348986500626209289, type: 3}
+  - {fileID: 1031956287, guid: abc00000000001697748900531660878, type: 3}
+  - {fileID: 1031955933, guid: abc00000000009727456147446752595, type: 3}
+  - {fileID: 1031954945, guid: abc00000000014500817921354051328, type: 3}
+  - {fileID: 1031955985, guid: abc00000000007042922125972612693, type: 3}
+  - {fileID: 1031955967, guid: abc00000000011810702872595043468, type: 3}
+  - {fileID: 1031948650, guid: abc00000000006851104229171084076, type: 3}
+  - {fileID: 1031948188, guid: abc00000000004061977646923815321, type: 3}
+  - {fileID: 1031948668, guid: abc00000000004555082184116422294, type: 3}
+  - {fileID: 1031948472, guid: abc00000000010317178449220744876, type: 3}
+  - {fileID: 1031941446, guid: abc00000000018235783114345474583, type: 3}
+  - {fileID: 1031941464, guid: abc00000000004836315593334579356, type: 3}
+  - {fileID: 1031948472, guid: abc00000000010317178449220744876, type: 3}
+  addMissingColliders: 1
+  wall: {fileID: 0}
+  door: {fileID: 0}
+  window: {fileID: 0}
+  pillar: {fileID: 0}
+  floorTile: {fileID: 0}
+  ceilingTile: {fileID: 0}

@@ -96,7 +96,12 @@ namespace UntitledPoolGame.PoolEditor
                 Debug.LogWarning("[PoolTableBuilder] Nothing selected — select the table's root GameObject first (\"PoolPhysics\" for a custom table, \"PoolTable\"/\"PoolTable (Offline)\" for a generated one).");
                 return;
             }
+            AddPowerSpawnSystemTo(root);
+        }
 
+        // Same as the menu item, on a given table root (used by the Level Maker).
+        public static void AddPowerSpawnSystemTo(GameObject root)
+        {
             settings = GetOrCreateTableAssetSettings();
             EnsurePowerSpawnSettingsAsset();
 
@@ -121,7 +126,17 @@ namespace UntitledPoolGame.PoolEditor
             Debug.Log($"[PoolTableBuilder] Power spawn system added — PowerBall added to {addedTo} ball(s) that didn't already have one.");
         }
 
-        private static void BuildTable(bool hideVisuals = false, bool parentToSelection = false)
+        // Level Maker entry point: the physics scaffold under a table model
+        // already placed in the scene (not the settings' prefab, not the
+        // selection). Without cues: the builder's cylinders have none of the
+        // parts LocalCueHolder needs, the Level Maker places the Cue prefab.
+        public static GameObject AttachPhysicsTo(GameObject table, bool createCues)
+            => BuildTable(hideVisuals: true, parentToSelection: true, target: table, createCues: createCues);
+
+        public static PoolTableAssetSettings TableAssetSettings => GetOrCreateTableAssetSettings();
+
+        private static GameObject BuildTable(bool hideVisuals = false, bool parentToSelection = false,
+            GameObject target = null, bool createCues = true)
         {
             settings = GetOrCreateTableAssetSettings();
 
@@ -163,11 +178,11 @@ namespace UntitledPoolGame.PoolEditor
             GameObject root;
             if (parentToSelection)
             {
-                GameObject tableInstance = InstantiateCustomTablePrefab() ?? Selection.activeGameObject;
+                GameObject tableInstance = target != null ? target : InstantiateCustomTablePrefab() ?? Selection.activeGameObject;
                 if (tableInstance == null)
                 {
                     Debug.LogWarning("[PoolTableBuilder] No custom table prefab assigned (Tools > Pool > Select Custom Table Settings) and nothing selected in the Hierarchy — nothing to attach physics to.");
-                    return;
+                    return null;
                 }
 
                 // Re-running this after tweaking dimensions used to just add
@@ -203,14 +218,18 @@ namespace UntitledPoolGame.PoolEditor
             RackBalls(root.transform, ballMaterial);
             // Two cues, not one — each player needs their own to pick up
             // instead of having to fight over/wait for a single shared one.
-            CreateCue(root.transform, "Cue_P1", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, -0.2f));
-            CreateCue(root.transform, "Cue_P2", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, 0.2f));
+            if (createCues)
+            {
+                CreateCue(root.transform, "Cue_P1", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, -0.2f));
+                CreateCue(root.transform, "Cue_P2", new Vector3(settings.playLength / 2f + 0.2f, settings.tableSurfaceY + 0.1f, 0.2f));
+            }
             root.AddComponent<PoolMatchRules>();
             BuildPowerSpawnPoints(root.transform);
             root.AddComponent<PoolPowerCrateManager>();
             root.AddComponent<PoolPowerBallRotator>();
 
             Selection.activeGameObject = root;
+            return root;
         }
 
         // An inset grid with random per-point jitter — a pure grid read as
@@ -446,6 +465,10 @@ namespace UntitledPoolGame.PoolEditor
             ball.transform.SetParent(parent);
             ball.transform.localPosition = localPosition;
             ball.transform.localScale = Vector3.one * settings.ballDiameter;
+            // PhysicsLayerSetup keeps players and cues out of the balls by
+            // this layer; a generated ball left on Default collided with them.
+            int ballLayer = LayerMask.NameToLayer("Poolball");
+            if (ballLayer >= 0) ball.layer = ballLayer;
 
             ball.GetComponent<SphereCollider>().sharedMaterial = material;
 
