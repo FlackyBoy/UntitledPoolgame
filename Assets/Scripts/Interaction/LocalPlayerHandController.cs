@@ -42,11 +42,15 @@ namespace UntitledPoolGame.Interaction
         // The procedural pickup: takes over the cue whenever it's present
         // and enabled; disable it to fall back to cuePickupTrigger.
         private LocalCueHolder cueHolder;
+        // Hands-on pickup/carry/throw of ordinary objects; disabled, objects
+        // fall back to LocalGrabbable.PickUp/Throw (stuck in front of the player).
+        private LocalObjectHands objectHands;
         private PlayerInput playerInput;
         private InputAction interactAction;
         private InputAction attackAction;
         private LocalGrabbable heldObject;
         private float chargedThrowPower;
+        private bool throwArmed;   // Attack pressed since the object is in hand
 
         public LocalGrabbable HeldObject => heldObject;
 
@@ -62,6 +66,15 @@ namespace UntitledPoolGame.Interaction
             ? cueHolder.IsSettled
             : cuePickupTrigger == null || cuePickupTrigger.PickUpCue == null || cuePickupTrigger.PickUpCue.IsSettled;
 
+        private bool ObjectHandsActive => objectHands != null && objectHands.isActiveAndEnabled;
+
+        // The hands are in the middle of a gesture (reaching for, lifting,
+        // throwing or letting go of the cue or an object): nothing else
+        // should drive them (punches, another pickup).
+        public bool HandsMoving =>
+            (CueBusy && !CueSettled) ||
+            (ObjectHandsActive && objectHands.IsBusy && !objectHands.IsSettled);
+
         private void Awake()
         {
             poolAimController = GetComponent<LocalPoolAimController>();
@@ -74,7 +87,22 @@ namespace UntitledPoolGame.Interaction
             // left as is: that's the way back to the old route.
             cueHolder = GetComponent<LocalCueHolder>();
             if (cueHolder == null) cueHolder = gameObject.AddComponent<LocalCueHolder>();
+            // Same for ordinary objects (a disabled one on the prefab = the
+            // old carry, stuck in front of the player).
+            objectHands = GetComponent<LocalObjectHands>();
+            if (objectHands == null) objectHands = gameObject.AddComponent<LocalObjectHands>();
+            // Powers: activating one's own (Next) and undergoing the
+            // opponent's. Neither needs wiring, and the current player
+            // prefab had lost both (no power could be triggered any more).
+            if (GetComponent<LocalPoolPowerController>() == null) gameObject.AddComponent<LocalPoolPowerController>();
+            if (GetComponent<LocalPoolPowerEffectReceiver>() == null) gameObject.AddComponent<LocalPoolPowerEffectReceiver>();
             playerInput = GetComponent<PlayerInput>();
+            // The throw direction: the player's own camera when left empty.
+            if (cameraTransform == null)
+            {
+                Camera cam = GetComponentInChildren<Camera>(true);
+                if (cam != null) cameraTransform = cam.transform;
+            }
 
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             interactAction = map.FindAction(interactActionName, throwIfNotFound: true);
@@ -122,15 +150,36 @@ namespace UntitledPoolGame.Interaction
             if (heldObject == null || IsCue(heldObject))
             {
                 chargedThrowPower = 0f;
+                throwArmed = false;
+                return;
+            }
+            // Hands still reaching/lifting, or already mid-throw.
+            if (ObjectHandsActive && objectHands.IsBusy && !objectHands.IsSettled)
+            {
+                throwArmed = false;
+                return;
+            }
+
+            // Only a press made once the object is in hand starts a throw: an
+            // Attack still held from before (e.g. a punch's click) went
+            // straight into the windup right after the pickup.
+            if (attackAction.WasPressedThisFrame()) throwArmed = true;
+            if (!throwArmed)
+            {
+                chargedThrowPower = 0f;
                 return;
             }
 
             if (attackAction.IsPressed())
             {
                 chargedThrowPower = Mathf.Min(chargedThrowPower + throwChargeSpeed * Time.deltaTime, maxThrowPower);
+                // The arm cocks back with the charge (0 → 1 over the power range).
+                if (ObjectHandsActive)
+                    objectHands.SetCharge(Mathf.InverseLerp(0f, maxThrowPower, chargedThrowPower));
             }
             else if (chargedThrowPower > 0f)
             {
+                throwArmed = false;
                 Throw();
             }
         }
@@ -149,6 +198,10 @@ namespace UntitledPoolGame.Interaction
             chargedThrowPower = 0f;
 
             LocalGrabbable thrown = heldObject;
+            // With the hands: the object stays held until it leaves the hand
+            // partway through the swing (heldObject cleared then).
+            if (ObjectHandsActive && objectHands.TryThrow(thrown, impulse, () => { if (heldObject == thrown) heldObject = null; }))
+                return;
             heldObject = null;
             thrown.Throw(impulse);
         }
@@ -158,6 +211,9 @@ namespace UntitledPoolGame.Interaction
 
         private void TryPickUp()
         {
+            // Mid-gesture (e.g. arms coming back after a throw): wait.
+            if (HandsMoving) return;
+
             // The cue's own pickup (FBBIK reach-and-grab, gated by its
             // InteractionTrigger) is tried first, through this same call
             // chain rather than a separate Update() reading Interact
@@ -180,7 +236,8 @@ namespace UntitledPoolGame.Interaction
                     continue;
 
                 heldObject = grabbable;
-                grabbable.PickUp(transform);
+                if (!ObjectHandsActive || !objectHands.TryStartPickup(grabbable))
+                    grabbable.PickUp(transform);
                 return;
             }
         }
@@ -198,9 +255,14 @@ namespace UntitledPoolGame.Interaction
         {
             // The cue releases through its InteractionSystem interaction
             // (PickUpCue.ReleaseCue) instead of a plain LocalGrabbable.Drop().
+            // Mid-throw the throw itself lets go (and clears heldObject).
+            if (ObjectHandsActive && objectHands.IsThrowing) return;
+
             bool released = CueHolderActive
                 ? cueHolder.TryRelease(heldObject)
                 : cuePickupTrigger != null && cuePickupTrigger.TryReleaseIfCue(heldObject);
+            if (!released && ObjectHandsActive)
+                released = objectHands.TryDrop(heldObject);
             if (!released)
                 heldObject.Drop();
 
@@ -213,6 +275,12 @@ namespace UntitledPoolGame.Interaction
         // physics takes over the whole body).
         public void ForceDrop()
         {
+            // Knocked down mid-gesture (even mid-throw): let go at once.
+            if (ObjectHandsActive && objectHands.IsBusy)
+            {
+                objectHands.ReleaseNow();
+                if (heldObject != null && !IsCue(heldObject)) heldObject = null;
+            }
             if (heldObject != null) Drop();
         }
 

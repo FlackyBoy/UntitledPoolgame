@@ -8,10 +8,9 @@ namespace UntitledPoolGame.Pool
     // are actually gated to the holder's own turn — see PoolPower.
     // RequiresOwnTurn — Attack/Defense can be triggered whenever, since
     // they target/react to the opponent instead of the holder's own next
-    // shot. Reuses the existing "Next" action — bound to Keyboard 2 /
-    // Gamepad D-pad right in the default asset, and not used by anything
-    // else in this project — instead of adding a brand new input binding;
-    // rename it to something clearer in the input asset later if desired.
+    // shot. Reads the "Next" action (F / gamepad B-Circle in the local
+    // input asset; it used to share X-Square with Attack). Added to the
+    // player automatically by LocalPlayerHandController when missing.
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPoolPowerController : MonoBehaviour
     {

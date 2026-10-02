@@ -376,7 +376,7 @@ namespace UntitledPoolGame.Interaction
             if (cueMelee != null && cueMelee.IsSwinging) return false;
             // Not while picking the cue up or letting it go: the pickup pins
             // the feet and drives the hands.
-            if (handController.CueBusy && !handController.CueSettled) return false;
+            if (handController.HandsMoving) return false;
             if (m == Move.Punch)
             {
                 // Fists only with empty hands (with the cue, the click is

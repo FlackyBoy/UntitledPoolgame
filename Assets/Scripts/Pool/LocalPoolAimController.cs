@@ -290,6 +290,8 @@ namespace UntitledPoolGame.Pool
             interactAction = map.FindAction(interactActionName, throwIfNotFound: true);
             attackAction = map.FindAction(attackActionName, throwIfNotFound: true);
 
+            ResolveMissingReferences();
+
             if (cueBallPreview != null)
             {
                 cueBallPreview.enabled = false;
@@ -300,6 +302,73 @@ namespace UntitledPoolGame.Pool
                 objectBallPreview.enabled = false;
                 objectBallPreview.startColor = objectBallPreview.endColor = objectBallPreviewColor;
             }
+        }
+
+        // A player spawned by PlayerInputManager only has what its prefab
+        // holds: wiring done on a player placed in a scene (Inspector
+        // overrides, e.g. the preview lines in BarSplitscreen) never reaches
+        // it. Everything here lives on the player itself, so whatever was
+        // left empty is found among its children, or created.
+        private void ResolveMissingReferences()
+        {
+            if (cameraTransform == null)
+            {
+                Camera cam = GetComponentInChildren<Camera>(true);
+                if (cam != null) cameraTransform = cam.transform;
+            }
+            if (lookAtIK == null) lookAtIK = GetComponentInChildren<LookAtIK>(true);
+            // Only ever moved onto the cue ball (UpdateAimIKTarget), so any
+            // empty object will do.
+            if (aimIKTarget == null)
+            {
+                aimIKTarget = new GameObject("AimIKTarget (auto)").transform;
+                aimIKTarget.SetParent(transform, false);
+            }
+
+            if (cueBallPreview != null && objectBallPreview != null) return;
+            LineRenderer[] lines = GetComponentsInChildren<LineRenderer>(true);
+            if (cueBallPreview == null) cueBallPreview = PickLine(lines, "CueBall");
+            if (objectBallPreview == null) objectBallPreview = PickLine(lines, "ObjectBall");
+            // Unnamed lines left on the player, then new ones.
+            if (cueBallPreview == null) cueBallPreview = PickLine(lines, null);
+            if (objectBallPreview == null) objectBallPreview = PickLine(lines, null);
+            if (cueBallPreview == null) cueBallPreview = CreatePreviewLine("CueBallPreviewLine (auto)", objectBallPreview);
+            if (objectBallPreview == null) objectBallPreview = CreatePreviewLine("ObjectBallPreviewLine (auto)", cueBallPreview);
+        }
+
+        // First line not already used as a preview, whose object name holds
+        // keyword (any name when null).
+        private LineRenderer PickLine(LineRenderer[] lines, string keyword)
+        {
+            foreach (LineRenderer line in lines)
+            {
+                if (line == cueBallPreview || line == objectBallPreview) continue;
+                if (keyword == null || line.name.Contains(keyword)) return line;
+            }
+            return null;
+        }
+
+        private LineRenderer CreatePreviewLine(string lineName, LineRenderer lookLike)
+        {
+            var go = new GameObject(lineName);
+            go.transform.SetParent(transform, false);
+            LineRenderer line = go.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.positionCount = 0;
+            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            if (lookLike != null)
+            {
+                line.widthMultiplier = lookLike.widthMultiplier;
+                line.sharedMaterial = lookLike.sharedMaterial;
+            }
+            else
+            {
+                line.widthMultiplier = 0.005f;
+                // Always included in builds; tinted by the line's colors.
+                line.sharedMaterial = new Material(Shader.Find("Sprites/Default"));
+            }
+            return line;
         }
 
         public bool WantsInteractThisFrame(LocalGrabbable heldObject)
@@ -361,6 +430,10 @@ namespace UntitledPoolGame.Pool
         public bool IsPlacementViewActive => ballPlacementActive || callPocketActive;
         private Vector3 placementCameraRestLocalPosition;
         private Quaternion placementCameraRestLocalRotation;
+        [Tooltip("Logs [PlacementTrace] de la vue de dessus (bille en main, annonce de poche) : caméra, fenêtre, hauteur, plafond.")]
+        [SerializeField] private bool tracePlacementView = true;
+        private Vector3 placementCameraExpected;
+        private int placementCheckFrames;
 
         // Ball-in-hand: after a foul, the player who now has the turn switches
         // to a top-down view of the whole table and slides the cue ball around
@@ -574,6 +647,36 @@ namespace UntitledPoolGame.Pool
             Vector3 center = surface != null ? surface.transform.position : transform.position;
             cameraTransform.position = center + Vector3.up * PlacementHeightForCurrentViewport();
             cameraTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            placementCameraExpected = cameraTransform.position;
+            placementCheckFrames = 10;
+
+            if (tracePlacementView)
+            {
+                Camera cam = cameraTransform.GetComponent<Camera>();
+                float ceiling = Physics.Raycast(center + Vector3.up * 0.2f, Vector3.up, out RaycastHit hit, 50f, ~0, QueryTriggerInteraction.Ignore)
+                    ? hit.distance + 0.2f : -1f;
+                Debug.Log($"[PlacementTrace] P{playerInput.playerIndex} top-down view: camera '{cameraTransform.name}' " +
+                          $"(Camera component: {(cam != null ? "yes" : "NO")}, brain: {(cinemachineBrain != null ? "yes" : "no")}), " +
+                          $"viewport rect {(cam != null ? cam.rect.ToString() : "-")}, aspect {(cam != null ? cam.aspect : 0f):F2}, " +
+                          $"screen {Screen.width}x{Screen.height}, fov {(cam != null ? cam.fieldOfView : 0f):F0}, " +
+                          $"height {PlacementHeightForCurrentViewport():F2} m (tuned {placementCameraHeight:F2}), table center {center}, " +
+                          $"table right {(surface != null ? surface.transform.right.ToString() : "-")}, " +
+                          $"half length {(surface != null ? surface.HalfLength : 0f):F2} / width {(surface != null ? surface.HalfWidth : 0f):F2}, " +
+                          $"ceiling above table {(ceiling < 0f ? "none" : ceiling.ToString("F2") + " m" + (hit.collider != null ? $" ({hit.collider.name})" : ""))}", this);
+            }
+        }
+
+        // Diagnostic: the top-down camera moved by something else after we placed it.
+        private void CheckPlacementCamera()
+        {
+            if (placementCheckFrames <= 0 || cameraTransform == null) return;
+            placementCheckFrames--;
+            if (tracePlacementView && (cameraTransform.position - placementCameraExpected).sqrMagnitude > 0.0001f)
+            {
+                Debug.LogWarning($"[PlacementTrace] P{playerInput.playerIndex} top-down camera moved by something else: " +
+                                 $"expected {placementCameraExpected}, now {cameraTransform.position}.", this);
+                placementCheckFrames = 0;
+            }
         }
 
         // Placement Camera Height is tuned by hand for full-screen (solo) —
@@ -603,6 +706,7 @@ namespace UntitledPoolGame.Pool
 
         private void Update()
         {
+            CheckPlacementCamera();
             if (HandleBallInHand()) return;
             if (HandleCallPocket()) return;
 

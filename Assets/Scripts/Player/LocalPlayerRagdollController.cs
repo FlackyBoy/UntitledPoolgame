@@ -175,6 +175,20 @@ namespace UntitledPoolGame.Player
         // not-yet-reliable state on the very first frame.
         public void OnKnockedDown()
         {
+            // Knocked down again while still getting up (hit again, or
+            // bumping into something during the get-up): the recovery
+            // scheduled by the previous OnRegainBalance must not run —
+            // handing control back then left the ragdoll lying on the floor
+            // while the character stood up, detached from it.
+            if (recoverRoutine != null)
+            {
+                StopCoroutine(recoverRoutine);
+                recoverRoutine = null;
+                Debug.Log($"[Ragdoll] {name}: knocked down again while getting up — pending recovery cancelled", this);
+            }
+
+            Debug.Log($"[Ragdoll] {name}: knocked down (ragdoll mode on)", this);
+
             if (handController != null && handController.HeldObject != null)
                 handController.ForceDrop();
 
@@ -229,12 +243,24 @@ namespace UntitledPoolGame.Player
         // delay before actually handing control back.
         public void OnRegainBalance()
         {
-            StartCoroutine(RecoverAfterDelay());
+            if (recoverRoutine != null) StopCoroutine(recoverRoutine);
+            recoverRoutine = StartCoroutine(RecoverAfterDelay());
         }
+
+        private Coroutine recoverRoutine;
 
         private System.Collections.IEnumerator RecoverAfterDelay()
         {
             yield return new WaitForSeconds(getUpRecoveryDelay);
+            recoverRoutine = null;
+
+            // Only if the puppet really is back on its feet: if it lost its
+            // balance again meanwhile, the next OnRegainBalance will recover.
+            if (behaviourPuppet != null && behaviourPuppet.state != BehaviourPuppet.State.Puppet)
+            {
+                Debug.Log($"[Ragdoll] {name}: recovery skipped — puppet is {behaviourPuppet.state}, waiting for it to regain balance again", this);
+                yield break;
+            }
             OnRecovered();
         }
 
@@ -250,7 +276,27 @@ namespace UntitledPoolGame.Player
             // cached once in its own Awake). Moving the root there absorbs
             // the same motion for the CharacterController, without
             // touching any ragdoll muscle directly.
-            if (modelTransform != null && modelFollow != null)
+            // Got up on the other side of a wall from where it fell (thrown
+            // through it): don't follow it there. The puppet is brought back
+            // to the fall spot instead (teleported onto its animated pose,
+            // the only muscle-touching exception in this script) and the root
+            // stays put — the model follow snaps the animated body back onto
+            // it below.
+            RaycastHit wall = default;
+            bool behindWall = modelTransform != null && Physics.Linecast(
+                transform.position + Vector3.up, modelTransform.position + Vector3.up,
+                out wall, lostRagdollBlockers, QueryTriggerInteraction.Ignore);
+            if (behindWall && behaviourPuppet != null && behaviourPuppet.puppetMaster != null)
+            {
+                Debug.LogWarning($"[Ragdoll] {name}: got up behind '{wall.collider.name}' ({Vector3.Distance(transform.position, modelTransform.position):F2} m from the fall spot) — brought back to the fall spot", this);
+                behaviourPuppet.puppetMaster.Teleport(transform.position, transform.rotation, true);
+                if (modelFollow != null)
+                {
+                    modelFollow.ResyncNow();
+                    modelFollow.enabled = true;
+                }
+            }
+            else if (modelTransform != null && modelFollow != null)
             {
                 Vector3 currentModelWorldPosition = modelTransform.position;
                 Quaternion currentModelWorldRotation = modelTransform.rotation;
@@ -290,6 +336,7 @@ namespace UntitledPoolGame.Player
                 // late correction.
             }
 
+            Debug.Log($"[Ragdoll] {name}: recovered — control handed back{(behindWall ? " (at the fall spot)" : "")}", this);
             characterController.enabled = true;
             if (fpsController != null) fpsController.enabled = true;
             if (aimController != null) aimController.enabled = true;
@@ -308,6 +355,154 @@ namespace UntitledPoolGame.Player
         // Everything else (LocalFpsPlayerController, LocalPoolAimController) is
         // already disabled for the whole ragdoll duration, so this is the
         // sole writer of the ragdoll camera's transform while active.
+        // Safety net: the player has control (not in ragdoll mode) while the
+        // puppet isn't standing — its ragdoll lying on the floor, detached
+        // from a character that stood back up. Whatever led there, going
+        // back through OnKnockedDown lets BehaviourPuppet get up normally
+        // (the model follow no longer pins the animated body to the root),
+        // and OnRegainBalance then hands control back as usual.
+        [Tooltip("Délai (secondes) au bout duquel un ragdoll resté au sol alors que le joueur a le contrôle est remis en mode chute pour qu'il se relève normalement. 0 = désactivé.")]
+        [SerializeField] private float desyncRecoveryDelay = 0.5f;
+        private float desyncTime;
+
+        // A ragdoll thrown hard can end up where it can never get up: through
+        // a wall (seen with the Spartan kick) or under the floor. While down:
+        // its pelvis crossing level geometry between two frames (it passed
+        // through), falling well below the spot it was knocked down at (the
+        // root, which doesn't move during the ragdoll), or staying down too
+        // long gets it teleported back to that spot (PuppetMaster.Teleport,
+        // onto its animated pose) so it can get up in the room.
+        [Header("Lost ragdoll (through a wall, under the floor)")]
+        [Tooltip("Couches du décor que le ragdoll ne doit pas traverser (murs, sol). Vide = tout sauf les couches du ragdoll et des joueurs.")]
+        [SerializeField] private LayerMask lostRagdollBlockers;
+        [Tooltip("Mètres sous la position du joueur à partir desquels le ragdoll est considéré comme tombé sous le sol.")]
+        [SerializeField] private float lostBelowDistance = 2f;
+        [Tooltip("Secondes au sol maximum avant que le ragdoll soit ramené quoi qu'il arrive. 0 = désactivé.")]
+        [SerializeField] private float maxDownTime = 10f;
+        private float downTime;
+        private bool hasLastPelvis;
+        private Vector3 lastPelvis;
+        private float teleportCooldown;
+        private float nextDownTrace;
+
+        private void Start()
+        {
+            if (lostRagdollBlockers.value == 0)
+                lostRagdollBlockers = ~LayerMask.GetMask("Ragdoll", "Player", "PlayerAnimated");
+
+            // Continuous collision on every muscle: a ragdoll thrown at a few
+            // metres per second (Spartan kick, heavy hits) otherwise passes
+            // through thin walls between two physics steps.
+            int continuous = 0;
+            if (behaviourPuppet != null && behaviourPuppet.puppetMaster != null)
+                foreach (Muscle muscle in behaviourPuppet.puppetMaster.muscles)
+                    if (muscle.rigidbody != null)
+                    {
+                        muscle.rigidbody.collisionDetectionMode = muscle.rigidbody.isKinematic
+                            ? CollisionDetectionMode.ContinuousSpeculative
+                            : CollisionDetectionMode.ContinuousDynamic;
+                        continuous++;
+                    }
+            Debug.Log($"[Ragdoll] {name}: {continuous} muscles set to continuous collision" +
+                      (behaviourPuppet == null ? " — no Behaviour Puppet assigned, the lost-ragdoll checks can't run" : ""), this);
+        }
+
+        private void CheckLostRagdoll()
+        {
+            PuppetMaster puppet = behaviourPuppet != null ? behaviourPuppet.puppetMaster : null;
+            if (puppet == null || puppet.muscles.Length == 0 || puppet.muscles[0].rigidbody == null) return;
+
+            downTime += Time.deltaTime;
+
+            // Diagnostic: once a second while down, where the ragdoll is
+            // relative to the spot it fell from.
+            if (Time.time >= nextDownTrace)
+            {
+                nextDownTrace = Time.time + 1f;
+                Vector3 p = puppet.muscles[0].rigidbody.position;
+                Vector3 flat = Vector3.ProjectOnPlane(p - transform.position, Vector3.up);
+                Debug.Log($"[Ragdoll] {name}: down {downTime:F1} s | puppet {behaviourPuppet.state} | pelvis {flat.magnitude:F2} m from the fall spot, {p.y - transform.position.y:F2} m above it | " +
+                          $"pelvis collision {puppet.muscles[0].rigidbody.collisionDetectionMode}, layer {LayerMask.LayerToName(puppet.muscles[0].rigidbody.gameObject.layer)}", this);
+            }
+
+            // PuppetMaster applies a teleport on its next read: the jump it
+            // makes must not be mistaken for passing through a wall.
+            if (teleportCooldown > 0f) { teleportCooldown -= Time.deltaTime; hasLastPelvis = false; return; }
+            Vector3 pelvis = puppet.muscles[0].rigidbody.position;
+
+            // Crossed a wall or the floor since last frame?
+            RaycastHit crossed = default;
+            bool through = hasLastPelvis && Physics.Linecast(lastPelvis, pelvis, out crossed, lostRagdollBlockers, QueryTriggerInteraction.Ignore);
+            lastPelvis = pelvis;
+            hasLastPelvis = true;
+            bool below = pelvis.y < transform.position.y - lostBelowDistance;
+            bool tooLong = maxDownTime > 0f && downTime > maxDownTime;
+
+            if (!through && !below && !tooLong) return;
+
+            string reason = through ? $"passed through '{crossed.collider.name}'" : below ? "under the floor" : $"down for {downTime:F0} s";
+            Debug.LogWarning($"[Ragdoll] {name}: ragdoll lost ({reason}) — teleported back to where it was knocked down", this);
+            puppet.Teleport(transform.position, transform.rotation, true);
+            downTime = 0f;
+            hasLastPelvis = false;
+            teleportCooldown = 0.3f;
+        }
+
+        // A standing (pinned) ragdoll must sit on its animated body. Seen:
+        // the ragdoll thrown through a wall, getting up there, and then
+        // pinned toward the animated body standing on this side — held back
+        // by the wall, for good. Too far from its animated pelvis for too
+        // long, it's snapped back onto the animated pose (PuppetMaster.
+        // Teleport at the animated root, moveToTarget).
+        [Tooltip("Écart maximal (mètres) entre le bassin du ragdoll debout et celui du personnage animé ; au-delà, pendant Stuck Ragdoll Time, le ragdoll est coincé (contre un mur…) et il est replacé sur le personnage. 0 = désactivé.")]
+        [SerializeField] private float maxRagdollSeparation = 0.75f;
+        [Tooltip("Secondes pendant lesquelles le ragdoll doit rester trop loin du personnage animé avant d'être replacé.")]
+        [SerializeField] private float stuckRagdollTime = 0.5f;
+        private float stuckTime;
+
+        private void CheckStuckRagdoll()
+        {
+            PuppetMaster puppet = behaviourPuppet != null ? behaviourPuppet.puppetMaster : null;
+            if (maxRagdollSeparation <= 0f || puppet == null || puppet.muscles.Length == 0 || behaviourPuppet.state != BehaviourPuppet.State.Puppet)
+            {
+                stuckTime = 0f;
+                return;
+            }
+            Muscle pelvis = puppet.muscles[0];
+            if (pelvis.rigidbody == null || pelvis.target == null) return;
+
+            float gap = Vector3.Distance(pelvis.rigidbody.position, pelvis.target.position);
+            stuckTime = gap > maxRagdollSeparation ? stuckTime + Time.deltaTime : 0f;
+            if (stuckTime < stuckRagdollTime) return;
+
+            stuckTime = 0f;
+            Transform animatedRoot = puppet.targetRoot != null ? puppet.targetRoot : modelTransform;
+            if (animatedRoot == null) return;
+            bool wall = Physics.Linecast(pelvis.target.position, pelvis.rigidbody.position, out RaycastHit hit, lostRagdollBlockers, QueryTriggerInteraction.Ignore);
+            Debug.LogWarning($"[Ragdoll] {name}: standing ragdoll stuck {gap:F2} m from its animated body{(wall ? $" (behind '{hit.collider.name}')" : "")} — snapped back onto it", this);
+            puppet.Teleport(animatedRoot.position, animatedRoot.rotation, true);
+        }
+
+        private void Update()
+        {
+            CheckStuckRagdoll();
+            if (isRagdollCameraActive) CheckLostRagdoll();
+            else { downTime = 0f; hasLastPelvis = false; }
+
+            if (desyncRecoveryDelay <= 0f || behaviourPuppet == null || isRagdollCameraActive || recoverRoutine != null)
+            {
+                desyncTime = 0f;
+                return;
+            }
+            if (behaviourPuppet.state == BehaviourPuppet.State.Puppet) { desyncTime = 0f; return; }
+
+            desyncTime += Time.deltaTime;
+            if (desyncTime < desyncRecoveryDelay) return;
+            desyncTime = 0f;
+            Debug.LogWarning($"[Ragdoll] {name}: ragdoll is {behaviourPuppet.state} while the player has control — back to ragdoll mode so it can get up", this);
+            OnKnockedDown();
+        }
+
         private void LateUpdate()
         {
             if (!isRagdollCameraActive || ragdollVirtualCamera == null || behaviourPuppet == null) return;

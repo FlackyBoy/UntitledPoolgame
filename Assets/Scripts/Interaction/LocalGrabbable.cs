@@ -83,6 +83,20 @@ namespace UntitledPoolGame.Interaction
             IsHeld = false;
         }
 
+        // Lets go of an object held in the hand by LocalObjectHands (which
+        // held it through MarkExternallyHeld): back to physics where it is,
+        // with an optional impulse (a throw).
+        public void ReleaseFromHand(Vector3 impulse)
+        {
+            transform.SetParent(null, worldPositionStays: true);
+            MarkExternallyHeld(false);
+            if (rb == null) return;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            if (impulse != Vector3.zero) rb.AddForce(impulse, ForceMode.Impulse);
+        }
+
+        public Rigidbody Body => rb;
+
         // Drop, then give it a shove — impulse is already a full world-space
         // force vector (direction * power), computed by the thrower (who
         // knows their own look direction), not this object.

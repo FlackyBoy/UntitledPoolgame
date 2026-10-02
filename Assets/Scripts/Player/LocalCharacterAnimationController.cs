@@ -81,8 +81,8 @@ namespace UntitledPoolGame.Player
 
         // That controller family also has a Turn+Forward "face your
         // movement" locomotion mode as an alternative to real strafing,
-        // selected by this bool — forced permanently true once in Awake
-        // (never toggled after), since this FPS-style camera-relative
+        // selected by this bool — forced permanently true (in Awake and
+        // every frame, never false), since this FPS-style camera-relative
         // character always strafes rather than turning to face its own
         // movement direction (transform yaw is driven directly by
         // look input — see LocalFpsPlayerController — with no code path
@@ -139,6 +139,7 @@ namespace UntitledPoolGame.Player
         private bool hasMoveXYParameters;
         private bool hasRightForwardParameters;
         private bool hasGroundedParameter;
+        private bool hasIsStrafingParameter;
         private float previousYaw;
         private float turnLeanSmoothed;
 
@@ -157,9 +158,10 @@ namespace UntitledPoolGame.Player
             hasGroundedParameter = AnimatorHasBool(animator, groundedParameterName);
             previousYaw = transform.eulerAngles.y;
 
-            // Set once, never toggled — see the field comment above.
-            if (animator != null && AnimatorHasBool(animator, isStrafingParameterName))
-                animator.SetBool(isStrafingParameterName, true);
+            // Always true — see the field comment above; also re-asserted
+            // every frame in Update (parameters can be reset by a rebind).
+            hasIsStrafingParameter = AnimatorHasBool(animator, isStrafingParameterName);
+            if (hasIsStrafingParameter) animator.SetBool(isStrafingParameterName, true);
         }
 
         private static bool AnimatorHasBool(Animator animator, string parameterName)
@@ -189,6 +191,14 @@ namespace UntitledPoolGame.Player
         private void Update()
         {
             if (animator == null) return;
+
+            // Re-asserted every frame, not only in Awake: Unity puts the
+            // Animator's parameters back to their defaults (IsStrafing false
+            // in the controller) when it's rebound — disabled and re-enabled,
+            // its object reactivated — and the Base Layer then falls back to
+            // its default state, Grounded Directional, for good (its only way
+            // out to Grounded Strafe is IsStrafing true).
+            if (hasIsStrafingParameter) animator.SetBool(isStrafingParameterName, true);
 
             // Horizontal only — gravity's fall speed shouldn't blend toward
             // a running animation while airborne/falling.
