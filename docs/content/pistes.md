@@ -12,7 +12,7 @@
 | Ralentisseur (bille ou contrôles adverses, à préciser) | Attaque |
 | Désactiver la visée adverse | Attaque |
 | Faire exploser sa propre bille, comptée comme empochée | Effet |
-| Bille destructrice : la première bille touchée par la blanche est détruite, comptée comme empochée (dans la TODO) | Effet |
+| Bille destructrice : la première bille touchée par la blanche est détruite, comptée comme empochée (implémentée le 02/10, voir le GDD) | Effet |
 | Mélanger toutes les billes sur la table | Attaque |
 | Bille interdite : faute si l'adversaire la touche | Attaque (piège) |
 | Trajectoire courbée pour l'adversaire | Attaque |
@@ -53,7 +53,8 @@ Autres idées autour des pouvoirs :
 
 ### Environnements
 
-- **Maison / prison hantée**, **base spatiale** — gameplay associé à définir.
+- **Prison hantée** : bascule dans l'horreur (lumières qui s'éteignent, jump scares, billes qui bougent seules) et un **Némésis** qui traque le joueur pour l'empêcher de jouer — géré par le jeu, ou **incarné par l'autre joueur** pendant le tour adverse ?
+- **Base spatiale** : billes en apesanteur, gravité qui change, sas de dépressurisation.
 - Probablement le même système qui choisira le décor **et** les règles et pouvoirs actifs de chaque dimension.
 
 ### Outils et confort

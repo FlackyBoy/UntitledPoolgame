@@ -61,7 +61,21 @@ Lu par `PoolPowerCrateManager`, `PoolPowerBallRotator`, `PoolPowerCrate`, `Power
 
 ### Les pouvoirs (PoolPower)
 
-Chaque pouvoir est son propre asset (`Create > Pool > Powers > …`) : nom, `Requires Own Turn`, et ses paramètres (ex. multiplicateur de puissance pour le tir boosté, multiplicateur de sensibilité pour la vision brouillée).
+Chaque pouvoir est son propre asset (`Create > Pool > Powers > …`) : nom, `Requires Own Turn`, et ses paramètres. Exemples :
+- tir boosté : multiplicateur de puissance ;
+- vision brouillée : multiplicateur de sensibilité ;
+- bille destructrice : VFX d'explosion et son échelle, bille 8 épargnée, souffle (vitesse et rayon).
+
+### HudSettings — UI en jeu
+
+Tout ce qu'affiche le HUD (`MatchHud`) et comment :
+- **polices et taille** : polices, taille globale, taille des interjections, de « À toi ! » et des bandeaux ;
+- **couleurs** : joueurs, encre, cartes, mise en avant, danger, « BOUM ! », voile du joueur qui attend, jauge ;
+- **textes** : tour, plaque, bandeaux d'aide, interjections (liste tirée au hasard pour une bille rentrée), carte sponsor, fin de partie. `{0}` est remplacé par le numéro du joueur, la poche ou la catégorie du pouvoir ; un texte vidé désactive l'interjection ou le bandeau correspondant ;
+- **interrupteurs** : interjections de bille rentrée, carte sponsor, confettis, voile ; seuil du tir plein ;
+- **durées** : interjections, rayons, carte sponsor, délai « FAUTE ! » → « Main libre ! », secousse, balancement de « À toi ! ».
+
+Lu par `MatchHud` : les textes, couleurs et tailles à la construction du HUD, donc à la scène suivante ; les durées à chaque image.
 
 ## Réglages qui ne sont pas (encore) des ScriptableObjects
 

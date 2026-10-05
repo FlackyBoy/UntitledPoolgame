@@ -9,6 +9,12 @@
 | Échap, Retour arrière | B / ○ | Écran précédent |
 | Molette, - / + | LB / RB | 14.1 : changer le score cible |
 
+## Fin de partie
+
+| Clavier / souris | Manette | Action |
+|---|---|---|
+| Entrée, Espace, E, clic sur « Revanche » | A / ✕, Y / △ | Revanche (même mode) |
+
 ## Clavier / souris
 
 | Touche | Action |

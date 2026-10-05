@@ -4,14 +4,17 @@
 
 ## 1. Concept
 
-**UntitledPoolGame** est un jeu de billard « friend slop » en vue à la première personne. Les joueurs se déplacent librement dans une salle, prennent une queue en main et jouent de vraies parties de billard… que des pouvoirs, des objets lancés et des dimensions aux règles loufoques viennent détourner.
+**UntitledPoolGame** est un **jeu de billard loufoque** où le billard n'est qu'un **prétexte** : un prétexte pour vivre des moments de jeu drôles entre amis, façon party game. On joue en vue à la première personne, on se balade dans la salle, on prend une queue… et chaque décor détourne la partie avec son propre twist : horreur dans une prison hantée, billes en apesanteur dans une base spatiale, sabotages, coups et ragdolls.
+
+**Références** : *What the Golf?* (le sport détourné à chaque niveau), *Super Battle Golf* (le sport en chaos entre amis), *Mario Tennis* / *Mario Golf* (un sport accessible rendu spectaculaire par des coups et pouvoirs spéciaux). **Points forts** : le **friend slop** et le **couch coop** (à deux sur le même canapé, en écran partagé), l'aspect **WTF** et drôle.
 
 ### Piliers
 
-1. **Un vrai billard comme socle lisible** — physique réaliste et règles connues (8-ball, 9-ball, 14.1) : tout le monde comprend l'objectif avant que le chaos ne commence.
-2. **Le chaos entre amis** — pouvoirs de sabotage, objets à lancer sur l'adversaire, ragdoll : le plaisir vient autant des coups tordus que des beaux coups.
-3. **Des dimensions qui changent les règles** — chaque dimension apporte son décor et ses propres règles, jusqu'à des modes très éloignés du billard classique.
-4. **La liberté FPS** — on marche autour de la table, on ramasse, on lance ; le billard se joue avec le corps du personnage, pas depuis un menu.
+1. **Le billard comme prétexte** — des règles connues de tous (8-ball, 9-ball, 14.1) : chacun comprend l'objectif avant que tout déraille.
+2. **Rire entre amis** — couch coop, sabotages, objets lancés, coups, ragdolls : le plaisir vient autant des coups tordus et des réactions de l'autre que des beaux coups.
+3. **Chaque décor, son twist** — un décor change l'ambiance **et** les règles du jeu, jusqu'à des modes très éloignés du billard classique.
+4. **Le WTF assumé** — surprises, absurde, situations qu'on raconte après la soirée.
+5. **La liberté FPS** — on marche autour de la table, on ramasse, on lance ; le billard se joue avec le corps du personnage.
 
 ### Fiche
 
@@ -64,7 +67,7 @@ En bref : ZQSD + souris (sticks) pour bouger et regarder, **E / Y** pour interag
 - **Personnage visible** avec animations de marche / strafe / rotation. ✅ Course, visée, emotes : 📌
 - **Ramasser et lancer** n'importe quel objet prévu pour, **avec les mains** : la main va chercher l'objet (on se penche s'il est bas), un objet léger se tient dans la main droite et part d'un geste du bras, un objet lourd se porte à deux mains et se lance au-dessus de la tête. Maintenir Attaque charge, relâcher lance. 🔄 (en pause, derniers réglages à tester)
 - **La queue** se ramasse en tendant les bras vers elle, quelle que soit sa position (au sol, debout, en biais) ; en visée, le corps se place derrière elle et se penche au-dessus de la table pour les coups lointains, la tête suit la bille, la queue glisse dans les mains pendant la charge. ✅
-- **Ragdoll** : un coup ou un objet lancé fait tomber le joueur (PuppetMaster), puis il se relève ; caméra à la 3ᵉ personne pendant la chute. Le ragdoll ne reste plus coincé au sol ni derrière un mur. ✅ À raccourcir : le retour de la caméra après la chute.
+- **Ragdoll** : un coup ou un objet lancé fait tomber le joueur (PuppetMaster), puis il se relève ; la caméra recule à la 3ᵉ personne pendant la chute puis revient dans les yeux pendant le relevé. Le ragdoll ne reste plus coincé au sol ni derrière un mur. ✅
 
 ## 5. Le billard
 
@@ -76,7 +79,9 @@ Frottement de roulement et de glissement calculés par bille, rebonds vifs sur l
 
 - Caméra en orbite autour de la bille blanche, rapprochée pendant la charge.
 - Ligne de trajectoire jusqu'au premier contact, et direction prise par la bille touchée (pas de rebonds sur bande).
-- Si la bille est trop loin des bords pour être atteinte, le tir est bloqué avec un message : il faut contourner la table.
+- Le personnage se colle à la table : seul son corps doit rester hors de la table, la queue passe au-dessus de la bande. 🔄 à tester
+- Bille lointaine : **coup allongé** (hanche sur la bande, jambe arrière levée, la visée tremble un peu). Au-delà, le tir est bloqué avec un message : il faut contourner la table. 🔄 à tester
+- Prévu : coup **derrière le dos** quand la ligne longe la bande côté joueur. 📌
 
 ### Règles communes ✅
 
@@ -112,10 +117,9 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Vision brouillée** | Attaque | L'écran de l'adversaire blanchit et sa visée devient moins sensible | Tour de l'adversaire |
 | **Commandes inversées** | Attaque | Regard inversé, sensibilité augmentée, ligne de trajectoire masquée | Tour de l'adversaire |
 | **Poche fermée** | Attaque | Une poche au hasard est bouchée | Tour de l'adversaire |
+| **Bille destructrice** 🔄 | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
 
 Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
-
-**À faire 📌** : **Bille destructrice** (Effet) — au prochain tir, la première bille touchée par la blanche est détruite et compte comme empochée. Reste à trancher le cas de la bille adverse et de la 8.
 
 ## 8. Dimensions et environnements 📌
 
@@ -125,12 +129,20 @@ Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoir
   1. une **première dimension jouable** (salle + règles de base) ;
   2. une **deuxième dimension aux règles loufoques** ;
   3. une dimension **« shooter miniature »** : le joueur est réduit sur la table, la queue devient une arme et les billes des ennemis.
+- **Chaque décor a son twist** (idées, à définir) :
+
+  | Décor | Ambiance | Twist de gameplay |
+  |---|---|---|
+  | **Le bar** (décor de base) | Bar de quartier le soir, néons | Le billard « classique » : pouvoirs, objets du bar à lancer, bagarres, ragdolls |
+  | **La prison hantée** | Cellules, néons qui grésillent, brouillard | La partie **bascule dans l'horreur** : lumières qui s'éteignent pendant un tir, **jump scares**, billes qui bougent seules ; un **Némésis** traque le joueur pour l'empêcher de jouer (géré par le jeu ou **incarné par l'autre joueur**, à trancher) |
+  | **La base spatiale** | Station orbitale, alarmes | **Billes en apesanteur**, gravité qui change, sas qui aspire billes et joueurs |
+  | **Shooter miniature** | Le joueur rétréci sur la table | La queue devient une arme, les billes des ennemis |
 - La caméra de visée devra s'adapter à ces changements d'échelle et de vue.
 - **Salles et ambiances** 🔄 : les salles se construisent avec le **Level Maker** (outil d'éditeur : murs, portes, sols, étages, kits de décor interchangeables). Une même salle peut recevoir **plusieurs ambiances** (lumières, post-process, brouillard), chacune avec son éclairage précalculé, et en changer en cours de partie : c'est la base visuelle des dimensions. Détail dans la page *Outil de niveau*.
 
 ## 9. Combat et PNJ
 
-- **Coup de queue** 🔄 (code écrit, à tester), **« armer en tournant »** : queue en main et hors visée, **maintenir Attaque** charge le coup, **relâcher** frappe. La **direction** vient de la rotation faite pendant la charge : tourner à droite arme la queue à droite (le coup balaie vers la gauche), et inversement ; lever la tête = coup vertical ; sans rotation = estoc de la pointe, en position de tir. On voit pendant la charge le coup qui va partir. À la frappe, la vue revient vers là où l'on regardait à l'appui, ou vers l'adversaire proche (assistance légère), pour que le coup tombe sur la cible. Un coup léger fait tituber, un coup chargé fait **tomber en ragdoll** (chute garantie à pleine charge). Possible à tout moment, dans tous les modes.
+- **Coup de queue** ✅, **« armer en tournant »** : queue en main et hors visée, **maintenir Attaque** charge le coup, **relâcher** frappe. La **direction** vient de la rotation faite pendant la charge : tourner à droite arme la queue à droite (le coup balaie vers la gauche), et inversement ; lever la tête = coup vertical ; sans rotation = estoc de la pointe, en position de tir. On voit pendant la charge le coup qui va partir. À la frappe, la vue revient vers là où l'on regardait à l'appui, ou vers l'adversaire proche (assistance légère), pour que le coup tombe sur la cible. Un coup léger fait tituber, un coup chargé fait **tomber en ragdoll** (chute garantie à pleine charge). Possible à tout moment, dans tous les modes.
 - **Mains nues** 🔄 (code écrit, à tester) : **poing** (mains vides) et **pied** (à tout moment). Esprit **Gang Beasts** : les poings partent en crochet dès le clic et s'enchaînent en spammant, en alternant les mains ; ils font tituber (pas de poing chargé). Le pied : clic bref = coup de pied, appui maintenu = coup chargé ; le **pied chargé est un coup de pied spartiate** façon *300* : la cible est projetée loin en arrière, avec un zoom sur la vue de l'attaquant.
 - **Jauge d'encaissement** 📌 (prioritaire) : les coups reçus remplissent une jauge ; tant qu'elle n'est pas pleine, le joueur titube seulement ; pleine, il tombe en ragdoll. Elle redescend avec le temps.
 - **Place du combat pendant une partie** 📌 à cadrer : dans quels modes, effet d'un coup sur le joueur qui vise, lien avec les pouvoirs (pistes dans la TODO).
@@ -147,7 +159,14 @@ Déjà en place, à calibrer en jeu : secousse et zoom pendant la charge, recul 
 
 ## 12. Interface actuelle
 
-Le **menu d'avant-partie** suit la direction retenue, en version 2D (🔄, à tester) : titre, joueurs, choix du mode, dans le décor du bar ; on vise une bille avec la queue et on tire pour choisir. Typo des menus : **Titan One**. Le reste est encore provisoire (dessiné avec l'`OnGUI` d'Unity) : tableau des scores, indicateur du point de frappe, messages (poche à annoncer, hors de portée), fin de partie.
+Le **menu d'avant-partie** suit la direction retenue, en version 2D (🔄, à tester) : titre, joueurs, choix du mode, dans le décor du bar ; on vise une bille avec la queue et on tire pour choisir. Typo des menus : **Titan One**. L'**UI en jeu** suit la même direction (🔄, à tester). Chaque joueur a sa partie d'écran :
+- une plaque à sa couleur, avec les billes qui lui restent ;
+- « À toi ! » chez celui qui joue, l'autre moitié assombrie ;
+- le pouvoir en stock ;
+- la jauge de puissance et le point de frappe ;
+- les messages d'aide.
+
+Les temps forts ont leur interjection (« FAUTE ! », « Dans le mille ! », « OHHH ! »). Un pouvoir ramassé arrive comme un sponsor. La fin de partie montre la carte du gagnant avec « Revanche ». À venir : replay en incrustation, ardoise et trophées de fin.
 
 ### Direction retenue 📌
 

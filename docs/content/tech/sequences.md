@@ -221,7 +221,7 @@ sequenceDiagram
   participant PM as PuppetMaster / BehaviourPuppet
   participant RC as LocalPlayerRagdollController
   participant H as LocalPlayerHandController
-  participant CAM as Caméras Cinemachine
+  participant CAM as Caméra Cinemachine FPS
 
   O->>HR: OnCollisionEnter (objet non tenu, assez rapide)
   HR->>RC: NotifyCollision()
@@ -229,12 +229,15 @@ sequenceDiagram
   PM-->>RC: perte d'équilibre (OnKnockedDown)
   RC->>H: ForceDrop()
   RC->>RC: coupe CharacterController, déplacement, visée, animation, IK
-  RC->>CAM: priorité à la caméra ragdoll (3e personne)
+  RC->>CAM: détachée : recule derrière le bassin (3e personne)
   Note over PM: chute physique puis animation de relevé
+  RC->>CAM: dès le relevé, revient vers les yeux du corps qui se relève
   PM-->>RC: OnRegainBalance / relevé terminé
-  RC->>RC: replace le corps là où il a atterri
+  RC->>RC: replace le personnage sur le corps, orienté comme la vue
   RC->>RC: réactive les contrôleurs et l'IK
-  RC->>CAM: priorité à la caméra FPS
+  RC->>CAM: revenue dans les yeux : pose d'origine sous CameraPivot
 ```
+
+Une seule caméra pour toute la chute (la caméra FPS, déplacée par `LocalPlayerRagdollController.UpdateFallCamera`) : le retour part toujours de l'endroit où l'on voit. L'ancienne caméra de chute (`ragdollVirtualCamera`) n'est plus utilisée.
 
 `LocalPoolAimController.OnDisable` sort proprement de la visée ou du placement si la chute arrive pendant ces modes (caméra et Cinemachine rétablis).

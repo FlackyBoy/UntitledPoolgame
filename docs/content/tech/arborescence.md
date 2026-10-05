@@ -38,7 +38,7 @@ Assets/
 ├── Resources/              réglages chargés au lancement (4 ScriptableObjects)
 │   ├── PoolPhysicsSettings.asset, PoolScreenJuiceSettings.asset
 │   └── PoolPotEffectSettings.asset, PoolPowerSpawnSettings.asset
-├── Powers/                 un asset par pouvoir (BoostedShot, VisionImpair, InvertedControls, ClosePocket)
+├── Powers/                 un asset par pouvoir (BoostedShot, VisionImpair, InvertedControls, ClosePocket, BallBlast)
 ├── Editor/                 PoolTableAssetSettings.asset (dimensions de la table), LevelMakerSettings.asset (outil de niveau)
 ├── InputManagers/          InputSystem_Actions.inputactions (online) et _Local (écran partagé)
 ├── Settings/               URP : PC/Mobile RPAsset + Renderer, Volume profiles
@@ -92,6 +92,8 @@ Assets/Scripts/
 │       ├── LevelValidator.cs       vérifications et corrections
 │       └── LevelMakerSettings.cs   prefabs et options de l'outil
 ├── UI/
+│   ├── HudSettings.cs              réglages du HUD (textes, couleurs, tailles, durées), asset dans Resources
+│   ├── MatchHud.cs                 UI en jeu (UI Toolkit, direction Synthèse) : HUD par joueur, interjections, fin de partie ; créé tout seul
 │   └── SyntheseMenu.cs             menu d'avant-partie (UI Toolkit, direction Synthèse), créé tout seul
 ├── Interaction/
 │   ├── LocalPlayerHandController.cs  ramasser / poser / lancer (Interagir, Attaque)
@@ -121,7 +123,7 @@ Assets/Scripts/
     ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre, poche de la 8)
     ├── LocalPoolPowerController.cs activation du pouvoir
     ├── LocalPoolPowerEffectReceiver.cs   effets d'écran : pouvoirs, secousses, flashs
-    ├── PoolPower.cs, PowerType.cs + BoostedShot/VisionImpair/InvertedControls/ClosePocketPower.cs
+    ├── PoolPower.cs, PowerType.cs + BoostedShot/VisionImpair/InvertedControls/ClosePocket/BallBlastPower.cs
     ├── PoolPowerCrate.cs, PoolPowerCrateManager.cs, PoolPowerSpawnPoint.cs   caisses
     ├── PowerBall.cs, PoolPowerBallRotator.cs   bille à pouvoir
     ├── PoolPhysicsSettings.cs, PoolScreenJuiceSettings.cs, PoolPotEffectSettings.cs, PoolPowerSpawnSettings.cs   config

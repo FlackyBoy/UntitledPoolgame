@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration — UntitledPoolGame</title>
+<meta name="description" content="Tous les réglages d'UntitledPoolGame : où ils se trouvent, comment les modifier et ce que fait chaque valeur.">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main>
+  <div class="with-toc"><article class="prose" id="config-body"><p class="loading">Chargement…</p></article><nav class="toc" id="config-toc"></nav></div>
+</main>
+<footer class="site-footer">Source : <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/config.md">docs/content/config.md</a></footer>
+<script>
+  Site.renderHeader('config');
+  const body = document.getElementById('config-body');
+  Site.fetchText('content/config.md')
+    .then(md => Site.renderMarkdown(md, body, document.getElementById('config-toc')))
+    .catch(err => Site.showError(body, err));
+</script>
+</body>
+</html>

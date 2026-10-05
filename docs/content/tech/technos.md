@@ -10,7 +10,7 @@
 | **URP** (Universal Render Pipeline) | 17.6 | Pipeline de rendu, en mode **Forward+** (voir *Rendu*) |
 | **Shader Graph** | 17.6 | Disponible pour les shaders maison (utilisé par certains packs VFX) |
 | **Input System** | 1.20 | Toutes les commandes. `PlayerInput` par joueur + `PlayerInputManager` pour l'écran partagé. Asset : `InputSystem_Actions_Local` |
-| **Cinemachine** | 6.6 | Caméras virtuelles FPS et ragdoll, transition entre les deux ; un canal (`OutputChannels`) par joueur en écran partagé |
+| **Cinemachine** | 6.6 | Caméra virtuelle FPS (elle recule elle-même pendant une chute en ragdoll) ; un canal (`OutputChannels`) par joueur en écran partagé |
 | **Netcode for GameObjects** | 2.13 | Multijoueur en ligne (scripts online figés ; l'online sera reconstruit au-dessus des scripts `Local*`) |
 | **Multiplayer Play Mode** | 3.0 | Tester plusieurs clients dans l'éditeur |
 | **Test Framework** | 1.8 | Installé, pas encore de tests écrits (voir *Pistes & suggestions*) |

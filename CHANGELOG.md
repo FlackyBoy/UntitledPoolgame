@@ -3,7 +3,115 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-05
+- **Site : nouvelle page « Configuration »** (`docs/config.html`, contenu `docs/content/config.md`, dans le menu et sur l'accueil). Elle recense tous les réglages :
+  - les fichiers partagés de `Resources` et leurs champs ;
+  - les assets de pouvoirs ;
+  - les composants du prefab joueur, avec le détail de la visée ;
+  - les touches, la caméra Cinemachine et les réglages d'éditeur (table, outil de niveau, palettes, ambiances).
+
+  Pour chacun : où il se trouve, comment le créer et le modifier. Elle donne aussi les pièges du Play Mode (un asset garde ses modifications, un composant de scène les perd) et ce qui se passe quand un fichier manque.
+- **HUD paramétrable** : nouveau ScriptableObject `HudSettings` (`Assets/Resources/HudSettings.asset`, créé par *Tools > Pool > Ensure Config Assets Exist*). `MatchHud` y lit tout ce qui était écrit dans le code :
+  - **apparence** : polices, taille globale, tailles des interjections, de « À toi ! » et des bandeaux ;
+  - **couleurs** : joueurs, encre, cartes, mise en avant, danger, « BOUM ! », voile, jauge ;
+  - **textes** : tour, plaque, bandeaux d'aide, interjections, carte sponsor, fin de partie. `{0}` est remplacé par le numéro du joueur, la poche ou la catégorie. Un texte vidé désactive l'interjection ou le bandeau ; un format mal écrit s'affiche tel quel ;
+  - **interrupteurs** : interjections de bille rentrée, carte sponsor, confettis, voile ; seuil du tir plein ;
+  - **durées** : interjections, rayons, sponsor, délai faute → main libre, secousse, balancement.
+
+  Sans l'asset, les valeurs par défaut (celles d'avant) s'appliquent, avec un avertissement. Non compilé, non testé.
+
 ## 2026-10-02
+- **Pouvoir « Bille destructrice »** (`BallBlastPower`, catégorie Effet, à lancer pendant son tour).
+  - **Activation** : il arme le prochain tir du joueur, qui le consomme quoi qu'il touche.
+  - **Premier contact** : la bille explose (VFX Cartoon FX Remaster *CFXR2 WW Explosion*, choisi par l'utilisateur, à l'échelle *Explosion Scale*), puis elle est retirée de la table comme si le tireur l'avait empochée.
+  - **Règles** : elles jugent le coup normalement.
+    - Sa propre bille : il garde la main.
+    - Mauvaise bille : elle est détruite quand même ; le premier contact étant illégal, c'est une faute (main libre pour l'autre), et la bille est perdue au profit de l'adversaire.
+  - **La 8** est épargnée par défaut (*Spare Eight Ball*) : la détruire ferait perdre la partie sur-le-champ, puisqu'elle n'aurait pas été annoncée. Le pouvoir est alors perdu.
+  - **Souffle léger** (demande de l'utilisateur) : les billes voisines sont poussées à 0,5 m/s au contact de l'explosion, la poussée diminuant jusqu'à 0 au bord du rayon de 0,3 m (*Blast Speed*, *Blast Radius*). La blanche est poussée aussi. La poussée est donnée en vitesse, donc indépendante de la masse des billes.
+  - **HUD** : « BOUM ! » avec rayons et secousse ; bandeau « Bille destructrice armée » tant que le tir n'est pas joué.
+  - **Asset** : *Tools > Pool > Ensure Config Assets Exist* crée `Assets/Powers/BallBlastPower.asset`, avec l'explosion assignée, et l'ajoute aux pouvoirs distribués (`PoolPowerSpawnSettings`).
+
+  Non compilé, non testé.
+- **UI en jeu Synthèse** (`Assets/Scripts/UI/MatchHud.cs`, UI Toolkit, créée toute seule dès qu'il y a un `PoolMatchRules`). Elle reprend la partie « En jeu » et « Fin » du prototype `docs/ui/synthese.html`, avec une partie d'écran par joueur calée sur sa caméra (écran partagé) :
+  - **plaque du joueur** : sa couleur et ce qu'il doit jouer (billes de son groupe, grisées une fois rentrées, puis la 8 ; « Prochaine » au 9-ball ; score au 14.1) ;
+  - **tour** : « À toi ! » qui bouge chez celui qui joue, moitié de l'autre assombrie ;
+  - **pouvoir en stock** : rond à la couleur et à l'icône du type, nom, touche ;
+  - **pendant la visée** : jauge de puissance à 12 segments qui tremble au maximum, avec le point de frappe ;
+  - **bandeau d'aide** : trop loin, main libre, bille 8 ;
+  - **interjections** : bille rentrée, « Oups ! » quand la blanche tombe, « FAUTE ! » avec secousse puis « Main libre ! », « OHHH ! » au tir plein, « Envoyé ! » quand un pouvoir est lancé ;
+  - **carte « sponsor »** quand on ramasse un pouvoir ;
+  - **fin de partie** : carte du gagnant, rayons, confettis et « Revanche ».
+  
+  L'affichage OnGUI provisoire de `PoolMatchRules` et `LocalPoolAimController` n'est plus dessiné quand ce HUD est actif (`PoolMatchRules.ExternalHud`).
+
+  Ajouts pour l'alimenter :
+  - `PoolMatchRules` : `RequestRestart`, `GetGroup`, `TryGetScore`, événement `TurnChanged` ;
+  - `LocalPoolAimController` : `ContactOffset`, `IsBallPlacementActive`, `IsCallPocketActive`, `HighlightedPocket`, événement `ShotTaken` ;
+  - `EightBallRuleSet.GroupOf`, `FourteenOneRuleSet.ScoreOf` / `TargetScore`.
+
+  Non compilé, non testé.
+- **Tir chargé dès l'entrée en visée** (retour : à la première visée, et parfois au hasard). La charge ne monte que si l'action Attack (clic gauche, Entrée, X/Carré) est vue comme enfoncée pendant la visée : elle l'était donc déjà à l'entrée.
+  - La charge ne démarre plus que sur un **nouvel appui** fait pendant la visée.
+  - Un appui maintenu en entrant en visée, ou pendant que la bille est hors de portée, est ignoré jusqu'au relâchement.
+  - Diagnostic `[AimInput]` (*Trace Aim Input*) : avertissement quand Attack est vu enfoncé à l'entrée (touche, valeur, phase, schéma de contrôle), et touche qui lance chaque charge.
+
+  Non compilé, non testé.
+- **Hors de portée : la main avant lâche la queue** (idée de l'utilisateur). Retour de test : le torse ne vrillait plus, mais le corps se tordait bizarrement quand le coup était trop loin.
+  - Désormais, quand la bille est hors de portée, même en coup allongé, la main avant (côté pointe, ici la gauche) lâche la queue. Le corps se redresse : plus de penché ni de coup allongé, la queue reste tenue d'une main.
+  - Dès que le coup redevient possible, la main reprend la queue.
+  - Pour éviter de lâcher et reprendre sans arrêt à la limite, il faut dépasser la portée de *Out Of Reach Hysteresis* (0,1 m) avant de lâcher.
+  - Le lâcher et la reprise durent *Front Hand Release Time* (0,25 s), doigts compris. Le tout se désactive avec *Release Front Hand Out Of Reach*.
+  - Nouveau réglage `LocalCueHolder.FrontHandRelease`, piloté par `LocalPoolAimController`.
+
+  Non compilé, non testé.
+- **Coup allongé : le torse ne vrille plus en tournant autour de la table**. Retour de test : hors de portée, en passant d'un côté à l'autre, le torse tournait sur lui-même.
+  - **Logs** : d'une image à l'autre, la retenue du bassin sautait de 0,05 à 0,63 m et la flexion du buste de 4 à 40°.
+  - **Pied d'appui** : il était choisi à chaque image (le plus proche de la bille). Quand les deux pieds étaient presque à égale distance, il basculait, ce qui changeait de côté la jambe levée et faisait pivoter le bassin. Il est désormais choisi une seule fois par penché.
+  - **Lissage** : la retenue, la montée et la flexion du bassin sont lissées (*Hip Adjust Sharpness*, 6).
+
+  Non compilé, non testé.
+- **Coup allongé : le corps n'entre plus dans la table** (retour : pose « pas trop mal », mais le corps rentrait dans la table).
+  - Le bassin s'arrête au bord du tapis, au-dessus de la bande (*Hip Max Over Felt*, 0 m).
+  - Il reste au moins *Hip Above Table* (0,15 m) au-dessus de ce qui se trouve sous lui : un rayon vers le bas qui ignore les joueurs, la queue tenue et les billes.
+  - L'avancée que le bassin n'a pas pu faire est compensée par le buste, qui se plie davantage (*Max Compensation Bend*, 40° au maximum).
+  - `[AimTrace]` indique de combien le bassin a été retenu et relevé, et la flexion ajoutée.
+
+  Non compilé, non testé.
+- **Portée de tir, lot 2 : coup allongé**. Test du lot 1 : le personnage est bien collé à la bande, mais la bille testée était réellement trop loin (corps à 2,76 à 3,2 m, pour une portée maximale de 2,66 m).
+  - Au-delà de la portée normale, le tir est maintenant permis jusqu'à *Max Stretch Reach* (0,6 m) de plus.
+  - Le corps avance avec les mains, donc les bras ne s'allongent pas davantage.
+  - Le bassin remonte sur la bande au lieu de s'enfoncer, et le buste se couche sur la table.
+  - Le pied le plus proche de la bille reste planté, l'autre jambe se lève en arrière.
+  - Les pieds sont tenus par l'IK dès que le buste se penche (*Plant Feet While Leaning*), pour que les jambes ne suivent plus le bassin : c'est ce qui les tordait.
+  - Pour que le coup reste un pari, la visée tremble légèrement (*Stretch Aim Wobble*, 1,5° au maximum). Le tremblement est visible sur la queue et la ligne de visée.
+  - Le diagnostic `[AimTrace]` affiche la portée normale, la portée allongée et le taux d'allongement.
+
+  Non compilé, non testé.
+- **Portée de tir, lot 1 : portée juste**. Retour de test : en bout de table, la bille au milieu était « trop loin ». Logs : 1,69 m demandés pour 1,35 m jouables, corps à 2,97 m de la bille.
+  - **Cause** : il fallait que le milieu de la queue (les mains) soit hors de la table, et la marge (*Table Clearance Margin*, 0,5 m) était comptée deux fois. Le corps se retrouvait donc à plus d'un mètre de la bande.
+  - **Correction** : désormais seul le **corps** doit rester hors de la table, à *Table Clearance Margin* du bord du tapis, et la queue peut passer au-dessus de la bande comme en vrai. Le personnage se rapproche de la table et la même bille demande environ 0,5 m de moins.
+
+  Non compilé, non testé.
+- **Retour de caméra après chute, 4ᵉ passe : une seule caméra**. Retour du test : la caméra revenait encore de loin et ne partait pas de l'endroit où l'on voyait pendant la chute. Proposition de l'utilisateur : ne garder que la caméra FPS.
+  - Il n'y a plus de bascule vers une caméra de chute. La caméra FPS elle-même recule derrière le bassin pendant la chute (*Camera Pull Back Time*, 0,35 s).
+  - Dès le début du relevé, elle revient vers les yeux du corps qui se relève (*Camera Return Time*, 0,6 s). Au moment de rendre la main, le personnage est replacé sur le corps, orienté comme la vue : la caméra est déjà à sa place et reprend sa pose sous CameraPivot.
+  - L'ancienne caméra de chute (*Ragdoll Virtual Camera*) n'est plus utilisée ; elle reste à la priorité inactive et peut être retirée du prefab.
+  - Le réglage *Ragdoll Camera Turn Speed* est supprimé, ainsi que le changement d'inclinaison au relevé.
+
+  Testé et validé par l'utilisateur.
+- **Retour de caméra après chute, 3ᵉ passe**. Les logs `[CamReturn]` montrent que la caméra de chute regardait le personnage de face : elle était à 180° du sens dans lequel il se relève. Désormais, au relevé, c'est le corps qui prend la direction de la caméra de chute, et non l'inverse. La vue FPS repart donc dans l'axe où l'on regardait, et le fondu n'a plus qu'à avancer jusqu'aux yeux. Le diagnostic `[CamReturn]` au relevé indique en plus :
+  - la branche suivie (derrière un mur, suivi du modèle, pas de modèle) ;
+  - la position du personnage avant et après ;
+  - les positions du modèle et du bassin ;
+  - l'orientation du corps, celle de la caméra et l'orientation retenue.
+
+  Ces lignes servent à vérifier un écart d'environ 2 m entre la caméra FPS et le corps relevé. Non compilé, non testé.
+- **Retour de caméra après chute, 2ᵉ passe** (retour : il vient toujours de l'avant ; choix : garder la caméra de chute à la 3ᵉ personne) : au relevé, après avoir replacé le personnage là où il s'est relevé, la caméra FPS de Cinemachine repart de zéro (`PreviousStateIsValid = false`) au lieu de glisser depuis la pose laissée au moment de la chute, cause probable du retour « par l'avant ». Diagnostic `[CamReturn]` (réglage *Trace Camera Return*) pendant 8 images après le relevé : caméra de chute, caméra FPS, image finale, fondu en cours. Non compilé, non testé.
+- **Retour de la caméra après une chute** (retour : il ne repart pas de l'axe de la caméra de chute ; durée réglée dans Cinemachine). La caméra de chute était placée selon un axe fixe du monde (toujours vers -Z), sans lien avec le regard du joueur ni avec le sens du corps relevé : le fondu Cinemachine tournait entre deux directions sans rapport. Désormais elle part de la direction où regardait le joueur, puis, pendant le relevé, se place derrière le corps (*Ragdoll Camera Turn Speed*, 240 °/s). Au retour, la vue FPS est dans ce même axe et reprend son inclinaison vers le bas (plafonnée à 20°) : le fondu n'a plus qu'à avancer jusqu'aux yeux. Non compilé, non testé.
+- **Vue de dessus (bille en main, annonce de poche) cachée par un objet au-dessus de la table** (retour : la lampe ou le plafond masquait une partie de la table) : pendant cette vue, le plan de coupe proche de la caméra descend juste au-dessus du tapis (réglage *Placement Clear Above*, 0,5 m) ; la lampe, le plafond et les joueurs penchés ne sont plus dessinés, la table et les billes restent visibles. Réglage d'origine rétabli en sortant de la vue. Non compilé, non testé.
+- **Validés en jeu par l'utilisateur** : pouvoirs de nouveau déclenchables (F, B / ○ à la manette) et coup de queue « armer en tournant » (2ᵉ version).
+- **GDD, vision du jeu** (précisée par l'utilisateur) : le billard comme prétexte à des moments drôles entre amis, façon party game ; références *What the Golf?*, *Super Battle Golf*, *Mario Tennis / Golf* ; points forts friend slop, couch coop, WTF ; piliers revus ; chaque décor avec son twist (prison hantée qui bascule dans l'horreur avec un Némésis, base spatiale en apesanteur). Question du Némésis (IA ou autre joueur) dans les pistes.
 - **Doc** : GDD mis à jour (contrôles, prise de queue libre, objets tenus en main, ragdoll, salles et ambiances du Level Maker, pouvoir « bille destructrice », place du combat), suggestions de Claude complétées (combat en partie, menu 3D, Level Maker plus sûr et plus léger, prefab joueur, ancienne prise de queue).
 
 ## 2026-10-01
