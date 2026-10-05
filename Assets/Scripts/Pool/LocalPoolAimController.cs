@@ -99,9 +99,74 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Full Body Biped IK du personnage, pour le penché (vide = le premier trouvé sous ce joueur).")]
         [SerializeField] private FullBodyBipedIK leanIK;
 
+        // Past the normal reach, a stretched shot (a real player's one leg up,
+        // hip on the rail): the body keeps going forward with the hands — so
+        // the arms never stretch further than usual — the hips rise onto the
+        // rail instead of sinking, the torso lies flatter, the support foot
+        // stays planted (IK) and the other leg lifts behind. Before this,
+        // reaching that far bent the torso flat with the head down and the
+        // legs dragged along by the body (no foot was held).
+        [Header("Stretched shot (beyond the normal reach)")]
+        [Tooltip("Portée supplémentaire (mètres) au-delà de la portée normale, couverte par le coup allongé (hanche sur la bande, jambe levée). 0 = pas de coup allongé : « trop loin » dès la portée normale dépassée.")]
+        [SerializeField] private float maxStretchReach = 0.6f;
+        [Tooltip("Montée du bassin (mètres) au coup allongé maximal : il passe sur la bande au lieu de s'enfoncer.")]
+        [SerializeField] private float stretchHipRise = 0.2f;
+        [Tooltip("Flexion du buste supplémentaire (degrés) au coup allongé maximal : le buste se couche sur la table.")]
+        [SerializeField] private float stretchBend = 35f;
+        [Tooltip("Hauteur (mètres) à laquelle la jambe arrière se lève au coup allongé maximal.")]
+        [SerializeField] private float stretchLegLift = 0.45f;
+        [Tooltip("Recul (mètres) de la jambe levée au coup allongé maximal.")]
+        [SerializeField] private float stretchLegBack = 0.25f;
+        [Tooltip("Tremblement de la visée (degrés) au coup allongé maximal, pour que ce coup reste un pari. 0 = aucun.")]
+        [SerializeField] private float stretchAimWobble = 1.5f;
+        [Tooltip("Tient le pied d'appui au sol (IK) dès que le buste se penche, pour que les jambes ne suivent pas le bassin.")]
+        [SerializeField] private bool plantFeetWhileLeaning = true;
+        [Tooltip("Jusqu'où (mètres) le bassin peut avancer au-dessus du tapis, depuis son bord. 0 = le bassin s'arrête au bord du tapis (au-dessus de la bande) ; le reste de l'avancée vient du buste qui se couche.")]
+        [SerializeField] private float hipMaxOverFelt = 0f;
+        [Tooltip("Hauteur minimale (mètres) du bassin au-dessus de ce qui est sous lui (bande, tapis) : il passe par-dessus au lieu d'entrer dedans.")]
+        [SerializeField] private float hipAboveTable = 0.15f;
+        [Tooltip("Flexion du buste supplémentaire maximale (degrés) pour compenser l'avancée que le bassin n'a pas pu faire.")]
+        [SerializeField] private float maxCompensationBend = 40f;
+
+        // Diagnostic of the last lean (aim trace): how far the hips were held
+        // back from the felt and raised above the table.
+        private float lastHipHeldBack, lastHipRaise, lastCompensationBend;
+
+        // Smoothed versions of the above (they jump when the player orbits
+        // past a corner — the hips switch between clear of the felt and over
+        // it — which made the torso snap), and the support foot, picked once
+        // per lean: re-picked every frame (nearest foot to the ball) it
+        // flipped when both were about as near, swapping the lifted leg and
+        // twisting the hips round.
+        [Tooltip("Vitesse de lissage de la retenue, de la montée et de la flexion du bassin (plus grand = plus réactif, plus petit = plus doux).")]
+        [SerializeField] private float hipAdjustSharpness = 6f;
+        private float smoothHeldBack, smoothRaise, smoothCompensation;
+
+        // Out of reach (even stretched), the player stops straining: the front
+        // hand lets go of the cue (LocalCueHolder.FrontHandRelease), the body
+        // straightens up (no lean, no stretched shot) and the hand takes the
+        // cue again once the shot is reachable. Held at full stretch instead,
+        // the body twisted oddly while the player orbited looking for an angle.
+        [Header("Out of reach")]
+        [Tooltip("Hors de portée : la main avant lâche la queue et le corps se redresse, puis elle la reprend dès que le coup redevient possible.")]
+        [SerializeField] private bool releaseFrontHandOutOfReach = true;
+        [Tooltip("Marge (mètres) au-delà de la portée avant de lâcher la main : évite de lâcher et reprendre sans arrêt à la limite.")]
+        [SerializeField] private float outOfReachHysteresis = 0.1f;
+        [Tooltip("Durée (secondes) pour lâcher ou reprendre la queue de la main avant.")]
+        [SerializeField] private float frontHandReleaseTime = 0.25f;
+        private LocalCueHolder cueHolder;
+        private bool reachLost;
+        private float frontHandRelease;
+        private bool supportFootChosen, leftFootSupports;
+
         // Current lean over the table (metres), from the hand shift beyond
-        // Max Hand Stretch; applied in ApplyLean.
+        // Max Hand Stretch; applied in ApplyLean. Past Max Body Lean it's the
+        // stretched shot.
         private float bodyLean;
+        private bool feetDriven;
+
+        // 0 = normal reach, 1 = stretched as far as Max Stretch Reach allows.
+        public float StretchFraction => maxStretchReach > 0f ? Mathf.Clamp01((AimHandShift - maxHandStretch - maxBodyLean) / maxStretchReach) : 0f;
 
         // Where the cue sits relative to the body ONLY while aiming, added on
         // top of its normal held pose (Pivot/Hold Point, untouched), in the
@@ -119,7 +184,11 @@ namespace UntitledPoolGame.Pool
         // (arms stretched as far as they go, cue tilted at the ball) but the
         // tip doesn't reach it and no shot can be taken until the player
         // orbits to an angle that's within reach.
-        public bool IsOutOfReach => isAiming && AimReachExtra > MaxReach;
+        public bool IsOutOfReach => isAiming && AimReachExtra > StretchedReach;
+
+        // The normal reach plus the stretched shot's, still within Max Hand
+        // Shift (the hands never go further forward than that).
+        private float StretchedReach => Mathf.Max(MaxReach, Mathf.Min(maxHandShift, MaxReach + maxStretchReach));
 
         // The reach actually playable: Max Hand Shift, but never more than
         // the arms (Max Arm Stretch) plus what the cue can slide through the
@@ -212,6 +281,7 @@ namespace UntitledPoolGame.Pool
 
         [Header("Body positioning while aiming")]
         [SerializeField] private float standDistance = 1f;
+        [Tooltip("Distance (mètres) entre le bord du tapis et le point où se tient le personnage en visée : largeur de la bande + un peu d'espace pour le corps. Plus petit = le personnage se colle à la table et atteint des billes plus loin.")]
         [SerializeField] private float tableClearanceMargin = 0.5f;
 
         [Header("Ball-in-hand placement (top-down view)")]
@@ -266,7 +336,18 @@ namespace UntitledPoolGame.Pool
         public float ChargeFraction => maxPower > 0f ? Mathf.Clamp01(chargedPower / maxPower) : 0f;
         private float aimYaw;
         private float chargedPower;
+        // A press of Attack made during the current aim (see UpdateAim).
+        private bool chargeArmed;
+        [Tooltip("Diagnostic : signale si le tir est vu comme déjà enfoncé à l'entrée en visée, et quelle touche lance chaque charge.")]
+        [SerializeField] private bool traceAimInput = true;
         private Vector2 contactOffset;
+        // Strike point on the cue ball (-1..1 each way), for the HUD's spin disc.
+        public Vector2 ContactOffset => contactOffset;
+        public int PlayerIndex => playerInput != null ? playerInput.playerIndex : 0;
+
+        // A shot was struck: this player's PlayerInput index and the charge
+        // it was struck with (0..1) — the HUD's "OHHH !" on a full-power shot.
+        public static event System.Action<int, float> ShotTaken;
         private Vector3 cameraRestLocalPosition;
         private Quaternion cameraRestLocalRotation;
 
@@ -274,6 +355,7 @@ namespace UntitledPoolGame.Pool
         {
             fpsController = GetComponent<LocalFpsPlayerController>();
             handController = GetComponent<LocalPlayerHandController>();
+            cueHolder = GetComponent<LocalCueHolder>();
             cueMelee = GetComponent<LocalCueMelee>();
             unarmedMelee = GetComponent<LocalUnarmedMelee>();
             if (leanIK == null) leanIK = GetComponentInChildren<FullBodyBipedIK>(true);
@@ -428,12 +510,21 @@ namespace UntitledPoolGame.Pool
         // cameraTransform's WORLD position/rotation directly every frame, a
         // THIRD state distinct from both aiming and normal FPS view.
         public bool IsPlacementViewActive => ballPlacementActive || callPocketActive;
+        // Read by the in-game HUD (MatchHud): which top-down view is up, and
+        // the pocket currently pointed at in the 8-ball call view.
+        public bool IsBallPlacementActive => ballPlacementActive;
+        public bool IsCallPocketActive => callPocketActive;
+        public PoolPocket HighlightedPocket => highlightedPocket;
         private Vector3 placementCameraRestLocalPosition;
         private Quaternion placementCameraRestLocalRotation;
         [Tooltip("Logs [PlacementTrace] de la vue de dessus (bille en main, annonce de poche) : caméra, fenêtre, hauteur, plafond.")]
         [SerializeField] private bool tracePlacementView = true;
         private Vector3 placementCameraExpected;
         private int placementCheckFrames;
+        [Tooltip("Vue de dessus : rien n'est dessiné au-delà de cette hauteur au-dessus du tapis (lampe, plafond, têtes des joueurs penchés), pour voir toute la table.")]
+        [SerializeField] private float placementClearAbove = 0.5f;
+        private Camera placementCamera;
+        private float placementRestNearClip = -1f;
 
         // Ball-in-hand: after a foul, the player who now has the turn switches
         // to a top-down view of the whole table and slides the cue ball around
@@ -650,6 +741,19 @@ namespace UntitledPoolGame.Pool
             placementCameraExpected = cameraTransform.position;
             placementCheckFrames = 10;
 
+            // Whatever hangs over the table (its lamp, the ceiling, a player
+            // leaning over it) stood between this camera and the felt and hid
+            // part of the table. Moving the near clip plane down to just above
+            // the felt leaves only the table, the balls and the felt in view.
+            // Cinemachine is off during this view, so it doesn't reset the lens.
+            placementCamera = cameraTransform.GetComponent<Camera>();
+            if (placementCamera != null)
+            {
+                placementRestNearClip = placementCamera.nearClipPlane;
+                float aboveFelt = cameraTransform.position.y - center.y;
+                placementCamera.nearClipPlane = Mathf.Max(placementRestNearClip, aboveFelt - placementClearAbove);
+            }
+
             if (tracePlacementView)
             {
                 Camera cam = cameraTransform.GetComponent<Camera>();
@@ -698,6 +802,11 @@ namespace UntitledPoolGame.Pool
 
         private void EndPlacementView(bool returnControlToPlayer = true)
         {
+            if (placementCamera != null && placementRestNearClip > 0f)
+            {
+                placementCamera.nearClipPlane = placementRestNearClip;
+                placementRestNearClip = -1f;
+            }
             if (returnControlToPlayer) fpsController.enabled = true;
             if (cinemachineBrain != null) cinemachineBrain.enabled = true;
             if (cameraTransform != null)
@@ -737,6 +846,9 @@ namespace UntitledPoolGame.Pool
 
         private void OnGUI()
         {
+            // The in-game HUD (MatchHud) draws all of this in its own style.
+            if (PoolMatchRules.ExternalHud) return;
+
             // highlightedPocket is only ever non-null while the call-pocket
             // top-down view (HandleCallPocket) is active and has already
             // found a nearest pocket — a reliable enough signal on its own
@@ -799,20 +911,25 @@ namespace UntitledPoolGame.Pool
             characterController.enabled = true;
         }
 
-        // How far past aimBaseDistance the body needs to stand for this shot
-        // to actually clear the table — NEVER capped: the body must always
-        // end up outside the play area, whatever that takes, or it ends up
-        // standing inside the table. What the hands/cue mesh visually
-        // stretch to cover (capped by maxHandShift) is a separate concern —
-        // see IsOutOfReach/AimMeshReach — not something this distance can
-        // be shortened for.
-        private float RequiredReachExtra(Vector3 ballPos, Vector3 aimDirection)
+        // How far past aimBaseDistance the body needs to stand back for this
+        // shot so that the BODY (its root, rootOffset away from the cue's
+        // origin) is clear of the table by Table Clearance Margin — NEVER
+        // capped: the body must always end up outside, or it stands inside
+        // the table. The cue itself may well be over the table, as it is for
+        // a real player leaning over a rail. What the hands/cue mesh stretch
+        // to cover is a separate concern (IsOutOfReach/AimMeshReach).
+        // Before 02/10 this required the cue's middle (the hands) to be
+        // clear, with the margin counted twice: the body ended up more than
+        // a metre from the rail and many shots read as out of reach.
+        private float RequiredReachExtra(Vector3 ballPos, Vector3 aimDirection, Vector3 rootOffset)
         {
             PoolTableSurface surface = PoolTableSurface.Instance;
-            float clearDistance = surface != null
-                ? surface.DistanceToClearPlayArea(ballPos, -aimDirection, tableClearanceMargin)
-                : 0f;
-            return Mathf.Max(0f, clearDistance + tableClearanceMargin - aimBaseDistance);
+            if (surface == null) return 0f;
+            // The root sits at ballPos + rootOffset - aimDirection * distance:
+            // walking back along the line from ballPos + rootOffset gives the
+            // distance at which it leaves the table.
+            float clearDistance = surface.DistanceToClearPlayArea(ballPos + rootOffset, -aimDirection, tableClearanceMargin);
+            return Mathf.Max(0f, clearDistance - aimBaseDistance);
         }
 
         // Where the body should stand, and which way it faces, for a shot
@@ -823,9 +940,6 @@ namespace UntitledPoolGame.Pool
         // line, aimBaseDistance + AimReachExtra along the cue from its origin.
         private void ComputeAimBodyPose(Vector3 ballPos, Vector3 aimDirection, out Vector3 position, out float yaw)
         {
-            AimReachExtra = RequiredReachExtra(ballPos, aimDirection);
-            float distance = aimBaseDistance + AimReachExtra;
-
             Vector3 originHorizontal = new Vector3(cueLocalOrigin.x + aimCueOffset.x, 0f, cueLocalOrigin.z + aimCueOffset.z);
             Vector3 tipHorizontal = new Vector3(cueLocalTipDirection.x, 0f, cueLocalTipDirection.z);
             if (!hasCueLine || tipHorizontal.sqrMagnitude < 0.0001f)
@@ -837,9 +951,15 @@ namespace UntitledPoolGame.Pool
 
             float tipAngle = Mathf.Atan2(tipHorizontal.x, tipHorizontal.z) * Mathf.Rad2Deg;
             yaw = Quaternion.LookRotation(aimDirection).eulerAngles.y - tipAngle + bodyYawOffsetWhileAiming;
-
             Quaternion bodyRotation = Quaternion.Euler(0f, yaw, 0f);
-            position = ballPos - bodyRotation * (originHorizontal + tipHorizontal * distance);
+
+            // bodyRotation * tipHorizontal is aimDirection, so the root is at
+            // ballPos - bodyRotation * originHorizontal - aimDirection * distance.
+            Vector3 rootOffset = -(bodyRotation * originHorizontal);
+            AimReachExtra = RequiredReachExtra(ballPos, aimDirection, rootOffset);
+            float distance = aimBaseDistance + AimReachExtra;
+
+            position = ballPos + rootOffset - aimDirection * distance;
             position.y = transform.position.y;
         }
 
@@ -847,6 +967,12 @@ namespace UntitledPoolGame.Pool
         {
             isAiming = true;
             chargedPower = 0f;
+            chargeArmed = false;
+            // Diagnostic for the "already charged on entering aim" bug: which
+            // control Attack thinks is held at this moment.
+            if (traceAimInput && attackAction.IsPressed())
+                Debug.LogWarning($"[AimInput] {name}: Attack already held on entering aim — control {attackAction.activeControl?.path ?? "?"}, " +
+                                 $"value {attackAction.ReadValue<float>():F2}, phase {attackAction.phase}, scheme {playerInput.currentControlScheme}. Ignored until released and pressed again.", this);
             contactOffset = Vector2.zero;
             fpsController.enabled = false;
             if (cinemachineBrain != null) cinemachineBrain.enabled = false;
@@ -1009,7 +1135,23 @@ namespace UntitledPoolGame.Pool
             // plus the torso lean; the lean itself is whatever the shift asks
             // beyond the arms (ApplyLean moves the body so the arms keep
             // their pose).
-            float targetShift = Mathf.Min(AimReachExtra, maxHandShift, maxHandStretch + maxBodyLean);
+            // Past the normal reach (the cue sliding through the hands
+            // included), the stretched shot takes the hands and body further.
+            float stretch = Mathf.Clamp(AimReachExtra - MaxReach, 0f, maxStretchReach);
+            float targetShift = Mathf.Min(AimReachExtra, maxHandShift, maxHandStretch + maxBodyLean + stretch);
+
+            // Out of reach with some margin (hysteresis: no letting go and
+            // taking back at the limit): front hand off, body upright — the
+            // hands only go as far as the arms comfortably do, no lean.
+            if (releaseFrontHandOutOfReach)
+            {
+                if (!reachLost && AimReachExtra > StretchedReach + outOfReachHysteresis) reachLost = true;
+                else if (reachLost && AimReachExtra <= StretchedReach) reachLost = false;
+            }
+            else reachLost = false;
+            if (reachLost) targetShift = Mathf.Min(AimReachExtra, maxHandStretch);
+            frontHandRelease = Mathf.MoveTowards(frontHandRelease, reachLost ? 1f : 0f, Time.deltaTime / Mathf.Max(0.01f, frontHandReleaseTime));
+            if (cueHolder != null) cueHolder.FrontHandRelease = frontHandRelease;
             AimHandShift = Mathf.MoveTowards(AimHandShift, targetShift, 1.5f * Time.deltaTime);
             bodyLean = Mathf.Max(0f, AimHandShift - maxHandStretch);
             Transform held = cue.transform;
@@ -1037,7 +1179,7 @@ namespace UntitledPoolGame.Pool
                 if (IsOutOfReach)
                 {
                     Vector3 back = Vector3.ProjectOnPlane(aimPoint - held.position, Vector3.up);
-                    if (back.sqrMagnitude > 1e-6f) aimPoint -= back.normalized * (AimReachExtra - MaxReach);
+                    if (back.sqrMagnitude > 1e-6f) aimPoint -= back.normalized * (AimReachExtra - StretchedReach);
                 }
                 Vector3 toBall = aimPoint - held.position;
                 if (toBall.sqrMagnitude > 0.0001f)
@@ -1063,7 +1205,7 @@ namespace UntitledPoolGame.Pool
                 string slideInfo = held.TryGetComponent(out CueChargeSlide traceSlide)
                     ? $"charge {ChargeFraction:F2} | cue follows {(traceSlide.FollowedAimController == this ? "this player" : traceSlide.FollowedAimController != null ? traceSlide.FollowedAimController.name : "nobody")} | mesh offset {traceSlide.CurrentMeshOffset:F2} m | "
                     : "no CueChargeSlide on the held cue | ";
-                Debug.Log($"[AimTrace] {name}: {slideInfo}{(IsOutOfReach ? "OUT OF REACH" : "in reach")} | reach extra {AimReachExtra:F2} (playable max {MaxReach:F2}, Max Hand Shift {maxHandShift:F2}) | hand shift {AimHandShift:F2} | body lean {bodyLean:F2} | mesh slide {AimMeshReach:F2} | cue tilt {traceTilt:F1}° " +
+                Debug.Log($"[AimTrace] {name}: {slideInfo}{(IsOutOfReach ? "OUT OF REACH" : "in reach")} | reach extra {AimReachExtra:F2} (normal max {MaxReach:F2}, stretched max {StretchedReach:F2}, Max Hand Shift {maxHandShift:F2}) | hand shift {AimHandShift:F2} | body lean {bodyLean:F2} | stretch {StretchFraction:F2} | front hand {(reachLost ? "LET GO" : "on cue")} ({frontHandRelease:F2}) | hips held back {lastHipHeldBack:F2} m, raised {lastHipRaise:F2} m, extra bend {lastCompensationBend:F0}° | mesh slide {AimMeshReach:F2} | cue tilt {traceTilt:F1}° " +
                           $"| cue local pos {held.localPosition} | body→ball {toBallFlat.magnitude:F2} m | root y {transform.position.y:F2} | hips y {(hips != null ? hips.position.y : float.NaN):F2}", this);
             }
         }
@@ -1089,25 +1231,143 @@ namespace UntitledPoolGame.Pool
         // hands, on the cue, keep their place relative to the shoulders.
         private void ApplyLean()
         {
-            if (!isAiming || bodyLean <= 0f || leanIK == null) return;
+            if (leanIK == null) return;
+            if (!isAiming || bodyLean <= 0f)
+            {
+                ReleaseFeet();
+                return;
+            }
             LocalGrabbable cue = handController.HeldObject;
             Vector3 forward = cue != null ? Vector3.ProjectOnPlane(cue.transform.TransformDirection(CueTipAxis(cue)), Vector3.up) : transform.forward;
             if (forward.sqrMagnitude < 1e-4f) forward = transform.forward;
             forward.Normalize();
 
             float k = Mathf.Clamp01(bodyLean / Mathf.Max(0.01f, maxBodyLean));
+            float s = StretchFraction;
             RootMotion.BipedReferences r = leanIK.references;
-            if (bodyLeanBend > 0f && r.spine != null && r.spine.Length > 0)
+
+            // Normal lean: forward and a little down. Stretched: the hips come
+            // back up, onto the rail.
+            float sink = Mathf.Min(bodyLean, maxBodyLean) * 0.3f;
+            Vector3 offset = forward * bodyLean + Vector3.up * (stretchHipRise * s - sink);
+
+            // The hips stop at the felt's edge (over the rail) and stay above
+            // whatever is under them: pushed straight forward they went into
+            // the table. What they can't go forward, the torso makes up by
+            // bending further (shoulders forward, hands kept in reach).
+            float heldBack = 0f, raise = 0f, compensation = 0f;
+            if (r.pelvis != null)
             {
-                Quaternion perBone = Quaternion.AngleAxis(bodyLeanBend * k / r.spine.Length, Vector3.Cross(Vector3.up, forward));
+                Vector3 hips = r.pelvis.position + offset;
+                PoolTableSurface surface = PoolTableSurface.Instance;
+                if (surface != null)
+                {
+                    float over = surface.DistanceToClearPlayArea(hips, -forward, -hipMaxOverFelt);
+                    if (over > 0f)
+                    {
+                        heldBack = Mathf.Max(0f, Mathf.Min(over, Vector3.Dot(offset, forward)));
+                        float torso = TorsoLength(r);
+                        if (torso > 0.05f)
+                            compensation = Mathf.Min(maxCompensationBend, Mathf.Asin(Mathf.Clamp01(heldBack / torso)) * Mathf.Rad2Deg);
+                    }
+                }
+                float below = SurfaceHeightBelow(hips - forward * heldBack);
+                if (!float.IsNegativeInfinity(below))
+                    raise = Mathf.Max(0f, below + hipAboveTable - (hips.y));
+            }
+            float blend = 1f - Mathf.Exp(-hipAdjustSharpness * Time.deltaTime);
+            smoothHeldBack = Mathf.Lerp(smoothHeldBack, heldBack, blend);
+            smoothRaise = Mathf.Lerp(smoothRaise, raise, blend);
+            smoothCompensation = Mathf.Lerp(smoothCompensation, compensation, blend);
+            offset += Vector3.up * smoothRaise - forward * smoothHeldBack;
+            lastHipHeldBack = smoothHeldBack;
+            lastHipRaise = smoothRaise;
+            lastCompensationBend = smoothCompensation;
+
+            float bend = bodyLeanBend * k + stretchBend * s + smoothCompensation;
+            if (bend > 0f && r.spine != null && r.spine.Length > 0)
+            {
+                Quaternion perBone = Quaternion.AngleAxis(bend / r.spine.Length, Vector3.Cross(Vector3.up, forward));
                 foreach (Transform bone in r.spine)
                     if (bone != null) bone.rotation = perBone * bone.rotation;
             }
-            leanIK.solver.bodyEffector.positionOffset += forward * bodyLean - Vector3.up * (bodyLean * 0.3f);
+            leanIK.solver.bodyEffector.positionOffset += offset;
+
+            if (!plantFeetWhileLeaning || r.leftFoot == null || r.rightFoot == null) { ReleaseFeet(keepLean: true); return; }
+
+            // Feet as animated (read before FBBIK solves): the one nearer the
+            // ball is the support foot and stays put; the other one stays put
+            // too in a normal lean, and lifts up and back when stretched.
+            if (!supportFootChosen)
+            {
+                Vector3 ball = currentCueBall != null ? currentCueBall.transform.position : transform.position + forward;
+                leftFootSupports = Vector3.ProjectOnPlane(r.leftFoot.position - ball, Vector3.up).sqrMagnitude
+                                 <= Vector3.ProjectOnPlane(r.rightFoot.position - ball, Vector3.up).sqrMagnitude;
+                supportFootChosen = true;
+            }
+            bool leftSupports = leftFootSupports;
+            Vector3 lift = Vector3.up * (stretchLegLift * s) - forward * (stretchLegBack * s);
+            IKEffector left = leanIK.solver.leftFootEffector, right = leanIK.solver.rightFootEffector;
+            left.position = r.leftFoot.position + (leftSupports ? Vector3.zero : lift);
+            right.position = r.rightFoot.position + (leftSupports ? lift : Vector3.zero);
+            // Faded in over the first few centimetres of lean, so starting to
+            // lean doesn't snap the legs.
+            float w = Mathf.Clamp01(bodyLean / 0.1f);
+            left.positionWeight = w;
+            right.positionWeight = w;
+            feetDriven = true;
+        }
+
+        // Pelvis to the shoulders' midpoint, as animated.
+        private static float TorsoLength(RootMotion.BipedReferences r)
+        {
+            if (r.pelvis == null || r.leftUpperArm == null || r.rightUpperArm == null) return 0f;
+            return Vector3.Distance(r.pelvis.position, (r.leftUpperArm.position + r.rightUpperArm.position) * 0.5f);
+        }
+
+        private readonly RaycastHit[] surfaceHits = new RaycastHit[16];
+
+        // Height of the highest solid thing under a point (rail, felt, or
+        // the floor), ignoring this player (body, ragdoll), the held cue and
+        // the balls. -Infinity if nothing.
+        private float SurfaceHeightBelow(Vector3 point)
+        {
+            Transform cue = handController != null && handController.HeldObject != null ? handController.HeldObject.transform : null;
+            // Player layers excluded too: the ragdoll's own colliders sit
+            // right under this ray and would push the hips up frame after frame.
+            int mask = ~LayerMask.GetMask("Ragdoll", "Player", "PlayerAnimated");
+            int count = Physics.RaycastNonAlloc(point + Vector3.up, Vector3.down, surfaceHits, 2.5f, mask, QueryTriggerInteraction.Ignore);
+            float best = float.NegativeInfinity;
+            for (int i = 0; i < count; i++)
+            {
+                Collider c = surfaceHits[i].collider;
+                if (c.transform.IsChildOf(transform) || (cue != null && c.transform.IsChildOf(cue))) continue;
+                if (c.attachedRigidbody != null && c.attachedRigidbody.TryGetComponent(out PoolBall _)) continue;
+                best = Mathf.Max(best, surfaceHits[i].point.y);
+            }
+            return best;
+        }
+
+        // Only undoes what ApplyLean set: the pickup (LocalCueHolder) and the
+        // kicks (LocalUnarmedMelee) drive these effectors too.
+        private void ReleaseFeet(bool keepLean = false)
+        {
+            // Lean over: the next one starts fresh (support foot picked
+            // again, no leftover hip adjustment).
+            if (!keepLean)
+            {
+                supportFootChosen = false;
+                smoothHeldBack = smoothRaise = smoothCompensation = 0f;
+            }
+            if (!feetDriven || leanIK == null) return;
+            leanIK.solver.leftFootEffector.positionWeight = 0f;
+            leanIK.solver.rightFootEffector.positionWeight = 0f;
+            feetDriven = false;
         }
 
         private void OnDisable()
         {
+            ReleaseFeet();
             if (leanIK != null) leanIK.solver.OnPreUpdate -= ApplyLean;
             if (isAiming) LeaveAim(returnControlToPlayer: false);
 
@@ -1135,6 +1395,9 @@ namespace UntitledPoolGame.Pool
             }
             AimHandShift = 0f;
             cueTilt = Quaternion.identity;
+            reachLost = false;
+            frontHandRelease = 0f;
+            if (cueHolder != null) cueHolder.FrontHandRelease = 0f;
 
             isAiming = false;
             if (returnControlToPlayer) fpsController.enabled = true;
@@ -1198,7 +1461,12 @@ namespace UntitledPoolGame.Pool
             contactOffset += moveInput * offsetAdjustSpeed * Time.deltaTime;
             if (contactOffset.magnitude > 1f) contactOffset = contactOffset.normalized;
 
-            Vector3 aimDirection = Quaternion.Euler(0f, aimYaw, 0f) * Vector3.forward;
+            // Stretched shot: the aim sways a little (slow noise, scaled by
+            // how far the body is stretched) — shown on the cue and preview,
+            // so the player times the shot rather than being cheated.
+            float wobble = stretchAimWobble * StretchFraction;
+            if (wobble > 0f) wobble *= (Mathf.PerlinNoise(Time.time * 1.3f, playerInput.playerIndex * 7.1f) - 0.5f) * 2f;
+            Vector3 aimDirection = Quaternion.Euler(0f, aimYaw + wobble, 0f) * Vector3.forward;
             Vector3 ballPos = currentCueBall.Rigidbody.position;
 
             // Keeps the body standing behind the cue (and facing it) as the
@@ -1233,13 +1501,24 @@ namespace UntitledPoolGame.Pool
             if (IsOutOfReach)
             {
                 chargedPower = 0f;
+                chargeArmed = false;
                 return;
             }
 
-            if (attackAction.IsPressed())
+            // Charging needs a press made during this aim: Attack sometimes
+            // read as already held on entering aim (first aim, and at random),
+            // which charged a shot nobody asked for.
+            if (attackAction.WasPressedThisFrame())
+            {
+                chargeArmed = true;
+                if (traceAimInput) Debug.Log($"[AimInput] {name}: charge started by {attackAction.activeControl?.path ?? "?"}", this);
+            }
+            if (chargeArmed && attackAction.IsPressed())
                 chargedPower = Mathf.Min(chargedPower + chargeSpeed * Time.deltaTime, maxPower);
             else if (chargedPower > 0f)
                 Shoot(aimDirection);
+            else if (!attackAction.IsPressed())
+                chargeArmed = false;
         }
 
         private void UpdateAimIKTarget(Vector3 ballPos)
@@ -1297,6 +1576,7 @@ namespace UntitledPoolGame.Pool
 
         private void Shoot(Vector3 direction)
         {
+            ShotTaken?.Invoke(PlayerIndex, ChargeFraction);
             float power = Mathf.Max(chargedPower, minPower);
 
             PoolMatchRules rules = PoolMatchRules.Instance;

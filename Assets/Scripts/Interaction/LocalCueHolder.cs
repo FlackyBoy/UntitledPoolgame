@@ -167,6 +167,13 @@ namespace UntitledPoolGame.Interaction
 
         // Busy from the reach until the hands have let go.
         public bool IsBusy => phase != Phase.Idle;
+
+        // 0 = both hands on the cue, 1 = the front hand (the one nearer the
+        // tip, the bridge hand) let go. Set by LocalPoolAimController while
+        // the ball is out of reach: the body straightens up holding the cue
+        // in one hand instead of staying twisted over the table, and the
+        // hand takes the cue again as soon as the shot is reachable.
+        public float FrontHandRelease { get; set; }
         // Held and done moving into the carry pose: others may move the cue.
         public bool IsSettled => phase == Phase.Held;
 
@@ -723,10 +730,17 @@ namespace UntitledPoolGame.Interaction
                     break;
                 }
                 case Phase.Held:
-                    DriveHand(ref left, left.carryTarget.position, left.carryTarget.rotation, 1f);
-                    DriveHand(ref right, right.carryTarget.position, right.carryTarget.rotation, 1f);
-                    Fingers(1f);
+                {
+                    float release = Mathf.Clamp01(FrontHandRelease);
+                    bool leftIsFront = cueSlide == null
+                        || Vector3.Dot(left.carryTarget.position - right.carryTarget.position, cue.TransformDirection(cueSlide.TipAxis)) > 0f;
+                    float leftWeight = leftIsFront ? 1f - release : 1f, rightWeight = leftIsFront ? 1f : 1f - release;
+                    DriveHand(ref left, left.carryTarget.position, left.carryTarget.rotation, leftWeight);
+                    DriveHand(ref right, right.carryTarget.position, right.carryTarget.rotation, rightWeight);
+                    if (left.poser != null) left.poser.weight = leftWeight;
+                    if (right.poser != null) right.poser.weight = rightWeight;
                     break;
+                }
                 case Phase.Releasing:
                 {
                     float w = 1f - Smooth(phaseTime / Mathf.Max(0.01f, releaseTime));

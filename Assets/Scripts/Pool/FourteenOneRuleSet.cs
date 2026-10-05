@@ -46,5 +46,9 @@ namespace UntitledPoolGame.Pool
         }
 
         public string DescribePlayer(int player) => $"Score : {score[player]} / {targetScore}";
+
+        // Read by the HUD through PoolMatchRules.TryGetScore.
+        public int ScoreOf(int player) => score[player];
+        public int TargetScore => targetScore;
     }
 }

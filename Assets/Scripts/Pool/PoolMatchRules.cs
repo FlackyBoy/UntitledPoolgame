@@ -95,6 +95,34 @@ namespace UntitledPoolGame.Pool
         // provisional OnGUI mode select is then not drawn.
         public static bool ExternalMenu { get; set; }
 
+        // Set by the in-game HUD (MatchHud, UI Toolkit): the provisional
+        // OnGUI status lines, game-over box and aim hints are then not drawn.
+        public static bool ExternalHud { get; set; }
+
+        // "Revanche" from outside (the HUD's end card), through the same
+        // deferred path as the OnGUI "Rejouer" button.
+        public void RequestRestart()
+        {
+            if (GameOver) pendingRestart = true;
+        }
+
+        // Structured per-player state for the HUD (DescribePlayer is one
+        // line of text): 8-ball group (Cue = not decided yet, or not an
+        // 8-ball game), 14.1 score.
+        public BallGroup GetGroup(int player) => ruleSet is EightBallRuleSet eightBall ? eightBall.GroupOf(player) : BallGroup.Cue;
+        public bool TryGetScore(int player, out int score, out int target)
+        {
+            score = target = 0;
+            if (!(ruleSet is FourteenOneRuleSet straight)) return false;
+            score = straight.ScoreOf(player);
+            target = straight.TargetScore;
+            return true;
+        }
+
+        // Fired after a shot is resolved when the turn passes to the other
+        // player (CurrentPlayer is already the new one).
+        public static event Action<int> TurnChanged;
+
         // Starts a match from outside (a menu), through the same deferred path
         // as the OnGUI buttons: applied in the next Update.
         public void RequestStart(PoolGameMode mode, PoolPartyMode partyMode, int targetScore)
@@ -419,7 +447,36 @@ namespace UntitledPoolGame.Pool
         {
             if (!MatchStarted) return;
             firstContactThisShot = other;
+
+            // Ball Blast armed for this shot: the touched ball explodes and
+            // leaves the table as if pocketed by the shooter — the rule set
+            // then judges it like any pot (own ball: turn kept; wrong ball:
+            // illegal first contact, so a foul, and the ball is gone anyway).
+            BallBlastPower blast = ballBlastThisShot;
+            ballBlastThisShot = null;
+            if (blast == null) return;
+            if (!blast.CanBlast(other))
+            {
+                Debug.Log($"[BallBlast] Joueur {CurrentPlayer + 1} : {other.name} épargnée (bille 8) — pouvoir perdu.");
+                return;
+            }
+            blast.PlayEffects(other);
+            BallBlasted?.Invoke(other, CurrentPlayer);
+            other.OnPocketed();
         }
+
+        // Ball Blast (BallBlastPower): armed by the power, it waits for the
+        // activating player's next shot, which consumes it (NotifyShotFired)
+        // whatever that shot touches.
+        private readonly BallBlastPower[] ballBlastArmed = new BallBlastPower[2];
+        private BallBlastPower ballBlastThisShot;
+
+        public void ArmBallBlast(int player, BallBlastPower power) => ballBlastArmed[player] = power;
+        public bool IsBallBlastArmed(int player) => ballBlastArmed[player] != null;
+
+        // A ball destroyed by Ball Blast (before it's removed): the ball and
+        // the shooter. For the explosion's HUD shout.
+        public static event Action<PoolBall, int> BallBlasted;
 
         // Whether playerIndex (0 or 1) is currently allowed to shoot — used by
         // the offline aim controllers (PlayerInput.playerIndex identifies which
@@ -464,6 +521,9 @@ namespace UntitledPoolGame.Pool
             cueBallPocketedThisShot = false;
             firstContactThisShot = null;
             shotInProgress = true;
+
+            ballBlastThisShot = ballBlastArmed[CurrentPlayer];
+            ballBlastArmed[CurrentPlayer] = null;
         }
 
         // Which pocket a ball pocketed THIS shot actually fell into — null if
@@ -631,6 +691,7 @@ namespace UntitledPoolGame.Pool
                 closePocketPending = false;
                 ApplyRandomPocketClose(pendingClosePocketOwner);
             }
+            TurnChanged?.Invoke(CurrentPlayer);
         }
 
         public void Win(int player)
@@ -675,6 +736,8 @@ namespace UntitledPoolGame.Pool
             closedPocket = null;
             closePocketPending = false;
             calledEightBallPocket = null;
+            ballBlastArmed[0] = ballBlastArmed[1] = null;
+            ballBlastThisShot = null;
 
             pocketedThisShot.Clear();
             pocketByBallThisShot.Clear();
@@ -727,6 +790,8 @@ namespace UntitledPoolGame.Pool
                 if (!ExternalMenu) DrawModeSelectGUI();
                 return;
             }
+
+            if (ExternalHud) return;
 
             if (GameOver)
             {

@@ -124,6 +124,9 @@ namespace UntitledPoolGame.Pool
             playerGroup[1 - player] = group == BallGroup.Solid ? BallGroup.Stripe : BallGroup.Solid;
         }
 
+        // Cue = not decided yet (read by the HUD through PoolMatchRules.GetGroup).
+        public BallGroup GroupOf(int player) => playerGroup[player];
+
         public string DescribePlayer(int player) => playerGroup[player] switch
         {
             BallGroup.Solid => "Pleines (1-7)",

@@ -81,25 +81,50 @@ namespace UntitledPoolGame.Player
         // for the full reasoning.
         [SerializeField] private Transform modelTransform;
 
-        // Two separate CinemachineCameras (not the real output Camera —
-        // that one just needs a CinemachineBrain and is never touched here)
-        // instead of one repositioned back and forth: the FPS one is never
-        // touched by this script at all (it just sits under CameraPivot,
-        // following the normal FPS look/pitch on its own), so there's
-        // nothing to save/restore and nothing that can ever drift. Blending
-        // between the two on knockdown/recovery is handled by Cinemachine
-        // itself (whichever has the higher Priority is "live", blended
-        // automatically per CinemachineBrain's default blend) — we only
-        // ever flip Priority, never touch a Camera's own enabled state.
-        [Header("Cameras (Cinemachine — Priority swapped, brain blends)")]
+        // One camera for the whole fall: the FPS CinemachineCamera (a plain
+        // camera under CameraPivot, no Body/Aim — its transform is the view)
+        // is pulled back behind the ragdoll by this script, then brought back
+        // to the eyes of the body getting up. An earlier version swapped to a
+        // separate fall camera and let the brain blend back: the FPS camera
+        // was then still at the fall spot, facing an unrelated way, so the
+        // return always came from far away / from the front.
+        [Header("Cameras (the FPS camera itself pulls back during the fall)")]
         [SerializeField] private CinemachineCamera fpsVirtualCamera;
+        [Tooltip("Ancienne caméra de chute : n'est plus utilisée (gardée à la priorité inactive). Peut être retirée du prefab.")]
         [SerializeField] private CinemachineCamera ragdollVirtualCamera;
         [SerializeField] private int activePriority = 20;
         [SerializeField] private int inactivePriority = 10;
 
-        [Header("Ragdoll camera (3rd person, behind/above the pelvis)")]
+        [Header("Fall view (3rd person, behind/above the pelvis)")]
         [SerializeField] private float ragdollCameraDistance = 2.5f;
         [SerializeField] private float ragdollCameraHeight = 1.5f;
+        [Tooltip("Durée (secondes) du recul de la caméra FPS derrière le corps quand le joueur tombe.")]
+        [SerializeField] private float cameraPullBackTime = 0.35f;
+        [Tooltip("Durée (secondes) du retour de la caméra dans les yeux, à partir du début du relevé.")]
+        [SerializeField] private float cameraReturnTime = 0.6f;
+
+        [Tooltip("Logs [CamReturn] au relevé et pendant les images qui suivent : position de la caméra FPS, de son point de repos et de l'image finale.")]
+        [SerializeField] private bool traceCameraReturn = true;
+        private int cameraReturnTraceFrames;
+        private CinemachineBrain brain;
+
+        // Which way the view looks during the fall (world yaw): where the
+        // player was looking when knocked down. The root takes it back on
+        // recovery, so the view returns along the same axis.
+        private float ragdollCameraYaw;
+
+        // 0 = camera in the eyes, 1 = full fall view. While detached, this
+        // script writes the camera's world pose every frame; back at 0 after
+        // recovery, its authored local pose is restored and it's released.
+        private float cameraPull;
+        private bool cameraDetached;
+        private bool hasCameraRest;
+        private Vector3 cameraRestLocalPosition;
+        private Quaternion cameraRestLocalRotation;
+        // The eye pose relative to the root, for where the eyes will be once
+        // the root is moved onto the body that got up.
+        private Vector3 eyePositionInRoot;
+        private Quaternion eyeRotationInRoot;
 
         // FBBIK, Look At IK, etc. — solving toward their targets
         // while PuppetMaster physically owns the bones would just fight the
@@ -230,9 +255,34 @@ namespace UntitledPoolGame.Player
                 }
             }
 
+            // The view pulls back from the eyes, keeping the direction the
+            // player was looking.
+            if (!isRagdollCameraActive)
+            {
+                ragdollCameraYaw = transform.eulerAngles.y;
+                DetachCamera();
+            }
             isRagdollCameraActive = true;
-            if (ragdollVirtualCamera != null) ragdollVirtualCamera.Priority = activePriority;
-            if (fpsVirtualCamera != null) fpsVirtualCamera.Priority = inactivePriority;
+        }
+
+        private void DetachCamera()
+        {
+            if (fpsVirtualCamera == null) return;
+            Transform cam = fpsVirtualCamera.transform;
+            if (!hasCameraRest)
+            {
+                cameraRestLocalPosition = cam.localPosition;
+                cameraRestLocalRotation = cam.localRotation;
+                hasCameraRest = true;
+            }
+            // Eye pose from the rest pose (not the current one: knocked down
+            // again while the camera is still coming back).
+            Transform parent = cam.parent;
+            Vector3 eyePosition = parent != null ? parent.TransformPoint(cameraRestLocalPosition) : cameraRestLocalPosition;
+            Quaternion eyeRotation = (parent != null ? parent.rotation : Quaternion.identity) * cameraRestLocalRotation;
+            eyePositionInRoot = transform.InverseTransformPoint(eyePosition);
+            eyeRotationInRoot = Quaternion.Inverse(transform.rotation) * eyeRotation;
+            cameraDetached = true;
         }
 
         // Wired in the Inspector to BehaviourPuppet's onRegainBalance
@@ -286,6 +336,8 @@ namespace UntitledPoolGame.Player
             bool behindWall = modelTransform != null && Physics.Linecast(
                 transform.position + Vector3.up, modelTransform.position + Vector3.up,
                 out wall, lostRagdollBlockers, QueryTriggerInteraction.Ignore);
+            if (traceCameraReturn)
+                Debug.Log($"[CamReturn] {name} recovery branch: {(behindWall ? "behind a wall (root stays)" : modelTransform != null && modelFollow != null ? "follow the model" : "NO model / model follow — root stays at the fall spot")}", this);
             if (behindWall && behaviourPuppet != null && behaviourPuppet.puppetMaster != null)
             {
                 Debug.LogWarning($"[Ragdoll] {name}: got up behind '{wall.collider.name}' ({Vector3.Distance(transform.position, modelTransform.position):F2} m from the fall spot) — brought back to the fall spot", this);
@@ -306,8 +358,21 @@ namespace UntitledPoolGame.Player
                 // even if the model's own settled rotation has a slight
                 // residual tilt right after getting up.
                 Quaternion fullRootRotation = currentModelWorldRotation * Quaternion.Inverse(modelFollow.LocalRestRotation);
-                Quaternion newRootRotation = Quaternion.Euler(0f, fullRootRotation.eulerAngles.y, 0f);
+                // The root faces where the view has looked all along (not
+                // where the get-up clip left the body): the camera came back
+                // to the eyes along that axis while getting up, so handing
+                // control back doesn't turn the view. Same math as
+                // PredictedRoot, used for the camera meanwhile.
+                float bodyYaw = fullRootRotation.eulerAngles.y;
+                float viewYaw = fpsVirtualCamera != null ? ragdollCameraYaw : bodyYaw;
+                Quaternion newRootRotation = Quaternion.Euler(0f, viewYaw, 0f);
                 Vector3 newRootPosition = currentModelWorldPosition - newRootRotation * modelFollow.LocalRestPosition;
+
+                if (traceCameraReturn)
+                    Debug.Log($"[CamReturn] {name} recovery: root {transform.position:F2} → {newRootPosition:F2}, model {currentModelWorldPosition:F2}, " +
+                              $"pelvis {(behaviourPuppet != null && behaviourPuppet.puppetMaster != null && behaviourPuppet.puppetMaster.muscles.Length > 0 ? behaviourPuppet.puppetMaster.muscles[0].rigidbody.position.ToString("F2") : "—")}, " +
+                              $"body yaw {bodyYaw:F0}, view yaw {ragdollCameraYaw:F0} → root yaw {viewYaw:F0}, camera pull {cameraPull:F2}, " +
+                              $"camera {(fpsVirtualCamera != null ? fpsVirtualCamera.transform.position.ToString("F2") : "—")}", this);
 
                 characterController.enabled = false;
                 transform.SetPositionAndRotation(newRootPosition, newRootRotation);
@@ -345,16 +410,28 @@ namespace UntitledPoolGame.Player
                 foreach (IK ik in ikComponents)
                     if (ik != null) ik.enabled = true;
 
+            // The camera keeps going (UpdateFallCamera): usually already back
+            // in the eyes, otherwise it finishes its return from there.
             isRagdollCameraActive = false;
-            if (fpsVirtualCamera != null) fpsVirtualCamera.Priority = activePriority;
-            if (ragdollVirtualCamera != null) ragdollVirtualCamera.Priority = inactivePriority;
+            if (traceCameraReturn) cameraReturnTraceFrames = 8;
         }
 
-        // LateUpdate — same reasoning as LocalPoolPowerEffectReceiver: runs
-        // after whatever else might have touched the camera this frame.
-        // Everything else (LocalFpsPlayerController, LocalPoolAimController) is
-        // already disabled for the whole ragdoll duration, so this is the
-        // sole writer of the ragdoll camera's transform while active.
+        // Diagnostic of the return to the FPS view: where each camera is and
+        // looks, frame by frame, and how far the output camera is from each.
+        private void TraceCameraReturn()
+        {
+            if (cameraReturnTraceFrames <= 0) return;
+            cameraReturnTraceFrames--;
+            if (brain == null) brain = GetComponentInChildren<CinemachineBrain>(true);
+            string Describe(Transform t) => t == null ? "—" : $"{t.position:F2} fwd {t.forward:F2}";
+            Transform output = brain != null ? brain.transform : null;
+            Transform camParent = fpsVirtualCamera != null ? fpsVirtualCamera.transform.parent : null;
+            Debug.Log($"[CamReturn] {name} frame {8 - cameraReturnTraceFrames}: root yaw {transform.eulerAngles.y:F0}, " +
+                      $"FPS cam {Describe(fpsVirtualCamera != null ? fpsVirtualCamera.transform : null)}, " +
+                      $"eyes {(camParent != null ? camParent.TransformPoint(cameraRestLocalPosition).ToString("F2") : "—")}, pull {cameraPull:F2}, detached {cameraDetached}, " +
+                      $"output {Describe(output)}, blending {(brain != null && brain.IsBlending)}", this);
+        }
+
         // Safety net: the player has control (not in ragdoll mode) while the
         // puppet isn't standing — its ragdoll lying on the floor, detached
         // from a character that stood back up. Whatever led there, going
@@ -503,22 +580,77 @@ namespace UntitledPoolGame.Player
             OnKnockedDown();
         }
 
+        // LateUpdate: other scripts that touch the camera are disabled during
+        // the ragdoll, so this is its sole writer while detached.
         private void LateUpdate()
         {
-            if (!isRagdollCameraActive || ragdollVirtualCamera == null || behaviourPuppet == null) return;
-            if (behaviourPuppet.puppetMaster == null || behaviourPuppet.puppetMaster.muscles.Length == 0) return;
+            UpdateFallCamera();
+            TraceCameraReturn();
+        }
 
-            // muscles[0] is always the hip/root muscle.
-            Vector3 pelvis = behaviourPuppet.puppetMaster.muscles[0].rigidbody.position;
-            Vector3 lookTarget = pelvis + Vector3.up * 0.3f;
+        private void UpdateFallCamera()
+        {
+            if (!cameraDetached || fpsVirtualCamera == null) return;
+            Transform cam = fpsVirtualCamera.transform;
 
-            // No attempt to track a stable facing direction — a tumbling
-            // ragdoll doesn't have one worth following. A fixed world-space
-            // back-and-up offset from the pelvis keeps the shot readable.
-            Vector3 offset = new Vector3(0f, ragdollCameraHeight, -ragdollCameraDistance);
-            Transform ragdollCamTransform = ragdollVirtualCamera.transform;
-            ragdollCamTransform.position = pelvis + offset;
-            ragdollCamTransform.LookAt(lookTarget);
+            // Pulled back only while actually down; the return starts with the
+            // get-up, so the view is in the eyes by the time control is back.
+            bool down = isRagdollCameraActive && (behaviourPuppet == null || behaviourPuppet.state == BehaviourPuppet.State.Unpinned);
+            float target = down ? 1f : 0f;
+            float duration = target > cameraPull ? cameraPullBackTime : cameraReturnTime;
+            cameraPull = duration > 0f ? Mathf.MoveTowards(cameraPull, target, Time.deltaTime / duration) : target;
+
+            // Back in the eyes after recovery: the camera's authored pose under
+            // CameraPivot takes over again, exactly where it was being drawn.
+            if (!isRagdollCameraActive && cameraPull <= 0f)
+            {
+                cam.localPosition = cameraRestLocalPosition;
+                cam.localRotation = cameraRestLocalRotation;
+                cameraDetached = false;
+                return;
+            }
+
+            // Eyes: while down, where they'll be once the root is moved onto
+            // the body (same math as OnRecovered); after recovery, the rest pose.
+            Vector3 eyePosition;
+            Quaternion eyeRotation;
+            if (isRagdollCameraActive)
+            {
+                PredictedRoot(out Vector3 rootPosition, out Quaternion rootRotation);
+                eyePosition = rootPosition + rootRotation * eyePositionInRoot;
+                eyeRotation = rootRotation * eyeRotationInRoot;
+            }
+            else
+            {
+                Transform parent = cam.parent;
+                eyePosition = parent != null ? parent.TransformPoint(cameraRestLocalPosition) : cameraRestLocalPosition;
+                eyeRotation = (parent != null ? parent.rotation : Quaternion.identity) * cameraRestLocalRotation;
+            }
+
+            // Fall view: behind/above the pelvis (muscles[0], always the
+            // hip), looking where the player was looking.
+            Vector3 fallPosition = eyePosition;
+            Quaternion fallRotation = eyeRotation;
+            PuppetMaster puppet = behaviourPuppet != null ? behaviourPuppet.puppetMaster : null;
+            if (puppet != null && puppet.muscles.Length > 0 && puppet.muscles[0].rigidbody != null)
+            {
+                Vector3 pelvis = puppet.muscles[0].rigidbody.position;
+                fallPosition = pelvis + Quaternion.Euler(0f, ragdollCameraYaw, 0f) * new Vector3(0f, ragdollCameraHeight, -ragdollCameraDistance);
+                fallRotation = Quaternion.LookRotation(pelvis + Vector3.up * 0.3f - fallPosition);
+            }
+
+            float w = Mathf.SmoothStep(0f, 1f, cameraPull);
+            cam.SetPositionAndRotation(Vector3.Lerp(eyePosition, fallPosition, w), Quaternion.Slerp(eyeRotation, fallRotation, w));
+        }
+
+        // Where OnRecovered will put the root: on the animated body, facing
+        // the view's yaw.
+        private void PredictedRoot(out Vector3 position, out Quaternion rotation)
+        {
+            rotation = Quaternion.Euler(0f, ragdollCameraYaw, 0f);
+            position = modelTransform != null && modelFollow != null
+                ? modelTransform.position - rotation * modelFollow.LocalRestPosition
+                : transform.position;
         }
     }
 }

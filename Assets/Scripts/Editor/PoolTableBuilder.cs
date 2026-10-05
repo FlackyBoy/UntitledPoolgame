@@ -73,7 +73,49 @@ namespace UntitledPoolGame.PoolEditor
             EnsureScreenJuiceSettingsAsset();
             EnsurePotEffectSettingsAsset();
             EnsurePowerSpawnSettingsAsset();
+            EnsureBallBlastPowerAsset();
+            EnsureHudSettingsAsset();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
+        }
+
+        // Texts, colours and timings of the in-game HUD (MatchHud).
+        private static void EnsureHudSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/HudSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<UntitledPoolGame.Core.HudSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<UntitledPoolGame.Core.HudSettings>(), path);
+        }
+
+        // The "Bille destructrice" power asset, with Cartoon FX Remaster's
+        // "CFXR2 WW Explosion" assigned (the user's pick), added to the powers handed out if it isn't
+        // there yet (the spawn settings asset itself is otherwise left as is).
+        private static void EnsureBallBlastPowerAsset()
+        {
+            EnsureFolder("Assets/Powers");
+            const string path = "Assets/Powers/BallBlastPower.asset";
+            BallBlastPower power = AssetDatabase.LoadAssetAtPath<BallBlastPower>(path);
+            if (power == null)
+            {
+                power = ScriptableObject.CreateInstance<BallBlastPower>();
+                AssetDatabase.CreateAsset(power, path);
+                var serialized = new SerializedObject(power);
+                serialized.FindProperty("powerName").stringValue = "Bille destructrice";
+                const string explosionPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Explosions/CFXR2 WW Explosion.prefab";
+                serialized.FindProperty("explosionPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(explosionPath);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                Debug.Log($"[PoolTableBuilder] Created {path} (explosion: CFXR2 WW Explosion).");
+            }
+
+            PoolPowerSpawnSettings spawn = AssetDatabase.LoadAssetAtPath<PoolPowerSpawnSettings>("Assets/Resources/PoolPowerSpawnSettings.asset");
+            if (spawn == null) return;
+            var list = new System.Collections.Generic.List<PoolPower>(spawn.availablePowers ?? new PoolPower[0]);
+            if (list.Contains(power)) return;
+            list.Add(power);
+            spawn.availablePowers = list.ToArray();
+            EditorUtility.SetDirty(spawn);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[PoolTableBuilder] Bille destructrice added to PoolPowerSpawnSettings > Available Powers.");
         }
 
         // Bridges an EXISTING table (built before PoolPowerCrateManager/
