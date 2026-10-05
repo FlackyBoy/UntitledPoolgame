@@ -184,8 +184,9 @@ Proposé le 05/10 dans le prototype [Parcours des menus](../ui/parcours.html) :
 
 ### Mini-jeu : la borne d'arcade 📌 (aperçu jouable)
 
-Dans le bar, une borne d'arcade fait tourner **SUPER POOL SHOT**, un billard 2D façon console 8 bits sur un vieil écran cathodique ([aperçu jouable](../ui/arcade.html)).
-- **Le principe** : c'est pour la blague, la bille rentre quoi qu'il arrive. Une mauvaise visée la fait rebondir n'importe comment avant d'entrer (« TRICK SHOT! »).
+Dans le bar, une borne d'arcade fait tourner **SUPER POOL SHOT**, un vrai billard d'arcade à niveaux façon console 8 bits, sur un vieil écran cathodique ([aperçu jouable](../ui/arcade.html)).
+- **Le jeu** : physique réelle et effet sur la blanche. 7 niveaux à coups limités, dont 2 coups de maître. Combos, vies, CONTINUE?, et un mode 2 joueurs en alterné.
+- **La blague** : un code secret façon années 80 sur l'écran titre fait filer toutes les billes dans les poches.
 - **Usage** : un moment pour souffler entre deux parties, ou pour faire patienter l'autre joueur.
 
 ### Direction retenue 📌

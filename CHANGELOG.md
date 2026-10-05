@@ -4,6 +4,16 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-05
+- **Borne d'arcade, v2 : un vrai jeu** (retour : shader validé, « autant que ce soit un vrai jeu » ; choix : arcade à niveaux, blague en code secret). `docs/ui/arcade.html` réécrit :
+  - **Vraie physique 2D** : collisions entre billes de même masse, bandes, poches, freinage du tapis, 8 sous-pas par image. L'effet sur la blanche (B + flèches) donne le coulé et le rétro au premier choc, et un effet latéral qui agit sur les bandes.
+  - **Guide de visée** : bille fantôme au point de contact et direction de la bille touchée.
+  - **7 niveaux** à coups limités, dont 2 coups de maître (« CUT SHOT », « COMBINATION ») avec bonus de 5 000.
+  - **Score** : combos jusqu'à ×8, bille NEXT ×2, bonus multi-billes, coups restants et PERFECT.
+  - **Vies** : 3 vies (blanche rentrée, rien touché, coups épuisés), vies bonus, GAME OVER et CONTINUE? avec compte à rebours. Après une faute, la blanche se replace à la main.
+  - **Mode 2 joueurs** en alterné sur 3 racks.
+  - **Pause** sur START, meilleur score gardé dans le navigateur.
+  - **Code secret** sur l'écran titre, ↑↑↓↓←→←→ B A (« ALL BALLS GO IN! ») : les billes en mouvement sont attirées par les poches, et la blanche va chercher la bille la plus proche.
+  - **Vérifié par simulation** : casse, fin de coup, coups de maître, mode 2 joueurs, écran titre.
 - **Site, propositions UI : parcours des menus** (`docs/ui/parcours.html`, prototype interactif dans la direction Synthèse).
   - **Menu principal** en deux variantes : billes sur la table, ou ardoise du bar.
   - **Nouvelle partie et Charger** : emplacements de sauvegarde.

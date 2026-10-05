@@ -117,8 +117,8 @@ const EXTRAS = [
     pitch: 'Tout le parcours demandé, dans le langage Synthèse : menu principal, sous-menus, réglages des touches, pause.',
     points: ['Menu principal en deux variantes : les billes sur la table, ou l\'ardoise du bar', 'Nouvelle partie / Charger (emplacements), Just for fun et Multijoueur (local ou en ligne) → niveau → type de partie', 'Réglages : les touches, réaffectables pour de vrai dans le prototype (clavier, souris, manette)', 'Pause sur Échap en deux variantes (carte, ou « Temps mort ! » sur une petite table) + confirmation du retour au menu'] },
   { id: 'arcade', name: 'Borne d\'arcade : SUPER POOL SHOT', hero: `<div class="hero h-arcade"><div class="scr2"><b>POOL SHOT</b><i style="background:#f8b800;left:62%;top:48%"></i><i style="background:#0058f8;left:66%;top:42%"></i><i style="background:#fcfcfc;left:30%;top:52%"></i></div>`,
-    pitch: 'Le mini-jeu de la borne du bar, jouable ici : billard 2D façon console 8 bits sur un écran cathodique. Quoi qu\'il arrive, la bille rentre.',
-    points: ['256 × 240 pixels, palette façon NES, police pixel, sons de puce', 'Shader d\'écran cathodique : bombé, lignes de balayage, masque RGB, halo', 'On vise, on charge (jauge qui fait l\'aller-retour), on tire : mauvaise visée = la bille fait n\'importe quoi… et rentre (« TRICK SHOT! »)', 'Trois racks puis « A WINNER IS YOU! » ; clavier, boutons à l\'écran ou manette'] },
+    pitch: 'Le mini-jeu de la borne du bar, jouable ici : un vrai billard d\'arcade à niveaux, façon console 8 bits, sur un écran cathodique (shader validé le 05/10).',
+    points: ['Vraie physique : chocs, bandes, poches, effet sur la blanche (coulé, rétro, latéral) ; bille fantôme dans le guide', '7 niveaux à coups limités dont 2 coups de maître, combos, bille « NEXT » x2, 3 vies, vie bonus, CONTINUE?', 'Mode 2 joueurs en alterné sur 3 racks ; blanche en main après une faute', 'Code secret sur l\'écran titre : ↑↑↓↓←→←→ B A, et toutes les billes filent dans les poches'] },
 ];
 const STORE = 'untitledpool-ui-concepts-v1';
 let state = { fav: '', notes: {}, global: '' };
