@@ -4,6 +4,20 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-05
+- **Site, propositions UI : parcours des menus** (`docs/ui/parcours.html`, prototype interactif dans la direction Synthèse).
+  - **Menu principal** en deux variantes : billes sur la table, ou ardoise du bar.
+  - **Nouvelle partie et Charger** : emplacements de sauvegarde.
+  - **Just for fun** : choix du niveau, puis du type de partie.
+  - **Multijoueur** : local (arrivée de J2) ou en ligne (héberger / rejoindre avec un code), puis niveau et type de partie.
+  - **Réglages des touches** : on peut réellement réaffecter une touche (clavier, souris, manette), avec échange en cas de doublon et réinitialisation.
+  - **Pause sur Échap** en deux variantes (carte, ou « Temps mort ! »), avec confirmation du retour au menu.
+- **Site : mini-jeu de la borne d'arcade** (`docs/ui/arcade.html`, aperçu jouable) : « SUPER POOL SHOT ».
+  - **Le jeu** : billard 2D façon console 8 bits, en 256 × 240 avec une palette inspirée de la NES. Police pixel dessinée à la main, sons générés façon puce 8 bits.
+  - **L'écran cathodique** (shader WebGL) : écran bombé, lignes de balayage, masque RGB, décalage des couleurs, halo, vignettage, scintillement.
+  - **La blague** : on vise, on charge (jauge qui fait l'aller-retour), on tire, et la bille rentre quoi qu'il arrive. Viser à côté donne une courbe, des rebonds absurdes et « TRICK SHOT! ».
+  - **La partie** : trois racks, puis « A WINNER IS YOU! ». Jouable au clavier, avec les boutons à l'écran ou à la manette.
+  - **Galerie** : les deux pages sont ajoutées à la page Propositions UI, dans une section « À valider ».
+- **Validés en jeu par l'utilisateur** : coup allongé et main qui lâche la queue, correctif du tir chargé à l'entrée en visée, HUD, bille destructrice.
 - **Site : nouvelle page « Configuration »** (`docs/config.html`, contenu `docs/content/config.md`, dans le menu et sur l'accueil). Elle recense tous les réglages :
   - les fichiers partagés de `Resources` et leurs champs ;
   - les assets de pouvoirs ;

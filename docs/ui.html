@@ -51,6 +51,15 @@
   .h-jb .v { position: absolute; left: 50%; top: 28%; transform: translateX(-50%); width: 9em; height: 9em; border-radius: 50%; background: repeating-radial-gradient(circle, #111 0 .2em, #1d1d1d .2em .35em); z-index: 1; }
   .h-jb .v::after { content: ""; position: absolute; inset: 33%; border-radius: 50%; background: #e63b2e; }
   .h-jb .t { position: absolute; left: 4%; top: 12%; font: 3.4em/1.1 "Monoton"; color: #ffe9f4; text-shadow: 0 0 .3em #ff3d7f; z-index: 1; }
+  .h-board { background: radial-gradient(ellipse at 50% 40%, #4d3121, #140d09); }
+  .h-board .bd { position: absolute; left: 8%; top: 12%; width: 38%; bottom: 12%; border: .8em solid #7a4a2a; border-radius: .5em; background: #20302a; padding: .6em 1em; font: 1.7em/1.35 "Caveat Brush"; color: #eef3ea; }
+  .h-board .bd b { color: #ffd23f; font-weight: 400; }
+  .h-board .card { position: absolute; right: 9%; top: 22%; width: 30%; background: #fff6e3; border: .2em solid #1c1510; border-radius: .6em; box-shadow: 0 .3em 0 #1c1510; padding: .5em .9em; font: 2.4em "Bowlby One"; color: #1c1510; transform: rotate(-3deg); }
+  .h-arcade { background: #120b1c; }
+  .h-arcade .scr2 { position: absolute; left: 50%; top: 10%; bottom: 10%; aspect-ratio: 4 / 3; transform: translateX(-50%); border-radius: 1.2em / 1em; overflow: hidden;
+                    background: repeating-linear-gradient(transparent 0 .18em, rgba(0,0,0,.35) .18em .3em), linear-gradient(#000 0 22%, #503000 22% 26%, #00a800 26% 74%, #503000 74% 78%, #280058 78%); box-shadow: 0 0 0 .6em #26262c, 0 0 2em rgba(120,200,255,.25); }
+  .h-arcade .scr2 b { position: absolute; left: 50%; top: 5%; transform: translateX(-50%); font: 700 1.8em ui-monospace, monospace; color: #f8b800; letter-spacing: .15em; text-shadow: .12em .12em 0 #d82800; white-space: nowrap; }
+  .h-arcade .scr2 i { position: absolute; width: .9em; height: .9em; border-radius: 50%; }
 </style>
 <script src="assets/site.js"></script>
 </head>
@@ -61,6 +70,11 @@
   <p class="note"><b>Retours du 29/09 :</b> gardés — le menu de la Table Vivante (tirer sur les billes) et sa fin avec récap et trophées ; du Grand Show l'effet écran TV / replay, les interjections et l'affichage des pouvoirs ; de Happy Hour l'ardoise récapitulative. Écartés — l'UI en partie de la Table Vivante, le menu et le thème du Grand Show, le thème de Happy Hour. Le prototype <b>Synthèse</b> assemble ce qui a été gardé.</p>
   <p class="note">Tes références (Astro Bot, What the Golf?, Moving Out, Boomerang Fu…) restent la barre de qualité : couleurs franches, formes épaisses, animations qui rebondissent, humour. Les concepts s'en inspirent pour l'énergie, pas pour la forme.</p>
 
+  <h2 style="margin-top:28px">À valider (05/10)</h2>
+  <p class="note">Le parcours complet des menus dans la direction Synthèse, et l'aperçu jouable du mini-jeu de la borne d'arcade.</p>
+  <div class="concepts" id="extras"></div>
+
+  <h2 style="margin-top:36px">Les concepts de départ</h2>
   <div class="concepts" id="concepts"></div>
 
   <section class="global" style="margin-top:32px">
@@ -98,6 +112,14 @@ const CONCEPTS = [
     pitch: 'Le juke-box du bar sert de menu : les modes sont des disques, J1 et J2 la face A et la face B.',
     points: ['Sélections A1, A2… sur des bandeaux de titres', 'J2 rejoint en glissant une pièce', 'Modes = disques qu\'on sort de la pochette, face cachée pour les dimensions à débloquer', 'VU-mètre pour la puissance, scratch à la faute, hit-parade à la fin'] },
 ];
+const EXTRAS = [
+  { id: 'parcours', name: 'Parcours des menus', hero: `<div class="hero h-board"><div class="bd"><b>●</b> Nouvelle partie<br>Charger<br>Just for fun<br>Multijoueur<br>Réglages</div><div class="card">Pause</div>`,
+    pitch: 'Tout le parcours demandé, dans le langage Synthèse : menu principal, sous-menus, réglages des touches, pause.',
+    points: ['Menu principal en deux variantes : les billes sur la table, ou l\'ardoise du bar', 'Nouvelle partie / Charger (emplacements), Just for fun et Multijoueur (local ou en ligne) → niveau → type de partie', 'Réglages : les touches, réaffectables pour de vrai dans le prototype (clavier, souris, manette)', 'Pause sur Échap en deux variantes (carte, ou « Temps mort ! » sur une petite table) + confirmation du retour au menu'] },
+  { id: 'arcade', name: 'Borne d\'arcade : SUPER POOL SHOT', hero: `<div class="hero h-arcade"><div class="scr2"><b>POOL SHOT</b><i style="background:#f8b800;left:62%;top:48%"></i><i style="background:#0058f8;left:66%;top:42%"></i><i style="background:#fcfcfc;left:30%;top:52%"></i></div>`,
+    pitch: 'Le mini-jeu de la borne du bar, jouable ici : billard 2D façon console 8 bits sur un écran cathodique. Quoi qu\'il arrive, la bille rentre.',
+    points: ['256 × 240 pixels, palette façon NES, police pixel, sons de puce', 'Shader d\'écran cathodique : bombé, lignes de balayage, masque RGB, halo', 'On vise, on charge (jauge qui fait l\'aller-retour), on tire : mauvaise visée = la bille fait n\'importe quoi… et rentre (« TRICK SHOT! »)', 'Trois racks puis « A WINNER IS YOU! » ; clavier, boutons à l\'écran ou manette'] },
+];
 const STORE = 'untitledpool-ui-concepts-v1';
 let state = { fav: '', notes: {}, global: '' };
 try { Object.assign(state, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
@@ -114,10 +136,21 @@ document.getElementById('concepts').innerHTML = CONCEPTS.map(c => `
     </div>
   </article>`).join('');
 
+document.getElementById('extras').innerHTML = EXTRAS.map(c => `
+  <article class="concept">
+    <a href="ui/${c.id}.html" aria-label="Ouvrir ${c.name}">${c.hero}<span class="cta">Ouvrir ▶</span></div></a>
+    <div class="body">
+      <h2>${c.name}</h2><p class="pitch">${c.pitch}</p>
+      <ul>${c.points.map(p => `<li>${p}</li>`).join('')}</ul>
+      <textarea data-note="${c.id}" placeholder="Tes retours : variante préférée, ce qui manque, ce qui ne va pas…"></textarea>
+      <div class="actions"><a class="open" href="ui/${c.id}.html">Ouvrir</a></div>
+    </div>
+  </article>`).join('');
+
 function summary() {
   const fav = CONCEPTS.find(c => c.id === state.fav);
   const lines = ['Propositions UI — concepts', `Préféré : ${fav ? fav.name : 'pas encore choisi'}`];
-  CONCEPTS.forEach(c => { if (state.notes[c.id]) lines.push(`- ${c.name} : ${state.notes[c.id].trim()}`); });
+  EXTRAS.concat(CONCEPTS).forEach(c => { if (state.notes[c.id]) lines.push(`- ${c.name} : ${state.notes[c.id].trim()}`); });
   if (state.global) lines.push(`Avis général : ${state.global.trim()}`);
   document.getElementById('summary-text').textContent = lines.join('\n');
 }

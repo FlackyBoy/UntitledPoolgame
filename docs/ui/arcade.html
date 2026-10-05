@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borne d'arcade — Mini-jeu</title>
+<meta name="description" content="Aperçu jouable du mini-jeu de la borne d'arcade du bar : billard 2D façon console 8 bits, sur un écran cathodique. Quoi qu'il arrive, la bille rentre.">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<style>
+  .cabinet { max-width: 980px; margin: 0 auto; padding: 28px 28px 22px; border-radius: 26px 26px 14px 14px;
+             background: linear-gradient(#2a1a3d, #120b1c); box-shadow: inset 0 0 0 6px #3d2a57, 0 18px 40px rgba(0,0,0,.35); }
+  .marquee { text-align: center; margin: -6px 0 18px; font: 800 clamp(18px, 3.4vw, 30px)/1 ui-monospace, monospace; letter-spacing: .3em;
+             color: #fff3c4; text-shadow: 0 0 6px #ff9a1f, 0 0 18px #ff3d7f; }
+  .bezel { position: relative; padding: 18px; border-radius: 22px; background: linear-gradient(145deg, #0d0d10, #26262c); box-shadow: inset 0 3px 8px rgba(255,255,255,.08), inset 0 -4px 10px rgba(0,0,0,.6); }
+  .tube { position: relative; border-radius: 26px / 22px; overflow: hidden; background: #000; aspect-ratio: 4 / 3;
+          box-shadow: inset 0 0 40px rgba(0,0,0,.9); }
+  .tube canvas { display: block; width: 100%; height: 100%; }
+  .tube canvas.fallback { image-rendering: pixelated; }
+  /* glass: soft reflection over the picture */
+  .tube::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+                 background: radial-gradient(ellipse at 30% 12%, rgba(255,255,255,.10), transparent 40%), radial-gradient(ellipse at 50% 50%, transparent 62%, rgba(0,0,0,.45));
+                 box-shadow: inset 0 0 0 2px rgba(255,255,255,.04); }
+  .tube .scan { position: absolute; inset: 0; pointer-events: none; display: none;
+                background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.35) 2px 3px); }
+  .tube.css .scan { display: block; }
+  .panel { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; color: #d9cdf0; font: 600 13px ui-monospace, monospace; }
+  .led { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3dff7a; box-shadow: 0 0 8px #3dff7a; margin-right: 6px; vertical-align: 0; }
+  .pad { display: flex; gap: 10px; align-items: center; }
+  .pad button { width: 46px; height: 46px; border-radius: 50%; border: 0; font: 800 14px ui-monospace, monospace; color: #fff; cursor: pointer; touch-action: none;
+                background: radial-gradient(circle at 35% 30%, #ff6b6b, #c41d1d); box-shadow: 0 4px 0 #6b0d0d; }
+  .pad button.dir { background: radial-gradient(circle at 35% 30%, #5d5d66, #26262c); box-shadow: 0 4px 0 #0d0d10; }
+  .pad button.start { width: 66px; height: 26px; border-radius: 13px; font-size: 11px; background: #3d2a57; box-shadow: 0 3px 0 #1a1026; }
+  .pad button:active { transform: translateY(3px); box-shadow: none; }
+  .howto { max-width: 980px; margin: 14px auto 0; font-size: 14px; color: var(--muted); }
+  .howto kbd { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--text); }
+</style>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div><h1>Borne d'arcade : SUPER POOL SHOT</h1><p>Le mini-jeu de la borne du bar, pour la blague : un billard 2D façon console 8 bits, sur un vieil écran cathodique. On vise, on charge, on tire… et quoi qu'il arrive, la bille rentre.</p></div>
+    <a href="../ui.html">← Toutes les propositions</a>
+  </div>
+
+  <div class="cabinet">
+    <div class="marquee">SUPER POOL SHOT</div>
+    <div class="bezel"><div class="tube" id="tube"><canvas id="screen" width="1024" height="768" aria-label="Écran du mini-jeu"></canvas><div class="scan"></div></div></div>
+    <div class="panel">
+      <span><span class="led"></span>1 CRÉDIT · SON : <span id="snd">clique ou appuie sur une touche</span></span>
+      <div class="pad">
+        <button class="dir" data-k="left" aria-label="Gauche">◀</button>
+        <button class="dir" data-k="right" aria-label="Droite">▶</button>
+        <button data-k="a" aria-label="Tirer">A</button>
+        <button class="start" data-k="start">START</button>
+      </div>
+    </div>
+  </div>
+  <p class="howto">Viser : <kbd>←</kbd><kbd>→</kbd> (ou <kbd>Q</kbd><kbd>D</kbd>), réglage fin <kbd>↑</kbd><kbd>↓</kbd> · Tirer : maintenir <kbd>Espace</kbd> (ou <kbd>X</kbd>), relâcher au bon moment · <kbd>Entrée</kbd> : START · <kbd>Échap</kbd> : écran titre. Manette : croix ou stick, A pour tirer, Start.</p>
+
+  <div class="proto-notes">
+    <div><b>Dans le jeu</b>Une borne d'arcade dans le bar : on s'approche, Interagir (E / Y), la caméra se cale sur l'écran et la manette pilote le mini-jeu. Sortie avec Échap / B. Un petit moment pour souffler entre deux parties… ou pour faire attendre l'autre joueur.</div>
+    <div><b>La blague</b>Le tir est « scénarisé » : la blanche part vers la bille la plus proche de la visée (en courbe si on vise à côté), puis la bille rebondit n'importe comment et finit toujours dans une poche. Mauvaise visée = « TRICK SHOT! » et plus de points. Tir trop mou = elle se traîne… et rentre quand même.</div>
+    <div><b>Le ton 8 bits</b>Image de 256 × 240 pixels, palette limitée façon NES, police pixel, sons de puce (ondes carrées et bruit), écran titre « PUSH START », « A WINNER IS YOU! ». Écran cathodique : bombé, lignes de balayage, masque RGB, aberration de couleurs, halo, vignettage, léger scintillement.</div>
+    <div><b>Dans Unity (piste)</b>Jeu 2D en sprites rendu dans une RenderTexture 256 × 240 en point filtering, affichée sur l'écran 3D de la borne avec un shader CRT (Shader Graph URP) ; sons en chiptune. Interaction via le système de prise existant (Interact), contrôles du joueur coupés pendant le mini-jeu.</div>
+  </div>
+</div>
+
+<script>
+Site.renderHeader('ui', '../');
+(() => {
+  // =========================================================================
+  // Picture: a 256 × 240 "console" frame drawn pixel by pixel, then shown
+  // through a CRT shader (WebGL); CSS scanlines if WebGL is unavailable.
+  // =========================================================================
+  const W = 256, H = 240;
+  const game = document.createElement('canvas'); game.width = W; game.height = H;
+  const g = game.getContext('2d');
+  const P = { // limited NES-like palette
+    black: '#000000', white: '#fcfcfc', grey: '#7c7c7c', lgrey: '#bcbcbc',
+    felt: '#00a800', feltD: '#007800', wood: '#ac7c00', woodD: '#503000', woodL: '#f8b800',
+    red: '#d82800', blue: '#0058f8', sky: '#3cbcfc', yellow: '#f8b800', orange: '#e45c10', purple: '#6844fc',
+    green: '#00a844', maroon: '#a81000', skin: '#fca044', hair: '#503000', pink: '#f878f8', navy: '#0000bc',
+  };
+
+  // ---- 5 × 7 pixel font (uppercase, digits, a few signs) ----
+  const F = {
+    A: [14,17,17,31,17,17,17], B: [30,17,17,30,17,17,30], C: [14,17,16,16,16,17,14], D: [30,17,17,17,17,17,30],
+    E: [31,16,16,30,16,16,31], F: [31,16,16,30,16,16,16], G: [14,17,16,23,17,17,15], H: [17,17,17,31,17,17,17],
+    I: [14,4,4,4,4,4,14], J: [7,2,2,2,2,18,12], K: [17,18,20,24,20,18,17], L: [16,16,16,16,16,16,31],
+    M: [17,27,21,21,17,17,17], N: [17,17,25,21,19,17,17], O: [14,17,17,17,17,17,14], P: [30,17,17,30,16,16,16],
+    Q: [14,17,17,17,21,18,13], R: [30,17,17,30,20,18,17], S: [15,16,16,14,1,1,30], T: [31,4,4,4,4,4,4],
+    U: [17,17,17,17,17,17,14], V: [17,17,17,17,17,10,4], W: [17,17,17,21,21,21,10], X: [17,17,10,4,10,17,17],
+    Y: [17,17,17,10,4,4,4], Z: [31,1,2,4,8,16,31],
+    0: [14,17,19,21,25,17,14], 1: [4,12,4,4,4,4,14], 2: [14,17,1,2,4,8,31], 3: [31,2,4,2,1,17,14],
+    4: [2,6,10,18,31,2,2], 5: [31,16,30,1,1,17,14], 6: [6,8,16,30,17,17,14], 7: [31,1,2,4,8,8,8],
+    8: [14,17,17,14,17,17,14], 9: [14,17,17,15,1,2,12],
+    '!': [4,4,4,4,4,0,4], '?': [14,17,1,2,4,0,4], '.': [0,0,0,0,0,12,12], '-': [0,0,0,31,0,0,0],
+    ':': [0,12,12,0,12,12,0], "'": [4,4,8,0,0,0,0], '/': [1,1,2,4,8,16,16], '©': [14,17,23,25,23,17,14],
+    'x': [0,17,10,4,10,17,0], '+': [0,4,4,31,4,4,0],
+  };
+  function text(s, x, y, c, sc = 1, shadow = null) {
+    s = String(s);
+    for (const pass of shadow ? [shadow, c] : [c]) {
+      const o = pass === c ? 0 : sc;
+      g.fillStyle = pass;
+      let cx = x;
+      for (const ch of s) {
+        const rows = F[ch] || F[ch.toUpperCase()];
+        if (rows) for (let r = 0; r < 7; r++) for (let b = 0; b < 5; b++)
+          if (rows[r] & (16 >> b)) g.fillRect(cx + b * sc + o, y + r * sc + o, sc, sc);
+        cx += 6 * sc;
+      }
+    }
+  }
+  const textW = (s, sc = 1) => String(s).length * 6 * sc - sc;
+  const center = (s, y, c, sc = 1, sh = null) => text(s, (W - textW(s, sc)) >> 1, y, c, sc, sh);
+
+  function disc(cx, cy, r, c) {
+    g.fillStyle = c;
+    for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++)
+      if (x * x + y * y <= r * r + r * 0.6) g.fillRect(Math.round(cx) + x, Math.round(cy) + y, 1, 1);
+  }
+  function line(x0, y0, x1, y1, colorAt, dotted = false) {
+    x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+    const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+    const n = Math.max(dx, -dy) || 1; let err = dx + dy, i = 0;
+    for (;;) {
+      if (!dotted || ((i >> 1) & 1) === 0) { g.fillStyle = typeof colorAt === 'function' ? colorAt(i / n) : colorAt; g.fillRect(x0, y0, 1, 1); }
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } i++;
+    }
+  }
+
+  // ---- The table (drawn once) ----
+  const T = { x0: 28, y0: 62, x1: 228, y1: 196 };          // felt
+  const OUT = { x0: 20, y0: 54, x1: 236, y1: 204 };        // outer rail
+  const POCKETS = [[T.x0, T.y0], [128, T.y0 - 1], [T.x1, T.y0], [T.x0, T.y1], [128, T.y1 + 1], [T.x1, T.y1]];
+  const BR = 3; // ball radius
+  const tableCv = document.createElement('canvas'); tableCv.width = W; tableCv.height = H;
+  (() => {
+    const t = tableCv.getContext('2d');
+    t.fillStyle = P.woodD; t.fillRect(OUT.x0 - 1, OUT.y0 - 1, OUT.x1 - OUT.x0 + 2, OUT.y1 - OUT.y0 + 2);
+    t.fillStyle = P.wood; t.fillRect(OUT.x0, OUT.y0, OUT.x1 - OUT.x0, OUT.y1 - OUT.y0);
+    t.fillStyle = P.woodL; t.fillRect(OUT.x0 + 1, OUT.y0 + 1, OUT.x1 - OUT.x0 - 2, 1);
+    t.fillStyle = P.feltD; t.fillRect(T.x0 - 2, T.y0 - 2, T.x1 - T.x0 + 4, T.y1 - T.y0 + 4);  // cushions
+    t.fillStyle = P.felt; t.fillRect(T.x0, T.y0, T.x1 - T.x0, T.y1 - T.y0);
+    t.fillStyle = P.feltD;  // dithered nap
+    for (let y = T.y0; y < T.y1; y += 2) for (let x = T.x0 + ((y >> 1) & 1) * 2; x < T.x1; x += 4) t.fillRect(x, y, 1, 1);
+    t.fillStyle = P.white;  // sights on the rails
+    for (let i = 1; i < 8; i++) { if (i === 4) continue; const x = T.x0 + (T.x1 - T.x0) * i / 8 | 0; t.fillRect(x, OUT.y0 + 3, 1, 1); t.fillRect(x, OUT.y1 - 4, 1, 1); }
+    for (let i = 1; i < 4; i++) { const y = T.y0 + (T.y1 - T.y0) * i / 4 | 0; t.fillRect(OUT.x0 + 3, y, 1, 1); t.fillRect(OUT.x1 - 4, y, 1, 1); }
+    t.fillStyle = P.white; t.fillRect(64, T.y0, 1, T.y1 - T.y0); // head string (dotted)
+    t.fillStyle = P.felt; for (let y = T.y0; y < T.y1; y += 2) t.fillRect(64, y, 1, 1);
+    t.fillStyle = P.black;
+    for (const [px, py] of POCKETS) for (let y = -5; y <= 5; y++) for (let x = -5; x <= 5; x++) if (x * x + y * y <= 27) t.fillRect(px + x, py + y, 1, 1);
+  })();
+
+  // ---- Player sprite (back view; front view when above the table) ----
+  const SPR = {
+    back: ['....RRRR....', '...RRRRRR...', '..RRRRRRRRR.', '...HHHHHH...', '...HHHHHH...', '....SSSS....', '..BBBBBBBB..',
+           '.SBBBBBBBBS.', '.SBBBBBBBBS.', '.SBBBBBBBBS.', '..BBBBBBBB..', '..PPPPPPPP..', '..PPP..PPP..', '..PPP..PPP..', '..KKK..KKK..'],
+    front: ['....RRRR....', '...RRRRRR...', '.RRRRRRRRR..', '...SSSSSS...', '...SKSSKS...', '...SSSSSS...', '....SRRS....', '..BBBBBBBB..',
+            '.SBBBWWBBBS.', '.SBBBBBBBBS.', '.SBBBBBBBBS.', '..BBBBBBBB..', '..PPPPPPPP..', '..PPP..PPP..', '..KKK..KKK..'],
+  };
+  const SC = { R: P.red, H: P.hair, S: P.skin, B: P.blue, P: P.navy, K: P.black, W: P.white };
+  function sprite(rows, cx, cy) {
+    const x0 = Math.round(cx) - 6, y0 = Math.round(cy) - 9;
+    rows.forEach((row, r) => [...row].forEach((ch, c) => { if (SC[ch]) { g.fillStyle = SC[ch]; g.fillRect(x0 + c, y0 + r, 1, 1); } }));
+  }
+
+  // =========================================================================
+  // Sound: square waves and noise, like a sound chip.
+  // =========================================================================
+  let ac = null;
+  function audio() {
+    if (ac) return ac;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); document.getElementById('snd').textContent = 'ON'; } catch (e) { ac = null; }
+    return ac;
+  }
+  function tone(f, d, { type = 'square', vol = 0.06, to = null, at = 0 } = {}) {
+    const a = audio(); if (!a) return;
+    const t0 = a.currentTime + at, o = a.createOscillator(), v = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (to) o.frequency.exponentialRampToValueAtTime(to, t0 + d);
+    v.gain.setValueAtTime(vol, t0); v.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+    o.connect(v).connect(a.destination); o.start(t0); o.stop(t0 + d + 0.02);
+  }
+  function noise(d, vol = 0.08, at = 0) {
+    const a = audio(); if (!a) return;
+    const n = a.sampleRate * d | 0, buf = a.createBuffer(1, n, a.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = a.createBufferSource(), v = a.createGain(); s.buffer = buf; v.gain.value = vol;
+    s.connect(v).connect(a.destination); s.start(a.currentTime + at);
+  }
+  const SFX = {
+    blip: () => tone(880, 0.05, { vol: 0.04 }),
+    start: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.12, { at: i * 0.09 })),
+    shot: () => { noise(0.08, 0.12); tone(220, 0.1, { to: 110, vol: 0.05 }); },
+    clack: () => { noise(0.04, 0.1); tone(1400, 0.03, { vol: 0.04 }); },
+    bounce: () => tone(330, 0.06, { to: 260, vol: 0.05 }),
+    pot: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.1, { at: i * 0.06, vol: 0.05 })),
+    trick: () => [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.09, { at: i * 0.05, type: 'triangle', vol: 0.09 })),
+    clear: () => [523, 523, 523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, 0.14, { at: i * 0.12 })),
+    win: () => [392, 523, 659, 784, 659, 784, 1047, 1047].forEach((f, i) => tone(f, 0.18, { at: i * 0.16, vol: 0.06 })),
+  };
+
+  // =========================================================================
+  // Input: keyboard, on-screen pad, gamepad.
+  // =========================================================================
+  const keys = { left: false, right: false, up: false, down: false, a: false, start: false, back: false };
+  const pressed = new Set();
+  const KEYMAP = { arrowleft: 'left', q: 'left', a: 'left', arrowright: 'right', d: 'right', arrowup: 'up', z: 'up', w: 'up', arrowdown: 'down', s: 'down',
+                   ' ': 'a', x: 'a', k: 'a', enter: 'start', escape: 'back' };
+  addEventListener('keydown', e => {
+    const k = KEYMAP[e.key.toLowerCase()]; if (!k) return;
+    e.preventDefault(); audio();
+    if (!keys[k]) pressed.add(k); keys[k] = true;
+  });
+  addEventListener('keyup', e => { const k = KEYMAP[e.key.toLowerCase()]; if (k) { keys[k] = false; e.preventDefault(); } });
+  document.querySelectorAll('.pad button').forEach(b => {
+    const k = b.dataset.k;
+    b.addEventListener('pointerdown', e => { e.preventDefault(); audio(); if (!keys[k]) pressed.add(k); keys[k] = true; b.setPointerCapture(e.pointerId); });
+    const up = () => { keys[k] = false; };
+    b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+  });
+  document.getElementById('tube').addEventListener('pointerdown', () => { audio(); if (mode !== 'play') pressed.add('start'); });
+  const padPrev = {};
+  function pollPad() {
+    const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
+    if (!pads.length) return;
+    const p = pads[0], b = i => p.buttons[i] && p.buttons[i].pressed;
+    const state = { left: b(14) || p.axes[0] < -0.4, right: b(15) || p.axes[0] > 0.4, up: b(12), down: b(13), a: b(0) || b(2), start: b(9), back: b(1) };
+    for (const k in state) { if (state[k] && !padPrev[k]) pressed.add(k); if (state[k] !== padPrev[k]) keys[k] = state[k]; padPrev[k] = state[k]; }
+  }
+
+  // =========================================================================
+  // Game: aim, charge, shoot — the target ball always ends in a pocket.
+  // =========================================================================
+  const BALLC = [P.yellow, P.blue, P.red, P.purple, P.orange, P.green, P.maroon, P.pink, P.sky, P.lgrey];
+  const RACKS = [3, 6, 10];
+  let mode = 'title', time = 0, score = 0, rack = 0, combo = 0, balls = [], cue = { x: 80, y: 129, vx: 0, vy: 0 };
+  let aim = 0, power = 0, chargeT = 0, charging = false, shot = null, floats = [], timer = 0;
+  let hi = 5000; try { hi = +localStorage.getItem('spoolshot-hi') || 5000; } catch (e) {}
+
+  function setRack(n) {
+    balls = []; combo = 0;
+    const count = RACKS[n], rows = n === 0 ? 2 : n === 1 ? 3 : 4;
+    let i = 0;
+    for (let r = 0; r < rows && i < count; r++)
+      for (let k = 0; k <= r && i < count; k++, i++)
+        balls.push({ x: 168 + r * 6, y: 129 - r * 3.5 + k * 7, c: BALLC[i % BALLC.length], s: 1 });
+    cue = { x: 80, y: 129, vx: 0, vy: 0 }; aim = 0;
+  }
+  function startGame() { score = 0; rack = 0; setRack(0); mode = 'play'; shot = null; floats = []; SFX.start(); }
+  const ang = (a, b) => Math.atan2(b.y - a.y, b.x - a.x);
+  const diff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const float = (s, x, y, c) => floats.push({ s, x, y, c, t: 0 });
+
+  function fire() {
+    if (!balls.length) return;
+    // The ball nearest the aim, by angle: that one is going in, whatever.
+    let best = null, err = 9;
+    for (const b of balls) { const e = Math.abs(diff(ang(cue, b), aim)); if (e < err) { err = e; best = b; } }
+    const dir = { x: Math.cos(aim), y: Math.sin(aim) };
+    const toT = ang(cue, best), contact = { x: best.x - Math.cos(toT) * BR * 2, y: best.y - Math.sin(toT) * BR * 2 };
+    const dist = Math.hypot(contact.x - cue.x, contact.y - cue.y);
+    // Off-target aim: the cue ball curves round to it (control point along the aim).
+    const C = { x: cue.x + dir.x * dist * 0.6, y: cue.y + dir.y * dist * 0.6 };
+    const speed = lerp(45, 330, power);
+    shot = { phase: 'cue', target: best, P0: { x: cue.x, y: cue.y }, C, P2: contact, t: 0, dur: Math.max(0.12, dist / speed * 1.15),
+             speed, good: err < 0.17, weak: power < 0.15, inDir: toT };
+    cue.vx = cue.vy = 0;
+    SFX.shot();
+    if (!shot.good) float('?!', cue.x - 4, cue.y - 12, P.white);
+  }
+
+  function pathFor(s) {
+    const b = s.target, d = { x: Math.cos(s.inDir), y: Math.sin(s.inDir) };
+    if (s.good) {
+      // the pocket best in line with the hit
+      let pk = POCKETS[0], best = -9;
+      for (const p of POCKETS) { const l = Math.hypot(p[0] - b.x, p[1] - b.y), dot = ((p[0] - b.x) * d.x + (p[1] - b.y) * d.y) / l; if (dot > best) { best = dot; pk = p; } }
+      return [{ x: pk[0], y: pk[1] }];
+    }
+    // Bad shot: two (or three) silly cushion bounces, then a pocket anyway.
+    const pts = [], n = 2 + (Math.random() < 0.4 ? 1 : 0);
+    for (let i = 0; i < n; i++) {
+      const side = (i + (Math.random() * 4 | 0)) % 4;
+      const x = side < 2 ? lerp(T.x0 + 10, T.x1 - 10, Math.random()) : side === 2 ? T.x0 + BR : T.x1 - BR;
+      const y = side >= 2 ? lerp(T.y0 + 10, T.y1 - 10, Math.random()) : side === 0 ? T.y0 + BR : T.y1 - BR;
+      pts.push({ x, y });
+    }
+    const last = pts[pts.length - 1];
+    let pk = POCKETS[0], bd = 1e9;
+    for (const p of POCKETS) { const dd = Math.hypot(p[0] - last.x, p[1] - last.y); if (dd < bd) { bd = dd; pk = p; } }
+    pts.push({ x: pk[0], y: pk[1] });
+    return pts;
+  }
+
+  function update(dt) {
+    time += dt;
+    pollPad();
+    if (pressed.has('back') && mode !== 'title') { mode = 'title'; shot = null; SFX.blip(); }
+
+    if (mode === 'title') {
+      if (pressed.has('start') || pressed.has('a')) startGame();
+    } else if (mode === 'clear') {
+      timer -= dt;
+      if (timer <= 0) { rack++; if (rack >= RACKS.length) { mode = 'win'; SFX.win(); score > hi && (hi = score, (() => { try { localStorage.setItem('spoolshot-hi', hi); } catch (e) {} })()); } else { setRack(rack); mode = 'play'; } }
+    } else if (mode === 'win') {
+      if (pressed.has('start') || pressed.has('a')) { mode = 'title'; SFX.blip(); }
+    } else if (mode === 'play') {
+      if (!shot) {
+        const turn = (keys.left ? -1 : 0) + (keys.right ? 1 : 0), fine = (keys.up ? -1 : 0) + (keys.down ? 1 : 0);
+        aim += turn * 1.6 * dt + fine * 0.25 * dt;
+        if (keys.a) {
+          if (!charging) { charging = true; chargeT = 0; }
+          chargeT += dt;
+          const ph = (chargeT / 1.1) % 2; power = ph < 1 ? ph : 2 - ph;     // the meter bounces, NES style
+          if (((chargeT * 10) | 0) !== (((chargeT - dt) * 10) | 0)) tone(200 + power * 700, 0.03, { vol: 0.025 });
+        } else if (charging) { charging = false; fire(); power = 0; }
+      } else updateShot(dt);
+      // the cue ball rolls a little after the hit
+      if (shot && shot.phase !== 'cue' || !shot) {
+        cue.x += cue.vx * dt; cue.y += cue.vy * dt;
+        const f = Math.exp(-2.2 * dt); cue.vx *= f; cue.vy *= f;
+        if (cue.x < T.x0 + BR + 1 || cue.x > T.x1 - BR - 1) { cue.vx *= -0.8; cue.x = Math.min(Math.max(cue.x, T.x0 + BR + 1), T.x1 - BR - 1); }
+        if (cue.y < T.y0 + BR + 1 || cue.y > T.y1 - BR - 1) { cue.vy *= -0.8; cue.y = Math.min(Math.max(cue.y, T.y0 + BR + 1), T.y1 - BR - 1); }
+      }
+    }
+    floats.forEach(f => { f.t += dt; f.y -= 12 * dt; });
+    floats = floats.filter(f => f.t < 1.3);
+    pressed.clear();
+  }
+
+  function updateShot(dt) {
+    const s = shot;
+    if (s.phase === 'cue') {
+      s.t = Math.min(1, s.t + dt / s.dur);
+      const u = s.t, a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, c = u * u;
+      cue.x = a * s.P0.x + b * s.C.x + c * s.P2.x; cue.y = a * s.P0.y + b * s.C.y + c * s.P2.y;
+      if (u >= 1) {
+        SFX.clack();
+        s.phase = 'obj'; s.path = pathFor(s); s.seg = 0;
+        // the cue ball glances off, sideways
+        const side = Math.random() < 0.5 ? 1 : -1, sp = s.speed * 0.35;
+        cue.vx = Math.cos(s.inDir + side * 1.2) * sp; cue.vy = Math.sin(s.inDir + side * 1.2) * sp;
+        if (!s.good) float('WHAT?!', s.target.x - 16, s.target.y - 12, P.red);
+        if (s.weak) float('...', s.target.x - 8, s.target.y - 12, P.white);
+      }
+    } else if (s.phase === 'obj') {
+      const b = s.target, p = s.path[s.seg], dx = p.x - b.x, dy = p.y - b.y, d = Math.hypot(dx, dy);
+      const v = (s.weak ? 22 : s.speed * 0.8) * dt;
+      if (d <= v) {
+        b.x = p.x; b.y = p.y; s.seg++;
+        if (s.seg >= s.path.length) { s.phase = 'sink'; s.t = 0; }
+        else SFX.bounce();
+      } else { b.x += dx / d * v; b.y += dy / d * v; }
+    } else if (s.phase === 'sink') {
+      s.t += dt; s.target.s = Math.max(0, 1 - s.t / 0.3);
+      if (s.t >= 0.3) {
+        balls = balls.filter(x => x !== s.target);
+        combo++;
+        const pts = (s.good ? 100 : 300) * combo;
+        score += pts;
+        if (s.good) { SFX.pot(); float(s.weak ? 'IN!' : ['NICE!', 'GOOD!', 'WOW!'][combo % 3], s.target.x - 12, s.target.y - 10, P.yellow); }
+        else { SFX.trick(); float('TRICK SHOT!', Math.min(s.target.x - 30, W - 70), s.target.y - 10, P.pink); }
+        float('+' + pts, s.target.x - 10, s.target.y + 2, P.white);
+        shot = null;
+        if (!balls.length) { mode = 'clear'; timer = 2.4; SFX.clear(); }
+      }
+    }
+  }
+
+  // Where the player stands: on the aim line, just outside the table.
+  function playerSpot() {
+    const dx = -Math.cos(aim), dy = -Math.sin(aim);
+    let t = 1e9;
+    if (dx > 0) t = Math.min(t, (OUT.x1 + 8 - cue.x) / dx); if (dx < 0) t = Math.min(t, (OUT.x0 - 8 - cue.x) / dx);
+    if (dy > 0) t = Math.min(t, (OUT.y1 + 9 - cue.y) / dy); if (dy < 0) t = Math.min(t, (OUT.y0 - 9 - cue.y) / dy);
+    return { x: Math.min(Math.max(cue.x + dx * t, 7), W - 7), y: Math.min(Math.max(cue.y + dy * t, 40), H - 8) };
+  }
+
+  function drawBall(b) {
+    if (b.s <= 0) return;
+    const r = Math.max(1, Math.round(BR * b.s));
+    disc(b.x, b.y, r, b.c);
+    if (r >= 2) { g.fillStyle = P.white; g.fillRect(Math.round(b.x) - 1, Math.round(b.y) - 1, 1, 1); }
+  }
+
+  function drawHud() {
+    g.fillStyle = P.black; g.fillRect(0, 0, W, 48);
+    text('1P', 10, 10, P.red); text(String(score).padStart(6, '0'), 26, 10, P.white);
+    text('HI', 104, 10, P.red); text(String(Math.max(hi, score)).padStart(6, '0'), 120, 10, P.white);
+    text('RACK', 186, 10, P.sky); text(String(rack + 1), 216, 10, P.white);
+    text('BALL', 10, 26, P.sky); balls.forEach((b, i) => disc(44 + i * 8, 29, 2, b.c));
+    text('POWER', 150, 26, P.sky);
+    g.fillStyle = P.grey; g.fillRect(184, 26, 62, 7); g.fillStyle = P.black; g.fillRect(185, 27, 60, 5);
+    const w = Math.round(60 * power);
+    for (let x = 0; x < w; x++) { g.fillStyle = x < 36 ? P.green : x < 50 ? P.yellow : P.red; g.fillRect(185 + x, 27, 1, 5); }
+  }
+
+  function draw() {
+    g.fillStyle = P.black; g.fillRect(0, 0, W, H);
+    if (mode === 'title') return drawTitle();
+    // floor
+    g.fillStyle = '#280058'; for (let y = 48; y < H; y += 8) for (let x = (y >> 3) % 2 * 8; x < W; x += 16) g.fillRect(x, y, 8, 8);
+    g.drawImage(tableCv, 0, 0);
+    drawHud();
+    balls.forEach(drawBall);
+    disc(cue.x, cue.y, BR, P.white); g.fillStyle = P.lgrey; g.fillRect(Math.round(cue.x) + 1, Math.round(cue.y) + 1, 1, 1);
+
+    if (mode === 'play') {
+      const pl = playerSpot(), dx = Math.cos(aim), dy = Math.sin(aim);
+      if (!shot) {
+        // dotted aim guide
+        line(cue.x + dx * 5, cue.y + dy * 5, cue.x + dx * 60, cue.y + dy * 60, P.white, true);
+        // cue: from the player's hands to the ball, pulled back while charging
+        const pull = 4 + power * 10, tip = { x: cue.x - dx * pull, y: cue.y - dy * pull };
+        line(pl.x, pl.y, tip.x, tip.y, u => u > 0.97 ? P.blue : u > 0.55 ? '#fcd8a8' : u > 0.2 ? P.wood : P.woodD);
+      }
+      sprite(pl.y < OUT.y0 ? SPR.front : SPR.back, pl.x + (charging ? (Math.random() * 2 | 0) - 0 : 0), pl.y);
+      if (!shot && !charging && ((time * 2) | 0) % 2 === 0) center('HOLD A - RELEASE TO SHOOT', 222, P.lgrey);
+    }
+    floats.forEach(f => { if (((f.t * 12) | 0) % 2 === 0 || f.t < 0.8) text(f.s, Math.round(f.x), Math.round(f.y), f.c, 1, P.black); });
+
+    if (mode === 'clear') { center('RACK CLEAR!', 112, P.yellow, 2, P.black); center('BONUS ' + combo + 'x', 134, P.white, 1, P.black); }
+    if (mode === 'win') {
+      g.fillStyle = P.black; g.fillRect(16, 76, W - 32, 96);
+      g.fillStyle = P.white; g.fillRect(16, 76, W - 32, 1); g.fillRect(16, 171, W - 32, 1);
+      center('A WINNER IS YOU!', 88, P.yellow, 2, P.red);
+      center('SCORE ' + score, 116, P.white);
+      center('THANK YOU FOR PLAYING', 132, P.sky);
+      if (((time * 2) | 0) % 2 === 0) center('PRESS START', 152, P.white);
+    }
+  }
+
+  function drawTitle() {
+    center('SUPER', 22, P.yellow, 2, P.red);
+    center('POOL SHOT', 44, P.white, 3, P.blue);
+    // a small table, a ball going round it, the player waiting with his cue
+    const x0 = 76, y0 = 98, x1 = 196, y1 = 150;
+    g.fillStyle = P.woodD; g.fillRect(x0 - 7, y0 - 7, x1 - x0 + 14, y1 - y0 + 14);
+    g.fillStyle = P.wood; g.fillRect(x0 - 6, y0 - 6, x1 - x0 + 12, y1 - y0 + 12);
+    g.fillStyle = P.felt; g.fillRect(x0, y0, x1 - x0, y1 - y0);
+    g.fillStyle = P.feltD; for (let y = y0; y < y1; y += 2) for (let x = x0 + ((y >> 1) & 1) * 2; x < x1; x += 4) g.fillRect(x, y, 1, 1);
+    [[x0, y0], [128 + 8, y0 - 1], [x1, y0], [x0, y1], [128 + 8, y1 + 1], [x1, y1]].forEach(([px, py]) => disc(px, py, 3, P.black));
+    const a = time * 1.7, bx = 136 + Math.cos(a) * 46, by = 124 + Math.sin(a * 2) * 16;
+    disc(bx, by, 3, P.red); g.fillStyle = P.white; g.fillRect(Math.round(bx) - 1, Math.round(by) - 1, 1, 1);
+    disc(110, 124, 3, P.white);
+    sprite(SPR.front, 52, 126);
+    line(52, 126, 104, 124, u => u > 0.97 ? P.blue : u > 0.5 ? '#fcd8a8' : P.wood);
+    if (((time * 2) | 0) % 2 === 0) center('PUSH START BUTTON', 176, P.white, 1, P.black);
+    center('© 1987 UNTITLED SOFT', 204, P.lgrey);
+    center('LICENSED BY THE BAR', 218, P.grey);
+  }
+
+  // =========================================================================
+  // CRT presentation (WebGL).
+  // =========================================================================
+  const screen = document.getElementById('screen');
+  let gl = null, prog, tex, uTime, uRes;
+  try { gl = screen.getContext('webgl', { antialias: false, premultipliedAlpha: false }); } catch (e) { gl = null; }
+  const VS = 'attribute vec2 p; varying vec2 uv; void main(){ uv = p * .5 + .5; gl_Position = vec4(p, 0., 1.); }';
+  const FS = `precision mediump float;
+    uniform sampler2D t; uniform float time; uniform vec2 res; varying vec2 uv;
+    vec2 curve(vec2 u){ u = u * 2. - 1.; vec2 o = abs(u.yx) / vec2(5.2, 4.2); u += u * o * o; return u * .5 + .5; }
+    float rnd(vec2 c){ return fract(sin(dot(c, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main(){
+      vec2 c = curve(uv);
+      if (c.x < 0. || c.x > 1. || c.y < 0. || c.y > 1.) { gl_FragColor = vec4(0., 0., 0., 1.); return; }
+      float ab = .0014;
+      vec3 col = vec3(texture2D(t, c + vec2(ab, 0.)).r, texture2D(t, c).g, texture2D(t, c - vec2(ab, 0.)).b);
+      vec3 glow = (texture2D(t, c + vec2(.004, 0.)).rgb + texture2D(t, c - vec2(.004, 0.)).rgb
+                 + texture2D(t, c + vec2(0., .005)).rgb + texture2D(t, c - vec2(0., .005)).rgb) * .25;
+      col += glow * .28;
+      float scan = .5 - .5 * cos(c.y * 240. * 6.2831853);
+      col *= mix(.62, 1.08, scan);
+      float m = mod(gl_FragCoord.x, 3.);
+      col *= m < 1. ? vec3(1.06, .86, .86) : m < 2. ? vec3(.86, 1.06, .86) : vec3(.86, .86, 1.06);
+      vec2 v = c * (1. - c.yx); col *= pow(v.x * v.y * 18., .22);
+      col *= .97 + .03 * sin(time * 50.);
+      col += (rnd(gl_FragCoord.xy + fract(time)) - .5) * .035;
+      col += vec3(.012, .016, .02);
+      gl_FragColor = vec4(col * 1.08, 1.);
+    }`;
+  function compile(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+  try {
+    if (!gl) throw new Error('no webgl');
+    prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('link');
+    gl.useProgram(prog);
+    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.NEAREST));
+    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
+    uTime = gl.getUniformLocation(prog, 'time'); uRes = gl.getUniformLocation(prog, 'res');
+  } catch (e) {
+    gl = null;
+    document.getElementById('tube').classList.add('css');
+  }
+  const ctx2d = gl ? null : screen.getContext('2d');
+  if (!gl) { screen.width = W; screen.height = H; screen.classList.add('fallback'); }
+  function resize() {
+    if (!gl) return;
+    const r = screen.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (screen.width !== w || screen.height !== h) { screen.width = w; screen.height = h; gl.viewport(0, 0, w, h); }
+  }
+  function present() {
+    if (!gl) { ctx2d.drawImage(game, 0, 0); return; }
+    resize();
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, game);
+    gl.uniform1f(uTime, time); gl.uniform2f(uRes, screen.width, screen.height);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  // ---- Loop: fixed 60 Hz steps, like the console ----
+  let last = performance.now(), acc = 0;
+  function frame(now) {
+    acc += Math.min(0.1, (now - last) / 1000); last = now;
+    while (acc >= 1 / 60) { update(1 / 60); acc -= 1 / 60; }
+    draw(); present();
+    requestAnimationFrame(frame);
+  }
+  setRack(0);
+  // "#play" starts straight into a rack (for screenshots / sharing).
+  if (location.hash === '#play') { mode = 'play'; }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

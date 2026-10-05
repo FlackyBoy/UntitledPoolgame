@@ -79,8 +79,8 @@ Frottement de roulement et de glissement calculés par bille, rebonds vifs sur l
 
 - Caméra en orbite autour de la bille blanche, rapprochée pendant la charge.
 - Ligne de trajectoire jusqu'au premier contact, et direction prise par la bille touchée (pas de rebonds sur bande).
-- Le personnage se colle à la table : seul son corps doit rester hors de la table, la queue passe au-dessus de la bande. 🔄 à tester
-- Bille lointaine : **coup allongé** (hanche sur la bande, jambe arrière levée, la visée tremble un peu). Au-delà, le tir est bloqué avec un message : il faut contourner la table. 🔄 à tester
+- Le personnage se colle à la table : seul son corps doit rester hors de la table, la queue passe au-dessus de la bande. ✅
+- Bille lointaine : **coup allongé** (hanche sur la bande, jambe arrière levée, la visée tremble un peu). Au-delà, le tir est bloqué avec un message : il faut contourner la table (la main avant lâche alors la queue). ✅
 - Prévu : coup **derrière le dos** quand la ligne longe la bande côté joueur. 📌
 
 ### Règles communes ✅
@@ -117,7 +117,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Vision brouillée** | Attaque | L'écran de l'adversaire blanchit et sa visée devient moins sensible | Tour de l'adversaire |
 | **Commandes inversées** | Attaque | Regard inversé, sensibilité augmentée, ligne de trajectoire masquée | Tour de l'adversaire |
 | **Poche fermée** | Attaque | Une poche au hasard est bouchée | Tour de l'adversaire |
-| **Bille destructrice** 🔄 | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
+| **Bille destructrice** | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
 
 Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 
@@ -159,7 +159,7 @@ Déjà en place, à calibrer en jeu : secousse et zoom pendant la charge, recul 
 
 ## 12. Interface actuelle
 
-Le **menu d'avant-partie** suit la direction retenue, en version 2D (🔄, à tester) : titre, joueurs, choix du mode, dans le décor du bar ; on vise une bille avec la queue et on tire pour choisir. Typo des menus : **Titan One**. L'**UI en jeu** suit la même direction (🔄, à tester). Chaque joueur a sa partie d'écran :
+Le **menu d'avant-partie** suit la direction retenue, en version 2D (🔄, à tester) : titre, joueurs, choix du mode, dans le décor du bar ; on vise une bille avec la queue et on tire pour choisir. Typo des menus : **Titan One**. L'**UI en jeu** suit la même direction (✅ validée le 05/10). Chaque joueur a sa partie d'écran :
 - une plaque à sa couleur, avec les billes qui lui restent ;
 - « À toi ! » chez celui qui joue, l'autre moitié assombrie ;
 - le pouvoir en stock ;
@@ -167,6 +167,26 @@ Le **menu d'avant-partie** suit la direction retenue, en version 2D (🔄, à te
 - les messages d'aide.
 
 Les temps forts ont leur interjection (« FAUTE ! », « Dans le mille ! », « OHHH ! »). Un pouvoir ramassé arrive comme un sponsor. La fin de partie montre la carte du gagnant avec « Revanche ». À venir : replay en incrustation, ardoise et trophées de fin.
+
+### Parcours des menus 📌 (prototype à valider)
+
+Proposé le 05/10 dans le prototype [Parcours des menus](../ui/parcours.html) :
+
+- **Menu principal** :
+  - **Nouvelle partie** : histoire, avec tutoriel au début (à venir) ;
+  - **Charger une partie** : emplacements de sauvegarde ;
+  - **Just for fun** : une partie tout de suite, choix du niveau puis du type de partie (Classique, Pouvoirs, 9-ball, 14.1) ;
+  - **Multijoueur** : local (écran partagé, J2 rejoint) ou en ligne (héberger / rejoindre avec un code), puis niveau et type de partie ;
+  - **Réglages** : pour l'instant les touches (clavier / souris et manette, réaffectables) ;
+  - **Quitter**.
+- **En jeu** : Échap / Start ouvre la pause. Elle propose Reprendre, Réglages et Menu principal (avec confirmation), et arrête les deux joueurs en écran partagé.
+- Deux variantes à départager : menu principal sur la table (billes) ou sur l'ardoise du bar ; pause en carte ou en « Temps mort ! ».
+
+### Mini-jeu : la borne d'arcade 📌 (aperçu jouable)
+
+Dans le bar, une borne d'arcade fait tourner **SUPER POOL SHOT**, un billard 2D façon console 8 bits sur un vieil écran cathodique ([aperçu jouable](../ui/arcade.html)).
+- **Le principe** : c'est pour la blague, la bille rentre quoi qu'il arrive. Une mauvaise visée la fait rebondir n'importe comment avant d'entrer (« TRICK SHOT! »).
+- **Usage** : un moment pour souffler entre deux parties, ou pour faire patienter l'autre joueur.
 
 ### Direction retenue 📌
 

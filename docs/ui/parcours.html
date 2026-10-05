@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parcours des menus — Prototype UI</title>
+<meta name="description" content="Prototype du parcours complet des menus dans la direction Synthèse : menu principal (deux variantes), nouvelle partie, charger, Just for fun, multijoueur, réglages des touches, pause (deux variantes).">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Caveat+Brush&family=Nunito:wght@700;900&family=Titan+One&display=swap">
+<style>
+  /* ---------- Synthèse language (same as synthese.html) ---------- */
+  .stage { --felt: #1d7f4b; --felt-d: #125c35; --wood: #6b3a1e; --wood-l: #8d5330; --chalk: #eaf6ff; --cube: #3d8fe0;
+           --ink: #1c1510; --cream: #fff6e3; --yel: #ffd23f; --red: #ff4d3d; --p1: #2f7cf6; --p2: #ef4a3c;
+           font-family: "Nunito", sans-serif; color: var(--chalk); background: var(--felt-d); }
+  .room { position: absolute; inset: 0; overflow: hidden; background:
+      radial-gradient(ellipse at 50% -12%, rgba(255,214,140,.42), transparent 55%),
+      linear-gradient(transparent 64%, rgba(0,0,0,.32) 64%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 .15em, transparent .15em 5.5em),
+      radial-gradient(ellipse at 50% 40%, #4d3121, #26180f 70%, #140d09); }
+  .room::before { content: ""; position: absolute; inset: 0; filter: blur(.45em); opacity: .75; background:
+      radial-gradient(circle at 7% 20%, rgba(255,170,80,.55) 0 1em, transparent 1.3em), radial-gradient(circle at 15% 34%, rgba(255,120,90,.45) 0 .7em, transparent 1em),
+      radial-gradient(circle at 24% 16%, rgba(120,200,255,.35) 0 .8em, transparent 1.1em), radial-gradient(circle at 79% 18%, rgba(255,200,120,.5) 0 1.1em, transparent 1.4em),
+      radial-gradient(circle at 88% 32%, rgba(255,90,140,.4) 0 .8em, transparent 1.1em), radial-gradient(circle at 94% 12%, rgba(140,255,200,.3) 0 .7em, transparent 1em); }
+  .room::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 55%, transparent 45%, rgba(0,0,0,.55)); }
+  .tshadow { position: absolute; left: 11%; right: 11%; top: 18%; bottom: 1%; border-radius: 2em; background: rgba(0,0,0,.55); filter: blur(1.2em); }
+  .felt { position: absolute; inset: 14% 10% 5%; border-radius: 1em; background:
+      radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.10), transparent 60%),
+      repeating-radial-gradient(circle at 20% 30%, rgba(0,0,0,.035) 0 .08em, transparent .08em .22em),
+      radial-gradient(ellipse at 50% 50%, var(--felt), var(--felt-d)); }
+  .rail { position: absolute; inset: 14% 10% 5%; border: 1.6em solid var(--wood); border-radius: 1em; box-shadow: inset 0 0 0 .25em #3e200f, inset 0 0 2.5em rgba(0,0,0,.55); pointer-events: none; }
+  .pocket { position: absolute; width: 3.6em; height: 3.6em; border-radius: 50%; background: radial-gradient(#000 55%, #1b0f07); transform: translate(-50%, -50%); box-shadow: 0 0 0 .3em #3e200f; }
+  .lamplight { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 48%, rgba(255,226,160,.18), transparent 55%); mix-blend-mode: screen; }
+  .lampshade { position: absolute; left: 50%; top: 0; width: 34%; height: 9%; transform: translateX(-50%); z-index: 1; pointer-events: none; }
+  .lampshade i { position: absolute; inset: 22% 0 0; border-radius: 1.2em 1.2em .4em .4em; background: linear-gradient(#1e5a3c, #0f3a25); box-shadow: 0 .35em 0 #f7d58a, 0 .8em 2em rgba(255,214,140,.55); }
+  .chalk { font-family: "Titan One", sans-serif; color: #fff7e3; text-shadow: 0 .08em 0 #0d4527, 0 .14em .2em rgba(0,0,0,.3); }
+  .bowl { font-family: "Bowlby One", sans-serif; letter-spacing: .02em; }
+  .pb { position: absolute; width: 4.4em; height: 4.4em; border-radius: 50%; transform: translate(-50%, -50%);
+        background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.9) 0 7%, transparent 8%), radial-gradient(circle at 50% 50%, var(--c) 60%, color-mix(in srgb, var(--c) 70%, #000));
+        box-shadow: inset -.35em -.45em .7em rgba(0,0,0,.35), 0 .45em .5em rgba(0,0,0,.4); transition: transform .25s cubic-bezier(.3,1.6,.5,1), box-shadow .25s; }
+  .pb.st { background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.9) 0 7%, transparent 8%), linear-gradient(#f6f1e4 0 26%, var(--c) 26% 74%, #f6f1e4 74%); }
+  .pb[data-n]::after { content: attr(data-n); position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; transform: translate(-50%, -50%); border-radius: 50%; background: #f6f1e4; color: #222; font: 900 1.05em/1 "Nunito"; display: grid; place-items: center; }
+  .pb.cue { --c: #f6f1e4; }
+  .f.pb.focus { transform: translate(-50%, -62%) scale(1.18); box-shadow: inset -.35em -.45em .7em rgba(0,0,0,.35), 0 1.3em 1em rgba(0,0,0,.35), 0 0 0 .25em rgba(255,255,255,.6); }
+  .lab { position: absolute; transform: translate(-50%, 0); font-size: 1.55em; white-space: nowrap; transition: transform .2s; pointer-events: none; }
+  .focus + .lab { transform: translate(-50%, 0) scale(1.15); }
+  .lab small { display: block; font: 900 .55em "Nunito"; text-align: center; opacity: .8; }
+  .cue-stick { position: absolute; height: .75em; width: 24em; transform-origin: 0 50%; border-radius: .4em;
+               background: linear-gradient(90deg, #3a80c8 0 2%, #f4ecd6 2% 5%, #c8914f 5% 60%, #2b1a0f 60% 100%); box-shadow: 0 .4em .4em rgba(0,0,0,.35); transition: transform .25s ease; pointer-events: none; }
+  .aim { position: absolute; height: 0; border-top: .18em dashed rgba(255,255,255,.55); transform-origin: 0 50%; pointer-events: none; transition: all .25s ease; }
+  .logo { position: absolute; left: 50%; top: 21%; transform: translateX(-50%); text-align: center; z-index: 1; }
+  .logo .small { font: 2em "Titan One"; color: #fff7e3; display: block; margin-bottom: -.1em; text-shadow: 0 .08em 0 #0d4527; }
+  .logo .big { font-size: 4.2em; line-height: 1; color: #fff7e3; text-shadow: 0 .06em 0 #0d4527, 0 .12em .2em rgba(0,0,0,.35); }
+  .blink { animation: blink 1.4s steps(2, jump-none) infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .cube { position: absolute; background: var(--cube); color: #fff; border-radius: .5em; padding: 1em 1.2em;
+          background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,.25), transparent 40%), repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 .2em, transparent .2em .5em);
+          box-shadow: 0 .5em 0 #1f5c99, 0 1em 1.5em rgba(0,0,0,.4); }
+  .cube h3 { margin: 0 0 .2em; font: 1.9em "Bowlby One"; }
+  .cube p { margin: .2em 0; font-size: 1.05em; }
+  .cube .opt { display: inline-block; margin-top: .4em; padding: .15em .6em; border-radius: .4em; background: rgba(0,0,0,.2); }
+  .btn-ball { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: .6em; padding: .45em 1.2em .45em .45em; border-radius: 3em;
+              background: rgba(0,0,0,.28); font: 1.5em "Titan One"; color: #fff7e3; white-space: nowrap; transition: transform .2s, background .2s; }
+  .btn-ball .pb { position: relative; left: auto; top: auto; transform: none; width: 1.6em; height: 1.6em; flex: none; }
+  .btn-ball .pb::after { font-size: .45em; }
+  .btn-ball.focus { background: rgba(255,255,255,.2); transform: translate(-50%, -50%) scale(1.08); }
+  .pop-card { background: var(--cream); color: var(--ink); border: .18em solid var(--ink); border-radius: .8em; box-shadow: 0 .3em 0 var(--ink); }
+  .pop { position: absolute; transform: translate(-50%, -50%); font-size: 2.6em; pointer-events: none; animation: pop 1.3s ease-out forwards; z-index: 9; white-space: nowrap; }
+  @keyframes pop { 0% { transform: translate(-50%, -30%) scale(.4); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 75% { opacity: 1; } 100% { transform: translate(-50%, -110%) scale(1); opacity: 0; } }
+  .title { position: absolute; left: 50%; top: 19%; transform: translateX(-50%); font-size: 2.9em; white-space: nowrap; z-index: 1; }
+  .ctx { position: absolute; left: 12%; top: 17.5%; z-index: 2; font: 900 .95em "Nunito"; background: var(--yel); color: var(--ink); padding: .15em .7em; border-radius: .4em; border: .12em solid var(--ink); transform: rotate(-3deg); }
+  .hint { position: absolute; left: 50%; bottom: 1.2%; transform: translateX(-50%); font: 900 .85em "Nunito"; color: rgba(255,255,255,.65); white-space: nowrap; z-index: 2; }
+  .soon { display: inline-block; font: 900 .5em "Nunito"; background: var(--red); color: #fff; padding: .1em .5em; border-radius: .3em; vertical-align: .4em; margin-left: .3em; }
+
+  /* ---------- Menu B: the bar's chalkboard ---------- */
+  .board { position: absolute; left: 22%; right: 22%; top: 10%; bottom: 8%; border-radius: .8em; border: 1.1em solid #7a4a2a;
+           background: radial-gradient(ellipse at 40% 30%, rgba(255,255,255,.07), transparent 60%), #20302a;
+           box-shadow: inset 0 0 2em rgba(0,0,0,.6), 0 1em 2em rgba(0,0,0,.5); }
+  .board::after { content: ""; position: absolute; inset: 0; border-radius: .3em; opacity: .5;
+           background: repeating-linear-gradient(-20deg, rgba(255,255,255,.025) 0 .5em, transparent .5em 1.6em); pointer-events: none; }
+  .board .bt { position: absolute; left: 50%; top: 5%; transform: translateX(-50%) rotate(-2deg); font: 2.6em "Caveat Brush"; color: #f4f0e6; white-space: nowrap; text-shadow: 0 0 .06em rgba(255,255,255,.5); }
+  .board .bt b { font-family: "Bowlby One"; font-weight: 400; font-size: .9em; color: #ffd23f; }
+  .board ul { position: absolute; left: 14%; right: 10%; top: 21%; margin: 0; padding: 0; list-style: none; }
+  .board li { position: relative; font: 2em/1.42 "Caveat Brush"; color: #eef3ea; padding-left: 1.4em; transition: transform .2s, color .2s; }
+  .board li::before { content: ""; position: absolute; left: .1em; top: .38em; width: .78em; height: .78em; border-radius: 50%; background: radial-gradient(circle at 32% 26%, #fff 0 9%, transparent 10%), #f6f1e4; transform: scale(0); transition: transform .25s cubic-bezier(.3,1.6,.5,1); box-shadow: 0 .1em .15em rgba(0,0,0,.5); }
+  .board li.focus { color: #ffd23f; transform: translateX(.4em) rotate(-1deg); }
+  .board li.focus::before { transform: scale(1); }
+  .board li.focus::after { content: ""; position: absolute; left: 1.4em; right: 30%; bottom: .18em; height: .1em; background: #ffd23f; border-radius: .1em; opacity: .8; }
+  .board li small { font-size: .5em; color: #aab4a8; margin-left: .5em; }
+  .board .price { position: absolute; right: 6%; bottom: 4%; font: 1.5em "Caveat Brush"; color: #aab4a8; transform: rotate(-4deg); }
+
+  /* ---------- Slots (new / load) ---------- */
+  .slots { position: absolute; left: 14%; right: 14%; top: 31%; display: flex; gap: 1.6em; justify-content: center; z-index: 1; }
+  .slot-card { flex: 1; max-width: 15em; padding: 1em 1.1em 1.1em; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+  .slot-card:nth-child(1) { transform: rotate(-2deg); } .slot-card:nth-child(3) { transform: rotate(2deg); }
+  .slot-card.focus { transform: translateY(-.6em) scale(1.06); background: #fff; }
+  .slot-card h4 { margin: 0; font: 1.2em "Bowlby One"; white-space: nowrap; }
+  .slot-card .ch { font: 1.15em "Titan One"; margin: .3em 0 .1em; }
+  .slot-card .meta { font: 900 .9em "Nunito"; opacity: .65; }
+  .slot-card .bar { height: .5em; border-radius: 1em; background: rgba(28,21,16,.12); margin-top: .7em; overflow: hidden; }
+  .slot-card .bar i { display: block; height: 100%; background: var(--p1); border-radius: 1em; }
+  .slot-card.empty { background: rgba(255,246,227,.55); border-style: dashed; box-shadow: none; }
+  .slot-card.empty h4 { opacity: .6; }
+  .slot-card .plus { font: 3em/1 "Bowlby One"; opacity: .35; text-align: center; margin: .2em 0; }
+
+  /* ---------- Level postcards ---------- */
+  .levels { position: absolute; left: 13%; right: 13%; top: 30%; display: flex; gap: 1.6em; justify-content: center; z-index: 1; }
+  .lv { flex: 1; max-width: 15em; padding: .5em .5em .8em; transition: transform .25s cubic-bezier(.3,1.6,.5,1); position: relative; }
+  .lv:nth-child(1) { transform: rotate(-3deg); } .lv:nth-child(2) { transform: rotate(1deg); } .lv:nth-child(3) { transform: rotate(3deg); }
+  .lv.focus { transform: translateY(-.7em) scale(1.07) rotate(0); }
+  .lv .pic { aspect-ratio: 4 / 3; border-radius: .45em; position: relative; overflow: hidden; border: .12em solid var(--ink); }
+  .lv h4 { margin: .45em .2em 0; font: 1.45em "Bowlby One"; }
+  .lv p { margin: .1em .25em 0; font: 900 .85em "Nunito"; opacity: .7; }
+  .lv.locked .pic { filter: grayscale(.7) brightness(.7); }
+  .lv .stamp { position: absolute; right: -.4em; top: 1.2em; background: var(--red); color: #fff; font: 1em "Bowlby One"; padding: .15em .6em; border: .12em solid var(--ink); transform: rotate(10deg); border-radius: .3em; }
+  .pic.bar { background: linear-gradient(transparent 62%, #5d2f19 62% 70%, #3e200f 70%), radial-gradient(circle at 25% 30%, #ff5fc0 0 .5em, transparent 1.6em), radial-gradient(circle at 75% 25%, #ffd23f 0 .4em, transparent 1.5em), linear-gradient(#4d3121, #26180f); }
+  .pic.bar::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 14%; height: 22%; border-radius: .3em; background: #1d7f4b; box-shadow: 0 0 0 .3em #6b3a1e; }
+  .pic.prison { background: repeating-linear-gradient(90deg, transparent 0 1.3em, #2b2f33 1.3em 1.6em), radial-gradient(circle at 50% 10%, rgba(140,255,170,.45), transparent 60%), linear-gradient(#5a6168, #2b2f33); }
+  .pic.space { background: radial-gradient(circle at 70% 35%, #ffb36b 0 1.4em, transparent 1.5em), radial-gradient(circle at 20% 20%, #fff 0 .08em, transparent .1em), radial-gradient(circle at 40% 70%, #fff 0 .08em, transparent .1em), radial-gradient(circle at 85% 80%, #fff 0 .1em, transparent .12em), radial-gradient(circle at 10% 60%, #fff 0 .06em, transparent .08em), linear-gradient(#0b1640, #281450); }
+  .pic.space::after { content: ""; position: absolute; left: 18%; top: 48%; width: 1.4em; height: 1.4em; border-radius: 50%; background: #f4c20d; box-shadow: 2.6em -.8em 0 -.1em #2f7cf6, 4.6em .6em 0 -.2em #ef4a3c; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-.5em); } }
+
+  /* ---------- Lobby ---------- */
+  .slot { position: absolute; width: 8em; height: 8em; border-radius: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; }
+  .slot.empty { border: .3em dashed rgba(255,255,255,.55); animation: pulse 1.4s ease-in-out infinite; }
+  .slot.empty.focus { border-color: #fff; background: rgba(255,255,255,.08); }
+  @keyframes pulse { 50% { transform: translate(-50%, -50%) scale(1.06); } }
+  .slot .pb { width: 7em; height: 7em; position: relative; left: auto; top: auto; transform: none; }
+  .slot .pb::after { font-size: 1.4em; }
+
+  /* ---------- Settings: key bindings ---------- */
+  .panel { position: absolute; left: 9%; right: 9%; top: 5%; bottom: 5%; z-index: 2; padding: .9em 1.6em; display: flex; flex-direction: column; }
+  .panel h2 { margin: 0; font: 1.9em/1.1 "Bowlby One"; }
+  .tabs { display: flex; gap: .5em; margin: .4em 0 .6em; }
+  .tabs span { font: .95em/1.3 "Titan One"; padding: .2em .9em; border-radius: .5em; border: .12em solid var(--ink); background: #fff; }
+  .tabs span.on { background: var(--yel); box-shadow: 0 .18em 0 var(--ink); }
+  .tabs span.off { opacity: .45; border-style: dashed; }
+  .binds { display: grid; grid-template-columns: 1fr 9em 9em; gap: .3em .6em; align-items: center; font: 900 .92em "Nunito"; }
+  .binds .hd { font: .95em "Titan One"; opacity: .6; }
+  .binds .act small { font-size: .82em; opacity: .55; font-weight: 700; margin-left: .5em; }
+  .cap { display: flex; justify-content: center; align-items: center; height: 1.75em; border-radius: .45em; background: #fff; border: .12em solid var(--ink); box-shadow: 0 .16em 0 var(--ink); font: 1em "Titan One"; white-space: nowrap; transition: transform .15s, background .15s; }
+  .cap.fixed { background: transparent; box-shadow: none; border-style: dashed; opacity: .55; }
+  .cap.focus { background: var(--yel); transform: scale(1.06); }
+  .cap.wait { background: var(--ink); color: var(--yel); animation: blink .8s steps(2, jump-none) infinite; }
+  .cap.flash { animation: flash .6s ease; }
+  @keyframes flash { 0% { background: #30b566; color: #fff; } 100% { background: #fff; } }
+  .panel .foot { margin-top: auto; display: flex; gap: .8em; align-items: center; }
+  .pill { font: 1.1em "Titan One"; padding: .3em 1em; border-radius: 2em; border: .12em solid var(--ink); background: #fff; box-shadow: 0 .18em 0 var(--ink); transition: transform .15s; }
+  .pill.focus { background: var(--yel); transform: scale(1.06); }
+  .panel .msg { font: 900 .95em "Nunito"; opacity: .7; margin-left: auto; }
+
+  /* ---------- In game (Synthèse HUD, simplified) ---------- */
+  .halves { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .3em; background: var(--ink); }
+  .half { position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 20%, rgba(255,214,140,.25), transparent 60%), linear-gradient(#3a271c 0 42%, #4a3122 42%); }
+  .half .tbl { position: absolute; left: 6%; right: 6%; top: 40%; bottom: 6%; clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%); background: var(--wood); }
+  .half .tbl::after { content: ""; position: absolute; inset: 6% 5% 7%; clip-path: polygon(17% 0, 83% 0, 100% 100%, 0 100%); background: radial-gradient(ellipse at 50% 60%, var(--felt), var(--felt-d)); }
+  .half .gb { position: absolute; width: 2.2em; height: 2.2em; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1; background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.9) 0 7%, transparent 8%), var(--c); }
+  .half.idle::after { content: ""; position: absolute; inset: 0; background: rgba(10,6,4,.28); }
+  .plate { position: absolute; left: 3%; top: 4%; display: flex; align-items: center; gap: .5em; padding: .3em .7em .3em .3em; z-index: 2; }
+  .plate .who { width: 2.6em; height: 2.6em; border-radius: .55em; display: grid; place-items: center; font: 1.1em "Bowlby One"; color: #fff; border: .15em solid var(--ink); }
+  .plate span.t { font: 900 .95em "Nunito"; }
+  .turn-tag { position: absolute; left: 4%; top: 17%; z-index: 2; font: 1.5em "Bowlby One"; padding: .15em .6em; border-radius: .4em; transform: rotate(-4deg); border: .12em solid var(--ink); box-shadow: 0 .2em 0 var(--ink); background: var(--yel); color: var(--ink); }
+  .half.idle .turn-tag { background: rgba(255,255,255,.15); color: #fff; border-color: transparent; box-shadow: none; font-size: 1.1em; }
+  .esc { position: absolute; right: 2%; top: 2%; z-index: 3; font: 900 .85em "Nunito"; color: #fff; background: rgba(0,0,0,.45); padding: .3em .7em; border-radius: .5em; }
+  .esc kbd { font: inherit; background: #fff; color: var(--ink); padding: 0 .35em; border-radius: .25em; }
+
+  /* ---------- Pause ---------- */
+  .frozen { position: absolute; inset: -2%; filter: blur(.35em) brightness(.45) saturate(.7); }
+  .pause-who { position: absolute; left: 50%; top: 9%; transform: translateX(-50%); z-index: 3; font: 900 1.05em "Nunito"; color: #fff; background: var(--p1); border: .14em solid var(--ink); padding: .2em .8em; border-radius: .5em; white-space: nowrap; }
+  .pause-card { position: absolute; left: 50%; top: 52%; width: 30%; transform: translate(-50%, -50%) rotate(-1.5deg); z-index: 3; padding: 1.2em 1.4em 1.4em; animation: pin .45s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes pin { from { transform: translate(-50%, -50%) scale(.3) rotate(-12deg); opacity: 0; } }
+  .pause-card h3 { margin: 0 0 .5em; font: 3em/1 "Bowlby One"; text-align: center; }
+  .pause-card .btn-ball { position: relative; left: auto; top: auto; transform: none; margin: .45em 0; background: rgba(0,0,0,.18); }
+  .pause-card .btn-ball.focus { transform: scale(1.06); background: var(--yel); box-shadow: 0 .18em 0 var(--ink); }
+  .timeout { position: absolute; left: 16%; right: 16%; top: 17%; bottom: 9%; z-index: 3; animation: drop .5s cubic-bezier(.2,1.4,.4,1) both; }
+  .timeout .lab { font-size: 1.3em; }
+  #pause-b .pause-who { top: 4%; }
+  @keyframes drop { from { transform: translateY(-110%) rotate(-4deg); } }
+  .timeout .felt, .timeout .rail { inset: 0; }
+  .timeout .rail { border-width: 1.2em; }
+  .timeout .pocket { width: 2.8em; height: 2.8em; }
+  .confirm { position: absolute; left: 50%; top: 50%; width: 40%; transform: translate(-50%, -50%) rotate(1deg); z-index: 4; padding: 1.3em 1.5em; text-align: center; animation: pin .4s cubic-bezier(.2,1.5,.4,1) both; }
+  .confirm h3 { margin: 0; font: 2.1em "Bowlby One"; }
+  .confirm p { margin: .4em 0 1em; font: 900 1.05em "Nunito"; opacity: .75; }
+  .confirm .row { display: flex; gap: 1em; justify-content: center; }
+  .confirm .btn-ball { position: relative; left: auto; top: auto; transform: none; background: rgba(0,0,0,.15); color: var(--ink); }
+  .confirm .btn-ball.focus { transform: scale(1.07); background: var(--yel); }
+</style>
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div><h1>Parcours des menus</h1><p>Le parcours complet demandé le 05/10, dans le langage <b>Synthèse</b> validé (on vise une bille et on tire, cartes « pop », craie). Deux variantes du menu principal et deux de la pause sont à comparer ; les autres écrans sont communs.</p></div>
+    <a href="../ui.html">← Toutes les propositions</a>
+  </div>
+
+  <div class="stage-box"><div class="stage">
+
+    <!-- MENU A: balls on the table -->
+    <section class="scr" id="menu" data-label="Menu A · billes">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div><div class="lampshade"><i></i></div>
+      <span class="pocket" style="left:12.6%;top:19%"></span><span class="pocket" style="left:50%;top:17%"></span><span class="pocket" style="left:87.4%;top:19%"></span>
+      <span class="pocket" style="left:12.6%;top:90.5%"></span><span class="pocket" style="left:50%;top:92.5%"></span><span class="pocket" style="left:87.4%;top:90.5%"></span>
+      <div class="logo anim"><span class="small">Untitled</span><span class="big bowl">POOL GAME</span></div>
+      <span class="pb f default" style="--c:#f4c20d;left:30%;top:47%" data-n="1" data-go="new"></span><span class="lab chalk" style="left:30%;top:54%">Nouvelle partie</span>
+      <span class="pb f" style="--c:#1f4fd1;left:50%;top:47%" data-n="2" data-go="load"></span><span class="lab chalk" style="left:50%;top:54%">Charger</span>
+      <span class="pb f" style="--c:#d8261c;left:70%;top:47%" data-n="3" data-action="jff" data-go="level"></span><span class="lab chalk" style="left:70%;top:54%">Just for fun</span>
+      <span class="pb st f" style="--c:#6a2c91;left:30%;top:70%" data-n="12" data-go="multi"></span><span class="lab chalk" style="left:30%;top:77%">Multijoueur</span>
+      <span class="pb f" style="--c:#138a3a;left:50%;top:70%" data-n="6" data-action="toSettings" data-go="settings"></span><span class="lab chalk" style="left:50%;top:77%">Réglages</span>
+      <span class="pb f" style="--c:#111;left:70%;top:70%" data-n="8" data-action="quit"></span><span class="lab chalk" style="left:70%;top:77%">Quitter</span>
+      <div class="aim"></div><div class="cue-stick"></div>
+      <span class="pb cue" style="left:84%;top:84%;width:3.2em;height:3.2em"></span>
+      <div class="hint">Viser : souris · flèches · stick — Tirer : clic · Entrée · A</div>
+    </section>
+
+    <!-- MENU B: the bar's chalkboard -->
+    <section class="scr" id="menu-b" data-label="Menu B · ardoise">
+      <div class="room"></div>
+      <div class="board anim">
+        <div class="bt">Ce soir au <b>POOL GAME</b></div>
+        <ul>
+          <li class="f default" data-go="new">Nouvelle partie <small>histoire + tuto</small></li>
+          <li class="f" data-go="load">Charger une partie</li>
+          <li class="f" data-action="jff" data-go="level">Just for fun <small>une partie, tout de suite</small></li>
+          <li class="f" data-go="multi">Multijoueur <small>local · en ligne</small></li>
+          <li class="f" data-action="toSettings" data-go="settings">Réglages</li>
+          <li class="f" data-action="quit">Quitter</li>
+        </ul>
+        <div class="price">Happy hour : 2 billes pour 1</div>
+      </div>
+      <div class="hint">Choisir : flèches · souris · stick — Valider : Entrée · A</div>
+    </section>
+
+    <!-- NEW GAME -->
+    <section class="scr" id="new" data-label="Nouvelle partie" data-back="menu">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div>
+      <div class="title chalk">Nouvelle partie</div>
+      <div class="slots">
+        <div class="slot-card pop-card f default" data-action="newSlot"><h4>Emplacement 1</h4><div class="plus">+</div><div class="meta">Libre</div></div>
+        <div class="slot-card pop-card f" data-action="newSlot" data-used="1"><h4>Emplacement 2</h4><div class="ch">Chapitre 2 — Le bar</div><div class="meta">1 h 12 · hier · sera écrasé</div><div class="bar"><i style="width:35%"></i></div></div>
+        <div class="slot-card pop-card f" data-action="newSlot"><h4>Emplacement 3</h4><div class="plus">+</div><div class="meta">Libre</div></div>
+      </div>
+      <div class="cube" style="left:28%;right:28%;top:70%;transform:rotate(-1deg)"><p><b>Histoire</b> et <b>tutoriel</b> à venir : on commencera par apprendre à tenir la queue… et à s'en servir pour autre chose.</p></div>
+      <div class="hint">Échap · B : retour</div>
+    </section>
+
+    <!-- LOAD -->
+    <section class="scr" id="load" data-label="Charger" data-back="menu">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div>
+      <div class="title chalk">Charger une partie</div>
+      <div class="slots">
+        <div class="slot-card pop-card f default" data-action="loadSlot" data-used="1"><h4>Emplacement 1</h4><div class="ch">Chapitre 3 — La prison</div><div class="meta">2 h 40 · aujourd'hui</div><div class="bar"><i style="width:60%;background:#30b566"></i></div></div>
+        <div class="slot-card pop-card f" data-action="loadSlot" data-used="1"><h4>Emplacement 2</h4><div class="ch">Chapitre 2 — Le bar</div><div class="meta">1 h 12 · hier</div><div class="bar"><i style="width:35%"></i></div></div>
+        <div class="slot-card pop-card empty f" data-action="loadSlot"><h4>Emplacement 3</h4><div class="plus">–</div><div class="meta">Vide</div></div>
+      </div>
+      <div class="hint">Échap · B : retour</div>
+    </section>
+
+    <!-- LEVEL (Just for fun and multiplayer) -->
+    <section class="scr" id="level" data-label="Niveau" data-back="menu">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div>
+      <span class="ctx" id="ctx-level">Just for fun</span>
+      <div class="title chalk">On joue où ?</div>
+      <div class="levels">
+        <div class="lv pop-card f default" data-go="mode"><div class="pic bar"></div><h4>Le bar</h4><p>Néons, billard, bagarre</p></div>
+        <div class="lv pop-card locked f" data-action="locked"><div class="pic prison"></div><h4>La prison</h4><p>Lumières qui sautent… et un gardien</p><span class="stamp">Bientôt</span></div>
+        <div class="lv pop-card locked f" data-action="locked"><div class="pic space"></div><h4>Station spatiale</h4><p>Billes en apesanteur</p><span class="stamp">Bientôt</span></div>
+      </div>
+      <div class="hint">Échap · B : retour</div>
+    </section>
+
+    <!-- MODE / game type -->
+    <section class="scr" id="mode" data-label="Type de partie" data-back="level">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div><div class="lampshade"><i></i></div>
+      <span class="ctx" id="ctx-mode">Just for fun · Le bar</span>
+      <div class="chalk" style="position:absolute;left:15%;top:24%;font-size:2.4em;z-index:1">Quel type de partie ?</div>
+      <span class="pb f default" style="--c:#111;left:19%;top:46%" data-n="8" data-go="game" data-mode="Classique" data-rules="8-ball : pleines contre rayées, la 8 en dernier dans la poche annoncée." data-opt="Sans pouvoirs"></span><span class="lab chalk" style="left:19%;top:53%">Classique</span>
+      <span class="pb st f" style="--c:#6a2c91;left:35%;top:46%" data-n="12" data-go="game" data-mode="Pouvoirs" data-rules="Les règles du 8-ball, plus des caisses et une bille à pouvoir sur la table." data-opt="Attaque · Défense · Effet"></span><span class="lab chalk" style="left:35%;top:53%">Pouvoirs</span>
+      <span class="pb st f" style="--c:#f4c20d;left:19%;top:71%" data-n="9" data-go="game" data-mode="9-ball" data-rules="Touche toujours la plus petite bille. Qui rentre la 9 gagne." data-opt="Classique"></span><span class="lab chalk" style="left:19%;top:78%">9-ball</span>
+      <span class="pb f" style="--c:#d8261c;left:35%;top:71%" data-n="3" data-go="game" data-mode="14.1" data-rules="Chaque bille rentrée rapporte 1 point." data-opt="Premier à 25 ◀ ▶"></span><span class="lab chalk" style="left:35%;top:78%">14.1</span>
+      <div class="cube" style="left:51%;top:34%;width:33%;transform:rotate(2deg)"><h3 id="m-name">Classique</h3><p id="m-rules"></p><span class="opt" id="m-opt"></span></div>
+      <span class="pb cue" style="left:50%;top:84%;width:2.6em;height:2.6em"></span><div class="aim"></div><div class="cue-stick"></div>
+      <div class="hint">Échap · B : retour</div>
+    </section>
+
+    <!-- MULTIPLAYER -->
+    <section class="scr" id="multi" data-label="Multijoueur" data-back="menu">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div><div class="lampshade"><i></i></div>
+      <div class="title chalk">Multijoueur</div>
+      <span class="pb f default" style="--c:#2f7cf6;left:36%;top:52%;width:7em;height:7em" data-n="J1" data-action="local" data-go="lobby"></span><span class="lab chalk" style="left:36%;top:64%">Local<small>écran partagé · 2 manettes</small></span>
+      <span class="pb st f" style="--c:#ef4a3c;left:64%;top:52%;width:7em;height:7em" data-n="⇄" data-go="online"></span><span class="lab chalk" style="left:64%;top:64%">En ligne<small>héberger · rejoindre</small></span>
+      <span class="pb cue" style="left:50%;top:86%;width:2.6em;height:2.6em"></span><div class="aim"></div><div class="cue-stick"></div>
+      <div class="hint">Échap · B : retour</div>
+    </section>
+
+    <!-- LOBBY (local) -->
+    <section class="scr" id="lobby" data-label="Joueurs (local)" data-back="multi">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div>
+      <div class="title chalk">Qui joue ce soir ?</div>
+      <div class="slot" style="left:32%;top:48%"><span class="pb" style="--c:#2f7cf6" data-n="J1"></span></div>
+      <div class="chalk" style="position:absolute;left:32%;top:66%;transform:translateX(-50%);font-size:1.4em;text-align:center">Clavier &amp; souris ✓</div>
+      <div class="slot empty f" id="p2slot" style="left:68%;top:48%" data-action="join"><span class="chalk" style="font-size:1.5em;text-align:center">J2<br>appuie !</span></div>
+      <div class="chalk" id="p2lab" style="position:absolute;left:68%;top:66%;transform:translateX(-50%);font-size:1.4em;text-align:center">Une touche ou un bouton</div>
+      <div class="btn-ball f default" id="go-level" style="left:50%;top:83%" data-go="level"><span class="pb" style="--c:#f07b12" data-n="5"></span>C'est parti</div>
+      <div class="hint">Échap · B : retour</div>
+    </section>
+
+    <!-- ONLINE -->
+    <section class="scr" id="online" data-label="En ligne" data-back="multi">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div><div class="lamplight"></div><div class="lampshade"><i></i></div>
+      <div class="title chalk">En ligne <span class="soon">plus tard</span></div>
+      <span class="pb f default" style="--c:#30b566;left:34%;top:50%;width:6em;height:6em" data-n="H" data-action="host" data-go="level"></span><span class="lab chalk" style="left:34%;top:61%">Héberger<small>tu donnes un code à ton ami</small></span>
+      <span class="pb f" style="--c:#f07b12;left:66%;top:50%;width:6em;height:6em" data-n="R" data-action="joinOnline" data-go="level"></span><span class="lab chalk" style="left:66%;top:61%">Rejoindre<small>tu tapes son code</small></span>
+      <div class="cube" style="left:56%;right:16%;top:74%;transform:rotate(-1deg);text-align:center"><p>Code du salon : <b style="font:1.4em 'Bowlby One';letter-spacing:.15em">7K3P</b></p></div>
+      <span class="pb cue" style="left:22%;top:84%;width:2.4em;height:2.4em"></span><div class="aim"></div><div class="cue-stick"></div>
+    </section>
+
+    <!-- SETTINGS: key bindings -->
+    <section class="scr" id="settings" data-label="Réglages · touches" data-back="menu">
+      <div class="room"></div><div class="tshadow"></div><div class="felt"></div><div class="rail"></div>
+      <div class="panel pop-card">
+        <h2>Réglages</h2>
+        <div class="tabs"><span class="on">Touches</span><span class="off">Audio</span><span class="off">Vidéo</span><span class="off">Jeu</span></div>
+        <div class="binds" id="binds"></div>
+        <div class="foot">
+          <span class="pill f" data-action="resetBinds">Réinitialiser</span>
+          <span class="pill f" data-action="back">Retour</span>
+          <span class="msg" id="bind-msg">Entrée sur une touche pour la changer · Échap : retour</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- IN GAME -->
+    <section class="scr" id="game" data-label="En jeu" data-back="pause">
+      <div class="halves">
+        <div class="half"><div class="tbl"></div><span class="gb" style="--c:#f5f5f5;left:48%;top:68%"></span><span class="gb" style="--c:#d8261c;left:58%;top:58%"></span>
+          <div class="plate pop-card"><span class="who" style="background:var(--p1)">J1</span><span class="t">Pleines</span></div><div class="turn-tag">À toi !</div></div>
+        <div class="half idle"><div class="tbl"></div><span class="gb" style="--c:#f5f5f5;left:40%;top:62%"></span><span class="gb" style="--c:#f07b12;left:55%;top:72%"></span>
+          <div class="plate pop-card"><span class="who" style="background:var(--p2)">J2</span><span class="t">Rayées</span></div><div class="turn-tag">Tour de J1</div></div>
+      </div>
+      <div class="esc"><kbd>Échap</kbd> / <kbd>Start</kbd> : pause</div>
+    </section>
+
+    <!-- PAUSE A: card -->
+    <section class="scr" id="pause" data-label="Pause A · carte" data-back="game">
+      <div class="frozen"><div class="halves"><div class="half"><div class="tbl"></div></div><div class="half"><div class="tbl"></div></div></div></div>
+      <div class="pause-who">J1 a mis la partie en pause</div>
+      <div class="pause-card pop-card">
+        <h3>Pause</h3>
+        <div class="btn-ball f default" data-go="game" style="color:var(--ink)"><span class="pb" style="--c:#f4c20d" data-n="1"></span>Reprendre</div>
+        <div class="btn-ball f" data-action="toSettings" data-from="pause" data-go="settings" style="color:var(--ink)"><span class="pb" style="--c:#138a3a" data-n="6"></span>Réglages</div>
+        <div class="btn-ball f" data-go="confirm" style="color:var(--ink)"><span class="pb" style="--c:#111" data-n="8"></span>Menu principal</div>
+      </div>
+      <div class="hint">Échap · Start : reprendre</div>
+    </section>
+
+    <!-- PAUSE B: time out, a small table drops in -->
+    <section class="scr" id="pause-b" data-label="Pause B · temps mort" data-back="game">
+      <div class="frozen"><div class="halves"><div class="half"><div class="tbl"></div></div><div class="half"><div class="tbl"></div></div></div></div>
+      <div class="pause-who">J1 a mis la partie en pause</div>
+      <div class="timeout">
+        <div class="felt"></div><div class="rail"></div>
+        <span class="pocket" style="left:3%;top:5%"></span><span class="pocket" style="left:50%;top:3%"></span><span class="pocket" style="left:97%;top:5%"></span>
+        <span class="pocket" style="left:3%;top:95%"></span><span class="pocket" style="left:50%;top:97%"></span><span class="pocket" style="left:97%;top:95%"></span>
+        <div class="chalk" style="position:absolute;left:50%;top:14%;transform:translateX(-50%) rotate(-3deg);font-size:2.8em;white-space:nowrap">Temps mort !</div>
+        <span class="pb f default" style="--c:#f4c20d;left:22%;top:50%" data-n="1" data-go="game"></span><span class="lab chalk" style="left:22%;top:60%">Reprendre</span>
+        <span class="pb f" style="--c:#138a3a;left:50%;top:50%" data-n="6" data-action="toSettings" data-from="pause-b" data-go="settings"></span><span class="lab chalk" style="left:50%;top:60%">Réglages</span>
+        <span class="pb f" style="--c:#111;left:78%;top:50%" data-n="8" data-go="confirm"></span><span class="lab chalk" style="left:78%;top:60%">Menu principal</span>
+        <span class="pb cue" style="left:50%;top:84%;width:2.4em;height:2.4em"></span><div class="aim"></div><div class="cue-stick"></div>
+      </div>
+      <div class="hint">Échap · Start : reprendre</div>
+    </section>
+
+    <!-- CONFIRM -->
+    <section class="scr" id="confirm" data-label="Quitter ?" data-back="pause">
+      <div class="frozen"><div class="halves"><div class="half"><div class="tbl"></div></div><div class="half"><div class="tbl"></div></div></div></div>
+      <div class="confirm pop-card">
+        <h3>Retour au menu ?</h3>
+        <p>La partie en cours sera perdue (sauf en histoire : on reprend au dernier point de sauvegarde).</p>
+        <div class="row">
+          <div class="btn-ball f default" data-action="cancelQuit"><span class="pb" style="--c:#f4c20d" data-n="1"></span>Non, je reste</div>
+          <div class="btn-ball f" data-action="toMenu"><span class="pb" style="--c:#111" data-n="8"></span>Oui, quitter</div>
+        </div>
+      </div>
+    </section>
+
+  </div></div>
+
+  <div class="proto-notes">
+    <div><b>Menu principal : deux variantes</b>A — la table validée, six billes (on vise et on tire). B — l'ardoise du bar : une liste écrite à la craie, la bille blanche sert de curseur ; plus lisible avec six entrées et des sous-titres, mais moins « jeu ». Les deux mènent aux mêmes écrans.</div>
+    <div><b>Parcours</b>Nouvelle partie → emplacement (histoire et tuto à venir). Charger → emplacements. Just for fun → niveau → type de partie (Classique, Pouvoirs, 9-ball, 14.1). Multijoueur → Local (arrivée de J2) ou En ligne (héberger / rejoindre avec un code) → niveau → type de partie.</div>
+    <div><b>Réglages</b>Pour l'instant seulement les touches : chaque action a sa touche clavier et son bouton manette. Entrée sur une case, puis appuie sur la touche voulue (vraiment, dans ce prototype ; la manette marche aussi si elle est branchée). Une touche déjà prise est échangée. Audio, vidéo et jeu sont prévus.</div>
+    <div><b>Pause : deux variantes</b>Échap / Start en jeu. A — une carte « Pause » au centre. B — « Temps mort ! » : une petite table tombe sur l'écran figé, on tire sur Reprendre, Réglages ou Menu principal. En écran partagé, la pause arrête les deux joueurs et indique qui l'a demandée ; le retour au menu demande confirmation.</div>
+  </div>
+</div>
+
+<script>
+Site.renderHeader('ui', '../');
+const stageEl = document.querySelector('.stage');
+const rel = el => { const s = stageEl.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height / 2, w: r.width }; };
+const $ = id => document.getElementById(id);
+
+// Aim the cue of a screen (or of its .timeout table) at a target ball.
+function aim(scr, target) {
+  const host = target.closest('.timeout') || scr;
+  const cue = host.querySelector('.pb.cue'), stick = host.querySelector('.cue-stick'), line = host.querySelector('.aim');
+  if (!cue || !stick || !line) return;
+  const hr = host === scr ? { x: 0, y: 0 } : (() => { const s = stageEl.getBoundingClientRect(), r = host.getBoundingClientRect(); return { x: r.left - s.left, y: r.top - s.top }; })();
+  const c = rel(cue), t = rel(target.matches('.pb') ? target : target.querySelector('.pb') || target);
+  const ang = Math.atan2(t.y - c.y, t.x - c.x), deg = ang * 180 / Math.PI, dist = Math.hypot(t.x - c.x, t.y - c.y);
+  stick.style.left = (c.x - hr.x - Math.cos(ang) * c.w * .7) + 'px'; stick.style.top = (c.y - hr.y - Math.sin(ang) * c.w * .7) + 'px';
+  stick.style.transform = `translateY(-50%) rotate(${deg + 180}deg)`;
+  line.style.left = (c.x - hr.x) + 'px'; line.style.top = (c.y - hr.y) + 'px'; line.style.width = Math.max(0, dist - t.w / 2) + 'px';
+  line.style.transform = `rotate(${deg}deg)`;
+}
+// Stick draws back and strikes, cue ball rolls to the target, target drops in the nearest pocket.
+function shoot(scr, target, done) {
+  const host = target.closest('.timeout') || scr;
+  const cue = host.querySelector('.pb.cue'), stick = host.querySelector('.cue-stick');
+  const ball = target.matches('.pb') ? target : target.querySelector('.pb');
+  if (!cue || !stick || !ball) return done();
+  const c = rel(cue), t = rel(ball), base = stick.style.transform;
+  stick.animate([{ transform: base }, { transform: base + ' translateX(2.5em)' }, { transform: base + ' translateX(-1.2em)' }], { duration: 420, easing: 'ease-in' });
+  setTimeout(() => {
+    cue.animate([{ transform: 'translate(-50%,-50%)' }, { transform: `translate(calc(-50% + ${t.x - c.x}px), calc(-50% + ${t.y - c.y}px))` }], { duration: 260, easing: 'ease-in', fill: 'forwards' });
+    const pockets = [...host.querySelectorAll('.pocket')].map(rel);
+    const p = pockets.length ? pockets.sort((a, b) => Math.hypot(a.x - t.x, a.y - t.y) - Math.hypot(b.x - t.x, b.y - t.y))[0] : { x: t.x, y: -200 };
+    setTimeout(() => {
+      ball.animate([{ transform: 'translate(-50%,-50%) scale(1.1)' }, { transform: `translate(calc(-50% + ${p.x - t.x}px), calc(-50% + ${p.y - t.y}px)) scale(.3)`, opacity: .2 }], { duration: 520, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' });
+      setTimeout(done, 600);
+    }, 240);
+  }, 400);
+}
+const resetShots = scr => scr.querySelectorAll('.pb').forEach(b => b.getAnimations().forEach(a => a.cancel()));
+function popAt(scr, text, x, y, color) {
+  const d = document.createElement('div'); d.className = 'pop chalk'; d.textContent = text; d.style.left = x; d.style.top = y; if (color) d.style.color = color;
+  scr.appendChild(d); setTimeout(() => d.remove(), 1350);
+}
+
+// ---- Flow state ----
+let home = 'menu';            // which main-menu variant leads here
+let ctx = 'Just for fun';     // context shown on the level / mode screens
+let level = 'Le bar';
+let pauseScreen = 'pause';
+
+// ---- Key bindings (settings) ----
+const DEFAULT_BINDS = [
+  { id: 'move', act: 'Se déplacer', sub: 'en visée : point de frappe', kb: 'Z Q S D', pad: 'Stick G', fixed: true },
+  { id: 'look', act: 'Regarder', sub: 'en visée : tourner autour de la bille', kb: 'Souris', pad: 'Stick D', fixed: true },
+  { id: 'interact', act: 'Interagir', sub: 'ramasser · viser · valider', kb: 'E', pad: 'Y' },
+  { id: 'shoot', act: 'Tirer · lancer · coup de queue', sub: 'maintenir puis relâcher', kb: 'Clic G', pad: 'X' },
+  { id: 'punch', act: 'Coup de poing', sub: 'mains vides', kb: 'Clic G', pad: 'RB' },
+  { id: 'kick', act: 'Coup de pied', sub: 'maintenir : spartiate', kb: 'Clic D', pad: 'RT' },
+  { id: 'power', act: 'Pouvoir', sub: 'mode Pouvoirs', kb: 'F', pad: 'B' },
+  { id: 'jump', act: 'Sauter', sub: 'prévu', kb: 'Espace', pad: 'A' },
+  { id: 'pause', act: 'Pause', sub: '', kb: 'Échap', pad: 'Start' },
+];
+let binds = JSON.parse(JSON.stringify(DEFAULT_BINDS));
+// Keyboard punch shares the shot's button on purpose (context decides).
+const SHARED = new Set(['shoot|punch', 'punch|shoot']);
+function renderBinds() {
+  $('binds').innerHTML = '<span class="hd">Action</span><span class="hd" style="text-align:center">Clavier / souris</span><span class="hd" style="text-align:center">Manette</span>' +
+    binds.map(b => `<span class="act">${b.act}${b.sub ? `<small>${b.sub}</small>` : ''}</span>` +
+      ['kb', 'pad'].map(dev => b.fixed
+        ? `<span class="cap fixed" title="Pas modifiable ici">${b[dev]}</span>`
+        : `<span class="cap f" data-action="bind" data-id="${b.id}" data-dev="${dev}">${b[dev]}</span>`).join('')).join('');
+}
+const KEYNAMES = { ' ': 'Espace', escape: 'Échap', enter: 'Entrée', tab: 'Tab', shift: 'Maj', control: 'Ctrl', alt: 'Alt', backspace: 'Retour', arrowup: '↑', arrowdown: '↓', arrowleft: '←', arrowright: '→' };
+const PADNAMES = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'Select', 'Start', 'L3', 'R3', 'Haut', 'Bas', 'Gauche', 'Droite', 'Home'];
+let capture = null;
+function finishBind(label) {
+  const { el, id, dev } = capture; capture = null;
+  // The click that follows a mouse-button assignment must not reach the
+  // prototype (it would start a new assignment on the focused cell).
+  window.__bindDone = performance.now();
+  const b = binds.find(x => x.id === id);
+  let msg = `${b.act} : ${label}`;
+  if (label) {
+    const other = binds.find(x => x.id !== id && !x.fixed && x[dev] === label && !SHARED.has(id + '|' + x.id));
+    if (other) { other[dev] = b[dev]; msg = `« ${label} » était pris par ${other.act} : échangé`; }
+    b[dev] = label;
+  } else msg = 'Annulé';
+  renderBinds();
+  const cell = document.querySelector(`.cap[data-id="${id}"][data-dev="${dev}"]`);
+  if (cell) { Proto.setFocus(cell); if (label) cell.classList.add('flash'); }
+  $('bind-msg').textContent = msg;
+}
+// Capture phase on window: runs before the prototype's own keyboard and
+// click handlers, which then never see the key being assigned.
+addEventListener('keydown', e => {
+  if (!capture || capture.dev !== 'kb') return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const k = e.key.toLowerCase();
+  if (k === 'escape') return finishBind(null);
+  finishBind(KEYNAMES[k] || (e.key.length === 1 ? e.key.toUpperCase() : e.key));
+}, true);
+addEventListener('mousedown', e => {
+  if (!capture || capture.dev !== 'kb') return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  finishBind(['Clic G', 'Clic milieu', 'Clic D'][e.button] || 'Souris ' + e.button);
+}, true);
+['click', 'mouseup'].forEach(t => addEventListener(t, e => { if (capture || performance.now() - (window.__bindDone || 0) < 250) { e.stopImmediatePropagation(); } }, true));
+function pollPad(start) {
+  if (!capture || capture.dev !== 'pad') return;
+  const pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean);
+  for (const p of pads) {
+    const i = p.buttons.findIndex(b => b.pressed);
+    if (i >= 0 && !capture.held.has(p.index + ':' + i)) return finishBind(PADNAMES[i] || 'Bouton ' + i);
+  }
+  if (performance.now() - start > 5000) { finishBind(null); $('bind-msg').textContent = pads.length ? 'Temps écoulé' : 'Aucune manette détectée (branche-la et appuie sur un bouton)'; return; }
+  requestAnimationFrame(() => pollPad(start));
+}
+
+// ---- Prototype hooks ----
+window.PROTO = {
+  enter: {
+    menu: s => { home = 'menu'; resetShots(s); },
+    'menu-b': () => { home = 'menu-b'; },
+    mode: s => { resetShots(s); $('ctx-mode').textContent = `${ctx} · ${level}`; },
+    level: s => { $('ctx-level').textContent = ctx; s.dataset.back = ctx === 'Just for fun' ? home : ctx.includes('Local') ? 'lobby' : 'online'; },
+    online: s => resetShots(s),
+    'pause-b': s => { pauseScreen = 'pause-b'; resetShots(s); },
+    pause: () => { pauseScreen = 'pause'; },
+    confirm: s => { s.dataset.back = pauseScreen; },
+    settings: () => { renderBinds(); $('bind-msg').textContent = 'Entrée sur une touche pour la changer · Échap : retour'; },
+    new: s => { s.dataset.back = home; },
+    load: s => { s.dataset.back = home; },
+    multi: s => { s.dataset.back = home; resetShots(s); },
+  },
+  focus: (el, scr) => {
+    if (el.matches('.pb') || el.closest('.timeout')) aim(scr, el);
+    if (scr.id === 'mode' && el.dataset.mode) {
+      $('m-name').textContent = el.dataset.mode; $('m-rules').textContent = el.dataset.rules; $('m-opt').textContent = el.dataset.opt;
+    }
+  },
+  beforeGo: (el, scr, done) => {
+    if (el.matches('.lv')) level = el.querySelector('h4').textContent;
+    if (scr.querySelector('.cue-stick') && el.matches('.pb')) shoot(scr, el, done); else done();
+  },
+  actions: {
+    jff: () => { ctx = 'Just for fun'; },
+    local: () => { ctx = 'Multijoueur · Local'; },
+    host: () => { ctx = 'En ligne · hôte (code 7K3P)'; },
+    joinOnline: () => { ctx = 'En ligne · invité'; },
+    toSettings: el => { $('settings').dataset.back = el.dataset.from || home; },
+    quit: (el, scr) => popAt(scr, 'À bientôt !', el.style.left || '50%', '40%'),
+    locked: (el, scr) => popAt(scr, 'Bientôt !', '50%', '28%', '#ffd23f'),
+    newSlot: (el, scr, show) => {
+      popAt(scr, el.dataset.used ? 'On écrase… et c\'est parti !' : 'Le tuto arrive bientôt !', '50%', '26%', '#ffd23f');
+      setTimeout(() => show('game'), 1100);
+    },
+    loadSlot: (el, scr, show) => {
+      if (!el.dataset.used) return popAt(scr, 'Emplacement vide', '50%', '26%');
+      popAt(scr, 'Chargement…', '50%', '26%'); setTimeout(() => show('game'), 900);
+    },
+    join: (el, scr) => {
+      if (!el.classList.contains('empty')) return;
+      el.classList.remove('empty');
+      el.innerHTML = '<span class="pb" style="--c:#ef4a3c" data-n="J2"></span>';
+      el.firstChild.animate([{ transform: 'translateX(20em) rotate(720deg)' }, { transform: 'translateX(-.6em) rotate(-20deg)' }, { transform: 'none' }], { duration: 700, easing: 'cubic-bezier(.2,.8,.3,1)' });
+      $('p2lab').textContent = 'Manette ✓'; popAt(scr, 'Salut J2 !', '68%', '30%');
+      setTimeout(() => Proto.setFocus($('go-level')), 500);
+    },
+    bind: el => {
+      if (capture) return;
+      capture = { el, id: el.dataset.id, dev: el.dataset.dev, held: new Set() };
+      el.classList.add('wait'); el.textContent = el.dataset.dev === 'kb' ? 'Appuie…' : 'Bouton…';
+      $('bind-msg').textContent = el.dataset.dev === 'kb' ? 'Appuie sur une touche ou un bouton de souris (Échap : annuler)' : 'Appuie sur un bouton de la manette';
+      if (el.dataset.dev === 'pad') {
+        [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean).forEach(p => p.buttons.forEach((b, i) => b.pressed && capture.held.add(p.index + ':' + i)));
+        const t0 = performance.now(); requestAnimationFrame(() => pollPad(t0));
+      }
+    },
+    resetBinds: () => { binds = JSON.parse(JSON.stringify(DEFAULT_BINDS)); renderBinds(); $('bind-msg').textContent = 'Touches par défaut rétablies'; },
+    back: (el, scr, show) => show(scr.dataset.back || home),
+    cancelQuit: (el, scr, show) => show(pauseScreen),
+    toMenu: (el, scr, show) => show(home),
+  },
+  keys: {
+    p: s => { if (s.id === 'game') Proto.show(pauseScreen); },
+  },
+  events: {
+    pauseA: { label: 'Échap → pause A', on: 'game', run: () => Proto.show('pause') },
+    pauseB: { label: 'Échap → pause B', on: 'game', run: () => Proto.show('pause-b') },
+  },
+};
+// The prototype engine sends Escape to data-back: in game that is the pause
+// chosen last (A by default).
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && Proto.current && Proto.current.id === 'game') { $('game').dataset.back = pauseScreen; }
+}, true);
+addEventListener('resize', () => { const s = Proto.current, f = s && s.querySelector('.f.focus'); if (f && (f.matches('.pb') || f.closest('.timeout'))) aim(s, f); });
+</script>
+<script src="proto.js"></script>
+</body>
+</html>
