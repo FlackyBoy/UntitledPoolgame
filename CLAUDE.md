@@ -32,6 +32,10 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 - Je ne peux pas lancer Unity : le dire quand une modification n'est ni compilée ni testée.
 - À chaque fonctionnalité ou correctif : mettre à jour `TODO.md` et `CHANGELOG.md` ; mettre à jour le GDD quand le statut d'une fonctionnalité change ; la doc technique quand une classe, un flux ou un réglage change ; ajouter aux pistes ce qui est seulement envisagé.
 - Commit / push uniquement quand l'utilisateur le demande, en ne commitant que les fichiers concernés.
+- Travail à deux (organisation dans `docs/content/equipe.md`) :
+  - ne jamais committer ni pousser sur `master` : travailler sur une branche `feat/…`, `fix/…`, `level/…` ou `doc/…` créée depuis `master` à jour ;
+  - proposer d'ouvrir une Pull Request (la relecture et l'approbation restent humaines) ;
+  - ne pas modifier une scène partagée sans que l'utilisateur l'ait annoncée comme prise.
 
 ## Git
 
