@@ -35,5 +35,7 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 
 ## Git
 
-- `git` n'est pas dans le PATH : utiliser celui de GitHub Desktop, `C:\Users\Shadow\AppData\Local\GitHubDesktop\app-3.6.5\resources\app\git\cmd\git.exe`.
+- Si `git` n'est pas dans le PATH, utiliser celui de GitHub Desktop : `%LOCALAPPDATA%\GitHubDesktop\app-<version>\resources\app\git\cmd\git.exe` (la version change avec les mises à jour ; sur l'ancien poste : `app-3.6.5`).
+- Ne jamais afficher ni recopier un jeton d'accès GitHub (ni dans la doc, ni dans un commit).
+- Ne pas pousser `Assets/Plugins/LeartesStudios` (pack de 4,7 Go avec des fichiers de plus de 100 Mo, refusés par GitHub, et contenu sous licence) : il se réimporte depuis le compte Asset Store / Fab.
 - Les très gros envois échouent (HTTP 500) : découper en plusieurs commits/push.
