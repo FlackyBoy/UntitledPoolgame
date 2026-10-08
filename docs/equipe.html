@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Travailler à deux — UntitledPoolGame</title>
+<meta name="description" content="Organisation git du projet à deux : règles, branches, Pull Requests, scènes Unity, et le cycle d'une tâche pas à pas dans GitHub Desktop.">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="assets/site.js"></script>
+</head>
+<body>
+<main>
+  <p style="margin:0 0 8px"><a href="equipe.pdf">Télécharger en PDF</a></p>
+  <div class="with-toc"><article class="prose" id="equipe-body"><p class="loading">Chargement…</p></article><nav class="toc" id="equipe-toc"></nav></div>
+</main>
+<footer class="site-footer">Source : <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/equipe.md">docs/content/equipe.md</a></footer>
+<script>
+  Site.renderHeader('equipe');
+  const body = document.getElementById('equipe-body');
+  Site.fetchText('content/equipe.md')
+    .then(md => Site.renderMarkdown(md, body, document.getElementById('equipe-toc')))
+    .catch(err => Site.showError(body, err));
+</script>
+</body>
+</html>

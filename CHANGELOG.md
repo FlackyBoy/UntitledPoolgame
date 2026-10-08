@@ -3,6 +3,13 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-08
+- **Organisation pour travailler à deux** (choix validés : GitHub Flow, relecture obligatoire, règle « une scène partagée = une personne » avec l'outil de fusion de Unity, doc centrée sur GitHub Desktop) :
+  - **Doc** : `docs/content/equipe.md`, page « Travailler à deux » du site (`docs/equipe.html`, dans le menu et sur l'accueil) et PDF `docs/equipe.pdf`. Elle couvre les règles d'équipe, la mise en place, le cycle d'une tâche pas à pas dans GitHub Desktop, la relecture, les conflits et un pense-bête.
+  - **`.gitattributes`** : fins de ligne normalisées (le dépôt était déjà entièrement en LF, donc aucun fichier ne change). Scènes, prefabs, matériaux, animations et assets passent par l'outil de fusion de Unity (*UnityYAMLMerge*), et les binaires sont protégés.
+  - **CLAUDE.md** : Claude ne travaille plus sur `master`, mais sur une branche avec Pull Request, et ne touche pas une scène partagée sans annonce.
+- **Avant le changement d'ordinateur** : travail local poussé (scènes, niveaux, prefab, animator, Build Settings), historique Claude archivé hors du dépôt, CLAUDE.md rendu indépendant de la machine.
+
 ## 2026-10-05
 - **Borne d'arcade, v2 : un vrai jeu** (retour : shader validé, « autant que ce soit un vrai jeu » ; choix : arcade à niveaux, blague en code secret). `docs/ui/arcade.html` réécrit :
   - **Vraie physique 2D** : collisions entre billes de même masse, bandes, poches, freinage du tapis, 8 sous-pas par image. L'effet sur la blanche (B + flèches) donne le coulé et le rétro au premier choc, et un effet latéral qui agit sur les bandes.

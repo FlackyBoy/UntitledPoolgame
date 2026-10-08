@@ -1,0 +1,63 @@
+# Line endings: stored as LF in the repository (already the case for every
+# file), checked out natively. Stops the "LF will be replaced by CRLF"
+# warnings and files showing as modified between two Windows machines.
+* text=auto
+
+# Unity YAML (Force Text serialization): always LF, merged with Unity's
+# Smart Merge (UnityYAMLMerge). The "unityyamlmerge" driver is declared once
+# per machine in the user's .gitconfig (see docs/content/equipe.md); without
+# it, git falls back to its normal merge.
+*.unity              text eol=lf merge=unityyamlmerge
+*.prefab             text eol=lf merge=unityyamlmerge
+*.mat                text eol=lf merge=unityyamlmerge
+*.anim               text eol=lf merge=unityyamlmerge
+*.controller         text eol=lf merge=unityyamlmerge
+*.overrideController text eol=lf merge=unityyamlmerge
+*.physicMaterial     text eol=lf merge=unityyamlmerge
+*.physicsMaterial2D  text eol=lf merge=unityyamlmerge
+*.playable           text eol=lf merge=unityyamlmerge
+*.mask               text eol=lf merge=unityyamlmerge
+*.lighting           text eol=lf merge=unityyamlmerge
+*.meta               text eol=lf
+# .asset can be YAML or binary (LightingData, baking data): no forced line
+# ending, git's own detection keeps binary ones untouched.
+*.asset              merge=unityyamlmerge
+
+*.cs                 text diff=csharp
+*.shader             text
+*.hlsl               text
+*.uss                text
+*.uxml               text
+*.tss                text
+*.inputactions       text
+*.json               text
+*.md                 text
+*.html               text
+*.css                text
+*.js                 text
+
+# Binaries: never converted, never merged.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.tga    binary
+*.psd    binary
+*.tif    binary
+*.tiff   binary
+*.exr    binary
+*.hdr    binary
+*.fbx    binary
+*.FBX    binary
+*.obj    binary
+*.blend  binary
+*.wav    binary
+*.mp3    binary
+*.ogg    binary
+*.ttf    binary
+*.otf    binary
+*.bytes  binary
+*.dll    binary
+*.so     binary
+*.unitypackage binary
+*.pdf    binary
+*.zip    binary

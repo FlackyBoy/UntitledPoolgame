@@ -9,6 +9,12 @@ sera retravaillée au fur et à mesure que le scope se précise.
 Légende : ⬜ à faire · 🔄 en cours · ✅ fait
 
 ## En cours
+- 🔄 **Travailler à deux** (08/10) : organisation git validée et documentée (`docs/content/equipe.md`, page « Travailler à deux » du site, `docs/equipe.pdf`), `.gitattributes` ajouté, règles de Claude mises à jour dans CLAUDE.md. Reste, côté propriétaire du dépôt :
+  - ⬜ inviter le coéquipier (*Settings > Collaborators*) ;
+  - ⬜ protéger `master` (PR obligatoire, 1 approbation, sans contournement) ;
+  - ⬜ cocher la suppression automatique des branches fusionnées ;
+  - ⬜ chacun : brancher l'outil de fusion de Unity (script de la doc) et créer son dossier `Assets/Scenes/Sandbox/<prénom>/` ;
+  - ⬜ décider pour le dépôt public et les plugins payants (licences par poste, passage en privé ?).
 - 🔄 Split-screen local (2 joueurs, hors-ligne uniquement, pas de Netcode) — scripts écrits, câblage éditeur restant (voir Notes techniques)
 
 ## Correctifs à faire (liste de l'utilisateur, 01/10)

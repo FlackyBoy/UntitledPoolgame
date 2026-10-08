@@ -11,6 +11,7 @@
     { key: 'gdd', href: 'gdd.html', label: 'TODO & GDD' },
     { key: 'tech', href: 'tech.html', label: 'Doc technique' },
     { key: 'config', href: 'config.html', label: 'Configuration' },
+    { key: 'equipe', href: 'equipe.html', label: 'Travailler à deux' },
     { key: 'ui', href: 'ui.html', label: 'Propositions UI' },
     { key: 'level', href: 'level.html', label: 'Outil de niveau' },
   ];
