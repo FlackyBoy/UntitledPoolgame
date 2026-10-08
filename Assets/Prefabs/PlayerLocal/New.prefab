@@ -1954,6 +1954,148 @@ Transform:
   - {fileID: 1023804505124092283}
   m_Father: {fileID: 7231415296120963494}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1498155751577536239
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4439492626431640542}
+  - component: {fileID: 940895107686260755}
+  m_Layer: 0
+  m_Name: ObjectBallPreviewLine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4439492626431640542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1498155751577536239}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.68719524, z: -0, w: 0.7264728}
+  m_LocalPosition: {x: 0.0000033527613, y: 2.634, z: 2.4770017}
+  m_LocalScale: {x: 0.9999999, y: 1, z: 0.9999999}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7710799573782361724}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!120 &940895107686260755
+LineRenderer:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1498155751577536239}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 3b8d05f51cfee864998662447e563c55, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 10}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0.43720537
+        value: 0.01021409
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_UseWorldSpace: 1
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!1 &2066321178287504840
 GameObject:
   m_ObjectHideFlags: 0
@@ -2900,7 +3042,7 @@ Transform:
   m_GameObject: {fileID: 2794607756408669352}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.33, z: 0.28}
+  m_LocalPosition: {x: -0.009, y: 2.244, z: 0.436}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4883,6 +5025,10 @@ GameObject:
   - component: {fileID: 830746584599491971}
   - component: {fileID: 478227496102809996}
   - component: {fileID: 829624287426662906}
+  - component: {fileID: 2294111646963135089}
+  - component: {fileID: 5618550621816064689}
+  - component: {fileID: 725830530976083673}
+  - component: {fileID: 4376678797310553783}
   m_Layer: 8
   m_Name: New
   m_TagString: Player
@@ -4908,6 +5054,7 @@ Transform:
   - {fileID: 4342084672438446422}
   - {fileID: 1349352464026152444}
   - {fileID: 2335812443581188308}
+  - {fileID: 4439492626431640542}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -86.817, z: 0}
 --- !u!143 &4727233030533268693
@@ -5043,7 +5190,16 @@ MonoBehaviour:
   inactivePriority: 10
   ragdollCameraDistance: 2.5
   ragdollCameraHeight: 1.5
+  ragdollCameraTurnSpeed: 240
   ikComponents: []
+  desyncRecoveryDelay: 0.5
+  lostRagdollBlockers:
+    serializedVersion: 2
+    m_Bits: 0
+  lostBelowDistance: 2
+  maxDownTime: 10
+  maxRagdollSeparation: 0.75
+  stuckRagdollTime: 0.5
 --- !u!114 &2888473440151428817
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5060,7 +5216,6 @@ MonoBehaviour:
   actionMapName: Player
   interactActionName: Interact
   attackActionName: Attack
-  animator: {fileID: 8021190734109415177}
   startingHeldObject: {fileID: 0}
   cameraTransform: {fileID: 1349352464026152444}
   minThrowPower: 80
@@ -5080,6 +5235,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Interaction.LocalCuePickupTrigger
   cueGrabbable: {fileID: 0}
   pickUpCue: {fileID: 478227496102809996}
+  debugLogs: 1
 --- !u!114 &478227496102809996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5092,16 +5248,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4bb45ecda364e340a8f432a289c36ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Interaction.PickUpCue
-  GUIspace: 0
-  showDebugGUI: 0
   interactionSystem: {fileID: 5441898613167116498}
   obj: {fileID: 0}
   pivot: {fileID: 0}
   holdPoint: {fileID: 1356789127001123691}
   pickUpTime: 0.3
   primaryEffector: 6
-  holdRotationOffset: {x: 48, y: 173.3, z: 276.4}
   useFixedHeldRotation: 1
+  holdRotationOffset: {x: 48, y: 173.3, z: 276.4}
+  heldArmBendWeight: 1
+  armBendBlendTime: 0.2
 --- !u!114 &829624287426662906
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5125,18 +5281,23 @@ MonoBehaviour:
   chargeSpeed: 0.85
   offsetAdjustSpeed: 1.2
   maxOffsetFraction: 0.7
-  cueBallPreview: {fileID: 0}
-  objectBallPreview: {fileID: 0}
+  cueBallPreview: {fileID: 940895107686260755}
+  objectBallPreview: {fileID: 2294111646963135089}
   previewMaxDistance: 3
   objectBallPreviewLength: 0.4
   cueBallPreviewColor: {r: 1, g: 1, b: 1, a: 1}
   objectBallPreviewColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   aimIKTarget: {fileID: 0}
   aimHoldAxis: {x: 0, y: 0, z: 1}
-  maxHandShift: 1.8
+  maxHandShift: 1.9
+  maxHandStretch: 0.75
+  maxBodyLean: 0.6
+  bodyLeanBend: 70
+  leanIK: {fileID: 6813959220124960975}
   aimCueOffset: {x: 0.5, y: -0.1, z: 0.5}
   aimTipGap: 0.5
   tiltCueToBall: 1
+  traceAimPose: 1
   maxCueTilt: 10
   lookAtIK: {fileID: 4769770524244451860}
   leftArmBendGoal: {fileID: 0}
@@ -5154,6 +5315,296 @@ MonoBehaviour:
   moveActionName: Move
   interactActionName: Interact
   attackActionName: Attack
+  tracePlacementView: 1
+  placementClearAbove: 0.5
+--- !u!120 &2294111646963135089
+LineRenderer:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5173485609117257803}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 3b8d05f51cfee864998662447e563c55, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 10}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0.43720537
+        value: 0.01021409
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_UseWorldSpace: 1
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
+--- !u!114 &5618550621816064689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5173485609117257803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8ecd26db1488be4aab8fe6fcf25ed9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Interaction.LocalCueHolder
+  viewTransform: {fileID: 0}
+  fullBodyIK: {fileID: 0}
+  carryPose: {fileID: 0}
+  pickupRange: 1.3
+  viewAngle: 50
+  showPrompt: 1
+  referenceArmLength: 0.6
+  comfortForward: 0.35
+  comfortDown: 0.35
+  gripSpacing: 0.3
+  endMargin: 0.12
+  crouchAmount: 0.85
+  maxCrouchFraction: 0.45
+  leanForward: 0.15
+  maxHipBend: 75
+  armPullWhilePicking: 0.2
+  reachTime: 0.4
+  liftTime: 0.45
+  releaseTime: 0.25
+  fingerCloseStart: 0.6
+  pickupElbowGuide: 0.8
+  pickupElbowOutward: 0.3
+  pickupElbowBack: 0.1
+  heldArmBendWeight: 1
+  armBendBlendTime: 0.2
+  debugLogs: 1
+  traceIK: 0
+--- !u!114 &725830530976083673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5173485609117257803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c6c04a2af1164f4592b376a606324c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Interaction.LocalCueMelee
+  actionMapName: Player
+  attackActionName: Attack
+  viewTransform: {fileID: 0}
+  fullBodyIK: {fileID: 0}
+  turnThreshold: 12
+  thrustStanceDelay: 0.2
+  poseBlendTime: 0.1
+  returnViewOnStrike: 1
+  maxViewReturn: 120
+  assistAngle: 40
+  assistRange: 3
+  chargeTime: 0.8
+  minWindup: 0.4
+  shoulderPivot: 1
+  sweepWindup: 70
+  sweepFollowThrough: 85
+  overheadWindup: 75
+  overheadFollowThrough: 35
+  thrustPullBack: 0.2
+  thrustReach: 0.45
+  stanceSide: 0.12
+  stanceHeight: -0.25
+  stanceForward: 0.15
+  stanceBlendTime: 0.15
+  sweepTorsoTwist: 0.4
+  overheadTorsoBend: 0.25
+  windupLeanBack: 0.1
+  strikeLean: 0.18
+  strikeTime: 0.12
+  followThroughHold: 0.08
+  recoverTime: 0.25
+  cooldown: 0.35
+  muscleLayers:
+    serializedVersion: 2
+    m_Bits: 512
+  hitRadius: 0.2
+  subSteps: 3
+  minUnpin: 1
+  maxUnpin: 10
+  minForce: 5000
+  maxForce: 10000
+  guaranteedKnockdownAt: 0.9
+  upwardBias: 0.2
+  hitstopDuration: 0.06
+  hitstopTimeScale: 0.05
+  showChargeIndicator: 1
+  debugLogs: 1
+--- !u!114 &4376678797310553783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5173485609117257803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1dad9b096df4b54d90fcc166215d3b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Interaction.LocalUnarmedMelee
+  actionMapName: Player
+  punchActionName: Punch
+  kickActionName: Kick
+  viewTransform: {fileID: 0}
+  fullBodyIK: {fileID: 0}
+  fpsCamera: {fileID: 0}
+  referenceArmLength: 0.6
+  referenceLegLength: 0.9
+  maxLimbExtension: 0.95
+  tapTime: 0.18
+  chargeTime: 0.7
+  windupTime: 0.1
+  startForward: 0.12
+  startHeight: 0.08
+  startOutward: 0.05
+  midForward: 0.5
+  midOutward: 0.2
+  midHeight: 0.06
+  punchReach: 0.6
+  endHeight: 0
+  fistSpread: 1.1
+  punchPitchFollow: 0.3
+  elbowOut: 0.6
+  fistAlign: 1
+  fistRoll: 0
+  jabTorsoTwist: 8
+  shoulderReach: 0.1
+  punchLean: 0.12
+  kickReach: 0.8
+  kickHeight: -0.05
+  kickPitchFollow: 0.4
+  chamberForward: 0.2
+  chamberHeight: -0.35
+  chamberRaise: 0.12
+  kneeForward: 0.6
+  footSoleForward: 1
+  kickLeanBack: 0.15
+  kickLunge: 0.2
+  spartanLunge: 0.55
+  jabStrikeTime: 0.08
+  kickStrikeTime: 0.1
+  chargedKickStrikeTime: 0.13
+  holdTime: 0.06
+  kickHoldTime: 0.12
+  recoverTime: 0.22
+  cooldown: 0.1
+  muscleLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  fistRadius: 1.2
+  footRadius: 0.5
+  subSteps: 3
+  jabUnpin: 1.5
+  jabForce: 500
+  kickUnpin: 2.5
+  kickForce: 900
+  chargedKickUnpin: 8
+  chargedKickForce: 2500
+  upwardBias: 0.15
+  spartanMinCharge: 0.8
+  launchSpeed: 9
+  launchLift: 2.5
+  slowMoZoom: 12
+  spartanZoomDuration: 0.5
+  hitstopDuration: 0.05
+  hitstopTimeScale: 0.05
+  showChargeIndicator: 1
+  debugLogs: 1
 --- !u!1 &5417016711818815271
 GameObject:
   m_ObjectHideFlags: 0
@@ -5229,8 +5680,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5960817626512586231}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.00000018812716, y: 0, z: 0.000000059604645}
+  m_LocalRotation: {x: -0.0000000011258273, y: 0.976296, z: -0.21643957, w: 0.000000015373812}
+  m_LocalPosition: {x: 0.0090000145, y: 0.3900001, z: 2.0410004}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5269,7 +5720,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 65.029305
+  field of view: 72.91319
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
