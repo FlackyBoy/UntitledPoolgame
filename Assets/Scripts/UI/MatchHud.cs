@@ -454,13 +454,13 @@ namespace UntitledPoolGame.Core
             // Plate.
             Color pc = p == 0 ? P1 : P2;
             h.who.style.backgroundColor = pc;
-            h.whoText.text = Format(cfg.playerTagFormat, p + 1);
+            TextFx.Set(h.whoText, Format(cfg.playerTagFormat, p + 1));
             UpdatePlate(h, rules);
 
             // Turn tag: bobs on the player who plays, muted on the other.
             if (myTurn)
             {
-                h.tagText.text = cfg.yourTurnText;
+                TextFx.Set(h.tagText, cfg.yourTurnText);
                 h.tagText.style.fontSize = cfg.turnTagFontSize;
                 h.tagText.style.color = Ink;
                 h.tag.style.backgroundColor = Yellow;
@@ -471,7 +471,7 @@ namespace UntitledPoolGame.Core
             }
             else
             {
-                h.tagText.text = Format(cfg.otherTurnFormat, rules.CurrentPlayer + 1);
+                TextFx.Set(h.tagText, Format(cfg.otherTurnFormat, rules.CurrentPlayer + 1));
                 h.tagText.style.fontSize = cfg.turnTagFontSize * 0.7f;
                 h.tagText.style.color = Color.white;
                 h.tag.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
@@ -602,7 +602,7 @@ namespace UntitledPoolGame.Core
                 h.ring.style.backgroundColor = new Color(1f, 1f, 1f, 0.08f);
                 Border(h.ring, 4, new Color(1f, 1f, 1f, 0.45f));
                 h.ringIcon.style.display = DisplayStyle.None;
-                h.powerName.text = "—";
+                TextFx.Set(h.powerName, "—");
                 h.powerKey.style.display = DisplayStyle.None;
                 return;
             }
@@ -612,7 +612,7 @@ namespace UntitledPoolGame.Core
             h.ring.style.borderBottomWidth = 8;
             h.ringIcon.style.display = DisplayStyle.Flex;
             h.ringIcon.MarkDirtyRepaint();
-            h.powerName.text = held.PowerName;
+            TextFx.Reveal(h.powerName, held.PowerName);
             h.powerKey.style.display = DisplayStyle.Flex;
             Pop(h.ring, 0.6f);
         }
@@ -638,7 +638,7 @@ namespace UntitledPoolGame.Core
             // An emptied text in the settings hides that banner.
             if (string.IsNullOrEmpty(text)) text = null;
             h.banner.style.display = text != null && !rules.GameOver ? DisplayStyle.Flex : DisplayStyle.None;
-            if (text != null) h.bannerText.text = text;
+            if (text != null) TextFx.Set(h.bannerText, text);
         }
 
         // ---------- Events ----------
@@ -722,6 +722,22 @@ namespace UntitledPoolGame.Core
 
         // ---------- Effects ----------
 
+        // From outside (a Feel sequence, MMF_PoolHudText): a big word on that
+        // player's half (-1 = both halves), with its TextFx tags. color null =
+        // the HUD's yellow.
+        public static void ShowShout(int player, string markup, Color? color = null, bool burst = false)
+        {
+            MatchHud hud = FindAnyObjectByType<MatchHud>();
+            if (hud == null) return;
+            Color c = color ?? hud.Yellow;
+            if (player >= 0) { hud.Shout(player, markup, c, burst); return; }
+            foreach (Half h in hud.halves)
+                if (h != null && h.input != null) hud.Shout(h.player, markup, c, burst);
+        }
+
+        public static float ShoutDuration =>
+            PoolSettingsLoader.LoadOrDefault<HudSettings>("HudSettings").shoutDuration;
+
         private void Shout(int player, string text, Color color, bool burst)
         {
             Half h = HalfOf(player);
@@ -752,6 +768,7 @@ namespace UntitledPoolGame.Core
             holder.style.top = Length.Percent(40);
             holder.style.translate = new Translate(Length.Percent(-50), Length.Percent(-50));
             Label label = Text(holder, text, titleFont, cfg.shoutFontSize, color);
+            TextFx.Reveal(label, text);   // letters pop in one after the other
             label.style.unityTextOutlineWidth = 3f;
             label.style.unityTextOutlineColor = Ink;
             InkShadow(label, 7);
@@ -877,9 +894,9 @@ namespace UntitledPoolGame.Core
                 endShownAt = now;
                 int w = Mathf.Max(0, rules.Winner);
                 endWhoBox.style.backgroundColor = w == 0 ? P1 : P2;
-                endWho.text = Format(cfg.playerTagFormat, w + 1);
-                endTitle.text = Format(cfg.winnerFormat, w + 1);
-                endSubtitle.text = ModeName(rules.Mode);
+                TextFx.Set(endWho, Format(cfg.playerTagFormat, w + 1));
+                TextFx.Reveal(endTitle, Format(cfg.winnerFormat, w + 1));
+                TextFx.Set(endSubtitle, ModeName(rules.Mode));
                 foreach (Half h in halves) h.plateKey = null;
             }
             float t = now - endShownAt;
@@ -1023,9 +1040,11 @@ namespace UntitledPoolGame.Core
             return card;
         }
 
+        // The text may carry TextFx tags (<wave>, <shake>…).
         private Label Text(VisualElement parent, string text, Font font, float size, Color color)
         {
-            var label = new Label(text);
+            var label = new Label();
+            TextFx.Set(label, text);
             label.style.fontSize = size;
             label.style.color = color;
             if (font != null) label.style.unityFontDefinition = FontDefinition.FromFont(font);

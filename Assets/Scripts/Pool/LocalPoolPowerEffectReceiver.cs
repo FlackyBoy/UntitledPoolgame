@@ -72,8 +72,28 @@ namespace UntitledPoolGame.Pool
                 settings = PoolSettingsLoader.LoadOrDefault<PoolScreenJuiceSettings>("PoolScreenJuiceSettings");
         }
 
+        private static readonly System.Collections.Generic.List<LocalPoolPowerEffectReceiver> all =
+            new System.Collections.Generic.List<LocalPoolPowerEffectReceiver>();
+
+        // From outside (a Feel sequence, MMF_PoolScreenJuice): a shake and/or
+        // a flash on that player's camera (-1 = every player), through this
+        // component so the camera keeps a single writer. Zero magnitude or
+        // alpha = that part is skipped.
+        public static void PlayImpact(int player, float shakeMagnitude, float shakeDuration, Color flashColor, float flashAlpha, float flashDuration)
+        {
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            foreach (LocalPoolPowerEffectReceiver r in all)
+            {
+                int index = rules != null ? rules.GetEffectivePlayerIndex(r.playerInput.playerIndex) : r.playerInput.playerIndex;
+                if (player >= 0 && index != player) continue;
+                if (shakeMagnitude > 0f && shakeDuration > 0f) r.RequestShake(shakeMagnitude, shakeDuration);
+                if (flashAlpha > 0f && flashDuration > 0f) r.RequestFlash(flashColor, flashAlpha, flashDuration);
+            }
+        }
+
         private void OnEnable()
         {
+            all.Add(this);
             PoolBall.Pocketed += HandleBallPocketed;
             PoolMatchRules.Fouled += HandleFoul;
             PoolMatchRules.PowerGranted += HandlePowerGranted;
@@ -81,6 +101,7 @@ namespace UntitledPoolGame.Pool
 
         private void OnDisable()
         {
+            all.Remove(this);
             PoolBall.Pocketed -= HandleBallPocketed;
             PoolMatchRules.Fouled -= HandleFoul;
             PoolMatchRules.PowerGranted -= HandlePowerGranted;
