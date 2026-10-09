@@ -4,6 +4,9 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-09
+- **Site, propositions UI : maquettes de l'écran de chargement** (`docs/ui/chargement.html`, dans la galerie). Les deux variantes proposées le 08/10 :
+  - **A, « La casse »** : la queue recule au fil du chargement, puis casse le triangle ;
+  - **B, « Le retour des billes »** : carte postale du niveau, billes dans la gouttière, messages loufoques, chaque joueur confirme. C'est la variante **retenue et intégrée** dans le jeu.
 - **Correctif : scène du bar dans le build** :
   - *Sync Build Scenes* avait ajouté `Assets/_Recovery/BarSplitscreen.unity`, une copie de récupération d'Unity, au lieu de `Assets/Scenes/BarSplitscreen.unity` ; le jeu pouvait charger cette copie ;
   - la recherche des scènes, et le sélecteur de scène de GameFlowSettings, ignorent maintenant `_Recovery` et préfèrent `Assets/Scenes` ;
