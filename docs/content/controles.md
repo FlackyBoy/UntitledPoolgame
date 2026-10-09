@@ -1,6 +1,8 @@
 # Contrôles
 
-## Menu (avant la partie)
+## Menu principal
+
+Nouvelle partie · Charger · Just for fun (niveau puis type de partie) · Multijoueur (local : les joueurs rejoignent, puis niveau et type de partie ; en ligne : plus tard) · Réglages · Quitter.
 
 | Clavier / souris | Manette | Action |
 |---|---|---|
@@ -8,6 +10,23 @@
 | Clic, Entrée, Espace | A / ✕ | Tirer (valider) |
 | Échap, Retour arrière | B / ○ | Écran précédent |
 | Molette, - / + | LB / RB | 14.1 : changer le score cible |
+
+## Écran de chargement
+
+Quand le niveau est chargé, chaque joueur appuie sur **A / ✕** (manette) ou **Entrée / Espace / clic** (clavier) pour dire qu'il est prêt ; la partie démarre quand tout le monde l'est. Dans le menu, J1 est celui qui navigue ; en Multijoueur > Local, J2 rejoint en appuyant sur A / Start (ou Entrée si J1 joue à la manette).
+
+## Pause (en partie)
+
+| Clavier / souris | Manette | Action |
+|---|---|---|
+| Échap | Start | Ouvrir / fermer la pause (arrête les deux joueurs) |
+| Flèches, Z Q S D, souris | Stick gauche, croix | Choisir Reprendre, Réglages ou Menu principal |
+| Entrée, Espace, clic | A / ✕ | Valider |
+| Échap, Retour arrière | B / ○ | Reprendre (ou revenir de la confirmation) |
+
+## Réglages des touches
+
+Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis appuyer sur la nouvelle touche (clavier ou souris dans la colonne de gauche, manette dans celle de droite) ; Échap annule. Une touche déjà prise par une autre action est échangée. Les choix sont gardés et valent pour les deux joueurs. Se déplacer, regarder et la pause ne se modifient pas ici.
 
 ## Fin de partie
 

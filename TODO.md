@@ -131,11 +131,38 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
   - fin de partie : carte du gagnant, rayons, confettis, **Revanche** (Entrée, E, A / Y, clic).
   
   Remplace l'OnGUI provisoire de `PoolMatchRules` et `LocalPoolAimController` (`PoolMatchRules.ExternalHud`). Le HUD est paramétrable (05/10) dans `HudSettings` (`Assets/Resources/HudSettings.asset`, créé par *Ensure Config Assets Exist*) : polices, taille, couleurs, tous les textes, interrupteurs, durées. Testé et validé le 05/10 (sauf `HudSettings`, pas encore testé). Reste : replay en incrustation, ardoise et trophées de fin, bouton « Menu ».
-- 🔄 **Parcours des menus** (demande du 05/10), en prototype sur le site (`docs/ui/parcours.html`), **à valider** avant de l'intégrer dans Unity :
+- 🔄 **Parcours des menus** (demande du 05/10), prototype sur le site (`docs/ui/parcours.html`). Variantes retenues le 05/10 : **menu A** (billes sur la table) et **pause A** (carte) :
   - **Menu principal** : Nouvelle partie (histoire et tuto plus tard), Charger, Just for fun (niveau → type de partie : Classique, Pouvoirs, 9-ball, 14.1), Multijoueur (Local avec arrivée de J2 / En ligne héberger-rejoindre → niveau → type de partie), Réglages, Quitter. Deux variantes : A billes sur la table, B ardoise du bar.
   - **Réglages** : pour l'instant les touches seulement (clavier / souris et manette, réaffectables, échange en cas de doublon, réinitialiser).
   - **En jeu** : Échap / Start → pause (Reprendre, Réglages, Menu principal avec confirmation). Deux variantes : A carte « Pause », B « Temps mort ! » sur une petite table.
-  - ⬜ Ensuite dans Unity : étendre `SyntheseMenu` (pages, emplacements de sauvegarde, choix du niveau), écran de réaffectation des touches (Input System rebinding, sauvegarde des surcharges), menu de pause par-dessus `MatchHud` (`Time.timeScale` à 0, les deux joueurs arrêtés), retour au menu sans recharger la scène.
+  - 🔄 **Intégré dans Unity le 08/10** (branche `feat/menus-pause`), **non compilé, non testé** :
+    - `SyntheseMenu` réécrit : toutes les pages, emplacements de sauvegarde factices, choix du niveau, contexte affiché ;
+    - `KeyBindingsPanel` et `KeyBindings` : réaffectation Input System, sauvegarde dans les `PlayerPrefs`, application à chaque joueur ;
+    - `PauseMenu` par-dessus `MatchHud` : `Time.timeScale` à 0, entrées des deux joueurs coupées ;
+    - `UiKit`.
+    
+    Le retour au menu recharge la scène pour l'instant.
+  - 🔄 **Menu dans sa propre scène + écran de chargement** (08/10, variante B « Le retour des billes » retenue), **non compilé, non testé** :
+    - scène `MainMenu` (*Tools > Pool > Create Main Menu Scene*, en tête du build) ;
+    - `GameFlowSettings` (niveaux avec image, phrase, twist, « bientôt ») ;
+    - `LevelLoader` : chargement en arrière-plan, joueurs entrés avec les appareils du menu, « J1 : appuie sur A », départ ;
+    - `LoadingScreenSettings` : textes, astuces, messages, durées ;
+    - « Menu principal » depuis la pause → scène du menu.
+    
+    À faire une fois : *Ensure Config Assets Exist*, puis *Create Main Menu Scene*, puis mettre les images des niveaux dans `GameFlowSettings`.
+    
+    09/10 : barre de chargement qui avance au fil de l'eau et joueur contrôlable à l'arrivée dans le niveau (le joueur déjà posé dans la scène est repris) — **testé, ça fonctionne**.
+  - 🔄 **Texte animé `TextFx`** (09/10, inspiré de *Text Animator* de Febucci), **compilé, non testé** : balises dans tous les textes des réglages (`<wave>`, `<shake>`, `<bounce>`, `<wiggle>`, `<pulse>`, `<swing>`, `<rainbow>`, apparitions `<pop>`, `<drop>`, `<fade>`, `<slide>`, `<grow>`, force `a=` et vitesse `s=`) ; lettres qui arrivent une à une pour les interjections, messages, règles, nom du pouvoir, « J{0} gagne ! » ; machine à écrire pour les astuces et le twist (`<pause=…>`, `<speed=…>`). Réglages : `TextFxSettings`. À vérifier en jeu : le rappel d'Unity utilisé a eu un bug en 6.5.
+  - 🔄 **Choix de la scène d'un niveau** dans `GameFlowSettings` (09/10, retour : on ne pouvait pas la définir) : on glisse la scène dans le champ, avertissement et bouton « Ajouter au build » si elle n'y est pas. **Compilé, non testé.**
+  - 🔄 **Menu Studio** (09/10, demande : « un éditeur graphique de menu… à coupler avec Feel » ; choix : éditeur maison, tous les écrans), **compilé, non testé** :
+    - **Écrans en données** (`Resources/Menus`) : accueil, sauvegardes, niveau, type de partie, multijoueur, salon, réglages, pause, confirmation, chargement. `SyntheseMenu`, `PauseMenu`, `KeyBindingsPanel` et `LevelLoader` se construisent depuis eux.
+    - ***Tools > Pool > Menu Studio*** : aperçu identique au jeu, éléments déplacés et redimensionnés à la souris, ajout de billes, cartes, textes, images, panneaux et pilules, propriétés (texte, couleurs, image, action, effets d'arrivée et permanents), séquences Feel à l'ouverture, au survol et au choix, annulation.
+    - **Mode brouillon** : rien n'est écrit avant *Enregistrer* ; bandeau, demande en changeant d'écran, en fermant ou au Play ; le brouillon survit au rechargement.
+    - **À vérifier en jeu** : que les écrans par défaut ressemblent aux anciens (positions recalculées pour la pause et le chargement).
+  - 🔄 **Text FX Studio** (09/10, retour : « je veux un tool graphique qui permet de prévisualiser »), **compilé, non testé** : *Tools > Pool > Text FX Studio*. Choix d'un texte du jeu, boutons de balises sur la sélection, force et vitesse, prévisualisation en direct hors Play (fond, police, taille, couleur, contour, fixe / arrivée / machine à écrire, boucle, sortie), enregistrement dans le réglage, TextFxSettings dans la fenêtre.
+  - 🔄 **Feel branché sur la partie** (09/10), **compilé, non testé** : `GameFeelSettings` (moment → séquence Feel : bille rentrée, blanche, faute, tir, tir plein, pouvoir, BOUM, début de tour, victoire), `GameFeel` qui écoute la partie, feedbacks maison « Texte du HUD (TextFx) » et « Secousse et flash écran ». Text FX Studio crée la séquence avec le texte et la relie au moment choisi.
+  - 🔄 **Menu, pause et écran des touches paramétrables** (09/10), **compilé par Unity, non testé** : `MenuSettings` (`Assets/Resources/MenuSettings.asset`, créé par *Ensure Config Assets Exist*) avec tous les textes, les billes (texte, numéro, couleur, rayée), les règles des modes, la palette, les polices, une image de fond, les lumières du bar, un logo et quelques durées. Doc : page Configuration du site, avec la marche à suivre pour ajouter un niveau.
+  - ⬜ Ensuite : vraies sauvegardes (avec l'histoire), niveaux prison et station, jeu en ligne, réglages audio / vidéo / jeu.
 - 🔄 **Mini-jeu de la borne d'arcade** (demande du 05/10) : « SUPER POOL SHOT », billard 2D façon console 8 bits (256 × 240, palette NES, police pixel, sons de puce) sur un écran cathodique (shader **validé**). Retour : « quitte à faire un mini-jeu, autant que ce soit un vrai jeu » → v2, aperçu jouable sur le site (`docs/ui/arcade.html`), **à valider** :
   - **Physique** : chocs entre billes, bandes, poches, freinage du tapis. L'effet sur la blanche se règle avec B + flèches : coulé, rétro, ou effet latéral qui agit sur les bandes. Le guide montre la bille fantôme et la direction de la bille touchée.
   - **Arcade à niveaux** : 7 niveaux à coups limités, dont 2 coups de maître (un seul coup pour rentrer la bille indiquée dans la poche indiquée).
