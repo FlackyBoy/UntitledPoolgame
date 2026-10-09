@@ -75,6 +75,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePowerSpawnSettingsAsset();
             EnsureBallBlastPowerAsset();
             EnsureHudSettingsAsset();
+            GameFlowTools.EnsureAssets();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
         }
 
