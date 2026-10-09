@@ -58,6 +58,13 @@ chronologique inverse (les plus récentes en haut).
   La mise en page reste dans le code. Un format mal écrit s'affiche tel quel au lieu de casser le menu.
 - **Doc** : page Configuration, section `MenuSettings` et marche à suivre pour ajouter un niveau (scène, ligne dans `GameFlowSettings`, *Sync Build Scenes*, image).
 - **Écran de chargement** : les deux correctifs de la veille sont testés, ça fonctionne.
+- **Récap Discord des Pull Requests mergées** : `.github/workflows/discord-pr-merged.yml`. Chaque PR mergée sur `master` envoie un message sur un salon Discord :
+  - le titre de la PR, avec un lien ;
+  - la branche, l'auteur et la description ;
+  - chaque commit, avec un lien, son titre en gras et sa description dessous ; les commits de merge sont exclus.
+
+  Le message est coupé proprement au-delà de la limite de Discord. Le salon est choisi par le secret `DISCORD_WEBHOOK` du dépôt.
+- **Conventions git** (section *Workflow git* de `CLAUDE.md`) : branches `feature/`, `fix/` ou `chore/` ; commits avec un titre à l'impératif et une description ; une PR par feature, avec un titre lisible et 2 à 5 puces ; merge sans squash.
 
 ## 2026-10-08
 - **Écran de chargement : deux correctifs** (non compilés, non testés).
