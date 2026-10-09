@@ -1,0 +1,99 @@
+# Posts a recap to Discord each time a Pull Request is merged into master:
+# PR title (link), branch, author, description, then every commit (short
+# hash link, title in bold, description under it), merge commits left out.
+# Webhook URL: repository secret DISCORD_WEBHOOK.
+name: Discord - PR mergée
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify:
+    # Closed without merging: nothing to announce.
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Envoyer le récap sur Discord
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          # PR texts go through env, never pasted into the script, so a
+          # title or body can't inject shell commands.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DISCORD_WEBHOOK}" ]; then
+            echo "::error::Secret DISCORD_WEBHOOK manquant (gh secret set DISCORD_WEBHOOK)."
+            exit 1
+          fi
+
+          # --paginate prints one JSON array per page: read back with --slurpfile.
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate > commits.json
+
+          # jq builds the whole payload: --arg escapes quotes, newlines and
+          # emojis. Discord limits: title 256, description 4096 characters.
+          FILTER=$(cat <<'JQ'
+          def clean: gsub("\r"; "");
+          def trim: gsub("^\\s+|\\s+$"; "");
+          # Cut to $n characters, ending with $suffix; drops the last,
+          # half-cut line when what stays is still long enough. (Line split
+          # rather than rindex: rindex counts bytes on accented text.)
+          def cut($n; $suffix):
+            if length <= $n then .
+            else .[0:($n - ($suffix | length))] as $part
+              | ($part | split("\n")) as $lines
+              | ($lines[0:-1] | join("\n")) as $whole
+              | (if ($lines | length) > 1 and ($whole | length) > ($n * 0.6) then $whole else $part end) + $suffix
+            end;
+
+          [ $pages[][] | select((.parents | length) <= 1) ] as $commits
+          | ( $commits
+              | map(
+                  (.commit.message | clean | split("\n")) as $lines
+                  | "**[`\(.sha[0:7])`](\(.html_url)) \($lines[0] | trim)**"
+                    + ( [ $lines[1:][] | select(test("\\S")) ]
+                        | if length > 0 then "\n" + join("\n") else "" end )
+                )
+              | join("\n\n") ) as $commitText
+          | [ "Branche `\($head)` → `\($base)` par \($author)",
+              ($body | clean | trim | select(length > 0)),
+              (if ($commits | length) > 0 then "**Commits :**\n" + $commitText else empty end)
+            ]
+          | join("\n\n") as $description
+          | { embeds: [ {
+                title: (("✅ Feature mergée : " + $title) | cut(256; "…")),
+                url: $url,
+                description: ($description | cut(4096; "… (voir la PR pour la suite)")),
+                color: 5814783
+              } ] }
+          JQ
+          )
+
+          payload=$(jq -n \
+            --arg title "${PR_TITLE}" \
+            --arg body "${PR_BODY}" \
+            --arg url "${PR_URL}" \
+            --arg author "${PR_AUTHOR}" \
+            --arg head "${HEAD_REF}" \
+            --arg base "${BASE_REF}" \
+            --slurpfile pages commits.json \
+            "${FILTER}")
+
+          curl --fail --silent --show-error \
+            -H "Content-Type: application/json" \
+            -d "${payload}" \
+            "${DISCORD_WEBHOOK}"
