@@ -5,24 +5,29 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using UntitledPoolGame.Pool;
+using K = UntitledPoolGame.Core.UiKit;
 
 namespace UntitledPoolGame.Core
 {
-    // The pre-match menu of the validated UI direction (prototype
-    // docs/ui/synthese.html): title, players, game mode — the pool table in
-    // the bar at night, lit by its lamp; every choice is a ball that the cue
-    // aims at and shoots. 2D for now (UI Toolkit, built in code); the 3D
-    // version on a real table comes later. Replaces PoolMatchRules' OnGUI
-    // mode select (PoolMatchRules.ExternalMenu) and starts the match through
-    // PoolMatchRules.RequestStart. Created automatically in any scene that
-    // has a PoolMatchRules. Mouse, keyboard or any gamepad.
+    // The main menu of the validated UI direction (prototypes
+    // docs/ui/synthese.html and docs/ui/parcours.html, "Menu A · billes"):
+    // the pool table in the bar at night; on the table pages every choice is
+    // a ball that the cue aims at and shoots, the other choices are "pop"
+    // cards and pills.
+    //
+    // Every screen (Title, NewGame, Load, Level, Mode, Multiplayer, Lobby,
+    // Settings) is a MenuScreen drawn by MenuRenderer: elements, positions,
+    // colours, texts, actions, effects and Feel sequences are edited in
+    // Tools > Pool > Menu Studio. This class brings them to life: aiming
+    // and shooting, the action of each element, and the parts it fills itself
+    // (elements found by id: "context", "levels", "rules", "slot1"/"slot2"
+    // and their "-label", "aim-hint").
+    //
+    // Replaces PoolMatchRules' OnGUI mode select (PoolMatchRules.ExternalMenu)
+    // and starts the match through PoolMatchRules.RequestStart or the
+    // LevelLoader. Mouse, keyboard or any gamepad.
     public class SyntheseMenu : MonoBehaviour
     {
-        // ---------- Palette (prototype CSS) ----------
-        private static readonly Color Felt = Hex("#1d7f4b"), FeltDark = Hex("#125c35"), Wood = Hex("#6b3a1e"), WoodDark = Hex("#3e200f");
-        private static readonly Color Cream = Hex("#fff7e3"), ChalkShadow = Hex("#0d4527"), BallCream = Hex("#f6f1e4");
-        private static readonly Color Cube = Hex("#3d8fe0"), CubeDark = Hex("#1f5c99"), P1 = Hex("#2f7cf6"), P2 = Hex("#ef4a3c"), Ink = Hex("#1c1510");
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
@@ -33,87 +38,96 @@ namespace UntitledPoolGame.Core
 
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => TryCreate();
 
-        // The UIDocument gets its panel settings while the object is still
-        // inactive, so it attaches to the panel when it comes alive.
+        // Shown in the main menu scene (MainMenuScene marker), and in a level
+        // played straight from the editor (a PoolMatchRules, no session from
+        // the menu) — not in a level the menu just launched.
         private static void TryCreate()
         {
-            if (FindFirstObjectByType<PoolMatchRules>() == null || FindFirstObjectByType<SyntheseMenu>() != null) return;
+            if (FindAnyObjectByType<SyntheseMenu>() != null) return;
+            bool menuScene = FindAnyObjectByType<MainMenuScene>() != null;
+            bool levelPlayedDirectly = FindAnyObjectByType<PoolMatchRules>() != null && !GameSession.Active;
+            if (!menuScene && !levelPlayedDirectly) return;
             var go = new GameObject("Menu (Synthèse)");
             go.SetActive(false);
-            go.AddComponent<UIDocument>().panelSettings = CreatePanel();
+            go.AddComponent<UIDocument>().panelSettings = K.CreatePanel(100);
             go.AddComponent<SyntheseMenu>();
             go.SetActive(true);
-        }
-
-        // Full screen over the game, scaled from 1920 × 1080.
-        private static PanelSettings CreatePanel()
-        {
-            var panel = ScriptableObject.CreateInstance<PanelSettings>();
-            panel.themeStyleSheet = Resources.Load<ThemeStyleSheet>("UI/MenuTheme");
-            panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            panel.referenceResolution = new Vector2Int(1920, 1080);
-            panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-            panel.match = 0.5f;
-            panel.sortingOrder = 100;
-            return panel;
         }
 
         // ---------- State ----------
 
         private class Option
         {
-            public VisualElement visual;      // what grows when focused and flies when shot
+            public VisualElement visual;      // what grows when focused (and flies when shot)
             public Vector2 pos;               // percent of the screen, center
             public float radius;              // px, for the aim line
             public Action shoot;
             public float focus;               // 0..1, eased
+            public bool card;                 // not a ball: no flight
+            public float focusScale = 0.18f;
+            public MenuElement data;          // null for the generated level cards
+            public Color baseColor;
         }
 
         private class Page
         {
-            public VisualElement root;
+            public string id;
+            public MenuView view;
             public readonly List<Option> options = new List<Option>();
             public int focused;
-            public Page back;
-            public Vector2 cuePos;            // percent
-            public float cueRadius = 50f;
-            public VisualElement cueBall;
+            public Label context;             // "Just for fun · Le bar"…
+            public VisualElement aimHint;
+            public VisualElement Root => view.root;
+            public bool HasCue => view.cueBall != null;
+            public Vector2 CuePos => view.screen.cuePosition;
+            public float CueRadius => view.screen.cueSize / 2f;
         }
 
+        private MenuSettings cfg;
         private UIDocument document;
         private VisualElement root, stage, aimLine, cueStick, toast;
-        private Page title, lobby, mode, current;
-        private Font menuFont, titleFont;
-        private Label blinkHint, ruleTitle, ruleText, ruleOption;
-        private VisualElement[] slots = new VisualElement[2];
-        private Label[] slotLabels = new Label[2];
+        private readonly Dictionary<string, Page> pages = new Dictionary<string, Page>();
+        private Page title, level, mode, lobby, settingsPage, current;
+        private KeyBindingsPanel settings;
+        private Label ruleTitle, ruleText, ruleOption;
+        private readonly VisualElement[] slots = new VisualElement[2];
+        private readonly Label[] slotLabels = new Label[2];
         private int knownPlayers = -1;
 
-        private PoolGameMode chosenMode = PoolGameMode.EightBall;
+        private bool local;                   // multiplayer path (the lobby) or Just for fun
+        private string levelName = "";
+        private int levelIndex;
+
+        // J1 is whoever drives the menu (the device of the last confirm);
+        // J2 joins in the lobby by pressing a button on another device.
+        // Handed to the level through GameSession.
+        private InputDevice menuDevice;
+        private readonly InputDevice[] slotDevices = new InputDevice[2];
+        private bool joinedThisFrame;
         private PoolPartyMode chosenParty = PoolPartyMode.Classic;
         private int targetScore = 25;
-        private bool partyFromTitle;
 
         // Shot animation: pull back, thrust, the ball flies off, then the action.
-        private Option shooting;
+        private Option shooting, lastFocused;
         private float shotTime;
         private float toastTime;
+        private Action pendingAction;
+        private float pendingTime;
         private Vector2 lastMouse;
         private readonly Dictionary<Gamepad, Vector2> padLatch = new Dictionary<Gamepad, Vector2>();
 
         private void OnEnable()
         {
             PoolMatchRules.ExternalMenu = true;
-            menuFont = Resources.Load<Font>("UI/Fonts/TitanOne-Regular");
-            titleFont = Resources.Load<Font>("UI/Fonts/BowlbyOne-Regular");
-            if (menuFont == null || titleFont == null)
+            cfg = MenuSettings.Instance;
+            if (K.BodyFont == null || K.TitleFont == null)
                 Debug.LogWarning("[Menu] Polices introuvables dans Resources/UI/Fonts (Titan One, Bowlby One) : police par défaut.");
 
             document = GetComponent<UIDocument>();
             if (document == null)
             {
                 document = gameObject.AddComponent<UIDocument>();
-                document.panelSettings = CreatePanel();
+                document.panelSettings = K.CreatePanel(100);
             }
             if (document.rootVisualElement == null)
             {
@@ -133,266 +147,277 @@ namespace UntitledPoolGame.Core
         private void Build()
         {
             root = document.rootVisualElement;
-            root.style.position = Position.Absolute;
-            root.style.left = root.style.top = root.style.right = root.style.bottom = 0;
+            K.Fill(root);
+            stage = K.Box(root, "stage");
+            K.Fill(stage);
 
-            stage = Box(root, "stage");
-            Fill(stage);
-            BuildRoom(stage);
+            foreach (string id in new[] { MenuLayouts.Title, MenuLayouts.NewGame, MenuLayouts.Load, MenuLayouts.Level,
+                                          MenuLayouts.Mode, MenuLayouts.Multiplayer, MenuLayouts.Lobby, MenuLayouts.Settings })
+                pages[id] = BuildPage(id);
+            title = pages[MenuLayouts.Title];
+            level = pages[MenuLayouts.Level];
+            mode = pages[MenuLayouts.Mode];
+            lobby = pages[MenuLayouts.Lobby];
+            settingsPage = pages[MenuLayouts.Settings];
 
-            title = BuildTitle();
-            lobby = BuildLobby();
-            mode = BuildMode();
-            lobby.back = title;
-            mode.back = lobby;
+            BuildLevelCards(level);
+            BuildRulesCard(mode);
+            BuildLobbySlots(lobby);
 
-            aimLine = Box(stage, "aim");
+            aimLine = K.Box(stage, "aim");
             aimLine.style.position = Position.Absolute;
             aimLine.style.height = 5;
             aimLine.style.backgroundColor = new Color(1f, 1f, 1f, 0.5f);
             aimLine.style.transformOrigin = new TransformOrigin(Length.Percent(0), Length.Percent(50));
-            aimLine.pickingMode = PickingMode.Ignore;
 
-            cueStick = Box(stage, "cue-stick");
+            cueStick = K.Box(stage, "cue-stick");
             cueStick.style.position = Position.Absolute;
             cueStick.style.width = 620;
             cueStick.style.height = 16;
             cueStick.style.flexDirection = FlexDirection.Row;
             cueStick.style.transformOrigin = new TransformOrigin(Length.Percent(0), Length.Percent(50));
-            cueStick.pickingMode = PickingMode.Ignore;
-            Radius(cueStick, 8);
+            K.Radius(cueStick, 8);
             cueStick.style.overflow = Overflow.Hidden;
-            foreach (var (share, color) in new[] { (2f, Hex("#3a80c8")), (3f, Hex("#f4ecd6")), (55f, Hex("#c8914f")), (40f, Hex("#2b1a0f")) })
+            foreach (var (share, color) in new[] { (2f, K.Hex("#3a80c8")), (3f, K.Hex("#f4ecd6")), (55f, K.Hex("#c8914f")), (40f, K.Hex("#2b1a0f")) })
             {
-                VisualElement part = Box(cueStick, "part");
+                VisualElement part = K.Box(cueStick, "part");
                 part.style.flexGrow = share;
                 part.style.backgroundColor = color;
             }
 
-            blinkHint = Text(stage, "vise une bille, tire !", menuFont, 34, Cream);
-            Place(blinkHint.parent, 84f, 89f);
-            Label keys = Text(stage, "Viser : souris · flèches · stick    Tirer : clic · Entrée · A    Retour : Échap · B", menuFont, 20, new Color(1f, 1f, 1f, 0.6f));
-            Place(keys.parent, 50f, 97f);
+            settings = new KeyBindingsPanel(stage);
 
-            toast = Text(stage, "", titleFont, 44, Cream).parent;
-            Place(toast, 50f, 46f);
+            toast = K.Text(stage, "", K.TitleFont, 44, K.Chalk).parent;
+            K.Place(toast, 50f, 46f);
             toast.style.opacity = 0f;
         }
 
-        // The bar at night and the pool table lit by its lamp (every page).
-        private void BuildRoom(VisualElement parent)
+        private Page BuildPage(string id)
         {
-            VisualElement room = Box(parent, "room");
-            Fill(room);
-            room.style.backgroundImage = Radial(Hex("#4d3121"), Hex("#140d09"), 0.5f, 0.4f, 1.1f);
-            Stretch(room);
-
-            // Blurred bar lights in the background.
-            (float x, float y, float r, Color c)[] bokeh =
+            var page = new Page { id = id, view = MenuRenderer.Build(stage, MenuLayouts.Get(id)) };
+            page.view.Stop();
+            page.Root.style.display = DisplayStyle.None;
+            page.context = page.view.Item("context")?.text;
+            page.aimHint = page.view.Item("aim-hint")?.visual;
+            foreach (MenuNode item in page.view.Selectable)
             {
-                (7, 20, 60, new Color(1f, 0.67f, 0.31f, 0.55f)), (15, 34, 42, new Color(1f, 0.47f, 0.35f, 0.45f)),
-                (24, 16, 48, new Color(0.47f, 0.78f, 1f, 0.35f)), (79, 18, 66, new Color(1f, 0.78f, 0.47f, 0.5f)),
-                (88, 32, 48, new Color(1f, 0.35f, 0.55f, 0.4f)), (94, 12, 42, new Color(0.55f, 1f, 0.78f, 0.3f)),
-                (70, 8, 36, new Color(1f, 0.9f, 0.63f, 0.35f)), (33, 6, 36, new Color(1f, 0.59f, 0.35f, 0.35f)),
-            };
-            foreach (var (x, y, r, c) in bokeh)
-            {
-                VisualElement glow = Disc(parent, x, y, r * 2.4f, Color.clear);
-                glow.style.backgroundImage = Radial(c, new Color(c.r, c.g, c.b, 0f), 0.5f, 0.5f, 0.8f);
-                Stretch(glow);
+                MenuElement data = item.data;
+                page.options.Add(new Option
+                {
+                    visual = item.visual, pos = data.position, radius = item.Radius, card = item.IsCard,
+                    focusScale = data.focusScale, data = data, baseColor = data.color, shoot = () => Do(data),
+                });
             }
-
-            VisualElement tableShadow = Box(parent, "table-shadow");
-            Rect(tableShadow, 11f, 18f, 11f, 1f);
-            tableShadow.style.backgroundColor = new Color(0f, 0f, 0f, 0.45f);
-            Radius(tableShadow, 40);
-
-            VisualElement felt = Box(parent, "felt");
-            Rect(felt, 10f, 14f, 10f, 5f);
-            felt.style.backgroundImage = Radial(Felt, FeltDark, 0.5f, 0.6f, 1.2f);
-            Stretch(felt);
-            Radius(felt, 22);
-            Border(felt, 30, Wood);
-
-            foreach (var (x, y) in new[] { (12.6f, 19f), (50f, 17f), (87.4f, 19f), (12.6f, 90.5f), (50f, 92.5f), (87.4f, 90.5f) })
-            {
-                VisualElement pocket = Disc(parent, x, y, 66, Color.black);
-                Border(pocket, 6, WoodDark);
-            }
-
-            VisualElement lampLight = Box(parent, "lamplight");
-            Fill(lampLight);
-            lampLight.pickingMode = PickingMode.Ignore;
-            lampLight.style.backgroundImage = Radial(new Color(1f, 0.89f, 0.63f, 0.2f), new Color(1f, 0.89f, 0.63f, 0f), 0.5f, 0.52f, 0.9f);
-            Stretch(lampLight);
-
-            VisualElement shade = Box(parent, "lampshade");
-            shade.style.position = Position.Absolute;
-            shade.style.left = Length.Percent(33);
-            shade.style.width = Length.Percent(34);
-            shade.style.top = 0;
-            shade.style.height = Length.Percent(7.5f);
-            shade.style.backgroundColor = Hex("#174a31");
-            shade.style.borderBottomLeftRadius = shade.style.borderBottomRightRadius = 10;
-            shade.style.borderBottomWidth = 8;
-            shade.style.borderBottomColor = Hex("#f7d58a");
-
-            VisualElement vignette = Box(parent, "vignette");
-            Fill(vignette);
-            vignette.pickingMode = PickingMode.Ignore;
-            vignette.style.backgroundImage = Radial(new Color(0f, 0f, 0f, 0f), new Color(0f, 0f, 0f, 0.55f), 0.5f, 0.45f, 2.2f);
-            Stretch(vignette);
-        }
-
-        private Page NewPage(string name, Vector2 cue, float cueSize)
-        {
-            var page = new Page { root = Box(stage, name), cuePos = cue, cueRadius = cueSize / 2f };
-            Fill(page.root);
-            page.root.pickingMode = PickingMode.Ignore;
-            page.cueBall = Ball(page.root, cue.x, cue.y, cueSize, BallCream, null, false).Q("ball");
             return page;
         }
 
-        private Page BuildTitle()
+        // One postcard per level of GameFlowSettings, in a row centered on
+        // the "levels" zone of the Level screen.
+        private void BuildLevelCards(Page page)
         {
-            Page page = NewPage("title", new Vector2(50f, 85f), 96f);
-            VisualElement logo = Box(page.root, "logo");
-            logo.style.alignItems = Align.Center;
-            Place(logo, 50f, 28f);
-            Shadowed(Text(logo, "Untitled", menuFont, 60, Cream, false));
-            Shadowed(Text(logo, "POOL GAME", titleFont, 116, Cream, false), 8);
-
-            AddBall(page, 26f, 58f, Hex("#f4c20d"), "1", false, "Jouer", () => { partyFromTitle = false; Show(lobby); });
-            AddBall(page, 42f, 58f, Hex("#6a2c91"), "12", true, "Party", () => { partyFromTitle = true; Show(lobby); });
-            AddBall(page, 58f, 58f, Hex("#138a3a"), "6", false, "Réglages", () => Toast("Bientôt !"));
-            AddBall(page, 74f, 58f, Hex("#111111"), "8", false, "Quitter", Quit);
-            return page;
-        }
-
-        private Page BuildLobby()
-        {
-            Page page = NewPage("lobby", new Vector2(17f, 82f), 70f);
-            Shadowed(Text(page.root, "Qui joue ce soir ?", menuFont, 84, Cream));
-            Place(page.root[page.root.childCount - 1], 50f, 24f);
-
-            for (int i = 0; i < 2; i++)
+            MenuNode zone = page.view.Item("levels");
+            Vector2 center = zone != null ? zone.data.position : new Vector2(50f, 54f);
+            float width = zone != null ? zone.data.size.x / 1920f * 100f : 78f;
+            List<LevelEntry> levels = GameFlowSettings.Instance.levels;
+            int n = Mathf.Max(1, levels.Count);
+            float spacing = Mathf.Min(22f, width / n);
+            for (int i = 0; i < levels.Count; i++)
             {
-                float x = i == 0 ? 32f : 68f;
-                slots[i] = Box(page.root, "slot" + i);
-                Place(slots[i], x, 48f);
-                slotLabels[i] = Text(page.root, "", menuFont, 40, Cream);
-                Shadowed(slotLabels[i]);
-                Place(slotLabels[i].parent, x, 66f);
+                LevelEntry entry = levels[i];
+                int index = i;
+                float tilt = i % 3 == 0 ? -3f : i % 3 == 1 ? 1f : 3f;
+                AddLevelCard(page, center.x + (i - (n - 1) / 2f) * spacing, center.y, tilt, entry, index);
             }
-
-            // "C'est parti": a pill with a small ball, like the prototype's button.
-            VisualElement go = Box(page.root, "go");
-            Place(go, 50f, 84f);
-            VisualElement pill = Box(go, "pill");
-            pill.style.flexDirection = FlexDirection.Row;
-            pill.style.alignItems = Align.Center;
-            pill.style.paddingLeft = pill.style.paddingTop = pill.style.paddingBottom = 12;
-            pill.style.paddingRight = 34;
-            pill.style.backgroundColor = new Color(0f, 0f, 0f, 0.3f);
-            Radius(pill, 60);
-            VisualElement small = BallVisual(pill, 64, Hex("#f07b12"), "5", false);
-            small.style.marginRight = 16;
-            Shadowed(Text(pill, "C'est parti", titleFont, 46, Cream, false));
-            page.options.Add(new Option { visual = pill, pos = new Vector2(50f, 84f), radius = 150f, shoot = () => Show(mode) });
-            return page;
         }
 
-        private Page BuildMode()
+        private int FirstPlayableLevel()
         {
-            Page page = NewPage("mode", new Vector2(50f, 84f), 70f);
-            Shadowed(Text(page.root, "On joue à quoi ?", menuFont, 74, Cream));
-            Place(page.root[page.root.childCount - 1], 27f, 24f);
+            List<LevelEntry> levels = GameFlowSettings.Instance.levels;
+            for (int i = 0; i < levels.Count; i++) if (!levels[i].comingSoon) return i;
+            return 0;
+        }
 
-            AddModeBall(page, 18f, 42f, Hex("#111111"), "8", false, "8-ball", PoolGameMode.EightBall,
-                "Pleines contre rayées. La 8 en dernier, dans la poche annoncée.");
-            AddModeBall(page, 34f, 42f, Hex("#f4c20d"), "9", true, "9-ball", PoolGameMode.NineBall,
-                "Touche toujours la plus petite bille. Qui rentre la 9 gagne.");
-            AddModeBall(page, 18f, 70f, Hex("#d8261c"), "3", false, "14.1", PoolGameMode.FourteenOne,
-                "Chaque bille rentrée rapporte 1 point.");
-            AddModeBall(page, 34f, 70f, Hex("#6a2c91"), "12", true, "Party", PoolGameMode.Party,
-                "Les règles du 8-ball, plus des caisses et une bille à pouvoir sur la table.");
+        private void AddLevelCard(Page page, float x, float y, float tilt, LevelEntry entry, int index)
+        {
+            VisualElement holder = K.Box(page.Root, "level-card");
+            holder.style.width = 400;
+            holder.style.height = 470;
+            K.Place(holder, x, y);
+            VisualElement card = K.PopCard(holder, "card");
+            K.Fill(card);
+            K.Pad(card, 14, 14);
+            card.style.rotate = new Rotate(new Angle(tilt, AngleUnit.Degree));
+            VisualElement pic = K.Box(card, "picture");
+            pic.style.height = 270;
+            pic.style.overflow = Overflow.Hidden;
+            K.Radius(pic, 10);
+            K.Border(pic, 3, K.Ink);
+            LevelPictures.Fill(pic, entry, index);
+            bool locked = entry.comingSoon;
+            if (locked)
+            {
+                VisualElement veil = K.Box(pic, "veil");
+                K.Fill(veil);
+                veil.style.backgroundColor = new Color(0f, 0f, 0f, 0.4f);
+            }
+            Label n = K.Text(card, entry.displayName, K.TitleFont, 40, K.Ink, false);
+            n.style.unityTextAlign = TextAnchor.MiddleLeft;
+            n.style.marginTop = 12;
+            Label l = K.Text(card, entry.menuLine, K.BodyFont, 22, new Color(K.Ink.r, K.Ink.g, K.Ink.b, 0.65f), false);
+            l.style.unityTextAlign = TextAnchor.MiddleLeft;
+            l.style.whiteSpace = WhiteSpace.Normal;
+            if (locked)
+            {
+                VisualElement stamp = K.Box(card, "stamp");
+                stamp.style.position = Position.Absolute;
+                stamp.style.right = -14;
+                stamp.style.top = 36;
+                stamp.style.backgroundColor = K.Red;
+                K.Pad(stamp, 16, 4);
+                K.Radius(stamp, 8);
+                K.Border(stamp, 3, K.Ink);
+                stamp.style.rotate = new Rotate(new Angle(10f, AngleUnit.Degree));
+                K.Text(stamp, cfg.comingSoonStamp, K.TitleFont, 28, Color.white, false);
+            }
+            page.options.Add(new Option
+            {
+                visual = card, pos = new Vector2(x, y), radius = 200f, card = true, focusScale = 0.06f, baseColor = K.Card,
+                shoot = locked ? (Action)(() => Toast(cfg.comingSoonToast))
+                               : () => { levelName = TextFx.Strip(entry.displayName); levelIndex = index; Show(mode); },
+            });
+        }
 
-            // The rules card ("chalk cube").
-            VisualElement card = Box(page.root, "rules");
-            card.style.position = Position.Absolute;
-            card.style.left = Length.Percent(51);
-            card.style.top = Length.Percent(33);
-            card.style.width = Length.Percent(33);
-            card.style.backgroundColor = Cube;
-            card.style.paddingLeft = card.style.paddingRight = 32;
-            card.style.paddingTop = card.style.paddingBottom = 26;
-            card.style.borderBottomWidth = 12;
-            card.style.borderBottomColor = CubeDark;
-            card.style.rotate = new Rotate(new Angle(2f, AngleUnit.Degree));
-            Radius(card, 14);
-            ruleTitle = Text(card, "", titleFont, 54, Color.white, false);
-            ruleText = Text(card, "", menuFont, 30, Color.white, false);
-            ruleText.style.whiteSpace = WhiteSpace.Normal;
-            ruleText.style.marginTop = 8;
-            ruleOption = Text(card, "", menuFont, 26, Color.white, false);
+        // The "rules" panel of the Mode screen: its title and line show the
+        // aimed game type; an option line is added under them.
+        private void BuildRulesCard(Page page)
+        {
+            MenuNode rules = page.view.Item("rules");
+            if (rules == null) return;
+            ruleTitle = rules.text;
+            ruleText = rules.sub;
+            if (ruleTitle != null) ruleTitle.style.unityTextAlign = TextAnchor.MiddleLeft;
+            if (ruleText != null) ruleText.style.unityTextAlign = TextAnchor.MiddleLeft;
+            ruleOption = K.Text(rules.visual, "", K.BodyFont, Mathf.Max(12f, rules.data.subTextSize * 0.87f), rules.data.textColor, false);
             ruleOption.style.marginTop = 14;
             ruleOption.style.alignSelf = Align.FlexStart;
             ruleOption.style.backgroundColor = new Color(0f, 0f, 0f, 0.2f);
-            ruleOption.style.paddingLeft = ruleOption.style.paddingRight = 14;
-            ruleOption.style.paddingTop = ruleOption.style.paddingBottom = 4;
-            Radius(ruleOption, 10);
-            return page;
+            K.Pad(ruleOption, 14, 4);
+            K.Radius(ruleOption, 10);
         }
 
-        private readonly List<(Option option, PoolGameMode mode, string name, string rules)> modeOptions =
-            new List<(Option, PoolGameMode, string, string)>();
-
-        private void AddModeBall(Page page, float x, float y, Color color, string number, bool stripe, string label,
-            PoolGameMode gameMode, string rules)
+        private void BuildLobbySlots(Page page)
         {
-            Option option = AddBall(page, x, y, color, number, stripe, label, () =>
+            for (int i = 0; i < 2; i++)
             {
-                chosenMode = gameMode;
-                PoolMatchRules match = PoolMatchRules.Instance;
-                if (match != null) match.RequestStart(gameMode, chosenParty, targetScore);
-                Hide();
-            });
-            modeOptions.Add((option, gameMode, label, rules));
+                slots[i] = page.view.Item("slot" + (i + 1))?.visual;
+                slotLabels[i] = page.view.Item("slot" + (i + 1) + "-label")?.text;
+                if (slots[i] != null)
+                {
+                    slots[i].style.alignItems = Align.Center;
+                    slots[i].style.justifyContent = Justify.Center;
+                }
+            }
         }
 
-        private Option AddBall(Page page, float x, float y, Color color, string number, bool stripe, string label, Action shoot)
+        // ---------- Actions ----------
+
+        private void Do(MenuElement e)
         {
-            const float size = 110f;
-            VisualElement holder = Ball(page.root, x, y, size, color, number, stripe);
-            Label text = Text(page.root, label, menuFont, 44, Cream);
-            Shadowed(text);
-            Place(text.parent, x, y + 9f);
-            var option = new Option { visual = holder.Q("ball"), pos = new Vector2(x, y), radius = size / 2f, shoot = shoot };
-            page.options.Add(option);
-            return option;
+            MenuFeel.Play(e.feelOnPress);
+            switch (e.action)
+            {
+                case MenuAction.OpenScreen:
+                    if (pages.TryGetValue(e.targetScreen ?? "", out Page target)) Show(target);
+                    else Debug.LogWarning($"[Menu] Écran « {e.targetScreen} » introuvable (élément {e.id}).");
+                    break;
+                case MenuAction.Back: GoBack(); break;
+                case MenuAction.NewGameSlot:
+                    Toast(cfg.newGameToast);
+                    local = false;
+                    levelIndex = FirstPlayableLevel();
+                    Later(1.3f, () => Launch(PoolGameMode.EightBall));
+                    break;
+                case MenuAction.LoadSlot: Toast(cfg.emptySlotToast); break;
+                case MenuAction.JustForFun: local = false; Show(level); break;
+                case MenuAction.PlayLocal: local = true; Show(lobby); break;
+                case MenuAction.PlayOnline: Toast(cfg.onlineToast); break;
+                case MenuAction.LobbyGo: Show(level); break;
+                case MenuAction.StartMode: Launch(e.mode); break;
+                case MenuAction.OpenSettings: Show(settingsPage); break;
+                case MenuAction.Quit: Quit(); break;
+            }
+        }
+
+        private void GoBack()
+        {
+            if (current == level) { Show(local ? lobby : title); return; }
+            string back = current?.view.screen.backScreen;
+            if (!string.IsNullOrEmpty(back) && pages.TryGetValue(back, out Page target)) Show(target);
         }
 
         // ---------- Pages ----------
 
         private void Show(Page page)
         {
-            foreach (Page p in new[] { title, lobby, mode })
-                p.root.style.display = p == page ? DisplayStyle.Flex : DisplayStyle.None;
+            foreach (Page p in pages.Values)
+            {
+                bool on = p == page;
+                p.Root.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+                if (!on) p.view.Stop();
+            }
+            if (current == settingsPage && page != settingsPage) settings.Close();
             current = page;
+            page.view.Replay();
+            page.focused = 0;
             if (page == mode)
             {
-                PoolGameMode wanted = partyFromTitle ? PoolGameMode.Party : chosenMode;
-                int index = modeOptions.FindIndex(m => m.mode == wanted);
-                page.focused = Mathf.Max(0, index);
+                int classic = page.options.FindIndex(o => o.data != null && o.data.action == MenuAction.StartMode && o.data.mode == PoolGameMode.EightBall);
+                page.focused = Mathf.Max(0, classic);
+            }
+            if (page == lobby) { slotDevices[0] = menuDevice ?? slotDevices[0]; knownPlayers = -1; }
+            if (page == level)
+            {
+                // Start on the first level that can be played (the cards come after the screen's own options).
+                int first = FirstPlayableLevel(), cardsStart = page.options.FindIndex(o => o.data == null);
+                if (cardsStart >= 0 && cardsStart + first < page.options.Count) page.focused = cardsStart + first;
             }
             foreach (Option o in page.options) { o.focus = 0f; ResetVisual(o); }
             shooting = null;
+            lastFocused = null;
+
+            string context = local ? cfg.localContext : cfg.justForFunContext;
+            if (level.context != null) TextFx.Set(level.context, context);
+            if (mode.context != null) TextFx.Set(mode.context, context + " · " + levelName);
+            if (page == settingsPage) settings.Open();
         }
 
         private void Hide()
         {
             root.style.display = DisplayStyle.None;
+            foreach (Page p in pages.Values) p.view.Stop();
             current = null;
+        }
+
+        // The chosen level with this game type: loaded behind the loading
+        // screen, with J1 (and J2 in local multiplayer). In a level played
+        // straight from the editor, choosing that same level just starts the
+        // match in place.
+        private void Launch(PoolGameMode gameMode)
+        {
+            List<LevelEntry> levels = GameFlowSettings.Instance.levels;
+            LevelEntry entry = levelIndex >= 0 && levelIndex < levels.Count ? levels[levelIndex] : null;
+            PoolMatchRules matchRules = PoolMatchRules.Instance;
+            if (entry == null || (matchRules != null && SceneManager.GetActiveScene().name == entry.sceneName))
+            {
+                if (matchRules != null) matchRules.RequestStart(gameMode, chosenParty, targetScore);
+                Hide();
+                return;
+            }
+            var devices = new List<InputDevice>();
+            if (local) { foreach (InputDevice d in slotDevices) if (d != null) devices.Add(d); }
+            else devices.Add(menuDevice ?? (InputDevice)Keyboard.current ?? Gamepad.current);
+            LevelLoader.Load(entry, levelIndex, gameMode, chosenParty, targetScore, devices);
+            Hide();
         }
 
         private static void Quit()
@@ -406,8 +431,21 @@ namespace UntitledPoolGame.Core
 
         private void Toast(string text)
         {
-            toast.Q<Label>().text = text;
-            toastTime = 1.4f;
+            TextFx.Reveal(toast.Q<Label>(), text);
+            toastTime = cfg.toastDuration;
+        }
+
+        // A text from MenuSettings with its {0}; a typo in it must not throw.
+        private static string Format(string format, object value)
+        {
+            try { return string.Format(format ?? "", value); }
+            catch (FormatException) { return format; }
+        }
+
+        private void Later(float delay, Action action)
+        {
+            pendingAction = action;
+            pendingTime = delay;
         }
 
         // ---------- Frame ----------
@@ -415,73 +453,118 @@ namespace UntitledPoolGame.Core
         private void Update()
         {
             PoolMatchRules matchRules = PoolMatchRules.Instance;
-            if (current == null || (matchRules != null && matchRules.MatchStarted))
+            if (current == null || (matchRules != null && matchRules.MatchStarted) || LevelLoader.Busy)
             {
                 if (current != null) Hide();
                 return;
             }
 
-            if (toastTime > 0f) toastTime -= Time.unscaledDeltaTime;
+            float dt = Time.unscaledDeltaTime;
+            if (toastTime > 0f) toastTime -= dt;
             toast.style.opacity = Mathf.Clamp01(toastTime * 3f);
-            blinkHint.style.opacity = 0.55f + 0.45f * Mathf.Round(Mathf.Repeat(Time.unscaledTime / 0.7f, 1f));
+            if (current.aimHint != null)
+                current.aimHint.style.opacity = 0.55f + 0.45f * Mathf.Round(Mathf.Repeat(Time.unscaledTime / cfg.blinkPeriod, 1f));
+
+            if (pendingAction != null)
+            {
+                pendingTime -= dt;
+                if (pendingTime <= 0f) { Action a = pendingAction; pendingAction = null; a(); return; }
+            }
+
+            if (current == settingsPage)
+            {
+                aimLine.style.display = cueStick.style.display = DisplayStyle.None;
+                if (!settings.Tick(dt)) GoBack();
+                return;
+            }
 
             if (current == lobby) UpdateSlots();
             if (current == mode) UpdateRules();
 
-            if (shooting == null) ReadInput();
-            Animate();
+            // A J2 joining with its button doesn't also press "C'est parti".
+            if (shooting == null && pendingAction == null && !joinedThisFrame) ReadInput();
+            joinedThisFrame = false;
+            FocusFeel();
+            Animate(dt);
         }
 
+        private void FocusFeel()
+        {
+            if (current.options.Count == 0) return;
+            Option o = current.options[Mathf.Clamp(current.focused, 0, current.options.Count - 1)];
+            if (o == lastFocused) return;
+            if (lastFocused != null && o.data != null) MenuFeel.Play(o.data.feelOnFocus);
+            lastFocused = o;
+        }
+
+        // J1 = the device driving the menu; J2 = the first other device that
+        // presses its button (A / Start on a pad, Enter / Space on the
+        // keyboard when J1 plays with a pad).
         private void UpdateSlots()
         {
-            int players = PlayerInput.all.Count;
+            joinedThisFrame = false;
+            if (slotDevices[0] == null) slotDevices[0] = menuDevice ?? (InputDevice)Keyboard.current ?? Gamepad.current;
+            if (slotDevices[1] == null)
+            {
+                foreach (Gamepad pad in Gamepad.all)
+                    if (pad != slotDevices[0] && (pad.buttonSouth.wasPressedThisFrame || pad.startButton.wasPressedThisFrame))
+                    { slotDevices[1] = pad; joinedThisFrame = true; break; }
+                Keyboard kb = Keyboard.current;
+                if (slotDevices[1] == null && kb != null && !(slotDevices[0] is Keyboard)
+                    && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
+                { slotDevices[1] = kb; joinedThisFrame = true; }
+            }
+
+            int players = slotDevices[1] != null ? 2 : slotDevices[0] != null ? 1 : 0;
             float pulse = 1f + 0.06f * Mathf.Sin(Time.unscaledTime * 4.5f);
             for (int i = 0; i < 2; i++)
-                if (i >= players) slots[i].style.scale = new Scale(new Vector3(pulse, pulse, 1f));
+                if (slots[i] != null && i >= players) slots[i].style.scale = new Scale(new Vector3(pulse, pulse, 1f));
             if (players == knownPlayers) return;
             knownPlayers = players;
+            if (joinedThisFrame) Toast(cfg.player2Joined);
             for (int i = 0; i < 2; i++)
             {
+                if (slots[i] == null) continue;
                 slots[i].Clear();
                 slots[i].style.scale = new Scale(Vector3.one);
+                float size = Mathf.Max(40f, slots[i].resolvedStyle.width > 1f ? slots[i].resolvedStyle.width : 170f);
                 if (i < players)
                 {
-                    BallVisual(slots[i], 170, i == 0 ? P1 : P2, "J" + (i + 1), false);
-                    slotLabels[i].text = DeviceName(PlayerInput.all[i]) + " - prêt";
+                    K.BallVisual(slots[i], size, i == 0 ? K.P1 : K.P2, "J" + (i + 1), false);
+                    if (slotLabels[i] != null) TextFx.Reveal(slotLabels[i], Format(cfg.readyFormat, DeviceName(slotDevices[i])));
                 }
                 else
                 {
-                    VisualElement ring = Box(slots[i], "empty");
-                    ring.style.width = ring.style.height = 170;
-                    Radius(ring, 85);
-                    Border(ring, 6, new Color(1f, 1f, 1f, 0.55f));
+                    VisualElement ring = K.Box(slots[i], "empty");
+                    ring.style.width = ring.style.height = size;
+                    K.Radius(ring, size / 2f);
+                    K.Border(ring, 6, new Color(1f, 1f, 1f, 0.55f));
                     ring.style.justifyContent = Justify.Center;
-                    Label call = Text(ring, $"J{i + 1}\nappuie !", menuFont, 36, Cream, false);
+                    Label call = K.Text(ring, Format(cfg.joinCallFormat, i + 1), K.BodyFont, size * 0.21f, K.Chalk, false);
                     call.style.unityTextAlign = TextAnchor.MiddleCenter;
-                    slotLabels[i].text = "Une touche ou un bouton\npour rejoindre";
+                    if (slotLabels[i] != null) TextFx.Set(slotLabels[i], cfg.joinHint);
                 }
             }
         }
 
-        private static string DeviceName(PlayerInput player)
-        {
-            foreach (InputDevice device in player.devices)
-                if (device is Gamepad) return "Manette";
-            return "Clavier & souris";
-        }
+        private string DeviceName(InputDevice device) => device is Gamepad ? cfg.gamepadName : cfg.keyboardName;
 
         private void UpdateRules()
         {
-            if (current.options.Count == 0) return;
-            var entry = modeOptions[Mathf.Clamp(current.focused, 0, modeOptions.Count - 1)];
-            ruleTitle.text = entry.name;
-            ruleText.text = entry.rules;
-            ruleOption.text = entry.mode switch
-            {
-                PoolGameMode.FourteenOne => $"Premier à {targetScore}   < >  (LB / RB, molette, - / +)",
-                PoolGameMode.Party => "Pouvoirs : Attaque · Défense · Effet",
-                _ => "Classique",
-            };
+            if (current.options.Count == 0 || ruleTitle == null) return;
+            Option focused = current.options[Mathf.Clamp(current.focused, 0, current.options.Count - 1)];
+            MenuElement data = focused.data;
+            if (data == null || data.action != MenuAction.StartMode) return;
+            // The rules come in letter by letter when the aimed ball changes.
+            if (TextFx.Strip(data.text) != ruleTitle.text) TextFx.Reveal(ruleTitle, data.text);
+            if (ruleText != null && TextFx.Strip(data.description) != ruleText.text) TextFx.Reveal(ruleText, data.description);
+            if (ruleOption != null)
+                TextFx.Set(ruleOption, data.mode switch
+                {
+                    PoolGameMode.FourteenOne => Format(cfg.targetScoreFormat, targetScore),
+                    PoolGameMode.Party => cfg.powersOption,
+                    _ => cfg.noPowersOption,
+                });
         }
 
         // ---------- Input ----------
@@ -499,7 +582,11 @@ namespace UntitledPoolGame.Core
                 if (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame) nav = Vector2.up;
                 if (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame) nav = Vector2.left;
                 if (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame) nav = Vector2.right;
-                confirm |= kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame;
+                if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)
+                {
+                    confirm = true;
+                    menuDevice = kb;
+                }
                 back |= kb.escapeKey.wasPressedThisFrame || kb.backspaceKey.wasPressedThisFrame;
                 if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame || kb.pageDownKey.wasPressedThisFrame) adjust = -1;
                 if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame || kb.pageUpKey.wasPressedThisFrame) adjust = 1;
@@ -514,7 +601,11 @@ namespace UntitledPoolGame.Core
                 padLatch.TryGetValue(pad, out Vector2 held);
                 if (dir != Vector2.zero && dir != held) nav = dir;
                 padLatch[pad] = dir;
-                confirm |= pad.buttonSouth.wasPressedThisFrame;
+                if (pad.buttonSouth.wasPressedThisFrame)
+                {
+                    confirm = true;
+                    menuDevice = pad;
+                }
                 back |= pad.buttonEast.wasPressedThisFrame;
                 if (pad.leftShoulder.wasPressedThisFrame) adjust = -1;
                 if (pad.rightShoulder.wasPressedThisFrame) adjust = 1;
@@ -534,16 +625,21 @@ namespace UntitledPoolGame.Core
                 {
                     current.focused = current.options.IndexOf(hovered);
                     confirm = true;
+                    if (Keyboard.current != null) menuDevice = Keyboard.current;
                 }
                 float wheel = mouse.scroll.ReadValue().y;
                 if (wheel > 0.1f) adjust = 1;
                 else if (wheel < -0.1f) adjust = -1;
             }
 
-            if (adjust != 0 && current == mode && modeOptions[current.focused].mode == PoolGameMode.FourteenOne)
-                targetScore = Mathf.Clamp(targetScore + adjust * 5, 5, 200);
-            if (nav != Vector2.zero) Step(nav);
-            if (back && current.back != null) Show(current.back);
+            if (adjust != 0 && current == mode && current.options.Count > 0)
+            {
+                MenuElement data = current.options[current.focused].data;
+                if (data != null && data.action == MenuAction.StartMode && data.mode == PoolGameMode.FourteenOne)
+                    targetScore = Mathf.Clamp(targetScore + adjust * 5, 5, 200);
+            }
+            if (nav != Vector2.zero && current.options.Count > 1) Step(nav);
+            if (back) GoBack();
             else if (confirm && current.options.Count > 0)
             {
                 shooting = current.options[current.focused];
@@ -574,48 +670,63 @@ namespace UntitledPoolGame.Core
 
         // ---------- Animation ----------
 
-        private void Animate()
+        private void Animate(float dt)
         {
-            Vector2 size = current.root.layout.size;
-            if (float.IsNaN(size.x) || size.x < 1f || current.options.Count == 0)
+            Vector2 size = current.Root.layout.size;
+            for (int i = 0; i < current.options.Count; i++)
+            {
+                Option o = current.options[i];
+                if (o == shooting && !o.card) continue;
+                o.focus = Mathf.MoveTowards(o.focus, i == current.focused ? 1f : 0f, dt * 7f);
+                float s = 1f + o.focusScale * Ease(o.focus);
+                o.visual.style.scale = new Scale(new Vector3(s, s, 1f));
+                o.visual.style.translate = new Translate(0, -14f * Ease(o.focus));
+                o.visual.style.opacity = 1f;
+                FocusLook(o);
+            }
+
+            // No cue on this screen: the choice applies at once.
+            if (!current.HasCue || float.IsNaN(size.x) || size.x < 1f || current.options.Count == 0)
             {
                 aimLine.style.display = cueStick.style.display = DisplayStyle.None;
+                if (shooting != null)
+                {
+                    Option shot = shooting;
+                    shooting = null;
+                    shot.shoot?.Invoke();
+                }
                 return;
             }
             aimLine.style.display = cueStick.style.display = DisplayStyle.Flex;
 
-            float dt = Time.unscaledDeltaTime;
-            for (int i = 0; i < current.options.Count; i++)
-            {
-                Option o = current.options[i];
-                if (o == shooting) continue;
-                o.focus = Mathf.MoveTowards(o.focus, i == current.focused ? 1f : 0f, dt * 7f);
-                float s = 1f + 0.18f * Ease(o.focus);
-                o.visual.style.scale = new Scale(new Vector3(s, s, 1f));
-                o.visual.style.translate = new Translate(0, -14f * Ease(o.focus));
-                o.visual.style.opacity = 1f;
-            }
-
             Option target = shooting ?? current.options[current.focused];
-            Vector2 cue = Vector2.Scale(current.cuePos / 100f, size);
+            Vector2 cue = Vector2.Scale(current.CuePos / 100f, size);
             Vector2 aimAt = Vector2.Scale(target.pos / 100f, size) + new Vector2(0f, -14f * Ease(target.focus));
             Vector2 dir = (aimAt - cue).normalized;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
-            // Pull back, then thrust; then the ball flies off along the shot.
+            // Pull back, then thrust; then the ball flies off along the shot
+            // (cards and pills don't fly: the choice applies after the thrust).
             float pull = 18f;
             if (shooting != null)
             {
-                shotTime += dt;
+                shotTime += dt * cfg.shotSpeed;
                 if (shotTime < 0.16f) pull = Mathf.Lerp(18f, 70f, shotTime / 0.16f);
                 else if (shotTime < 0.24f) pull = Mathf.Lerp(70f, -6f, (shotTime - 0.16f) / 0.08f);
+                else if (shooting.card)
+                {
+                    Option shot = shooting;
+                    shooting = null;
+                    shot.shoot?.Invoke();
+                    return;
+                }
                 else
                 {
                     pull = -6f;
                     float k = Mathf.Clamp01((shotTime - 0.24f) / 0.32f);
                     Vector2 fly = dir * (420f * k);
                     shooting.visual.style.translate = new Translate(fly.x, fly.y - 14f);
-                    float s = Mathf.Lerp(1.18f, 0.35f, k);
+                    float s = Mathf.Lerp(1f + shooting.focusScale, 0.35f, k);
                     shooting.visual.style.scale = new Scale(new Vector3(s, s, 1f));
                     shooting.visual.style.opacity = 1f - k;
                     if (k >= 1f)
@@ -629,18 +740,33 @@ namespace UntitledPoolGame.Core
                 }
             }
 
-            Vector2 start = cue + dir * (current.cueRadius + 6f);
-            float length = Mathf.Max(0f, Vector2.Distance(start, aimAt) - target.radius * 1.18f);
+            Vector2 start = cue + dir * (current.CueRadius + 6f);
+            float length = Mathf.Max(0f, Vector2.Distance(start, aimAt) - target.radius * (1f + target.focusScale));
             aimLine.style.left = start.x;
             aimLine.style.top = start.y - 2.5f;
             aimLine.style.width = length;
             aimLine.style.rotate = new Rotate(new Angle(angle, AngleUnit.Degree));
             aimLine.style.opacity = shooting != null && shotTime > 0.24f ? 0f : 1f;
 
-            Vector2 tip = cue - dir * (current.cueRadius + pull);
+            Vector2 tip = cue - dir * (current.CueRadius + pull);
             cueStick.style.left = tip.x;
             cueStick.style.top = tip.y - 8f;
             cueStick.style.rotate = new Rotate(new Angle(angle + 180f, AngleUnit.Degree));
+        }
+
+        // Cards light up, pills turn yellow with an ink edge when aimed at.
+        private static void FocusLook(Option o)
+        {
+            MenuElementKind kind = o.data != null ? o.data.kind : MenuElementKind.Card;
+            if (kind == MenuElementKind.Card)
+                o.visual.style.backgroundColor = Color.Lerp(o.baseColor, Color.white, o.focus);
+            else if (kind == MenuElementKind.Pill)
+            {
+                bool on = o.focus > 0.5f;
+                o.visual.style.backgroundColor = Color.Lerp(new Color(0f, 0f, 0f, 0.08f), K.Yellow, o.focus);
+                K.Border(o.visual, on ? 3 : 0, K.Ink);
+                if (on) o.visual.style.borderBottomWidth = 6;
+            }
         }
 
         private static float Ease(float t) => 1f - (1f - t) * (1f - t);
@@ -651,166 +777,5 @@ namespace UntitledPoolGame.Core
             o.visual.style.scale = new Scale(Vector3.one);
             o.visual.style.opacity = 1f;
         }
-
-        // ---------- Element helpers ----------
-
-        private static VisualElement Box(VisualElement parent, string name)
-        {
-            var e = new VisualElement { name = name };
-            parent.Add(e);
-            return e;
-        }
-
-        private static void Fill(VisualElement e)
-        {
-            e.style.position = Position.Absolute;
-            e.style.left = e.style.top = e.style.right = e.style.bottom = 0;
-        }
-
-        private static void Rect(VisualElement e, float left, float top, float right, float bottom)
-        {
-            e.style.position = Position.Absolute;
-            e.style.left = Length.Percent(left);
-            e.style.top = Length.Percent(top);
-            e.style.right = Length.Percent(right);
-            e.style.bottom = Length.Percent(bottom);
-        }
-
-        // Centered on (x %, y %) of the parent.
-        private static void Place(VisualElement e, float x, float y)
-        {
-            e.style.position = Position.Absolute;
-            e.style.left = Length.Percent(x);
-            e.style.top = Length.Percent(y);
-            e.style.translate = new Translate(Length.Percent(-50), Length.Percent(-50));
-        }
-
-        private static void Radius(VisualElement e, float r)
-        {
-            e.style.borderTopLeftRadius = e.style.borderTopRightRadius = r;
-            e.style.borderBottomLeftRadius = e.style.borderBottomRightRadius = r;
-        }
-
-        private static void Border(VisualElement e, float width, Color color)
-        {
-            e.style.borderLeftWidth = e.style.borderRightWidth = e.style.borderTopWidth = e.style.borderBottomWidth = width;
-            e.style.borderLeftColor = e.style.borderRightColor = e.style.borderTopColor = e.style.borderBottomColor = color;
-        }
-
-        private static void Stretch(VisualElement e) =>
-            e.style.backgroundSize = new BackgroundSize(Length.Percent(100), Length.Percent(100));
-
-        private static VisualElement Disc(VisualElement parent, float x, float y, float size, Color color)
-        {
-            VisualElement d = Box(parent, "disc");
-            d.style.width = d.style.height = size;
-            Radius(d, size / 2f);
-            d.style.backgroundColor = color;
-            d.pickingMode = PickingMode.Ignore;
-            Place(d, x, y);
-            return d;
-        }
-
-        // A label; centered = wrapped in a holder to be placed with Place().
-        private Label Text(VisualElement parent, string text, Font font, float size, Color color, bool centered = true)
-        {
-            var label = new Label(text);
-            label.style.fontSize = size;
-            label.style.color = color;
-            if (font != null) label.style.unityFontDefinition = FontDefinition.FromFont(font);
-            label.style.unityTextAlign = TextAnchor.MiddleCenter;
-            label.style.whiteSpace = WhiteSpace.NoWrap;
-            label.pickingMode = PickingMode.Ignore;
-            if (!centered)
-            {
-                parent.Add(label);
-                return label;
-            }
-            VisualElement holder = Box(parent, "text");
-            holder.pickingMode = PickingMode.Ignore;
-            holder.Add(label);
-            return label;
-        }
-
-        private static Label Shadowed(Label label, float drop = 5f)
-        {
-            label.style.textShadow = new TextShadow { offset = new Vector2(0f, drop), blurRadius = 0f, color = ChalkShadow };
-            return label;
-        }
-
-        // A pool ball centered on (x %, y %): a holder with the ball (named
-        // "ball") inside, which is what scales and flies.
-        private VisualElement Ball(VisualElement parent, float x, float y, float size, Color color, string number, bool stripe)
-        {
-            VisualElement holder = Box(parent, "ball-holder");
-            holder.style.width = holder.style.height = size;
-            holder.pickingMode = PickingMode.Ignore;
-            Place(holder, x, y);
-            VisualElement shadow = Disc(holder, 50f, 62f, size * 0.9f, new Color(0f, 0f, 0f, 0.35f));
-            shadow.name = "shadow";
-            BallVisual(holder, size, color, number, stripe).name = "ball";
-            return holder;
-        }
-
-        private VisualElement BallVisual(VisualElement parent, float size, Color color, string number, bool stripe)
-        {
-            VisualElement ball = Box(parent, "ball");
-            ball.style.width = ball.style.height = size;
-            ball.style.flexShrink = 0;
-            Radius(ball, size / 2f);
-            ball.style.overflow = Overflow.Hidden;
-            ball.style.backgroundColor = stripe ? BallCream : color;
-            if (stripe)
-            {
-                VisualElement band = Box(ball, "band");
-                band.style.position = Position.Absolute;
-                band.style.left = band.style.right = 0;
-                band.style.top = Length.Percent(26);
-                band.style.bottom = Length.Percent(26);
-                band.style.backgroundColor = color;
-            }
-            VisualElement shade = Box(ball, "shade");
-            Fill(shade);
-            shade.style.backgroundImage = Radial(new Color(0f, 0f, 0f, 0f), new Color(0f, 0f, 0f, 0.38f), 0.36f, 0.68f, 1.6f);
-            Stretch(shade);
-            if (!string.IsNullOrEmpty(number))
-            {
-                VisualElement disc = Disc(ball, 50f, 50f, size * 0.44f, BallCream);
-                disc.style.justifyContent = Justify.Center;
-                Label n = Text(disc, number, menuFont, size * (number.Length > 1 ? 0.19f : 0.23f), Ink, false);
-                n.style.unityTextAlign = TextAnchor.MiddleCenter;
-            }
-            Disc(ball, 31f, 25f, size * 0.15f, new Color(1f, 1f, 1f, 0.9f));
-            return ball;
-        }
-
-        // ---------- Textures ----------
-
-        private static readonly Dictionary<string, Texture2D> textures = new Dictionary<string, Texture2D>();
-
-        // A radial gradient (CSS radial-gradient stand-in): inner at (cx, cy)
-        // (texture space, y up), outer at the corners; power shapes the falloff.
-        private static StyleBackground Radial(Color inner, Color outer, float cx, float cy, float power)
-        {
-            string key = $"{inner}{outer}{cx}{cy}{power}";
-            if (!textures.TryGetValue(key, out Texture2D tex) || tex == null)
-            {
-                const int n = 128;
-                tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.HideAndDontSave };
-                var pixels = new Color[n * n];
-                for (int y = 0; y < n; y++)
-                    for (int x = 0; x < n; x++)
-                    {
-                        float d = Vector2.Distance(new Vector2((x + 0.5f) / n, (y + 0.5f) / n), new Vector2(cx, cy)) / 0.7071f;
-                        pixels[y * n + x] = Color.Lerp(inner, outer, Mathf.Pow(Mathf.Clamp01(d), power));
-                    }
-                tex.SetPixels(pixels);
-                tex.Apply();
-                textures[key] = tex;
-            }
-            return new StyleBackground(tex);
-        }
-
-        private static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out Color c) ? c : Color.magenta;
     }
 }
