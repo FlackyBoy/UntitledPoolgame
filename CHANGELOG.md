@@ -3,6 +3,15 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-09
+- **Récap Discord des Pull Requests mergées** : `.github/workflows/discord-pr-merged.yml`. Chaque PR mergée sur `master` envoie un message sur un salon Discord :
+  - le titre de la PR, avec un lien ;
+  - la branche, l'auteur et la description ;
+  - chaque commit, avec un lien, son titre en gras et sa description dessous ; les commits de merge sont exclus.
+
+  Le message est coupé proprement au-delà de la limite de Discord. Le salon est choisi par le secret `DISCORD_WEBHOOK` du dépôt.
+- **Conventions git** (section *Workflow git* de `CLAUDE.md`) : branches `feature/`, `fix/` ou `chore/` ; commits avec un titre à l'impératif et une description ; une PR par feature, avec un titre lisible et 2 à 5 puces ; merge sans squash.
+
 ## 2026-10-08
 - **Organisation pour travailler à deux** (choix validés : GitHub Flow, relecture obligatoire, règle « une scène partagée = une personne » avec l'outil de fusion de Unity, doc centrée sur GitHub Desktop) :
   - **Doc** : `docs/content/equipe.md`, page « Travailler à deux » du site (`docs/equipe.html`, dans le menu et sur l'accueil) et PDF `docs/equipe.pdf`. Elle couvre les règles d'équipe, la mise en place, le cycle d'une tâche pas à pas dans GitHub Desktop, la relecture, les conflits et un pense-bête.

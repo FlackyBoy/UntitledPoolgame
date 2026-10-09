@@ -33,9 +33,24 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 - À chaque fonctionnalité ou correctif : mettre à jour `TODO.md` et `CHANGELOG.md` ; mettre à jour le GDD quand le statut d'une fonctionnalité change ; la doc technique quand une classe, un flux ou un réglage change ; ajouter aux pistes ce qui est seulement envisagé.
 - Commit / push uniquement quand l'utilisateur le demande, en ne commitant que les fichiers concernés.
 - Travail à deux (organisation dans `docs/content/equipe.md`) :
-  - ne jamais committer ni pousser sur `master` : travailler sur une branche `feat/…`, `fix/…`, `level/…` ou `doc/…` créée depuis `master` à jour ;
-  - proposer d'ouvrir une Pull Request (la relecture et l'approbation restent humaines) ;
+  - branches, commits et Pull Requests : voir *Workflow git* ci-dessous ;
+  - la relecture et l'accord de merge restent humains ;
   - ne pas modifier une scène partagée sans que l'utilisateur l'ait annoncée comme prise.
+
+## Workflow git
+
+La branche principale de ce dépôt est **`master`**. Chaque PR mergée dessus envoie un récap sur Discord (`.github/workflows/discord-pr-merged.yml`) : titre de la PR, sa description, puis chaque commit (titre en gras, description dessous). Ces textes doivent donc être lisibles.
+
+- **Ne jamais committer directement sur `master`.** Toujours travailler sur une branche créée depuis `master` à jour, nommée `feature/<nom-court>`, `fix/<nom-court>` ou `chore/<nom-court>` (en minuscules, avec des tirets).
+- **Chaque commit** :
+  - un titre court (moins de 72 caractères), à l'impératif, en français : « Ajoute la pause en carte », « Corrige la caméra de chute » ;
+  - une ligne vide ;
+  - une description qui explique ce qui a changé et pourquoi.
+- **Pas de commits « wip » ou « fix typo » isolés** : les regrouper avec le commit qu'ils corrigent avant d'ouvrir la PR.
+- **Une PR par feature**, avec :
+  - un titre clair, lisible par quelqu'un de non technique (c'est ce qui s'affiche dans Discord) ;
+  - une description courte : ce que la feature apporte, en 2 à 5 puces.
+- **Merger avec `gh pr merge --merge --delete-branch`** (pas de squash, pour garder le détail des commits), seulement après l'accord de l'utilisateur.
 
 ## Git
 
