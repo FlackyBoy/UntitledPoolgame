@@ -152,7 +152,7 @@ sequenceDiagram
   M->>M: mémorise l'orientation de la vue
   loop tant qu'Attaque est maintenue
     J->>M: tourne (Regarder)
-    M->>M: 1re rotation nette fixe le coup (droite → balayage vers la gauche, gauche → vers la droite, haut → vertical ; sinon estoc)
+    M->>M: 1re rotation nette fixe le coup (droite → balayage vers la gauche, gauche → vers la droite, haut → vertical, sinon estoc)
     M->>Q: armé de plus en plus loin (charge 0 → 1), dans le repère de la caméra
     Note over Q: FBBIK : les mains suivent
   end
