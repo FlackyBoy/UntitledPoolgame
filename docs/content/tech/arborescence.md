@@ -77,6 +77,10 @@ Assets/Scripts/
 │   ├── NetworkBootstrap.cs         F1/F2/F3 : Host / Client / Server (online)
 │   └── LocalClientRig.cs           ancien câblage Nappin (online, figé)
 ├── Editor/                         outils d'éditeur (non inclus dans le jeu)
+│   ├── GameFlowTools.cs            Tools > Pool > Create Main Menu Scene, Sync Build Scenes ; réglages du menu et du chargement
+│   ├── SceneNameDrawer.cs          sélecteur de scène dans l'Inspector, avertissement si la scène n'est pas dans le build
+│   ├── MenuStudio.cs               Tools > Pool > Menu Studio : éditeur graphique des écrans de menu
+│   ├── TextFxStudio.cs             Tools > Pool > Text FX Studio : écrire et prévisualiser les textes animés, créer une séquence Feel
 │   ├── PoolTableBuilder.cs         menus Tools > Pool (table, physique, config, pouvoirs)
 │   ├── PoolTableAssetSettings.cs   dimensions de la table
 │   ├── PoolBallTextureGenerator.cs textures numérotées des billes
@@ -92,9 +96,32 @@ Assets/Scripts/
 │       ├── LevelValidator.cs       vérifications et corrections
 │       └── LevelMakerSettings.cs   prefabs et options de l'outil
 ├── UI/
+│   ├── GameFlowSettings.cs         scène du menu et niveaux (nom, scène, image, twist), asset dans Resources
+│   ├── GameSession.cs              ce que le menu a décidé (niveau, mode, appareils des joueurs), garde le cap d'une scène à l'autre
 │   ├── HudSettings.cs              réglages du HUD (textes, couleurs, tailles, durées), asset dans Resources
+│   ├── LevelLoader.cs              écran de chargement + chargement du niveau, arrivée des joueurs, départ de la partie
+│   ├── LevelPictures.cs            image d'un niveau (ou dessin de remplacement)
+│   ├── LoadingScreenSettings.cs    textes, astuces et messages de l'écran de chargement, asset dans Resources
+│   ├── MainMenuScene.cs            marqueur de la scène du menu
+│   ├── MenuSettings.cs             textes, billes, couleurs, polices et fond du menu, de la pause et de l'écran des touches, asset dans Resources
+│   ├── KeyBindings.cs              touches choisies par le joueur (PlayerPrefs) + KeyBindingsApplier
+│   ├── KeyBindingsPanel.cs         écran « Réglages > Touches » (menu et pause)
+│   ├── PauseMenu.cs                pause en partie (Échap / Start), créée toute seule
+│   ├── Menus/                      écrans des menus en données (Menu Studio)
+│   │   ├── MenuScreen.cs           un écran : fond, queue, retour, éléments (MenuElement), asset dans Resources/Menus
+│   │   ├── MenuRenderer.cs         construit un écran (MenuView, MenuNode), effets (MenuFx), Feel (MenuFeel), chargement (MenuLayouts)
+│   │   └── MenuDefaults.cs         disposition d'origine de chaque écran
+│   ├── SceneNameAttribute.cs       champ « scène » choisi dans une liste (dessiné par Editor/SceneNameDrawer.cs)
+│   ├── TextFx.cs                   texte animé lettre par lettre (balises <wave>, <shake>…, apparitions, machine à écrire)
+│   ├── TextFxSettings.cs           force et vitesse des effets de texte, apparition, machine à écrire, asset dans Resources
+│   ├── UiKit.cs                    palette et polices (lues dans MenuSettings), constructeurs d'éléments partagés par les menus
 │   ├── MatchHud.cs                 UI en jeu (UI Toolkit, direction Synthèse) : HUD par joueur, interjections, fin de partie ; créé tout seul
-│   └── SyntheseMenu.cs             menu d'avant-partie (UI Toolkit, direction Synthèse), créé tout seul
+│   └── SyntheseMenu.cs             menu principal et ses pages (UI Toolkit, direction Synthèse), créé tout seul
+├── Feel/                           pont avec le plugin Feel (sans le modifier)
+│   ├── GameFeel.cs                 écoute la partie et joue la séquence Feel de chaque moment
+│   ├── GameFeelSettings.cs         moment de la partie → séquence Feel (MMF_Player), asset dans Resources
+│   ├── MMF_PoolHudText.cs          feedback Feel « Texte du HUD (TextFx) »
+│   └── MMF_PoolScreenJuice.cs      feedback Feel « Secousse et flash écran » (par LocalPoolPowerEffectReceiver)
 ├── Interaction/
 │   ├── LocalPlayerHandController.cs  ramasser / poser / lancer (Interagir, Attaque)
 │   ├── LocalGrabbable.cs           objet ramassable

@@ -4,6 +4,60 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-09
+- **Correctif : scène du bar dans le build** :
+  - *Sync Build Scenes* avait ajouté `Assets/_Recovery/BarSplitscreen.unity`, une copie de récupération d'Unity, au lieu de `Assets/Scenes/BarSplitscreen.unity` ; le jeu pouvait charger cette copie ;
+  - la recherche des scènes, et le sélecteur de scène de GameFlowSettings, ignorent maintenant `_Recovery` et préfèrent `Assets/Scenes` ;
+  - une autre scène du même nom est retirée de la liste du build ;
+  - le dossier des écrans s'appelle bien `Resources/Menus`.
+- **Menu Studio, l'éditeur graphique des menus** (*Tools > Pool > Menu Studio*), compilé, non testé :
+  - **Écrans en données** : chaque écran (accueil, sauvegardes, niveau, type de partie, multijoueur, salon, réglages, pause, confirmation, chargement) est un fichier `Resources/Menus/<écran>.asset`, créé avec la disposition d'origine par *Ensure Config Assets Exist*. Le menu, la pause, l'écran des touches et le chargement se construisent depuis ces fichiers.
+  - **Éléments libres** :
+    - types : billes, cartes, textes, images, panneaux, pilules, et zones remplies par le jeu ;
+    - place en % de l'écran, taille, inclinaison, couleurs, image, bordure, textes avec balises animées ;
+    - action : ouvrir un écran, lancer un type de partie, reprendre…
+  - **Effets** : arrivée (pop, chute, montée, glissé, fondu, tour, avec délai) et mouvement permanent (flotte, pulse, balance, gigote, tourne).
+  - **Feel** : séquence à l'ouverture d'un écran, quand un élément est visé, quand il est choisi ; le bouton crée la séquence et la relie.
+  - **La fenêtre** : aperçu identique au jeu, sélection et déplacement à la souris, poignée de taille, grille, flèches, Ctrl+D, Suppr, ordre derrière / devant, rejouer les effets, réinitialiser l'écran, annulation.
+  - **MenuSettings** garde les couleurs, les polices, les messages et les formats ; ses champs d'écran ne sont plus que les valeurs de départ.
+  - **Mode brouillon** (retour : « y'a pas de sécurité ? ») :
+    - on modifie une copie, le jeu ne change qu'avec *Enregistrer* ;
+    - un bandeau signale les modifications non enregistrées, avec *Enregistrer* / *Abandonner* ;
+    - une demande s'affiche en changeant d'écran, en fermant la fenêtre ou en lançant le Play ;
+    - le brouillon survit au rechargement des scripts et au Play.
+- **Text FX Studio** (*Tools > Pool > Text FX Studio*), compilé, non testé. Fenêtre graphique pour les textes animés :
+  - choisir un texte du jeu (HUD, menu, chargement, niveaux) ou écrire librement ;
+  - poser les balises avec des boutons sur la sélection, avec force et vitesse ;
+  - prévisualiser en direct, même hors Play : fond bar / tapis / carte, police, taille, couleur, contour, lecture fixe, lettre à lettre ou machine à écrire, boucle, sortie ;
+  - enregistrer dans le réglage d'origine ;
+  - régler `TextFxSettings` dans la fenêtre ;
+  - créer une séquence Feel avec le texte.
+- **Feel branché sur la partie**, compilé, non testé :
+  - **`GameFeelSettings`** : chaque moment de la partie (bille rentrée, blanche rentrée, faute, tir, tir plein, pouvoir, BOUM, début de tour, victoire) peut jouer une séquence Feel ;
+  - **`GameFeel`** écoute la partie et joue ces séquences ;
+  - **deux feedbacks Feel maison** :
+    - « Texte du HUD (TextFx) », sur l'écran du bon joueur ;
+    - « Secousse et flash écran », qui passe par notre système de caméra.
+  
+  Feel n'est pas modifié.
+- **`TextFx`** tourne maintenant en temps réel (aussi hors Play, pour la prévisualisation).
+- **Texte animé lettre par lettre (`TextFx`)**, inspiré de *Text Animator* (Febucci), compilé, non testé :
+  - **Balises** dans tous les textes des réglages d'interface : effets permanents `<wave>`, `<shake>`, `<bounce>`, `<wiggle>`, `<pulse>`, `<swing>`, `<rainbow>` ; apparitions `<pop>`, `<drop>`, `<fade>`, `<slide>`, `<grow>` ; force `a=` et vitesse `s=` ; les balises d'Unity (`<b>`, `<color>`…) restent utilisables.
+  - **Lettres qui arrivent une à une** : interjections du HUD, nom du pouvoir ramassé, « J{0} gagne ! », messages du menu et de la pause, règles des modes, messages du chargement.
+  - **Machine à écrire** pour les astuces et le twist du chargement, avec pauses de ponctuation, `<pause=…>` et `<speed=…>`.
+  - **Réglages** : `TextFxSettings` (créé par *Ensure Config Assets Exist*), appliqués tout de suite en jeu.
+  - **Technique** : chaque lettre est déplacée sur ses sommets après la mise en forme d'Unity (`TextElement.PostProcessTextVertices`) ; en cas d'erreur de ce rappel, le texte reste lisible et immobile.
+- **`GameFlowSettings` : choix de la scène d'un niveau** (retour : on ne pouvait pas la définir). On glisse la scène dans le champ ; avertissement et bouton « Ajouter au build » si elle n'est pas dans le build. Compilé, non testé.
+- **Vérification de compilation sans Unity** : les scripts sont maintenant compilés avec le SDK .NET fourni avec Unity avant d'être rendus.
+- **Pistes** : Feel pour orchestrer le ressenti des événements de partie, avec des feedbacks maison vers `TextFx` et nos effets de caméra.
+- **Menu, pause et écran des touches paramétrables** (compilé par Unity, non testé). Nouveau `MenuSettings` (`Assets/Resources/MenuSettings.asset`, créé par *Ensure Config Assets Exist*) :
+  - **Textes** : tout ce que le joueur lit dans le menu principal, la pause et *Réglages > Touches*, y compris les règles des modes et le nom de chaque action ;
+  - **Billes et pilules** : texte, petite ligne, numéro, couleur, pleine ou rayée ;
+  - **Apparence** : palette (aussi pour l'écran de chargement), polices, image de fond à la place du bar dessiné, lumières du bar, logo à la place du titre écrit ;
+  - **Durées** : messages, vitesse du tir sur une bille, clignotement.
+
+  La mise en page reste dans le code. Un format mal écrit s'affiche tel quel au lieu de casser le menu.
+- **Doc** : page Configuration, section `MenuSettings` et marche à suivre pour ajouter un niveau (scène, ligne dans `GameFlowSettings`, *Sync Build Scenes*, image).
+- **Écran de chargement** : les deux correctifs de la veille sont testés, ça fonctionne.
 - **Récap Discord des Pull Requests mergées** : `.github/workflows/discord-pr-merged.yml`. Chaque PR mergée sur `master` envoie un message sur un salon Discord :
   - le titre de la PR, avec un lien ;
   - la branche, l'auteur et la description ;
@@ -13,6 +67,42 @@ chronologique inverse (les plus récentes en haut).
 - **Conventions git** (section *Workflow git* de `CLAUDE.md`) : branches `feature/`, `fix/` ou `chore/` ; commits avec un titre à l'impératif et une description ; une PR par feature, avec un titre lisible et 2 à 5 puces ; merge sans squash.
 
 ## 2026-10-08
+- **Écran de chargement : deux correctifs** (non compilés, non testés).
+  - **Gouttière** : les billes arrivaient toutes d'un coup, car le chargement bloque l'éditeur une seconde et cette seconde était rattrapée d'un bloc. Le remplissage avance maintenant à un rythme régulier (une gouttière pleine en *Minimum Duration*, temps d'image plafonné), et le chargement attend que l'écran soit affiché.
+  - **Personnage sans contrôle dans le niveau** : la scène contient déjà un joueur posé (« New (1) »), qui prenait l'index 0 avant l'arrivée des joueurs du menu. Les joueurs déjà présents sont maintenant repris et reçoivent l'appareil choisi au menu ; seuls les manquants sont ajoutés, sous un index libre.
+  - **Diagnostic** : un log `[Loading]` liste les joueurs (index, appareils, schéma, entrées actives), à l'arrivée et au départ de la partie.
+- **Le menu dans sa propre scène + écran de chargement** (retour : le menu s'affichait par-dessus le niveau ; variante B « Le retour des billes » retenue, textes, astuces et images modifiables). Branche `feat/menus-pause`.
+  - **Scène `MainMenu`** : créée par *Tools > Pool > Create Main Menu Scene* sans fermer la scène ouverte, puis placée en tête des scènes du build avec les scènes des niveaux (*Sync Build Scenes*).
+  - **Menu** : les cartes de niveau viennent de `GameFlowSettings` (nom, scène, image, phrase, twist, « bientôt »). J1 est l'appareil qui navigue dans le menu ; en Local, J2 rejoint avec son bouton.
+  - **Lancement** (`LevelLoader`) :
+    - **Chargement** : en arrière-plan, derrière la carte postale du niveau (image, twist, tampon). Les billes tombent dans la gouttière au fil du chargement, avec des messages loufoques et une astuce qui change.
+    - **Joueurs** : ils entrent avec les appareils choisis au menu ; l'arrivée par bouton est coupée.
+    - **Départ** : chacun appuie sur A / Entrée, puis « C'est parti ! » et la partie démarre avec le mode choisi.
+  - **Retour au menu** : depuis la pause, « Menu principal » ramène à la scène `MainMenu`.
+  - **Test depuis l'éditeur** : un niveau lancé directement affiche toujours le menu sur place. Choisir ce même niveau démarre la partie sans chargement.
+  - **Réglages** :
+    - `LoadingScreenSettings` : tous les textes, les astuces, les messages, attendre ou non les joueurs, durées ;
+    - `GameFlowSettings` : niveaux, scène du menu, actions des joueurs pour l'écran des touches dans le menu.
+    
+    Les deux sont créés par *Ensure Config Assets Exist*.
+
+  Non compilé, non testé.
+- **Menus et pause dans Unity** (variantes retenues : menu A « billes sur la table », pause A « carte »), branche `feat/menus-pause`.
+  - **Menu principal** (`SyntheseMenu` réécrit) : six billes, Nouvelle partie, Charger, Just for fun, Multijoueur, Réglages, Quitter.
+    - **Nouvelle partie** : emplacements ; en attendant l'histoire et le tuto, elle lance une partie classique.
+    - **Charger** : emplacements vides, les sauvegardes viendront avec l'histoire.
+    - **Just for fun** : choix du niveau (le bar ; prison et station spatiale « bientôt »), puis du type de partie (Classique, Pouvoirs, 9-ball, 14.1).
+    - **Multijoueur** : Local (arrivée des joueurs, puis niveau et type de partie) ; En ligne « plus tard ».
+    - **Retour** : Échap / B ramène à la page précédente.
+  - **Réglages des touches** (`KeyBindingsPanel`, `KeyBindings`) :
+    - **Réaffectation** : clavier / souris et manette, réaffectables pour de vrai. Une touche déjà prise est échangée, et un bouton remet les touches par défaut.
+    - **Sauvegarde** : dans les `PlayerPrefs`, appliquée à chaque joueur, y compris celui qui rejoint plus tard.
+  - **Pause** (`PauseMenu`) : Échap / Start en partie.
+    - **Arrêt du jeu** : jeu figé, entrées des deux joueurs coupées, curseur libéré. Le menu indique quel joueur a mis en pause.
+    - **Options** : Reprendre, Réglages, et Menu principal avec confirmation (la scène est rechargée).
+  - **`UiKit`** : palette et constructeurs d'éléments partagés.
+
+  Non compilé, non testé.
 - **Organisation pour travailler à deux** (choix validés : GitHub Flow, relecture obligatoire, règle « une scène partagée = une personne » avec l'outil de fusion de Unity, doc centrée sur GitHub Desktop) :
   - **Doc** : `docs/content/equipe.md`, page « Travailler à deux » du site (`docs/equipe.html`, dans le menu et sur l'accueil) et PDF `docs/equipe.pdf`. Elle couvre les règles d'équipe, la mise en place, le cycle d'une tâche pas à pas dans GitHub Desktop, la relecture, les conflits et un pense-bête.
   - **`.gitattributes`** : fins de ligne normalisées (le dépôt était déjà entièrement en LF, donc aucun fichier ne change). Scènes, prefabs, matériaux, animations et assets passent par l'outil de fusion de Unity (*UnityYAMLMerge*), et les binaires sont protégés.

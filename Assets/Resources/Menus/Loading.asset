@@ -1,0 +1,263 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd493537923373649a5a05c5718d0653, type: 3}
+  m_Name: Loading
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.MenuScreen
+  backdrop: 0
+  backgroundColor: {r: 0.05, g: 0.03, b: 0.02, a: 0.62}
+  backgroundImage: {fileID: 0}
+  barLights: 1
+  table: 0
+  hasCue: 0
+  cuePosition: {x: 84, y: 84}
+  cueSize: 64
+  backScreen: 
+  feelOnOpen: {fileID: 0}
+  elements:
+  - id: context
+    kind: 4
+    visible: 1
+    position: {x: 18.5, y: 8.6}
+    size: {x: 540, y: 58}
+    rotation: -3
+    color: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 3
+    cornerRadius: 10
+    text: 
+    subText: 
+    textSize: 28
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 2
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: postcard
+    kind: 6
+    visible: 1
+    position: {x: 50, y: 36}
+    size: {x: 760, y: 520}
+    rotation: -2
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: 
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 1
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: tip
+    kind: 6
+    visible: 1
+    position: {x: 85, y: 15.5}
+    size: {x: 422, y: 230}
+    rotation: 2
+    color: {r: 0.23921569, g: 0.56078434, b: 0.8784314, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: 
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 5
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: status
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 69}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: 
+    subText: 
+    textSize: 46
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 0
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: ready
+    kind: 6
+    visible: 1
+    position: {x: 50, y: 69}
+    size: {x: 900, y: 100}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: 
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 0
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: gutter
+    kind: 6
+    visible: 1
+    position: {x: 50, y: 89.6}
+    size: {x: 1459, y: 96}
+    rotation: 0
+    color: {r: 0.2901961, g: 0.16470589, b: 0.08627451, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: 
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 3
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: go
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 40}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: 
+    subText: 
+    textSize: 150
+    subTextSize: 24
+    textColor: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+    titleFont: 1
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 0
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}

@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1069ab00f4f1f9b48b1eb19c93809163, type: 3}
+  m_Name: LoadingScreenSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.LoadingScreenSettings
+  stampText: EN ROUTE
+  tipTitle: Astuce
+  readyText: "Tout est pr\xEAt !"
+  pressFormat: 'J{0} : appuie sur {1}'
+  readyFormat: "J{0} : pr\xEAt !"
+  goText: C'est parti !
+  contextFormat: "{0} \xB7 {1}"
+  onePlayerText: 1 joueur
+  playersFormat: '{0} joueurs'
+  tips:
+  - "Rel\xE2che le tir quand la jauge tremble : c'est la puissance maximale."
+  - "Trop loin de la bille ? Ton personnage s'allonge sur la table\u2026 dans la limite du raisonnable."
+  - Un pouvoir en stock ? F / B pour le lancer pendant ton tour.
+  - "Un coup de queue charg\xE9 envoie l'adversaire au tapis. Le billard, c'est aussi un sport de contact."
+  - "La bille destructrice \xE9pargne la 8. Pas tes amis."
+  statusMessages:
+  - "On cire les queues\u2026"
+  - "On aligne les billes\u2026"
+  - "On allume les n\xE9ons\u2026"
+  - "On cache la craie\u2026"
+  - "On r\xE9veille le barman\u2026"
+  - "On compte les billes\u2026 il en manque une."
+  - "On remet la 8 au milieu\u2026"
+  waitForPlayers: 1
+  minimumDuration: 2.5
+  tipInterval: 3.6
+  statusInterval: 1.7
+  goDuration: 1.1

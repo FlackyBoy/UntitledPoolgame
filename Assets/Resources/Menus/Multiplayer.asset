@@ -1,0 +1,195 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd493537923373649a5a05c5718d0653, type: 3}
+  m_Name: Multiplayer
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.MenuScreen
+  backdrop: 0
+  backgroundColor: {r: 0.05, g: 0.03, b: 0.02, a: 0.62}
+  backgroundImage: {fileID: 0}
+  barLights: 1
+  table: 1
+  hasCue: 1
+  cuePosition: {x: 50, y: 85}
+  cueSize: 64
+  backScreen: Title
+  feelOnOpen: {fileID: 0}
+  elements:
+  - id: heading
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 23}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Multijoueur
+    subText: 
+    textSize: 80
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 2
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: local
+    kind: 0
+    visible: 1
+    position: {x: 36, y: 49}
+    size: {x: 170, y: 170}
+    rotation: 0
+    color: {r: 0.18431373, g: 0.4862745, b: 0.9647059, a: 1}
+    stripe: 0
+    number: J1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Local
+    subText: "\xE9cran partag\xE9 \xB7 2 manettes"
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 6
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: online
+    kind: 0
+    visible: 1
+    position: {x: 64, y: 49}
+    size: {x: 170, y: 170}
+    rotation: 0
+    color: {r: 0.9372549, g: 0.2901961, b: 0.23529412, a: 1}
+    stripe: 1
+    number: NET
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: En ligne
+    subText: "h\xE9berger \xB7 rejoindre"
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 7
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.05
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: aim-hint
+    kind: 2
+    visible: 1
+    position: {x: 84, y: 91}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: vise une bille, tire !
+    subText: 
+    textSize: 34
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 6
+    entranceDelay: 0.4
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: keys-hint
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 97.5}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: "Choisir : souris \xB7 fl\xE8ches \xB7 stick    Valider : clic \xB7 Entr\xE9e \xB7 A    Retour : \xC9chap \xB7 B"
+    subText: 
+    textSize: 20
+    subTextSize: 24
+    textColor: {r: 1, g: 1, b: 1, a: 0.6}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 6
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}

@@ -168,9 +168,9 @@ Le **menu d'avant-partie** suit la direction retenue, en version 2D (🔄, à te
 
 Les temps forts ont leur interjection (« FAUTE ! », « Dans le mille ! », « OHHH ! »). Un pouvoir ramassé arrive comme un sponsor. La fin de partie montre la carte du gagnant avec « Revanche ». À venir : replay en incrustation, ardoise et trophées de fin.
 
-### Parcours des menus 📌 (prototype à valider)
+### Parcours des menus 🔄 (intégré, à tester)
 
-Proposé le 05/10 dans le prototype [Parcours des menus](../ui/parcours.html) :
+Proposé le 05/10 dans le prototype [Parcours des menus](../ui/parcours.html), intégré dans Unity le 08/10 avec les variantes retenues (menu sur la table, pause en carte). Le menu a sa propre scène. Choisir un niveau le charge derrière un **écran de chargement** (variante « Le retour des billes » : carte postale du niveau, billes qui tombent dans la gouttière, astuces, puis chaque joueur appuie sur A). Les textes, les astuces et les images des niveaux sont modifiables sans toucher au code. Les sauvegardes, l'histoire, les niveaux prison et station et le jeu en ligne restent à venir.
 
 - **Menu principal** :
   - **Nouvelle partie** : histoire, avec tutoriel au début (à venir) ;
@@ -180,7 +180,7 @@ Proposé le 05/10 dans le prototype [Parcours des menus](../ui/parcours.html) :
   - **Réglages** : pour l'instant les touches (clavier / souris et manette, réaffectables) ;
   - **Quitter**.
 - **En jeu** : Échap / Start ouvre la pause. Elle propose Reprendre, Réglages et Menu principal (avec confirmation), et arrête les deux joueurs en écran partagé.
-- Deux variantes à départager : menu principal sur la table (billes) ou sur l'ardoise du bar ; pause en carte ou en « Temps mort ! ».
+- Variantes retenues : menu principal sur la table (billes), pause en carte.
 
 ### Mini-jeu : la borne d'arcade 📌 (aperçu jouable)
 

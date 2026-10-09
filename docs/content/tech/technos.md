@@ -37,13 +37,14 @@ Ragdoll « actif » : un double physique du squelette suit l'animation grâce à
 - `LocalPlayerRagdollController` écoute ses événements pour couper/rendre le contrôle, lâcher l'objet tenu et basculer de caméra.
 - `RagdollHitRelay` (un par os) ajoute une impulsion au point d'impact, proportionnelle à la quantité de mouvement de l'objet lancé.
 
-### MoreMountains — Feel ⚠️ installé, peu utilisé
+### MoreMountains — Feel ✅ branché sur les moments de la partie
 
 Retours visuels et sonores (secousses, flashs, ressorts…).
 
 - **Pas utilisé sur la caméra** : trois systèmes écrivent déjà dans la caméra (FPS, visée, vue de dessus) ; un composant Feel indépendant entrerait en conflit. Les secousses et flashs sont faits maison dans `LocalPoolPowerEffectReceiver`.
 - `MMRagdoller` essayé pour le ragdoll puis remplacé par PuppetMaster (relevés en boucle, décalages).
 - Candidat pour des effets sur des objets isolés (pop des caisses de pouvoir).
+- **Branché sur la partie depuis le 09/10** : `GameFeel` joue une séquence Feel par moment de la partie (`GameFeelSettings`), avec deux feedbacks maison (texte du HUD avec `TextFx`, secousse et flash par notre système de caméra). Les feedbacks UI Toolkit de Feel ne servent pas : ils visent un UIDocument posé dans la scène, alors que nos interfaces sont créées en code.
 
 ### Nappin — Physics Character Controller ❌ écarté pour le déplacement
 

@@ -77,6 +77,18 @@ Tout ce qu'affiche le HUD (`MatchHud`) et comment :
 
 Lu par `MatchHud` : les textes, couleurs et tailles à la construction du HUD, donc à la scène suivante ; les durées à chaque image.
 
+### MenuSettings — menu, pause, écran des touches
+
+Textes et billes du menu principal, de la pause et de *Réglages > Touches* ; palette, polices, image de fond, lumières du bar, logo ; durées (messages, vitesse du tir, clignotement).
+
+Lu par `UiKit` (palette et polices, donc aussi l'écran de chargement), `SyntheseMenu`, `PauseMenu` et `KeyBindingsPanel` à leur construction, donc au prochain lancement ; les durées à chaque image. Les niveaux restent dans `GameFlowSettings`, les textes du chargement dans `LoadingScreenSettings`.
+
+### TextFxSettings — texte animé
+
+Force et vitesse des sept effets permanents (`<wave>`, `<shake>`…), apparition par défaut des lettres, durées et décalages, machine à écrire (lettres par seconde, pauses de ponctuation), disparition.
+
+Lu par `TextFx` à chaque image, au moment de déplacer les sommets des lettres : un changement se voit tout de suite en Play Mode.
+
 ## Réglages qui ne sont pas (encore) des ScriptableObjects
 
 - **Table** : dimensions dans `PoolTableAssetSettings` (ScriptableObject **d'éditeur**, utilisé seulement par `PoolTableBuilder`).

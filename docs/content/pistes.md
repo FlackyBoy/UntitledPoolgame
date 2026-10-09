@@ -99,6 +99,7 @@ Autres idées autour des pouvoirs :
 - **HUD clair** : à qui le tour, pouvoir en stock (avec sa catégorie), groupe attribué, poche annoncée. Aujourd'hui ces informations sont dispersées ou absentes.
 - **Accessibilité daltonisme** : distinguer pleines, rayées et catégories de pouvoir autrement que par la couleur (motifs, icônes).
 - **Place du combat en partie** — à cadrer ; pistes : combat seulement en Party (ou réglable par mode), frapper celui qui vise lui fait rater son coup, trêve pendant la visée, un K.O. fait perdre le tour ou donne la bille en main, pouvoirs de combat (bouclier, coup renforcé, contre). *Pourquoi :* aujourd'hui on peut se battre à tout moment sans conséquence sur la partie ; ces règles donnent un enjeu au combat sans casser le billard.
+- **Passer les effets codés en dur sur Feel** (secousses et flashs de faute, interjections du HUD) maintenant que `GameFeelSettings` existe. *Pourquoi :* tout le ressenti d'un moment se réglerait au même endroit, sans doublon entre le code et Feel.
 - **Le menu en vraie 3D** — la version 2D du menu Synthèse permet de valider le parcours ; la version prévue se joue sur la table du bar avec la vraie queue. *Pourquoi :* c'est le moment où le joueur apprend le geste de visée avant même la première partie.
 
 ### Technique

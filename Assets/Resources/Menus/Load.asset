@@ -1,0 +1,229 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd493537923373649a5a05c5718d0653, type: 3}
+  m_Name: Load
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.MenuScreen
+  backdrop: 0
+  backgroundColor: {r: 0.05, g: 0.03, b: 0.02, a: 0.62}
+  backgroundImage: {fileID: 0}
+  barLights: 1
+  table: 1
+  hasCue: 0
+  cuePosition: {x: 84, y: 84}
+  cueSize: 64
+  backScreen: Title
+  feelOnOpen: {fileID: 0}
+  elements:
+  - id: heading
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 23}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Charger une partie
+    subText: 
+    textSize: 80
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 2
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: slot1
+    kind: 1
+    visible: 1
+    position: {x: 30, y: 48}
+    size: {x: 330, y: 300}
+    rotation: -2
+    color: {r: 1, g: 0.9647059, b: 0.8901961, a: 0.6}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Emplacement 1
+    subText: "\u2013  Vide"
+    textSize: 34
+    subTextSize: 30
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 4
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 1
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: slot2
+    kind: 1
+    visible: 1
+    position: {x: 50, y: 48}
+    size: {x: 330, y: 300}
+    rotation: 0
+    color: {r: 1, g: 0.9647059, b: 0.8901961, a: 0.6}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Emplacement 2
+    subText: "\u2013  Vide"
+    textSize: 34
+    subTextSize: 30
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 4
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 1
+    entranceDelay: 0.06
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: slot3
+    kind: 1
+    visible: 1
+    position: {x: 70, y: 48}
+    size: {x: 330, y: 300}
+    rotation: 2
+    color: {r: 1, g: 0.9647059, b: 0.8901961, a: 0.6}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Emplacement 3
+    subText: "\u2013  Vide"
+    textSize: 34
+    subTextSize: 30
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 4
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 1
+    entranceDelay: 0.12
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: note
+    kind: 4
+    visible: 1
+    position: {x: 50, y: 76}
+    size: {x: 883, y: 120}
+    rotation: -1
+    color: {r: 0.23921569, g: 0.56078434, b: 0.8784314, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Les sauvegardes arriveront avec l'histoire.
+    subText: 
+    textSize: 28
+    subTextSize: 24
+    textColor: {r: 1, g: 1, b: 1, a: 1}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 3
+    entranceDelay: 0.2
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: keys-hint
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 97.5}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: "Choisir : souris \xB7 fl\xE8ches \xB7 stick    Valider : clic \xB7 Entr\xE9e \xB7 A    Retour : \xC9chap \xB7 B"
+    subText: 
+    textSize: 20
+    subTextSize: 24
+    textColor: {r: 1, g: 1, b: 1, a: 0.6}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 6
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9eb865016189f4a4e9c81862b0338cd8, type: 3}
+  m_Name: GameFlowSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.GameFlowSettings
+  menuScene: MainMenu
+  levels:
+  - displayName: Le bar
+    sceneName: BarSplitscreen
+    picture: {fileID: 0}
+    menuLine: "N\xE9ons, billard, bagarre"
+    twist: "Le twist : les n\xE9ons clignotent quand la partie s'emballe\u2026 et le barman lance des objets."
+    comingSoon: 0
+  - displayName: La prison
+    sceneName: 
+    picture: {fileID: 0}
+    menuLine: "Lumi\xE8res qui sautent\u2026 et un gardien"
+    twist: "Le twist : la lumi\xE8re saute, et quelqu'un vous traque dans le noir."
+    comingSoon: 1
+  - displayName: Station spatiale
+    sceneName: 
+    picture: {fileID: 0}
+    menuLine: Billes en apesanteur
+    twist: "Le twist : les billes flottent quand la gravit\xE9 se coupe."
+    comingSoon: 1
+  playerActions: {fileID: -944628639613478452, guid: dd0bdb68284799d4e956ab3c97581747, type: 3}

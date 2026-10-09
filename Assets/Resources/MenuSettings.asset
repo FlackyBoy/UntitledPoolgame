@@ -1,0 +1,233 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 628e5cbb57d6f0a41beefc8be7d9b818, type: 3}
+  m_Name: MenuSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.MenuSettings
+  felt: {r: 0.11372549, g: 0.49803922, b: 0.29411766, a: 1}
+  feltDark: {r: 0.07058824, g: 0.36078432, b: 0.20784314, a: 1}
+  wood: {r: 0.41960785, g: 0.22745098, b: 0.11764706, a: 1}
+  woodDark: {r: 0.24313726, g: 0.1254902, b: 0.05882353, a: 1}
+  chalk: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+  chalkShadow: {r: 0.050980393, g: 0.27058825, b: 0.15294118, a: 1}
+  ballCream: {r: 0.9647059, g: 0.94509804, b: 0.89411765, a: 1}
+  ink: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+  card: {r: 1, g: 0.9647059, b: 0.8901961, a: 1}
+  yellow: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+  red: {r: 1, g: 0.3019608, b: 0.23921569, a: 1}
+  cube: {r: 0.23921569, g: 0.56078434, b: 0.8784314, a: 1}
+  cubeDark: {r: 0.12156863, g: 0.36078432, b: 0.6, a: 1}
+  player1: {r: 0.18431373, g: 0.4862745, b: 0.9647059, a: 1}
+  player2: {r: 0.9372549, g: 0.2901961, b: 0.23529412, a: 1}
+  bodyFont: {fileID: 0}
+  titleFont: {fileID: 0}
+  background: {fileID: 0}
+  barLights: 1
+  logo: {fileID: 0}
+  logoHeight: 260
+  titleSmall: Untitled
+  titleBig: POOL GAME
+  newGameBall:
+    label: Nouvelle partie
+    sub: 
+    number: 1
+    color: {r: 0.95686275, g: 0.7607843, b: 0.050980393, a: 1}
+    stripe: 0
+  loadBall:
+    label: Charger
+    sub: 
+    number: 2
+    color: {r: 0.12156863, g: 0.30980393, b: 0.81960785, a: 1}
+    stripe: 0
+  justForFunBall:
+    label: Just for fun
+    sub: 
+    number: 3
+    color: {r: 0.84705883, g: 0.14901961, b: 0.10980392, a: 1}
+    stripe: 0
+  multiplayerBall:
+    label: Multijoueur
+    sub: 
+    number: 12
+    color: {r: 0.41568628, g: 0.17254902, b: 0.5686275, a: 1}
+    stripe: 1
+  settingsBall:
+    label: "R\xE9glages"
+    sub: 
+    number: 6
+    color: {r: 0.07450981, g: 0.5411765, b: 0.22745098, a: 1}
+    stripe: 0
+  quitBall:
+    label: Quitter
+    sub: 
+    number: 8
+    color: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
+    stripe: 0
+  aimHint: vise une bille, tire !
+  titleKeysHint: "Viser : souris \xB7 fl\xE8ches \xB7 stick    Tirer : clic \xB7 Entr\xE9e \xB7 A"
+  pageKeysHint: "Choisir : souris \xB7 fl\xE8ches \xB7 stick    Valider : clic \xB7 Entr\xE9e \xB7 A    Retour : \xC9chap \xB7 B"
+  newGameHeading: Nouvelle partie
+  loadHeading: Charger une partie
+  slotFormat: Emplacement {0}
+  slotFree: Libre
+  slotEmpty: Vide
+  newGameNote: "Histoire et tutoriel \xE0 venir : en attendant, une partie classique."
+  loadNote: Les sauvegardes arriveront avec l'histoire.
+  newGameToast: "Le tuto arrive bient\xF4t !"
+  emptySlotToast: Emplacement vide
+  levelHeading: "On joue o\xF9 ?"
+  comingSoonStamp: "Bient\xF4t"
+  comingSoonToast: "Bient\xF4t !"
+  justForFunContext: Just for fun
+  localContext: "Multijoueur \xB7 Local"
+  modeHeading: Quel type de partie ?
+  classicMode:
+    ball:
+      label: Classique
+      sub: 
+      number: 8
+      color: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
+      stripe: 0
+    rules: "8-ball : pleines contre ray\xE9es, la 8 en dernier dans la poche annonc\xE9e."
+  powersMode:
+    ball:
+      label: Pouvoirs
+      sub: 
+      number: 12
+      color: {r: 0.41568628, g: 0.17254902, b: 0.5686275, a: 1}
+      stripe: 1
+    rules: "Les r\xE8gles du 8-ball, plus des caisses et une bille \xE0 pouvoir sur la table."
+  nineBallMode:
+    ball:
+      label: 9-ball
+      sub: 
+      number: 9
+      color: {r: 0.95686275, g: 0.7607843, b: 0.050980393, a: 1}
+      stripe: 1
+    rules: Touche toujours la plus petite bille. Qui rentre la 9 gagne.
+  fourteenOneMode:
+    ball:
+      label: 14.1
+      sub: 
+      number: 3
+      color: {r: 0.84705883, g: 0.14901961, b: 0.10980392, a: 1}
+      stripe: 0
+    rules: "Chaque bille rentr\xE9e rapporte 1 point."
+  targetScoreFormat: "Premier \xE0 {0}   < >  (LB / RB, molette, - / +)"
+  powersOption: "Pouvoirs : Attaque \xB7 D\xE9fense \xB7 Effet"
+  noPowersOption: Sans pouvoirs
+  multiplayerHeading: Multijoueur
+  localBall:
+    label: Local
+    sub: "\xE9cran partag\xE9 \xB7 2 manettes"
+    number: J1
+    color: {r: 0.18431373, g: 0.4862745, b: 0.9647059, a: 1}
+    stripe: 0
+  onlineBall:
+    label: En ligne
+    sub: "h\xE9berger \xB7 rejoindre"
+    number: NET
+    color: {r: 0.9372549, g: 0.2901961, b: 0.23529412, a: 1}
+    stripe: 1
+  onlineToast: Le jeu en ligne arrive plus tard
+  lobbyHeading: Qui joue ce soir ?
+  goText: C'est parti
+  joinCallFormat: 'J{0}
+
+    appuie !'
+  joinHint: 'Une touche ou un bouton
+
+    pour rejoindre'
+  readyFormat: "{0} - pr\xEAt"
+  gamepadName: Manette
+  keyboardName: Clavier & souris
+  player2Joined: Salut J2 !
+  pauseTitle: Pause
+  resumeItem:
+    label: Reprendre
+    sub: 
+    number: 1
+    color: {r: 0.95686275, g: 0.7607843, b: 0.050980393, a: 1}
+    stripe: 0
+  pauseSettingsItem:
+    label: "R\xE9glages"
+    sub: 
+    number: 6
+    color: {r: 0.07450981, g: 0.5411765, b: 0.22745098, a: 1}
+    stripe: 0
+  mainMenuItem:
+    label: Menu principal
+    sub: 
+    number: 8
+    color: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
+    stripe: 0
+  pausedByFormat: J{0} a mis la partie en pause
+  pausedText: Partie en pause
+  confirmTitle: Retour au menu ?
+  confirmText: La partie en cours sera perdue.
+  confirmStayItem:
+    label: Non, je reste
+    sub: 
+    number: 1
+    color: {r: 0.95686275, g: 0.7607843, b: 0.050980393, a: 1}
+    stripe: 0
+  confirmQuitItem:
+    label: Oui, quitter
+    sub: 
+    number: 8
+    color: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
+    stripe: 0
+  settingsTitle: "R\xE9glages"
+  settingsTabs:
+  - Touches
+  - Audio
+  - "Vid\xE9o"
+  - Jeu
+  tabSoonSuffix: " \xB7 bient\xF4t"
+  actionColumn: Action
+  keyboardColumn: Clavier / souris
+  gamepadColumn: Manette
+  resetButton: "R\xE9initialiser"
+  backButton: Retour
+  keyRows:
+  - id: Move
+    label: "Se d\xE9placer"
+    sub: "en vis\xE9e : point de frappe"
+  - id: Look
+    label: Regarder
+    sub: "en vis\xE9e : tourner autour de la bille"
+  - id: Interact
+    label: Interagir
+    sub: "ramasser \xB7 viser \xB7 valider"
+  - id: Attack
+    label: "Tirer \xB7 lancer \xB7 coup de queue"
+    sub: "maintenir puis rel\xE2cher"
+  - id: Punch
+    label: Coup de poing
+    sub: mains vides
+  - id: Kick
+    label: Coup de pied
+    sub: 'maintenir : spartiate'
+  - id: Next
+    label: Pouvoir
+    sub: mode Pouvoirs
+  - id: Sprint
+    label: Courir
+    sub: 
+  - id: Jump
+    label: Sauter
+    sub: "pr\xE9vu"
+  - id: Pause
+    label: Pause
+    sub: 
+  toastDuration: 1.4
+  shotSpeed: 1
+  blinkPeriod: 0.7
