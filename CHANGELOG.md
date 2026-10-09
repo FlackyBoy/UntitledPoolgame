@@ -4,6 +4,19 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-09
+- **Page « Travailler à deux » renommée « Travailler en équipe »** (menu du site, accueil, `CLAUDE.md`). Le texte parle de l'équipe et d'un relecteur au lieu de « l'autre ».
+- **Page équipe alignée sur les conventions git** :
+  - branches `feature/`, `fix/` ou `chore/` ;
+  - commits avec un titre à l'impératif et une description ;
+  - PR avec un titre lisible et 2 à 5 puces, fusionnées sans squash ;
+  - mention du récap Discord.
+- **Schémas git** sur cette page (section *Le schéma*) :
+  - où va le travail entre le PC et GitHub, avec les boutons de GitHub Desktop ;
+  - plusieurs branches en même temps ;
+  - le cycle d'une tâche, avec les conflits et la relecture.
+  
+  Le PDF `docs/equipe.pdf` n'est pas régénéré.
+- **Doc technique, page Séquences** : elle ne s'affichait plus. Un point-virgule dans un message du diagramme « Coup de queue » cassait Mermaid ; il est remplacé par une virgule.
 - **Site, propositions UI : maquettes de l'écran de chargement** (`docs/ui/chargement.html`, dans la galerie). Les deux variantes proposées le 08/10 :
   - **A, « La casse »** : la queue recule au fil du chargement, puis casse le triangle ;
   - **B, « Le retour des billes »** : carte postale du niveau, billes dans la gouttière, messages loufoques, chaque joueur confirme. C'est la variante **retenue et intégrée** dans le jeu.
