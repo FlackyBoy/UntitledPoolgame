@@ -5190,7 +5190,9 @@ MonoBehaviour:
   inactivePriority: 10
   ragdollCameraDistance: 2.5
   ragdollCameraHeight: 1.5
-  ragdollCameraTurnSpeed: 240
+  cameraPullBackTime: 0.35
+  cameraReturnTime: 1.5
+  traceCameraReturn: 0
   ikComponents: []
   desyncRecoveryDelay: 0.5
   lostRagdollBlockers:
@@ -5294,6 +5296,20 @@ MonoBehaviour:
   maxBodyLean: 0.6
   bodyLeanBend: 70
   leanIK: {fileID: 6813959220124960975}
+  maxStretchReach: 0.6
+  stretchHipRise: 0.2
+  stretchBend: 35
+  stretchLegLift: 0.45
+  stretchLegBack: 0.25
+  stretchAimWobble: 1.5
+  plantFeetWhileLeaning: 1
+  hipMaxOverFelt: 0
+  hipAboveTable: 0.15
+  maxCompensationBend: 40
+  hipAdjustSharpness: 6
+  releaseFrontHandOutOfReach: 1
+  outOfReachHysteresis: 0.1
+  frontHandReleaseTime: 0.25
   aimCueOffset: {x: 0.5, y: -0.1, z: 0.5}
   aimTipGap: 0.5
   tiltCueToBall: 1
@@ -5315,6 +5331,7 @@ MonoBehaviour:
   moveActionName: Move
   interactActionName: Interact
   attackActionName: Attack
+  traceAimInput: 0
   tracePlacementView: 1
   placementClearAbove: 0.5
 --- !u!120 &2294111646963135089
@@ -5680,7 +5697,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5960817626512586231}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0000000011258273, y: 0.976296, z: -0.21643957, w: 0.000000015373812}
+  m_LocalRotation: {x: 0.0000000010331602, y: 0.97629607, z: -0.2164396, w: -0.0000000056258074}
   m_LocalPosition: {x: 0.0090000145, y: 0.3900001, z: 2.0410004}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
