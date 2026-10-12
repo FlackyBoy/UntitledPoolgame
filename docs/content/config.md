@@ -219,7 +219,7 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 - sa couleur ;
 - pleine ou rayée.
 
-**Les noms des actions** de l'écran des touches se retrouvent par leur *Id* : `Move`, `Look`, `Pause`, ou le nom d'une action du joueur (`Interact`, `Attack`, `Punch`, `Kick`, `Next`, `Sprint`, `Jump`). Une ligne absente de la liste garde son nom par défaut. Les touches elles-mêmes se changent dans le jeu (*Réglages > Touches*), pas ici.
+**Les noms des actions** de l'écran des touches se retrouvent par leur *Id* : `Move`, `Look`, `Pause`, ou le nom d'une action du joueur (`Interact`, `Attack`, `Punch`, `PunchRight`, `Kick`, `Block`, `Next`, `Sprint`, `Jump`). Une ligne absente de la liste garde son nom par défaut. Les touches elles-mêmes se changent dans le jeu (*Réglages > Touches*), pas ici.
 
 - `{0}` est remplacé par le numéro (emplacement, joueur), le score ou l'appareil.
 - Un format mal écrit (accolade en trop) s'affiche tel quel au lieu de casser le menu.
@@ -275,10 +275,61 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 | Machine à écrire | Lettres par seconde (40), pause après `. ! ? …` (0,3 s), après `, ; :` (0,12 s) |
 | Disparition | Durée (0,25 s), décalage entre deux lettres (0,015 s) |
 
+### MovementSettings — déplacement de R&D (élan, saut, rebords)
+
+En R&D (branche `feature/deplacements-combat`) : ne s'applique qu'au joueur qui a le composant *Local Player Locomotion*, c'est-à-dire la variante `New_PlayerVariant`. Lu à chaque image, donc réglable en jouant. Essai : *Tools > Pool > R&D > Créer l'arène de test*, puis Play.
+
+| Groupe | Ce qu'on règle | Défauts |
+|---|---|---|
+| Marche et course | vitesse de marche et de sprint, prise de vitesse, freinage, contrôle en l'air | 4,5 et 7,5 m/s, 28 et 16 m/s², 0,35 |
+| Saut | hauteur, gravité, marge après un bord, appui gardé avant d'atterrir | 1,1 m, −22 m/s², 0,12 s, 0,12 s |
+| Escalade | hauteur min et max d'un rebord, distance de recherche, durée | 0,8 m, 2,1 m, 0,6 m, 0,6 s |
+| Corps mou (mains libres) | force et maintien des bras, force du buste, vitesse de passage mou ↔ rigide, penché du buste et son lissage | 0,45, 0,15, 0,8, 6, 0,08 m, 8 |
+| Vue | roulis en pas de côté, balancement et sa fréquence | 2,5°, 0,025 m, 1,9 pas/s |
+
+Sur le composant *Local Player Locomotion* lui-même : les noms des actions (Move, Sprint, Jump) et *Trace Movement*, qui écrit dans la console les sauts, rebords trouvés ou refusés (avec la raison) et escalades.
+
+### CombatSettings — combat de R&D (coups, encaissement, garde, endurance)
+
+En R&D : ne s'applique qu'avec la case *Boxing Punches* cochée sur *Local Unarmed Melee*, c'est-à-dire sur la variante `New_PlayerVariant`.
+
+**Un seul outil prépare tout** : *Tools > Pool > R&D > Préparer le joueur de R&D*. Il met sur la variante le déplacement, les poings de boxe et la jauge d'encaissement, puis crée ou reconstruit les calques d'animation. On peut le relancer sans risque. *Créer l'arène de test* l'appelle aussi. Ces valeurs remplacent celles du composant pour le poing. La garde et la portée du poing, ainsi que tout le coup de pied (spartiate compris), restent réglés sur le composant (voir *Réglages combat*). Lu à chaque image.
+
+| Groupe | Ce qu'on règle | Défauts |
+|---|---|---|
+| Coups animés | garde et coups joués par des animations (case *Use Animations* ; décochée = coups procéduraux en IK), nom du calque d'animation, vitesse des animations, fondu entre deux, fenêtre où le coup peut toucher (début, fin, en part de l'animation), moment où l'autre main peut enchaîner, moment du retour en garde, inversion gauche/droite, correction de direction de chaque poing (rotation du buste, la console donne la valeur à mettre) | oui, « R&D Combat », ×1,3, 0,06 s, 0,2–0,55, 0,4, 0,85, non, 0° / 0° |
+| Garde | temps pendant lequel les poings restent levés près du menton après le dernier coup (0 = pas de garde), temps pour la lever, pour la baisser | 1,5 s, 0,08 s, 0,35 s |
+| Poing fermé et poignet | repli des doigts et du pouce, rotation du poignet pendant le coup (vertical en garde → paume vers le bas à l'impact ; négatif si ça tourne à l'envers), où finissent les poings sur le côté (1 = parallèles, plus petit = vers l'axe du corps) | 85°, 40°, 80°, 0,45 |
+| Nervosité du poing | mise en garde avant de partir (premier coup, garde pas encore levée), durée de la frappe, bras tendu, retour en garde, forme (0 = direct, 1 = crochet large) | 0,05 s, 0,07 s, 0,03 s, 0,12 s, 0,2 |
+| Le corps derrière le coup | rotation du buste, avancée de l'épaule, engagement du corps | 18°, 0,16 m, 0,14 m |
+| Force | déséquilibre et force du coup | 2, 650 N |
+| Ressenti dans la vue | roulis et avancée de la vue quand le poing part, leur durée ; secousse quand il touche | 1,6°, 0,035 m, 0,16 s ; 1 |
+| Garde (Ctrl gauche / LT) | garde activée ; vitesse en garde ; demi-angle couvert devant ; part de jauge d'un poing / d'un pied bloqué ; part de la force qui passe ; coût d'un poing / d'un pied sur la jauge de garde ; délai et vitesse de remontée ; durée de la garde brisée ; coup de pied spartiate sur une garde (la brise seulement, ou passe à travers) ; contre-attaque : délai, vitesse, multiplicateur | oui ; ×0,6 ; 70° ; 0,1 / 0,5 ; 0,3 ; 0,25 / 0,45 ; 1 s, 0,5/s ; 1,5 s ; la brise ; 0,6 s, ×1,5, ×1,5 |
+| Endurance de celui qui frappe | endurance activée ; coût d'un poing, d'un pied, supplément du spartiate ; délai et vitesse de remontée ; seuil de fatigue, vitesse et force d'un poing fatigué | oui ; 0,15, 0,3, +0,25 ; 0,6 s, 0,45/s ; 30 %, ×0,75, ×0,7 |
+| Coups localisés | multiplicateur de jauge pour la tête, le corps (buste, bassin, bras), les jambes ; animations de coup reçu, leur fondu, inversion gauche/droite ; au K.O., poussée dans le sens du dernier coup et force des muscles (0 = tout mou) | ×1,5, ×1, ×0,7 ; oui, 0,1 s, non ; 3 m/s, 0,15 |
+| Encaissement | jauge activée ; remplissage par coup de poing, par coup de pied ; temps de l'équilibre renforcé après un coup (titube sans tomber), résistance des muscles et écart toléré pendant ce temps ; seuil « sonné » ; vitesse, dérive et tangage de la vue d'un joueur sonné, animation « Stunned » ; délai et vitesse de descente de la jauge ; durée du K.O. ; protection au réveil | oui ; 0,14, 0,3 ; 0,7 s, 1, 0,6 m ; 60 % ; ×0,55, 0,25 m/s, 4°, oui ; 1,5 s, 0,2/s ; 3 s ; 2 s |
+
+Pendant un coup et tant que la garde est levée, les bras restent rigides, au lieu de quitter progressivement le « corps mou » du déplacement : un bras encore mou suivait le poing en retard. La garde se baisse dès qu'on prend un objet ou la queue, qu'on vise ou qu'on tombe. Les doigts ne se replient que sur un personnage humanoïde.
+
+**Coups animés** : la garde (`Humanoid@IdleCombat`), le poing gauche (`Humanoid@Jab1`) et le poing droit (`Humanoid@RightHand1`, pack PROTOFACTOR) sont joués sur un calque « R&D Combat » du contrôleur d'animation du joueur, limité au haut du corps (masque `Assets/Animations/Combat/RnD_UpperBody.mask` : buste, bras, doigts ; ni la tête ni les jambes). Ce calque se crée avec **Tools > Pool > R&D > Préparer le joueur de R&D** (à relancer pour le reconstruire). Son poids est 0 par défaut : le joueur normal et les mannequins, qui partagent le contrôleur, ne changent pas. Sans ce calque, un avertissement s'affiche dans la console et les coups procéduraux restent. En mode animé, les réglages *Garde* (durées), *Force* et *Ressenti dans la vue* servent toujours ; *Poing fermé et poignet*, *Nervosité du poing* et *Le corps derrière le coup* ne servent plus. Avec *Debug Logs*, la console donne pour chaque coup le moment où la main va le plus vite, pour placer la fenêtre de touche.
+
+**Encaissement** : la jauge est le composant *Local Hit Gauge* de la cible. L'outil *Préparer le joueur de R&D* l'ajoute à la variante, et il s'ajoute seul au premier coup sur les autres corps (mannequins…). Sa case *Debug Logs* écrit dans la console « titube », « SONNÉ », « K.O. ! » et « réveil ». Seuls les coups d'un joueur qui a *Boxing Punches* comptent : les coups de queue et les objets lancés font tomber comme avant. Repère, poings au corps : 0,14 par poing, il faut 8 poings d'affilée pour un K.O. (5 pour être sonné). À la tête (×1,5), il en faut 5.
+
+**Animations d'encaissement** : *Tools > Pool > R&D > Préparer le joueur de R&D* crée aussi trois calques, au poids 0 par défaut :
+- « R&D Sonné (haut) » et « R&D Sonné (jambes) » : `Humanoid@Stunned`. Les jambes ne le jouent qu'à l'arrêt.
+- « R&D Coup reçu » : `Humanoid@GetHit{Front,Back,Left,Right}{Light,Heavy}Combat`, choisi selon le côté d'où vient le coup. La version lourde sert pour la tête ou quelqu'un de sonné.
+
+Les masques sont dans `Assets/Animations/Combat/`. Ordre des calques : sonné, coups, coup reçu, pour qu'un coup reçu passe devant un coup donné.
+
+**Chute au K.O.**, selon la zone du dernier coup :
+- tête : il part en arrière ;
+- corps : il se plie ;
+- jambes : elles se dérobent.
+
 ### GameFeelSettings — Feel aux moments de la partie
 
 Associe un **moment de la partie** à une **séquence Feel** (un prefab avec un *MMF Player*) :
-- **moments** : bille rentrée, blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire ;
+- **moments** : bille rentrée, blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse) ;
 - **pour chaque ligne** : le moment, la séquence, l'intensité (1 = normale). Plusieurs lignes pour le même moment jouent toutes ;
 - **aussi** : un interrupteur général et le seuil du « tir plein » (0,95).
 
@@ -382,6 +433,17 @@ Le récapitulatif des touches actuelles est dans l'onglet **Contrôles** de la p
 | Ambiances (AmbiencePreset) | Créées par l'étape Ambiance (*Create > Pool > Level Maker Ambience*) | Étape Ambiance | Scénario d'éclairage, ciel, lumière ambiante, lumière principale, post-process, brouillard, teinte et intensité des lumières du décor |
 
 Le détail de l'outil de niveau est sur la page **Outil de niveau**.
+
+## Le menu Tools > Pool
+
+Rangé par familles, séparées par un trait :
+
+| Famille | Outils |
+|---|---|
+| Éditeurs | *Menu Studio* (écrans des menus) · *Text FX Studio* (textes animés, séquences Feel) · *Level Maker* (salles et niveaux) |
+| Projet | *Ensure Config Assets Exist* (crée les fichiers de réglages manquants, sans toucher aux autres) · *Create Main Menu Scene* · *Sync Build Scenes (menu + levels)* |
+| Table | *Build Table* · *Attach Physics To Custom Table* · *Select Custom Table Settings* · *Add Power Spawn System To Selected Table* |
+| R&D | *Préparer le joueur de R&D* : composants et calques d'animation de la variante, en un passage · *Créer l'arène de test* : la scène de test, qui prépare aussi le joueur |
 
 ## Pour aller plus loin
 

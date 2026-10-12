@@ -94,11 +94,51 @@
 | Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
 | Action Map Name | Action map du joueur | Player |
-| Punch Action Name | Action du coup de poing | Punch |
-| Kick Action Name | Action du coup de pied | Kick |
+| Punch Action Name | Action du coup de poing (clic gauche / LB) ; poing gauche en R&D | Punch |
+| Kick Action Name | Action du coup de pied (F / RT) | Kick |
 | View Transform | Caméra du joueur (vide = trouvée seule) | — |
 | Full Body IK | IK du personnage, obligatoire (vide = trouvé seul) | — |
 | Fps Camera | Caméra Cinemachine FPS pour le zoom du spartiate (vide = celle dont le nom contient « FPS ») | — |
+
+### R&D Boxe
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Boxing Punches | Un bouton par main (Punch = gauche, Punch Right = droite). Au premier coup, les deux poings fermés montent en garde près du menton et y restent un moment. Chaque poing part de la garde à l'appui, presque droit vers l'axe du corps, plus sec, en tournant le poignet, avec le corps derrière, puis y revient ; la vue l'accompagne. Durées, forme, force et ressenti : **CombatSettings** (page Configuration). Coché seulement sur la variante de R&D ; décoché = poings en crochet qui alternent sur un seul bouton, comme avant | non |
+| Punch Right Action Name | Action du poing droit (clic droit / RB) | PunchRight |
+
+Avec cette case, ne servent plus pour le poing : *Windup Time*, *Jab Strike Time*, *Hold Time*, *Recover Time*, *Jab Torso Twist*, *Shoulder Reach*, *Punch Lean*, *Fist Spread*, *Jab Unpin* et *Jab Force*. Le point de départ du coup (*Start Forward / Height / Outward*) sert aussi de position de garde. Leurs équivalents sont dans CombatSettings. Le coup de pied garde ses propres réglages.
+
+**Coups animés** (CombatSettings > *Use Animations*, après *Tools > Pool > R&D > Préparer le joueur de R&D*) : la garde et les deux poings sont des animations de boxe (pack PROTOFACTOR) au lieu d'être construits en IK. Le coup touche le long de la vraie main, pendant la fenêtre *Hit Window Start / End* de l'animation. L'autre main enchaîne à partir de *Chain From*, et le retour en garde commence à *Return At*. Si le poing gauche joue le coup du droit, cocher *Swap Hands*.
+
+**Jauge d'encaissement** (CombatSettings > *Encaissement*) : les coups de ce joueur ne font plus tomber directement. Ils remplissent la jauge de la cible.
+- Tant qu'elle n'est pas pleine, la cible titube.
+- Au-delà de *Dazed From*, elle est sonnée : plus lente, elle dérive sur le côté et sa vue tangue.
+- Pleine, ou sur un coup de pied spartiate, elle est K.O. pendant *Knock Out Time*.
+- Pour des K.O. plus rapides, monter *Punch Damage* / *Kick Damage*. Pour des combats plus longs, monter *Drain Rate*. Si un coup fait encore tomber avant que la jauge soit pleine, monter *Stagger Drift* (écart toléré) ou *Stagger Resistance*. S'il ne fait plus assez tituber, baisser *Stagger Resistance*.
+
+**Garde** (CombatSettings > *Garde*, maintenir Ctrl gauche / LT) :
+- **Ce qu'elle couvre** : les coups de face (dans *Block Angle*), à la tête et au corps. Les jambes, les côtés et le dos ne sont pas couverts.
+- **Coup bloqué** : il ne remplit plus que *Blocked Damage* de la jauge (*Blocked Kick Damage* pour un pied, qui passe en partie) et ne pousse plus que de *Blocked Force*.
+- **Jauge de garde** : chaque coup bloqué lui coûte *Block Cost Punch / Kick*.
+- **Coup de pied spartiate sur une garde** : avec *Spartan Breaks Guard Only* (coché par défaut), il brise la garde sans K.O. ni projection. Décoché, il passe à travers.
+- **Garde brisée** : jauge de garde vide, ou coup de pied spartiate. Le joueur ne peut plus garder pendant *Guard Break Time* et les coups suivants comptent normalement sur sa jauge d'encaissement. La rupture elle-même n'y retire rien : le coup qui vide la jauge de garde est encore bloqué.
+- **Contre-attaque** : un poing donné dans *Counter Window* après un blocage part *Counter Speed* fois plus vite et compte *Counter Damage* fois plus.
+- **Équilibrage** :
+  - si tout le monde garde tout le temps, monter *Block Cost Punch* ou baisser *Block Move Speed* ;
+  - si la garde ne sert à rien, monter *Block Regen Rate*.
+
+**Endurance** (CombatSettings > *Endurance de celui qui frappe*) : chaque coup coûte de l'endurance (*Punch Stamina* 0,15, *Kick Stamina* 0,3, plus *Spartan Stamina* pour un spartiate). Sans assez d'endurance, le coup ne part pas.
+- Sous *Tired Below*, les poings sont plus lents (*Tired Speed*) et plus faibles (*Tired Damage*).
+- Repère : environ 6 poings d'affilée, dont les 2 derniers fatigués, puis une pause d'environ 2 s pour tout récupérer.
+- Pour des rafales plus longues, baisser *Punch Stamina* ou monter *Stamina Regen Rate*.
+
+**Coups localisés** (CombatSettings > *Coups localisés*) : la zone touchée change ce que le coup remplit (*Head / Body / Leg Damage*), l'animation de coup reçu (lourde à la tête) et la chute du K.O. :
+- tête : il s'écroule en arrière ;
+- corps : il se plie ;
+- jambes : ses jambes se dérobent.
+
+Si le personnage réagit du mauvais côté, cocher *Hit Reaction Swap Sides*. Pour une chute plus spectaculaire, monter *Knock Out Push*.
 
 ### Taille des membres
 

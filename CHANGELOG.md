@@ -3,6 +3,102 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-12
+- **Passe de nettoyage et d'optimisation de la R&D** (compilé, non testé).
+  - **Outils** : *Tools > Pool* est rangé par familles, séparées par un trait (éditeurs, projet, table, R&D), sans changer les noms.
+    - Les trois outils de R&D deviennent deux. **Préparer le joueur de R&D** fait tout en un passage : déplacement, poings de boxe et jauge sur la variante, puis calques d'animation. Il remplace *Activer la R&D…* et *Brancher les animations de coups*. *Créer l'arène de test* l'appelle.
+    - Une seule façon de rendre un mannequin inerte : celui de la touche G gardait son déplacement de R&D.
+  - **Moins de travail par image** :
+    - Les calques de coup reçu et de sonné ne sont plus touchés quand ils sont au repos. Avant, un fondu vers « Empty » était relancé à chaque image, pour chaque personnage.
+    - Les barres provisoires ne créent plus de style à chaque image.
+    - Le diagnostic de chute ne fabrique plus de texte à chaque pas de physique, et ne tourne que dans les secondes qui suivent un coup.
+    - Le déplacement ne cherche plus la jauge deux fois par image.
+  - **Console plus calme** : les journaux `[Move]` ne s'affichent qu'avec *Trace Movement*, ou s'il manque quelque chose au démarrage.
+  - **Code** : les quatre barres provisoires partagent une seule méthode, les conditions des gardes sont regroupées, et une mesure de la main en double est supprimée.
+- **R&D coups animés** : testés en jeu et validés. Les optimisations sont mises de côté pour plus tard.
+- **Coup de pied spartiate sur une garde** (compilé, non testé) : il brise la garde au lieu de mettre K.O. Il compte comme un coup bloqué, sans K.O. ni projection. Nouvelle case *Spartan Breaks Guard Only* dans `CombatSettings` > *Garde* : décochée, il passe à travers la garde comme avant.
+- **Animation de garde qui ne se déclenchait pas toujours** (compilé, non testé). Cause probable : une réaction à un coup encore en cours, sur un calque placé au-dessus de la garde, cachait la pose. Elle est maintenant coupée quand la garde se lève.
+  - **Diagnostic** : 0,3 s après la levée, la console écrit `guard pose OK` ou `NOT SHOWING`, avec l'état et le poids des calques.
+  - **Garde refusée** : la console dit aussi pourquoi (coup en cours, garde brisée…).
+- **R&D endurance** (compilé, non testé), contre le spam :
+  - **Coût** : chaque coup coûte de l'endurance (poing 15 %, pied 30 %, +25 % pour un spartiate). Sans assez d'endurance, le coup ne part pas.
+  - **Fatigue** : sous 30 %, les poings sont plus lents (×0,75) et plus faibles (×0,7).
+  - **Récupération** : l'endurance remonte 0,6 s après le dernier coup. Cela donne environ 6 poings d'affilée, puis une pause.
+  - **Affichage provisoire** : une barre verte sous le viseur, orange quand le joueur est fatigué.
+- **Correctif garde brisée** : la jauge de vie n'est plus remplie à 70 % quand la garde casse. Avant, le coup suivant mettait K.O. Le coup qui casse la garde reste bloqué, puis les coups comptent normalement sur la jauge d'encaissement. Une réaction lourde montre la rupture.
+- **R&D garde** (compilé, non testé), en maintenant **Ctrl gauche / LT** (nouvelle action `Block`, ajoutée à l'écran des touches). À relancer : *Tools > Pool > R&D > Brancher les animations de coups*, pour les animations `IdleBlockHigh` et `BlockedHigh`.
+  - **En garde** : plus lent (×0,6), pas de sprint, ni poing ni pied.
+  - **Ce qu'elle bloque** : les coups de face (70° de chaque côté de la vue), à la tête et au corps. Un poing bloqué ne remplit plus que 10 % de ce qu'il remplirait. Un pied passe à moitié. Le corps n'est poussé qu'à 30 %. Les jambes, les côtés et le dos ne sont pas couverts.
+  - **Jauge de garde** : un poing bloqué lui coûte 25 %, un pied 45 %. Elle remonte après 1 s sans coup.
+  - **Garde brisée** : jauge de garde vide, ou coup de pied spartiate. Le joueur ne peut plus garder pendant 1,5 s. Nouveau moment Feel « garde brisée ».
+  - **Contre-attaque** : un poing donné dans les 0,6 s qui suivent un blocage part 1,5× plus vite et compte 1,5× plus.
+  - **Affichage provisoire** : la jauge de garde sous le viseur, quand on garde ou qu'elle n'est pas pleine.
+- **R&D coups localisés et animations d'encaissement** (compilé, non testé). À relancer : *Tools > Pool > R&D > Brancher les animations de coups*.
+  - **Zones** : tête, corps, jambes, déduites du muscle touché. Elles remplissent la jauge plus ou moins vite : ×1,5, ×1 et ×0,7.
+  - **Coup reçu** : une animation de réaction, choisie selon le côté d'où vient le coup (face, dos, gauche, droite). La version lourde sert pour la tête ou quelqu'un de sonné. La physique du muscle touché s'ajoute par-dessus.
+  - **Sonné** : l'animation `Stunned` remplace la glissade. Elle prend tout le corps à l'arrêt et seulement le haut en marchant. La dérive sur le côté passe de 0,8 à 0,25 m/s (à régler aussi dans l'asset `CombatSettings` s'il garde l'ancienne valeur).
+  - **K.O. selon le dernier coup** : le corps devient tout mou, puis il est poussé dans le sens du coup. À la tête, il part en arrière ; au corps, il se plie ; aux jambes, elles se dérobent.
+- **Direction des coups animés** (compilé, non testé) : le jab partait de biais, car l'animation garde l'orientation de sa garde de profil.
+  - Après chaque coup, la console mesure de combien de degrés le poing s'écarte de la vue et donne la valeur à mettre.
+  - Le réglage se fait dans `CombatSettings` > *Punch Aim Left / Right*, qui tourne le buste pendant le coup.
+- **R&D jauge d'encaissement, étape 3** (compilé, non testé). Nouveau composant `LocalHitGauge` sur la cible : on le met sur la variante de R&D, et il s'ajoute tout seul au premier coup reçu (mannequins, joueur normal). Les coups des poings de boxe et des pieds la remplissent :
+  - **titube** : tant qu'elle n'est pas pleine, un coup secoue le corps sans le faire tomber ;
+  - **sonné**, au-delà de 60 % : le joueur ralentit, dérive sur le côté et sa vue tangue ;
+  - **K.O.**, jauge pleine ou coup de pied spartiate : il tombe et reste 3 s au sol, avec un nouveau moment Feel « K.O. » ;
+  - **réveil** : jauge vidée, et 2 s pendant lesquelles les coups ne la remplissent pas ;
+  - elle redescend seule après 1,5 s sans coup ;
+  - réglages dans `CombatSettings` > *Encaissement* ; la jauge de la dernière cible s'affiche sous le viseur (provisoire).
+- **Correctif : un poing ne fait plus tomber avant que la jauge soit pleine** (compilé, non testé).
+  - **Cause** : dans le prefab du joueur et des mannequins, les propriétés des muscles de PuppetMaster ont une résistance aux coups et une distance de déséquilibre à 0. Tout coup lâche le muscle entièrement, et le moindre écart fait tomber. Les deux premières tentatives multipliaient ces valeurs, qui restaient donc à 0.
+  - **Correctif** : pendant le « titube », la jauge leur donne des valeurs fixes (*Stagger Resistance* 1, *Stagger Drift* 0,6 m). Elle remet celles du prefab une fois que les muscles ont repris leur tenue.
+  - **Un joueur tombait encore 1 s après un poing** (jamais un mannequin). Ses bras mous, réglés par le déplacement de R&D, s'écartent toujours un peu de leur pose. Au retour des réglages du prefab, cet écart suffisait à le faire tomber. Maintenant, à la fin du titube, le coup est considéré comme encaissé : il faut un nouveau coup pour pouvoir tomber.
+  - **Un joueur tombait encore au premier poing**. Un diagnostic a été ajouté : la console dit maintenant quel muscle a fait tomber un corps quand ce n'est pas la jauge. Il a montré que c'était sa main molle qui ballottait au-delà de l'écart toléré. Pendant le titube, les bras et les mains ne comptent plus pour la chute.
+  - **Ce qui ne change pas** : le prefab lui-même, donc les coups de queue et les objets lancés font toujours tomber au premier contact.
+- **Correctif : un mannequin qui se relève reste inerte** (compilé, non testé). Au relevé, `LocalPlayerRagdollController` remet le CharacterController, le contrôleur FPS, la visée, l'animation et les IK **dans l'état où ils étaient avant la chute**. Avant, il les réactivait tous, ce qui rendait leurs contrôles de joueur aux mannequins.
+- **Renommage** : la case des poings de R&D s'appelle maintenant *Boxing Punches* (réglage gardé sur la variante).
+
+## 2026-10-11
+- **R&D coups de bagarre, étape 2** (compilé, non testé). Nouvelle case *Boxing Punches* sur *Local Unarmed Melee*, cochée sur la variante de R&D par *Tools > Pool > R&D > Activer la R&D sur la variante du joueur* :
+  - **un bouton par main** : clic gauche / LB = poing gauche, clic droit / RB = poing droit ; l'autre main enchaîne pendant un coup ;
+  - **un poing plus nerveux et plus réaliste**, après le retour « manque de réalisme et de nervosité ». Quatre causes ont été corrigées :
+    - il part à l'appui, et non plus au relâcher ;
+    - le bras redevient rigide d'un coup pendant la frappe, alors que le « corps mou » le laissait suivre en retard ;
+    - la trajectoire est presque droite au lieu du crochet, plus courte (0,07 s) et plus sèche, avec plus d'épaule et de corps engagés ;
+    - la vue roule et avance un peu quand le poing part ;
+  - **un vrai geste de boxe**, après le retour « on dirait qu'il lève la main pour serrer la main » :
+    - **garde** : les deux poings montent près du menton au premier coup et y restent 1,5 s après le dernier ; chaque coup part de la garde et y revient ;
+    - **poing fermé** : les doigts et le pouce se replient (calculé depuis la position des os) ;
+    - **direct** : les poings convergent vers l'axe du corps au lieu de finir parallèles ;
+    - **poignet** : il tourne pendant le coup, vertical en garde, paume vers le bas à l'impact ;
+  - **à l'impact** : secousse de la vue de celui qui frappe, et un nouveau moment Feel **« coup reçu »** (GameFeelSettings), joué sur l'écran de celui qui reçoit ;
+  - **réglages** : `CombatSettings` (créé par *Ensure Config Assets Exist*) : durées, forme (direct ↔ crochet), corps, force, mouvement de la vue. Le coup de pied, spartiate compris, ne change pas.
+
+  - **coups animés** (compilé, non testé), après le retour « le mouvement n'est pas dingue » :
+    - la garde et les deux poings sont maintenant des animations de boxe (PROTOFACTOR : `IdleCombat`, `Jab1` à gauche, `RightHand1` à droite) ;
+    - elles sont jouées sur un calque « R&D Combat » limité au haut du corps, que crée le nouvel outil *Tools > Pool > R&D > Brancher les animations de coups* ;
+    - le coup touche le long de la vraie main, pendant une fenêtre réglable de l'animation ;
+    - l'enchaînement, la vue, la force et le moment Feel ne changent pas ;
+    - réglages dans `CombatSettings` (*Coups animés*). Décocher *Use Animations* revient aux coups en IK.
+
+  Le poing chargé a été essayé puis retiré. Pas de coup de tête ni de coup de pied sauté (décision du 11/10). Le joueur normal garde ses poings en crochet qui alternent.
+- **Nouvelles touches, pour tous** : poing = clic gauche / **LB** (au lieu de RB), poing droit de R&D = clic droit / RB, coup de pied = **F** (au lieu du clic droit) / RT, pouvoir = **Q** (au lieu de F) / B. Le HUD affiche « Q / B », l'écran des touches gagne la ligne *Poing droit*.
+- **Feel** : le gestionnaire des moments de partie est aussi créé dans les scènes sans billard qui ont des joueurs (l'arène de test).
+- **R&D déplacement de bagarre, étape 1** (branche `feature/deplacements-combat`, compilé, non testé). Nouveau composant `LocalPlayerLocomotion`, seulement sur la variante de R&D du joueur (`New_PlayerVariant`) :
+  - **élan** : on prend de la vitesse et on en perd progressivement, moins de contrôle en l'air ;
+  - **sprint** (Maj / L3) et **saut** (Espace / A), avec une marge pour sauter juste après un bord et un appui gardé juste avant d'atterrir ; les animations de saut et de chute du contrôleur sont maintenant pilotées ;
+  - **escalade** des rebords de 0,8 à 2,1 m en sautant face à eux, mains posées sur le bord ;
+  - **corps mou** quand les mains sont libres : bras moins tenus (muscles PuppetMaster), buste un peu plus souple, bassin qui se penche avec l'accélération ; rigide de nouveau avec la queue, un objet, en visée ou en frappant ;
+  - **vue** : léger roulis en pas de côté, balancement en marchant.
+
+  Réglages : `MovementSettings` (créé par *Ensure Config Assets Exist*). Le contrôleur FPS ne gère plus que le regard quand ce composant est présent.
+- **Arène de test** (*Tools > Pool > R&D > Créer l'arène de test*), scène `Assets/Scenes/Sandbox/RnD/ArenaRnD.unity` :
+  - un sol, des rebords de 0,5 à 2,6 m (le dernier hors de portée), un long mur, une rampe, des marches, des caisses ;
+  - deux mannequins, et un troisième avec la touche G. Les mannequins sont des copies du joueur rendues inertes (entrées, contrôleurs et caméra coupés) : sans ça, ils prenaient la place du joueur ;
+  - la variante du joueur fait l'arrivée des joueurs (un bouton, ou C+P pour le second).
+
+  L'outil ajoute `LocalPlayerLocomotion` à la variante s'il n'y est pas.
+- **Réglages du joueur enregistrés dans le prefab** (PR #5) : coup allongé, main avant qui lâche la queue, durées de la caméra de chute ; deux logs de débogage coupés.
+
 ## 2026-10-09
 - **Page « Travailler à deux » renommée « Travailler en équipe »** (menu du site, accueil, `CLAUDE.md`). Le texte parle de l'équipe et d'un relecteur au lieu de « l'autre ».
 - **Page équipe alignée sur les conventions git** :

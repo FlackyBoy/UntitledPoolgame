@@ -80,6 +80,8 @@ Assets/Scripts/
 │   ├── GameFlowTools.cs            Tools > Pool > Create Main Menu Scene, Sync Build Scenes ; réglages du menu et du chargement
 │   ├── SceneNameDrawer.cs          sélecteur de scène dans l'Inspector, avertissement si la scène n'est pas dans le build
 │   ├── MenuStudio.cs               Tools > Pool > Menu Studio : éditeur graphique des écrans de menu
+│   ├── RnDArenaTools.cs            Tools > Pool > R&D > Préparer le joueur de R&D · Créer l'arène de test
+│   ├── RnDCombatAnimationTools.cs  calques Animator de la R&D (sonné, coups, garde, coup reçu), appelé par Préparer le joueur de R&D
 │   ├── TextFxStudio.cs             Tools > Pool > Text FX Studio : écrire et prévisualiser les textes animés, créer une séquence Feel
 │   ├── PoolTableBuilder.cs         menus Tools > Pool (table, physique, config, pouvoirs)
 │   ├── PoolTableAssetSettings.cs   dimensions de la table
@@ -133,13 +135,21 @@ Assets/Scripts/
 │   ├── LocalCueHolder.cs           prise procédurale de la queue (en test, remplace LocalCuePickupTrigger + PickUpCue quand actif)
 │   ├── LocalCueMelee.cs            coup de queue sur l'autre joueur (IK + PuppetMaster Hit)
 │   ├── LocalUnarmedMelee.cs        poing / pied, coup de pied spartiate (IK + PuppetMaster Hit)
+│   ├── LocalUnarmedMelee.Animated.cs  R&D : coups et garde joués par des animations (calque « R&D Combat »)
+│   ├── LocalUnarmedMelee.Block.cs  R&D : garde maintenue (blocage, jauge de garde, garde brisée, contre-attaque)
+│   ├── LocalUnarmedMelee.Stamina.cs  R&D : endurance de celui qui frappe (anti-spam, coups fatigués)
+│   ├── LocalHitGauge.cs            R&D : jauge d'encaissement de la cible (titube → sonné → K.O. → réveil)
+│   ├── LocalHitGauge.Reactions.cs  R&D : zones touchées, animations de coup reçu et de sonné, chute du K.O.
 │   ├── MeleeHit.cs                 commun aux coups : cible touchée, hitstop
+│   ├── CombatSettings.cs           R&D : coups animés, garde, nervosité et force des poings de boxe, asset dans Resources
 │   └── Grabbable.cs, PlayerHandController.cs   versions online (figées)
 ├── Player/
 │   ├── LocalFpsPlayerController.cs     déplacement, regard, canaux Cinemachine
 │   ├── LocalCharacterAnimationController.cs  paramètres de l'Animator
 │   ├── LocalCharacterModelFollow.cs    le modèle suit la racine hors ragdoll
 │   ├── LocalPlayerRagdollController.cs chute / relevé, caméras, IK
+│   ├── LocalPlayerLocomotion.cs        R&D : élan, sprint, saut, escalade, corps mou (variante du joueur)
+│   ├── MovementSettings.cs             réglages de LocalPlayerLocomotion, asset dans Resources
 │   ├── RagdollHitRelay.cs              impact localisé sur chaque os
 │   └── FpsPlayerController.cs, CharacterAnimationController.cs, NetworkPlayerRigLink.cs   online (figés)
 └── Pool/

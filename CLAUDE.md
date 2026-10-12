@@ -32,6 +32,11 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 - Je ne peux pas lancer Unity : le dire quand une modification n'est ni compilée ni testée.
 - À chaque fonctionnalité ou correctif : mettre à jour `TODO.md` et `CHANGELOG.md` ; mettre à jour le GDD quand le statut d'une fonctionnalité change ; la doc technique quand une classe, un flux ou un réglage change ; ajouter aux pistes ce qui est seulement envisagé.
 - Commit / push uniquement quand l'utilisateur le demande, en ne commitant que les fichiers concernés.
+- **Avant chaque commit, faire une passe sur ce qui a été fait** :
+  - validation : relire le diff, chercher les bugs et les cas oubliés, vérifier que ça compile quand c'est possible ;
+  - refacto : simplifier, retirer le code mort et les doublons, garder le style du code autour ;
+  - optimisation : pas d'allocations ni de recherches coûteuses (`GetComponent`, `Find`…) dans les boucles par image.
+  - Signaler à l'utilisateur ce que la passe a changé avant de commiter.
 - Travail en équipe (organisation dans `docs/content/equipe.md`) :
   - branches, commits et Pull Requests : voir *Workflow git* ci-dessous ;
   - la relecture et l'accord de merge restent humains ;
@@ -56,5 +61,6 @@ La branche principale de ce dépôt est **`master`**. Chaque PR mergée dessus e
 
 - Si `git` n'est pas dans le PATH, utiliser celui de GitHub Desktop : `%LOCALAPPDATA%\GitHubDesktop\app-<version>\resources\app\git\cmd\git.exe` (la version change avec les mises à jour ; sur l'ancien poste : `app-3.6.5`).
 - Ne jamais afficher ni recopier un jeton d'accès GitHub (ni dans la doc, ni dans un commit).
+- `Assets/PROTOFACTOR` (pack d'animations payant, 239 Mo) : seuls les 14 clips utilisés par le combat de R&D sont versionnés (liste dans `.gitignore`). Un nouveau clip utilisé = l'ajouter à cette liste.
 - Ne pas pousser `Assets/Plugins/LeartesStudios` (pack de 4,7 Go avec des fichiers de plus de 100 Mo, refusés par GitHub, et contenu sous licence) : il se réimporte depuis le compte Asset Store / Fab.
 - Les très gros envois échouent (HTTP 500) : découper en plusieurs commits/push.

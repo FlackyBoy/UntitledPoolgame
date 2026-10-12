@@ -41,10 +41,12 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Z Q S D / W A S D, flèches | Se déplacer · en visée : déplacer le point de frappe · vue de dessus : déplacer la bille, changer de poche |
 | Souris | Regarder · en visée : tourner autour de la bille |
 | E | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche |
-| Clic gauche | Mains vides : **coup de poing** (spammer pour enchaîner) · objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
+| Clic gauche | Mains vides : **coup de poing** (spammer pour enchaîner ; en R&D : **poing gauche**) · objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
 | Entrée | Comme le clic gauche pour tirer, lancer et le coup de queue (pas le poing) |
-| Clic droit | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |
-| F | Utiliser le pouvoir (mode Party) |
+| Clic droit | En R&D seulement : **poing droit** |
+| F | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |
+| Ctrl gauche (maintenir) | En R&D seulement : **garde** |
+| Q | Utiliser le pouvoir (mode Party) |
 | C + P (maintenir) | Test : faire rejoindre un second joueur |
 | C + W | Test : aller directement à la fin d'une partie de 8-ball |
 
@@ -57,7 +59,21 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Y / △ | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche |
 | X / □ | Objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
 | B / ○ | Utiliser le pouvoir (mode Party) |
-| RB / R1 | Mains vides : **coup de poing** (spammer pour enchaîner) |
+| LB / L1 | Mains vides : **coup de poing** (spammer pour enchaîner ; en R&D : **poing gauche**) |
+| RB / R1 | En R&D seulement : **poing droit** |
 | RT / R2 | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |
+| LT / L2 (maintenir) | En R&D seulement : **garde** |
 
 > A / ✕ est libre (prévu pour un futur saut). B / ○ porte encore l'action « Crouch », lue par aucun script.
+
+## R&D déplacement (arène de test, variante du joueur)
+
+Seulement avec le joueur de R&D (`New_PlayerVariant`, qui a le composant *Local Player Locomotion*), par exemple dans l'arène de test (*Tools > Pool > R&D > Créer l'arène de test*). Le joueur normal ne change pas.
+
+| Clavier / souris | Manette | Action |
+|---|---|---|
+| Maj (maintenir) | L3 (maintenir) | Sprint, en avançant |
+| Espace | A / ✕ | Sauter · face à un rebord entre 0,8 et 2,1 m : **l'escalader** |
+| Clic gauche / clic droit | LB / RB | **Poing gauche / poing droit**, qui part à l'appui. L'autre main enchaîne pendant un coup. |
+| F (maintenir) | RT | Coup de pied, spartiate chargé (inchangé) |
+| Ctrl gauche (maintenir) | LT (maintenir) | **Garde** : bloque les coups de face à la tête et au corps. Pendant ce temps : plus lent, sans sprint, ni poing ni pied. Un coup de poing donné juste après un blocage est une **contre-attaque**, plus rapide et plus forte. Trop de coups bloqués : **garde brisée**, plus de garde pendant un moment et les coups comptent de nouveau normalement. Chaque coup coûte de l'**endurance** : vide, on ne peut plus frapper le temps qu'elle remonte. |
