@@ -20,7 +20,11 @@ namespace UntitledPoolGame.PoolEditor
         // model doesn't need a code edit.
         private static PoolTableAssetSettings settings;
 
-        [MenuItem("Tools/Pool/Build Table")]
+        // Tools > Pool is grouped by priority (a gap of more than 10 draws a
+        // separator): 0–2 editors (Menu Studio, Text FX Studio, Level
+        // Maker), 20–22 project setup (config assets, menu scene, build
+        // scenes), 40–43 table, 60+ R&D submenu.
+        [MenuItem("Tools/Pool/Build Table", priority = 40)]
         public static void BuildTableMenu() => BuildTable();
 
         // For a custom table asset (a purchased/imported model) instead of our
@@ -51,10 +55,10 @@ namespace UntitledPoolGame.PoolEditor
         // size is off, change Play Length/Play Width/Table Surface Y on
         // PoolTableAssetSettings instead (real-world meters) and regenerate;
         // PoolPhysics itself should always stay at scale (1,1,1).
-        [MenuItem("Tools/Pool/Attach Physics To Custom Table")]
+        [MenuItem("Tools/Pool/Attach Physics To Custom Table", priority = 41)]
         public static void AttachPhysicsToCustomTable() => BuildTable(hideVisuals: true, parentToSelection: true);
 
-        [MenuItem("Tools/Pool/Select Custom Table Settings")]
+        [MenuItem("Tools/Pool/Select Custom Table Settings", priority = 42)]
         public static void SelectCustomTableSettings() => Selection.activeObject = GetOrCreateTableAssetSettings();
 
         // Standalone from BuildTable() on purpose: "Attach Physics To Custom
@@ -66,7 +70,7 @@ namespace UntitledPoolGame.PoolEditor
         // PoolPotEffectSettings) shouldn't have to risk that. Safe to run
         // any time — each Ensure*Asset() is a no-op if its asset already
         // exists.
-        [MenuItem("Tools/Pool/Ensure Config Assets Exist")]
+        [MenuItem("Tools/Pool/Ensure Config Assets Exist", priority = 20)]
         public static void EnsureConfigAssetsExist()
         {
             EnsurePhysicsSettingsAsset();
@@ -130,7 +134,7 @@ namespace UntitledPoolGame.PoolEditor
         // one BuildTable() itself would have created — "PoolPhysics" for a
         // custom table, "PoolTable"/"PoolTable (Offline)" for a generated
         // one).
-        [MenuItem("Tools/Pool/Add Power Spawn System To Selected Table")]
+        [MenuItem("Tools/Pool/Add Power Spawn System To Selected Table", priority = 43)]
         public static void AddPowerSpawnSystemToSelectedTable()
         {
             GameObject root = Selection.activeGameObject;

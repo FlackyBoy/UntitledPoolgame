@@ -35,7 +35,7 @@ namespace UntitledPoolGame.PoolEditor
         private List<LevelCheck> checks = new List<LevelCheck>();
         private bool checksDirty = true;
 
-        [MenuItem("Tools/Pool/Level Maker")]
+        [MenuItem("Tools/Pool/Level Maker", priority = 2)]
         public static void Open() => GetWindow<LevelMakerWindow>("Level Maker");
 
         private void OnEnable()
