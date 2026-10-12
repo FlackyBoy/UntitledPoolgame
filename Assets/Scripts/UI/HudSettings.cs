@@ -59,7 +59,7 @@ namespace UntitledPoolGame.Core
         public string nextBallText = "Prochaine ";
         public string powerGaugeText = "Puissance";
         [Tooltip("Touche affichée sous le pouvoir en stock.")]
-        public string powerKeyText = "F / B";
+        public string powerKeyText = "Q / B";
 
         [Header("Textes : bandeaux d'aide")]
         public string ballInHandBanner = "Main libre ! Place la blanche · E / Y pour valider";

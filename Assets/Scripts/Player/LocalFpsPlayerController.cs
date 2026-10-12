@@ -49,6 +49,12 @@ namespace UntitledPoolGame.Player
         // Degrees, positive = looking down (camera pivot's local X).
         public float Pitch => pitch;
 
+        public Transform CameraPivot => cameraPivot;
+
+        // R&D movement (momentum, jump, dive, ledges): when present and
+        // enabled it moves the body, and this controller only handles the look.
+        private LocalPlayerLocomotion locomotion;
+
         // Turns the view from code (LocalCueMelee swings it back toward the
         // target on a strike), on top of the player's own look input.
         public void AddLook(float yawDegrees, float pitchDegrees)
@@ -63,6 +69,7 @@ namespace UntitledPoolGame.Player
         {
             controller = GetComponent<CharacterController>();
             playerInput = GetComponent<PlayerInput>();
+            locomotion = GetComponent<LocalPlayerLocomotion>();
 
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             moveAction = map.FindAction(moveActionName, throwIfNotFound: true);
@@ -111,7 +118,7 @@ namespace UntitledPoolGame.Player
             if (rules != null && !rules.MatchStarted) return;
 
             HandleLook();
-            HandleMove();
+            if (locomotion == null || !locomotion.isActiveAndEnabled) HandleMove();
         }
 
         private void HandleLook()

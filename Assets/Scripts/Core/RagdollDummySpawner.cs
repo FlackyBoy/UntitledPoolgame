@@ -41,37 +41,38 @@ namespace UntitledPoolGame.Core
                 return;
             }
 
-            LocalFpsPlayerController player = FindFirstObjectByType<LocalFpsPlayerController>();
+            LocalFpsPlayerController player = FindAnyObjectByType<LocalFpsPlayerController>();
             Transform origin = player != null ? player.transform : transform;
 
             Vector3 position = origin.position + origin.forward * spawnDistance;
             Quaternion rotation = Quaternion.LookRotation(-origin.forward, Vector3.up);
 
             GameObject dummy = Instantiate(dummyPrefab, position, rotation);
-
-            // Spawned directly (not through PlayerInputManager.JoinPlayer),
-            // so nothing stops its PlayerInput from auto-pairing to whatever
-            // device is free (typically the keyboard already driving player
-            // 1) — disabling it outright is the simplest way to guarantee
-            // the dummy stays inert regardless of that. It doesn't need to
-            // move or aim at all, just stand there and react to collisions
-            // (LocalPlayerRagdollController doesn't depend on input).
-            if (dummy.TryGetComponent(out PlayerInput dummyInput)) dummyInput.enabled = false;
-            if (dummy.TryGetComponent(out LocalFpsPlayerController dummyFps)) dummyFps.enabled = false;
-            if (dummy.TryGetComponent(out LocalPoolAimController dummyAim)) dummyAim.enabled = false;
-            if (dummy.TryGetComponent(out LocalPlayerHandController dummyHand)) dummyHand.enabled = false;
-
-            // Never joined through PlayerInputManager, so its Camera never
-            // gets assigned a split-screen viewport rect (stays full-screen
-            // by default) — left enabled, it renders on top of/instead of
-            // the real players' own split views. Not needed for a dummy
-            // that only exists to be shot at.
-            Camera dummyCamera = dummy.GetComponentInChildren<Camera>(true);
-            if (dummyCamera != null) dummyCamera.enabled = false;
-            AudioListener dummyListener = dummy.GetComponentInChildren<AudioListener>(true);
-            if (dummyListener != null) dummyListener.enabled = false;
-
+            MakeInert(dummy);
             Debug.Log("[RagdollDummySpawner] Spawned a dummy.");
+        }
+
+        // A dummy is a copy of the player: only its body stays live (it
+        // still falls, reacts to hits and fills its hit gauge). Also used by
+        // the R&D arena tool for the dummies placed in the scene.
+        // - Spawned directly (not through PlayerInputManager.JoinPlayer),
+        //   nothing stops its PlayerInput from auto-pairing to whatever
+        //   device is free (typically the keyboard already driving player
+        //   1): disabled outright.
+        // - The controllers (move, R&D move, aim, hands) are off: it doesn't
+        //   move or aim at all.
+        // - Never joined, its Camera never gets a split-screen viewport rect
+        //   (stays full-screen) — left on, it would draw over the real
+        //   players' views; same for its AudioListener.
+        public static void MakeInert(GameObject dummy)
+        {
+            foreach (PlayerInput c in dummy.GetComponentsInChildren<PlayerInput>(true)) c.enabled = false;
+            foreach (LocalFpsPlayerController c in dummy.GetComponentsInChildren<LocalFpsPlayerController>(true)) c.enabled = false;
+            foreach (LocalPlayerLocomotion c in dummy.GetComponentsInChildren<LocalPlayerLocomotion>(true)) c.enabled = false;
+            foreach (LocalPoolAimController c in dummy.GetComponentsInChildren<LocalPoolAimController>(true)) c.enabled = false;
+            foreach (LocalPlayerHandController c in dummy.GetComponentsInChildren<LocalPlayerHandController>(true)) c.enabled = false;
+            foreach (Camera c in dummy.GetComponentsInChildren<Camera>(true)) c.enabled = false;
+            foreach (AudioListener c in dummy.GetComponentsInChildren<AudioListener>(true)) c.enabled = false;
         }
     }
 }

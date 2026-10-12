@@ -26,7 +26,9 @@ namespace UntitledPoolGame.Core
 
         private static void TryCreate()
         {
-            if (FindAnyObjectByType<PoolMatchRules>() == null || FindAnyObjectByType<GameFeel>() != null) return;
+            // Any scene with a match, or with players (the R&D arena).
+            if (FindAnyObjectByType<GameFeel>() != null) return;
+            if (FindAnyObjectByType<PoolMatchRules>() == null && FindAnyObjectByType<UnityEngine.InputSystem.PlayerInputManager>() == null) return;
             new GameObject("Game feel (Feel)").AddComponent<GameFeel>();
         }
 
@@ -53,6 +55,9 @@ namespace UntitledPoolGame.Core
             PoolMatchRules.BallBlasted += OnBlast;
             PoolMatchRules.TurnChanged += OnTurn;
             LocalPoolAimController.ShotTaken += OnShot;
+            UntitledPoolGame.Interaction.LocalUnarmedMelee.PlayerHit += OnPlayerHit;
+            UntitledPoolGame.Interaction.LocalHitGauge.KnockedOut += OnKnockedOut;
+            UntitledPoolGame.Interaction.LocalUnarmedMelee.GuardBroken += OnGuardBroken;
         }
 
         private void OnDisable()
@@ -63,7 +68,18 @@ namespace UntitledPoolGame.Core
             PoolMatchRules.BallBlasted -= OnBlast;
             PoolMatchRules.TurnChanged -= OnTurn;
             LocalPoolAimController.ShotTaken -= OnShot;
+            UntitledPoolGame.Interaction.LocalUnarmedMelee.PlayerHit -= OnPlayerHit;
+            UntitledPoolGame.Interaction.LocalHitGauge.KnockedOut -= OnKnockedOut;
+            UntitledPoolGame.Interaction.LocalUnarmedMelee.GuardBroken -= OnGuardBroken;
         }
+
+        // The victim's moment (its screen for the HUD text), scaled by how
+        // hard the blow was.
+        private void OnPlayerHit(int attacker, int victim, Vector3 point, float strength) =>
+            Play(GameFeelEvent.PlayerHit, victim, point, strength);
+
+        private void OnKnockedOut(int victim, Vector3 point) => Play(GameFeelEvent.PlayerKnockedOut, victim, point);
+        private void OnGuardBroken(int player, Vector3 point) => Play(GameFeelEvent.GuardBroken, player, point);
 
         private void Update()
         {
@@ -94,7 +110,7 @@ namespace UntitledPoolGame.Core
         }
 
         // Also callable from code for a moment that has no event yet.
-        public void Play(GameFeelEvent gameEvent, int player, Vector3 position)
+        public void Play(GameFeelEvent gameEvent, int player, Vector3 position, float intensityScale = 1f)
         {
             GameFeelSettings cfg = GameFeelSettings.Instance;
             if (!cfg.enabled) return;
@@ -104,7 +120,7 @@ namespace UntitledPoolGame.Core
                 MMF_Player p = InstanceOf(e.feedback);
                 EventPlayer = player;
                 p.transform.position = position;
-                p.PlayFeedbacks(position, e.intensity);
+                p.PlayFeedbacks(position, e.intensity * intensityScale);
             }
         }
 

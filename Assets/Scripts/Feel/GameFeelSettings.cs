@@ -17,6 +17,10 @@ namespace UntitledPoolGame.Core
         BallBlasted,      // "BOUM !" (ball blast power)
         TurnStart,        // the turn passes to a player
         MatchWon,
+        PlayerHit,        // a punch or a kick lands on a player (intensity × the blow's strength)
+        PlayerKnockedOut, // the hit gauge is full: K.O. (R&D combat)
+        GuardBroken,      // a player's guard breaks (R&D combat)
+        // New moments go at the end: assets store the number.
     }
 
     [Serializable]

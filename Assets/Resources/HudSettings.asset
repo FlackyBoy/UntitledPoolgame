@@ -35,7 +35,7 @@ MonoBehaviour:
   groupUndecidedText: "Groupe \xE0 d\xE9cider"
   nextBallText: 'Prochaine '
   powerGaugeText: Puissance
-  powerKeyText: F / B
+  powerKeyText: Q / B
   ballInHandBanner: "Main libre ! Place la blanche \xB7 E / Y pour valider"
   callPocketBannerFormat: "Bille 8 \u2192 {0} \xB7 E / Y pour valider"
   callPocketNoneBanner: 'Bille 8 : vise une poche'

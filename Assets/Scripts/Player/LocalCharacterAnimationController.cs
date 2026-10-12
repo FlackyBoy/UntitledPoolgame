@@ -14,6 +14,10 @@ namespace UntitledPoolGame.Player
         // than one (e.g. a held prop with its own).
         [SerializeField] private Animator animator;
 
+        // The character's Animator, for other components that drive their
+        // own parameters (LocalPlayerLocomotion: Jump, JumpLeg, Crouch).
+        public Animator Animator => animator;
+
         // Optional — see the Awake existence checks below. Our own simple
         // Idle/Locomotion controller (PlayerOffline.controller) uses this;
         // richer imported controllers (e.g. RootMotion's demo "Humanoid
