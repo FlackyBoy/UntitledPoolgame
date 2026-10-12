@@ -53,3 +53,22 @@ Thumbs.db
 # to be tracked.
 /My project/
 /My project (1)/
+
+# PROTOFACTOR Ultimate Animation Collection (paid Asset Store pack, 239 MB):
+# only the 14 clips the R&D combat uses are versioned (guard, punches,
+# block, stunned, blows taken — RnDCombatAnimationTools). The rest is
+# imported from the Asset Store account when needed.
+/Assets/PROTOFACTOR/**
+!/Assets/PROTOFACTOR/**/
+!/Assets/PROTOFACTOR/UltimateAnimationCollection.meta
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations.meta
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset.meta
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions.meta
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@IdleCombat.fbx*
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@Jab1.fbx*
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@RightHand1.fbx*
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@Stunned.fbx*
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@IdleBlockHigh.fbx*
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@BlockedHigh.fbx*
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@GetHit*LightCombat.fbx*
+!/Assets/PROTOFACTOR/UltimateAnimationCollection/Animations/Combat Bare Fists Animset/FBX Motions/Humanoid@GetHit*HeavyCombat.fbx*

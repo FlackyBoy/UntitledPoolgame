@@ -211,11 +211,17 @@ MonoBehaviour:
     label: "Tirer \xB7 lancer \xB7 coup de queue"
     sub: "maintenir puis rel\xE2cher"
   - id: Punch
-    label: Coup de poing
+    label: Poing gauche
+    sub: mains vides
+  - id: PunchRight
+    label: Poing droit
     sub: mains vides
   - id: Kick
     label: Coup de pied
     sub: 'maintenir : spartiate'
+  - id: Block
+    label: Garde
+    sub: maintenir
   - id: Next
     label: Pouvoir
     sub: mode Pouvoirs

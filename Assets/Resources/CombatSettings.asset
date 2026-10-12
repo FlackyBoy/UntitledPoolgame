@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29338915e2d129d4fb2fff6c70592d60, type: 3}
+  m_Name: CombatSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Interaction.CombatSettings
+  useAnimations: 1
+  animationLayer: R&D Combat
+  animationSpeed: 1.3
+  animationFade: 0.06
+  hitWindowStart: 0.2
+  hitWindowEnd: 0.55
+  chainFrom: 0.4
+  returnAt: 0.85
+  swapHands: 0
+  punchAimLeft: 0
+  punchAimRight: 0
+  guardTime: 1.5
+  guardRaiseTime: 0.08
+  guardLowerTime: 0.35
+  fingerCurl: 85
+  thumbCurl: 40
+  corkscrew: 80
+  fistSpread: 0.45
+  windupTime: 0.05
+  strikeTime: 0.07
+  holdTime: 0.03
+  recoverTime: 0.12
+  hookAmount: 0.2
+  torsoTwist: 18
+  shoulderDrive: 0.16
+  bodyLean: 0.14
+  unpin: 2
+  force: 650
+  throwViewRoll: 1.6
+  throwViewPush: 0.035
+  throwViewTime: 0.16
+  hitShake: 1
+  useHitGauge: 1
+  punchDamage: 0.14
+  kickDamage: 0.3
+  staggerTime: 0.7
+  staggerResistance: 1
+  staggerDrift: 0.6
+  dazedFrom: 0.6
+  dazedSpeed: 0.55
+  dazedStagger: 0.25
+  dazedAnimation: 1
+  dazedViewSway: 4
+  drainDelay: 1.5
+  drainRate: 0.2
+  knockOutTime: 3
+  wakeProtection: 2
+  blockEnabled: 1
+  blockMoveSpeed: 0.6
+  blockAngle: 70
+  blockedDamage: 0.1
+  blockedKickDamage: 0.5
+  blockedForce: 0.3
+  blockCostPunch: 0.25
+  blockCostKick: 0.45
+  blockRegenDelay: 1
+  blockRegenRate: 0.5
+  guardBreakTime: 1.5
+  counterWindow: 0.6
+  counterSpeed: 1.5
+  counterDamage: 1.5
+  staminaEnabled: 1
+  punchStamina: 0.15
+  kickStamina: 0.3
+  spartanStamina: 0.25
+  staminaRegenDelay: 0.6
+  staminaRegenRate: 0.45
+  tiredBelow: 0.3
+  tiredSpeed: 0.75
+  tiredDamage: 0.7
+  headDamage: 1.5
+  bodyDamage: 1
+  legDamage: 0.7
+  hitReactions: 1
+  hitReactionFade: 0.1
+  hitReactionSwapSides: 0
+  knockOutPush: 3
+  knockOutLimp: 0.15

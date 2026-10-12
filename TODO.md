@@ -9,6 +9,62 @@ sera retravaillée au fur et à mesure que le scope se précise.
 Légende : ⬜ à faire · 🔄 en cours · ✅ fait
 
 ## En cours
+- 🔄 **R&D déplacements et combat de bagarre** (11/10, branche `feature/deplacements-combat`). Choix : vue FPS gardée, physique hybride améliorée (animation + réactions physiques, pas d'active ragdoll permanent), personnage actuel, tout sur la variante `New_PlayerVariant` (le joueur normal ne change pas). Étapes :
+  - ✅ **1. Déplacement**, testé en jeu (12/10) :
+    - **Le mouvement** : élan et freinage, sprint, saut (avec marge de tolérance au bord et appui gardé). Plongeon essayé puis retiré (11/10) : sans effet sur les autres, il n'apportait rien.
+    - **L'escalade** des rebords de 0,8 à 2,1 m, mains posées sur le bord.
+    - **Le corps mou** quand les mains sont libres : bras moins tenus, buste qui se penche avec l'accélération. Rigide de nouveau avec la queue, un objet, en visée ou en frappant.
+    - **La vue** : roulis en pas de côté et balancement.
+    - `LocalPlayerLocomotion` + `MovementSettings` ; arène *Tools > Pool > R&D > Créer l'arène de test*.
+  - ✅ **2. Coups** (11/10), testés en jeu (12/10). Pas de coup de tête ni de coup de pied sauté (décision du 11/10) ; le coup de pied spartiate reste tel quel.
+    - **Poings de boxe**, case *Boxing Punches* sur la variante : un bouton par main.
+      - **Poing chargé** essayé puis retiré (11/10).
+      - **Retour « manque de réalisme et de nervosité »**, causes trouvées puis corrigées :
+        - le coup attendait le relâcher (à cause de la charge) ;
+        - le bras était encore mou au moment de frapper : il redevient rigide d'un coup ;
+        - le crochet est devenu presque droit, plus court et plus sec ;
+        - la vue ne bougeait pas au départ du poing : elle roule et avance maintenant un peu.
+      - **Retour « la main part du bas et se lève comme pour serrer la main »**, causes trouvées puis corrigées (coups en IK, remplacés depuis par les coups animés) :
+        - il n'y avait pas de garde : les poings fermés montent maintenant près du menton au premier coup, chaque coup part de la garde et y revient ;
+        - la main restait ouverte : les doigts se replient ;
+        - les poings finissaient parallèles : ils convergent vers l'axe du corps ;
+        - le poignet ne tournait pas : il passe de vertical à paume vers le bas.
+      - **Retour « le mouvement n'est pas dingue »** : ✅ **coups animés**, testés et validés par l'utilisateur (12/10).
+        - Garde `IdleCombat`, poing gauche `Jab1`, poing droit `RightHand1` (PROTOFACTOR), sur un calque du haut du corps.
+        - Outil : *Tools > Pool > R&D > Préparer le joueur de R&D*.
+        - ⬜ **À optimiser plus tard** (mis de côté le 12/10, à la demande de l'utilisateur). Pistes à vérifier :
+          - le réglage fin de la fenêtre de touche, de la vitesse et de l'enchaînement ;
+          - l'intégration en vue FPS.
+    - **À l'impact** : secousse de la vue et moment Feel « coup reçu ».
+    - **Réglages** : `CombatSettings`.
+    - **Touches pour tous** : clic gauche / LB = poing (gauche), clic droit / RB = poing droit (R&D), F / RT = pied, Q / B = pouvoir.
+  - ✅ **3. Sonné et K.O.** (12/10), testé en jeu. Jauge d'encaissement `LocalHitGauge`, réglages dans `CombatSettings` > *Encaissement*. Elle ne compte que les coups des poings de boxe et des pieds du joueur de R&D.
+    - **Titube** : tant que la jauge n'est pas pleine, un coup secoue le corps sans le faire tomber (équilibre renforcé un court moment).
+    - **Sonné** (au-delà de 60 %) : plus lent, il dérive sur le côté, la vue tangue.
+    - **K.O.** : jauge pleine ou coup de pied spartiate, le joueur tombe et reste 3 s au sol. Nouveau moment Feel « K.O. ».
+    - **Réveil** : la jauge est vide, et protégée 2 s.
+    - La jauge redescend seule 1,5 s après le dernier coup.
+    - La jauge de la dernière cible s'affiche sous le viseur de l'attaquant (provisoire).
+    - ✅ **Coups localisés et animations** (12/10, testés en jeu).
+      - Zones tête ×1,5 / corps ×1 / jambes ×0,7.
+      - Animations `GetHit` selon le côté d'où vient le coup ; `Stunned` quand il est sonné.
+      - Chute du K.O. selon la zone du dernier coup.
+    - 🔄 **Direction du jab** : correction *Punch Aim Left/Right* à régler d'après la console.
+    - ⬜ **Frapper là où l'on regarde** (demande du 12/10) : le coup doit suivre le regard (haut, bas, côtés), pas seulement partir droit devant.
+      - Les coups animés frappent toujours à hauteur de l'animation. Les coups en IK suivaient un peu le regard (*Punch Pitch Follow*).
+      - Piste : pencher le buste et les bras vers le regard pendant le coup, par exemple avec un Aim IK sur la colonne, ou un effecteur de main tiré vers la ligne de visée dans la fenêtre de touche. Le coup de pied pourrait faire de même (*Kick Pitch Follow*).
+      - Lien avec les zones : regarder la tête vise la tête, regarder bas vise les jambes.
+    - ✅ **Garde** (12/10, testée en jeu), Ctrl gauche / LT maintenu.
+      - Bloque les coups de face à la tête et au corps. Plus lent, ni poing ni pied en garde.
+      - Jauge de garde, garde brisée, contre-attaque après un blocage.
+      - Garde brisée : retour aux coups normaux sur la jauge d'encaissement (correctif du 12/10 : le coup suivant mettait K.O.).
+      - Le coup de pied spartiate brise la garde sans mettre K.O.
+    - ✅ **Endurance de celui qui frappe** (12/10, testée en jeu) : chaque coup coûte de l'endurance, les poings fatigués sont plus lents et plus faibles. Environ 6 poings d'affilée.
+    - ✅ **Passe de nettoyage** (12/10, testée en jeu) : outils de R&D réunis, optimisations, refacto.
+    - ⬜ À voir plus tard : faire compter aussi les coups de queue et les objets lancés.
+    - ⬜ Réglages PuppetMaster du prefab joueur à revoir. Dans *Behaviour Puppet > Defaults*, *Collision Resistance* et *Knock Out Distance* sont à 0 : tout contact lâche complètement le muscle, et le moindre écart fait tomber. Avec les bras mous de R&D, un joueur risque de tomber sur n'importe quel contact (coup de queue, objet).
+  - ⬜ 4. Attraper / porter / jeter un joueur (ou un K.O.), se débattre pour se libérer.
+  - ⬜ Paramétrage de MovementSettings par l'utilisateur, puis ses valeurs deviennent les valeurs par défaut.
 - 🔄 **Travailler à deux** (08/10) : organisation git validée et documentée (`docs/content/equipe.md`, page « Travailler à deux » du site, `docs/equipe.pdf`), `.gitattributes` ajouté, règles de Claude mises à jour dans CLAUDE.md. Reste, côté propriétaire du dépôt :
   - ⬜ inviter le coéquipier (*Settings > Collaborators*) ;
   - ⬜ protéger `master` (PR obligatoire, 1 approbation, sans contournement) ;
@@ -20,6 +76,7 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
 ## Correctifs à faire (liste de l'utilisateur, 01/10)
 - 🔄 **Caméra trop haute en écran partagé** — précision du 02/10 : surtout un **objet au-dessus de la table** (lampe, plafond) qui cache une partie de la vue. Correction : pendant la vue de dessus, le plan de coupe proche de la caméra descend juste au-dessus du tapis (*Placement Clear Above*, 0,5 m sur LocalPoolAimController), rien au-dessus n'est dessiné ; rétabli en sortant. Non compilé, non testé. Ancienne note : (vue de dessus : bille en main, annonce de poche) — la hauteur réglée pour le plein écran est multipliée par le rapport d'aspect plein écran / demi-écran (≈ ×2 en côte à côte). Pistes : calculer la hauteur qui fait tenir la table dans la fenêtre du joueur (champ de vision + taille de la table) et tourner la vue pour mettre la longueur de la table dans la grande dimension de la fenêtre ; ne pas dépasser le plafond. Le diagnostic `[PlacementTrace]` donne les valeurs.
 - ✅ **Retour de la caméra après une chute** (validé le 02/10 : une seule caméra, la caméra FPS) — précision du 02/10 : la durée est réglée dans Cinemachine ; le vrai problème est que le retour ne part pas de l'axe de la caméra de chute. Correction : la caméra de chute part de la direction où regardait le joueur, puis se place derrière le corps pendant qu'il se relève (*Ragdoll Camera Turn Speed*, 240 °/s) ; au retour, la vue FPS reprend cet axe et l'inclinaison de la caméra de chute. Test : le retour vient toujours de l'avant → 2ᵉ passe (caméra de chute à la 3ᵉ personne gardée) : la caméra FPS repart de zéro au relevé (`PreviousStateIsValid`), diagnostic `[CamReturn]`. Logs : la caméra de chute regardait le corps de face (180° d'écart) → 3ᵉ passe : au relevé, le corps prend l'orientation de la caméra de chute ; diagnostic du relevé (branche, position avant/après, modèle, bassin) pour l'écart d'environ 2 m entre la caméra FPS et le corps. Test : revient encore de loin → 4ᵉ passe : **une seule caméra**, la caméra FPS recule elle-même pendant la chute (*Camera Pull Back Time*) puis revient dans les yeux dès le relevé (*Camera Return Time*) ; l'ancienne caméra de chute n'est plus utilisée. Non compilé, non testé. Ancienne note : — temps entre la fin du ragdoll et le retour du contrôle / de la vue FPS à raccourcir (voir `LocalPlayerRagdollController` : délai de récupération, relevé).
+- ⬜ **Gestion du déclenchement des pouvoirs** (demande du 12/10) — à cadrer : quand et comment un pouvoir ramassé se déclenche (touche Q / B, moment autorisé selon le tour, ciblage, retour visuel).
 - ⬜ **Gestion du combat pendant une partie** — à cadrer (mode de jeu ? pouvoirs ?). Suggestions de Claude à discuter :
   - combat seulement en mode Party, ou réglable par mode (8-ball « propre » sans coups) ;
   - frapper le joueur qui vise lui fait rater ou perdre son coup (faute) — le combat devient une défense de la table ;

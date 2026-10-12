@@ -234,7 +234,7 @@ sequenceDiagram
   RC->>CAM: dès le relevé, revient vers les yeux du corps qui se relève
   PM-->>RC: OnRegainBalance / relevé terminé
   RC->>RC: replace le personnage sur le corps, orienté comme la vue
-  RC->>RC: réactive les contrôleurs et l'IK
+  RC->>RC: remet contrôleurs et IK dans leur état d'avant la chute
   RC->>CAM: revenue dans les yeux : pose d'origine sous CameraPivot
 ```
 

@@ -70,6 +70,20 @@ namespace UntitledPoolGame.PoolEditor
                 Debug.Log($"[GameFlow] Created {path} (menu screen, edit it in Tools > Pool > Menu Studio).");
             }
 
+            const string movementPath = "Assets/Resources/MovementSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<UntitledPoolGame.Player.MovementSettings>(movementPath) == null)
+            {
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<UntitledPoolGame.Player.MovementSettings>(), movementPath);
+                Debug.Log($"[GameFlow] Created {movementPath} (R&D movement: momentum, jump, ledges, floppy body).");
+            }
+
+            const string combatPath = "Assets/Resources/CombatSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<UntitledPoolGame.Interaction.CombatSettings>(combatPath) == null)
+            {
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<UntitledPoolGame.Interaction.CombatSettings>(), combatPath);
+                Debug.Log($"[GameFlow] Created {combatPath} (R&D combat: punches, hit gauge, guard, stamina, hit zones).");
+            }
+
             const string feelPath = "Assets/Resources/GameFeelSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<GameFeelSettings>(feelPath) == null)
             {
@@ -79,7 +93,7 @@ namespace UntitledPoolGame.PoolEditor
             AssetDatabase.SaveAssets();
         }
 
-        [MenuItem("Tools/Pool/Create Main Menu Scene")]
+        [MenuItem("Tools/Pool/Create Main Menu Scene", priority = 21)]
         public static void CreateMainMenuScene()
         {
             EnsureAssets();
@@ -104,7 +118,7 @@ namespace UntitledPoolGame.PoolEditor
             SyncBuildScenes();
         }
 
-        [MenuItem("Tools/Pool/Sync Build Scenes (menu + levels)")]
+        [MenuItem("Tools/Pool/Sync Build Scenes (menu + levels)", priority = 22)]
         public static void SyncBuildScenes()
         {
             var scenes = EditorBuildSettings.scenes.ToList();

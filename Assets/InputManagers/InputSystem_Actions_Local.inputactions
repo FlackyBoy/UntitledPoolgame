@@ -104,6 +104,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "PunchRight",
+                    "type": "Button",
+                    "id": "4f2a8c6e-1d3b-4a59-8e7c-2b6d9f0a3c15",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Block",
+                    "type": "Button",
+                    "id": "b7d3e9a1-5c42-4f68-9a0e-6d2c8f1b3e59",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -275,7 +293,7 @@
                 {
                     "name": "",
                     "id": "cbac6039-9c09-46a1-b5f2-4e5124cdc6fe",
-                    "path": "<Keyboard>/f",
+                    "path": "<Keyboard>/q",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -418,7 +436,7 @@
                 {
                     "name": "",
                     "id": "c62e9b14-7f3a-4d85-a0c9-5e1b8f2d7c46",
-                    "path": "<Gamepad>/rightShoulder",
+                    "path": "<Gamepad>/leftShoulder",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -429,11 +447,33 @@
                 {
                     "name": "",
                     "id": "5b0d8e3a-9c62-4f17-b4a8-2e7f1c6d9b58",
-                    "path": "<Mouse>/rightButton",
+                    "path": "<Keyboard>/f",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Kick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9d1e5b7a-3c24-4f86-a0b9-6e2c8d4f1a37",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "PunchRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2c7f9a1e-6b48-4d35-8f0a-7e3b1c9d5a64",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "PunchRight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -445,6 +485,28 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Kick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3e9c1a7d-8f24-4b6e-a5d0-1c7f3b9e2a48",
+                    "path": "<Keyboard>/leftCtrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Block",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6a2f8d4c-0e93-4c7b-b1e6-9d5a3f7c0b26",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Block",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

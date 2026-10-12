@@ -11,8 +11,13 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Bare-handed fighting, Gang Beasts spirit: Punch (left click / RB,
-    // hands empty) and Kick (right click / RT, any time). A punch goes out
+    // Bare-handed fighting, Gang Beasts spirit: Punch (left click / LB,
+    // hands empty) and Kick (F / RT, any time). R&D option (Boxing
+    // Punches, on the R&D player variant): one button per hand (Punch =
+    // left, PunchRight = right click / RB), a straighter and snappier punch
+    // that the view follows — see CombatSettings; with Use Animations, the
+    // guard and punches are animation clips instead (LocalUnarmedMelee.Animated.cs).
+    // Otherwise: a punch goes out
     // on the click, no charge (the charged punch was dropped after testing);
     // punches can be spammed: a click during a punch chains the next one
     // with the other hand straight away, the previous arm easing back on its
@@ -35,7 +40,7 @@ namespace UntitledPoolGame.Interaction
     // as for the cue: see MeleeHit.
     [RequireComponent(typeof(LocalPlayerHandController))]
     [RequireComponent(typeof(PlayerInput))]
-    public class LocalUnarmedMelee : MonoBehaviour
+    public partial class LocalUnarmedMelee : MonoBehaviour
     {
         // Tooltips are in French: they are read by the designer in the
         // Inspector.
@@ -43,8 +48,18 @@ namespace UntitledPoolGame.Interaction
         [SerializeField] private string actionMapName = "Player";
         [Tooltip("Action du coup de poing (clic gauche / RB), mains vides uniquement.")]
         [SerializeField] private string punchActionName = "Punch";
-        [Tooltip("Action du coup de pied (clic droit / RT).")]
+        [Tooltip("Action du coup de pied (F / RT).")]
         [SerializeField] private string kickActionName = "Kick";
+
+        // R&D (feature/deplacements-combat), ticked on the R&D player
+        // variant only: boxing punches — one button per hand, a guard, a
+        // snappier, straighter punch (CombatSettings). No charge: tried, then
+        // dropped on 11/10.
+        [Header("R&D Boxe")]
+        [Tooltip("R&D : un bouton par main (Punch = poing gauche, Punch Right = poing droit). Le poing part à l'appui, presque droit, sec, le corps derrière, et la vue l'accompagne. Durées, forme, force et ressenti : CombatSettings. Décoché = poings en crochet qui alternent sur un seul bouton.")]
+        [SerializeField] private bool boxingPunches;
+        [Tooltip("Action du poing droit (clic droit / RB), avec les poings de boxe.")]
+        [SerializeField] private string punchRightActionName = "PunchRight";
 
         [Tooltip("Caméra du joueur : les coups suivent son regard. Vide = la première caméra sous ce joueur.")]
         [SerializeField] private Transform viewTransform;
@@ -219,7 +234,33 @@ namespace UntitledPoolGame.Interaction
         private PuppetMaster ownPuppet;
         private Camera viewCamera;
         private InputAction punchAction;
+        private InputAction punchRightAction;
         private InputAction kickAction;
+        private PlayerInput playerInput;
+        private LocalPlayerLocomotion locomotion;   // R&D: view kick when a punch leaves
+
+        private bool Boxing => boxingPunches && punchRightAction != null;
+
+        // R&D guard: both fists up by the chin once punching starts, until
+        // Guard Time after the last punch. Index 0 = left hand, 1 = right.
+        private float guardWeight;
+        private float guardUntil = -1f;
+        private readonly Vector3[] guardPos = new Vector3[2];
+        private readonly bool[] guardPosValid = new bool[2];
+        private readonly bool[] guardDriven = new bool[2];
+        private readonly Vector3[] handFingers = new Vector3[2], handBack = new Vector3[2];
+        private readonly bool[] handMeasured = new bool[2];
+        private readonly float[] fist = new float[2];    // how closed each hand is, 0..1
+        private Animator bodyAnimator;
+
+        // Read by LocalPlayerLocomotion: the arms stay stiff in guard.
+        public bool IsGuarding => guardWeight > 0.01f;
+
+        // A blow landed on another player: attacker and victim player
+        // indices (-1 = not a joined player, e.g. a dummy), contact point,
+        // strength 0..1 (jab ~0.3, full charge 1). GameFeel plays its Feel
+        // sequence for it.
+        public static event System.Action<int, int, Vector3, float> PlayerHit;
 
         private Phase phase = Phase.Idle;
         private Move move;
@@ -273,10 +314,12 @@ namespace UntitledPoolGame.Interaction
         private readonly Collider[] overlapBuffer = new Collider[32];
         private Coroutine zoomRoutine;
         private float baseFov;
+        private LocalHitGauge lastGauge;     // R&D: the last target's gauge, shown for a moment
+        private float lastGaugeTime = -10f;
 
         // Read by LocalCueMelee and LocalPoolAimController so nothing else
         // starts driving the body mid-blow.
-        public bool IsAttacking => phase != Phase.Idle;
+        public bool IsAttacking => phase != Phase.Idle || animPunching;
 
         private void Awake()
         {
@@ -298,9 +341,17 @@ namespace UntitledPoolGame.Interaction
             rightElbowGoal = CreateGoal("MeleeElbowGoal_R");
             kneeGoal = CreateGoal("MeleeKneeGoal");
 
-            InputActionMap map = GetComponent<PlayerInput>().actions.FindActionMap(actionMapName, throwIfNotFound: true);
+            playerInput = GetComponent<PlayerInput>();
+            locomotion = GetComponent<LocalPlayerLocomotion>();
+            LocalCharacterAnimationController animControl = GetComponent<LocalCharacterAnimationController>();
+            bodyAnimator = animControl != null && animControl.Animator != null ? animControl.Animator : GetComponentInChildren<Animator>(true);
+            InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             punchAction = map.FindAction(punchActionName, throwIfNotFound: true);
+            punchRightAction = map.FindAction(punchRightActionName);
             kickAction = map.FindAction(kickActionName, throwIfNotFound: true);
+            FindBlockAction(map);
+            if (boxingPunches && punchRightAction == null)
+                Debug.LogWarning($"[UnarmedMelee] {name} : action « {punchRightActionName} » introuvable, poings de boxe désactivés.", this);
 
             if (muscleLayers.value == 0) muscleLayers = LayerMask.GetMask("Ragdoll");
         }
@@ -314,25 +365,66 @@ namespace UntitledPoolGame.Interaction
 
         private void OnEnable()
         {
-            if (fullBodyIK != null) fullBodyIK.solver.OnPreUpdate += ApplyBody;
+            if (fullBodyIK != null)
+            {
+                fullBodyIK.solver.OnPreUpdate += ApplyBody;
+                fullBodyIK.solver.OnPostUpdate += CurlFingers;
+            }
         }
 
         private void OnDisable()
         {
-            if (fullBodyIK != null) fullBodyIK.solver.OnPreUpdate -= ApplyBody;
+            if (fullBodyIK != null)
+            {
+                fullBodyIK.solver.OnPreUpdate -= ApplyBody;
+                fullBodyIK.solver.OnPostUpdate -= CurlFingers;
+            }
             ReleaseFade();
             EndBlow();
+            guardWeight = 0f;
+            IsBlocking = false;
+            ReleaseGuard();
+            ReleaseAnimatedLayer();
             RestoreFov();
         }
 
         private void Update()
         {
             if (cooldownLeft > 0f) cooldownLeft -= Time.deltaTime;
+            UpdateBlock(Time.deltaTime);
+            UpdateStamina(Time.deltaTime);
+            if (boxingPunches) UpdateGuard(Time.deltaTime);
+
+            // Animated punches (R&D): the Animator layer plays them; nothing
+            // else starts until the punch is done.
+            bool animated = AnimatedPunches;
+            if (animated)
+            {
+                UpdateAnimated(Time.deltaTime);
+                if (animPunching) return;
+            }
+            else if (animPunching || LayerBusy) ReleaseAnimatedLayer();
 
             if (phase == Phase.Idle)
             {
                 if (cooldownLeft > 0f) return;
-                if (punchAction.WasPressedThisFrame() && CanStart(Move.Punch)) Begin(Move.Punch, punchAction);
+                if (IsBlocking) return;   // no punch, no kick while guarding
+                if (Boxing)
+                {
+                    // One button per hand.
+                    if (punchAction.WasPressedThisFrame() && CanStart(Move.Punch))
+                    {
+                        if (animated) StartAnimatedPunch(false);
+                        else { rightHand = false; Begin(Move.Punch, punchAction); }
+                    }
+                    else if (punchRightAction.WasPressedThisFrame() && CanStart(Move.Punch))
+                    {
+                        if (animated) StartAnimatedPunch(true);
+                        else { rightHand = true; Begin(Move.Punch, punchRightAction); }
+                    }
+                    else if (kickAction.WasPressedThisFrame() && CanStart(Move.Kick)) Begin(Move.Kick, kickAction);
+                }
+                else if (punchAction.WasPressedThisFrame() && CanStart(Move.Punch)) Begin(Move.Punch, punchAction);
                 else if (kickAction.WasPressedThisFrame() && CanStart(Move.Kick)) Begin(Move.Kick, kickAction);
                 return;
             }
@@ -349,7 +441,10 @@ namespace UntitledPoolGame.Interaction
             // Spamming the punch: a click once the fist is on its way chains
             // the next punch with the other hand without waiting for this
             // arm to come back.
-            if (move == Move.Punch && phase != Phase.Windup && punchAction.WasPressedThisFrame())
+            // Boxing punches: it's the OTHER hand's button that chains (the
+            // same hand can't punch again before its arm is back).
+            InputAction chainAction = Boxing ? (rightHand ? punchAction : punchRightAction) : punchAction;
+            if (move == Move.Punch && phase != Phase.Windup && chainAction.WasPressedThisFrame())
             {
                 if (phase == Phase.Strike) bufferedPunch = true;
                 else { ChainPunch(); return; }
@@ -361,7 +456,7 @@ namespace UntitledPoolGame.Interaction
                 case Phase.Windup: UpdateWindup(); break;
                 case Phase.Strike: UpdateStrike(); break;
                 case Phase.Hold:
-                    if (phaseTime >= (move == Move.Kick ? kickHoldTime : holdTime)) { phase = Phase.Recover; phaseTime = 0f; }
+                    if (phaseTime >= (move == Move.Kick ? kickHoldTime : Boxing ? CombatSettings.Instance.holdTime : holdTime)) { phase = Phase.Recover; phaseTime = 0f; }
                     break;
                 case Phase.Recover: UpdateRecover(); break;
             }
@@ -377,6 +472,7 @@ namespace UntitledPoolGame.Interaction
             // Not while picking the cue up or letting it go: the pickup pins
             // the feet and drives the hands.
             if (handController.HandsMoving) return false;
+            if (!HasStamina(m)) return false;   // R&D: too tired
             if (m == Move.Punch)
             {
                 // Fists only with empty hands (with the cue, the click is
@@ -388,6 +484,13 @@ namespace UntitledPoolGame.Interaction
         }
 
         private bool IsDown() => ragdoll != null && ragdoll.IsRagdollCameraActive;
+
+        // Up, hands empty and not busy with the cue or aiming: what the R&D
+        // guard (after punching, or held) needs.
+        private bool HandsFreeForFists() =>
+            !IsDown() && handController.HeldObject == null && !handController.CueBusy && !handController.HandsMoving
+            && (aimController == null || (!aimController.IsAiming && !aimController.IsPlacementViewActive))
+            && (cueMelee == null || !cueMelee.IsSwinging);
 
         private Vector3 FlatForward()
         {
@@ -412,6 +515,8 @@ namespace UntitledPoolGame.Interaction
             bufferedPunch = false;
             limbLogged = false;
             hitThisBlow.Clear();
+            StartCounterIfAny();
+            SpendStamina(m);
 
             IKSolverFullBodyBiped solver = fullBodyIK.solver;
             if (m == Move.Kick)
@@ -442,15 +547,7 @@ namespace UntitledPoolGame.Interaction
         // with the back of the hand up. Without it the hand keeps the
         // animation's rotation, which turned the fist outward once the arm
         // was raised.
-        private void MeasureHand(BipedReferences r)
-        {
-            Transform hand = rightHand ? r.rightHand : r.leftHand;
-            Transform forearm = rightHand ? r.rightForearm : r.leftForearm;
-            if (hand == null || forearm == null) { fingersInHand = backInHand = Vector3.zero; return; }
-            float side = rightHand ? 1f : -1f;
-            fingersInHand = hand.InverseTransformDirection((hand.position - forearm.position).normalized);
-            backInHand = hand.InverseTransformDirection(transform.right * side);
-        }
+        private void MeasureHand(BipedReferences r) => MeasureHandFor(r, rightHand, out fingersInHand, out backInHand);
 
         // The foot's sole (down, while standing) and toes, in the foot
         // bone's own space — whatever the rig's bone axes are — so the kick
@@ -468,20 +565,32 @@ namespace UntitledPoolGame.Interaction
         {
             bufferedPunch = false;
             if (!CanStart(Move.Punch)) return false;
-            StartFade();
+            // R&D: the arm that just punched goes back to the guard (instead
+            // of fading to its hanging pose).
+            if (Boxing) HandToGuard();
+            else StartFade();
             AdvanceHand();
-            Begin(Move.Punch, punchAction);
+            Begin(Move.Punch, Boxing && rightHand ? punchRightAction : punchAction);
             return true;
         }
 
         private void UpdateWindup()
         {
-            weight = Mathf.Clamp01(phaseTime / Mathf.Max(0.01f, windupTime));
+            float windup = move == Move.Punch && Boxing ? CombatSettings.Instance.windupTime : windupTime;
+            weight = windup <= 0f ? 1f : Mathf.Clamp01(phaseTime / windup);
 
             // Punches don't charge: the fist goes out as soon as it's up in
             // guard, held or not.
             bool strikeNow;
-            if (move == Move.Punch)
+            if (move == Move.Punch && Boxing)
+            {
+                // Leaves on the press (after the short guard), never waits
+                // for the release: that wait read as lag.
+                twist = 0f;
+                lean = 0f;
+                strikeNow = phaseTime >= windup;
+            }
+            else if (move == Move.Punch)
             {
                 twist = 0f;
                 lean = 0f;
@@ -502,6 +611,13 @@ namespace UntitledPoolGame.Interaction
             {
                 phase = Phase.Strike;
                 phaseTime = 0f;
+                if (IsSpartan) SpendSpartanStamina();
+                // The view goes with the punch as it leaves (R&D).
+                if (move == Move.Punch && Boxing && locomotion != null)
+                {
+                    CombatSettings cfg = CombatSettings.Instance;
+                    locomotion.KickView((rightHand ? -1f : 1f) * cfg.throwViewRoll, cfg.throwViewPush, cfg.throwViewTime);
+                }
                 if (debugLogs)
                     Debug.Log($"[UnarmedMelee] {name}: {Describe()} (charge {charge:F2})", this);
             }
@@ -511,15 +627,26 @@ namespace UntitledPoolGame.Interaction
         {
             float t = Mathf.Clamp01(phaseTime / StrikeTime());
             float previousReach = reach;
-            // Fast out, settles on the target.
-            reach = 1f - (1f - t) * (1f - t);
+            bool snappy = move == Move.Punch && Boxing;
+            // Fast out, settles on the target (R&D punch: sharper, most of
+            // the distance in the first third).
+            reach = snappy ? 1f - (1f - t) * (1f - t) * (1f - t) : 1f - (1f - t) * (1f - t);
             weight = 1f;
 
             if (move == Move.Punch)
             {
                 float side = rightHand ? 1f : -1f;
-                twist = side * jabTorsoTwist * reach;
-                lean = punchLean * 0.4f * reach;
+                if (snappy)
+                {
+                    CombatSettings cfg = CombatSettings.Instance;
+                    twist = side * cfg.torsoTwist * reach;
+                    lean = cfg.bodyLean * reach;
+                }
+                else
+                {
+                    twist = side * jabTorsoTwist * reach;
+                    lean = punchLean * 0.4f * reach;
+                }
             }
             else
             {
@@ -543,9 +670,16 @@ namespace UntitledPoolGame.Interaction
 
         private void UpdateRecover()
         {
-            float t = Mathf.Clamp01(phaseTime / recoverTime);
+            float t = Mathf.Clamp01(phaseTime / RecoverTime());
             float left = 1f - t * t * (3f - 2f * t);
             weight = left;
+            // R&D: the fist comes back along its path to the guard, the arm
+            // staying driven while the guard is up.
+            if (move == Move.Punch && Boxing)
+            {
+                reach = left;
+                weight = Mathf.Max(left, guardWeight);
+            }
             twist = recoverTwist * left;
             lean = recoverLean * left;
             if (t >= 1f) EndBlow();
@@ -553,6 +687,11 @@ namespace UntitledPoolGame.Interaction
 
         private void EndBlow()
         {
+            if (phase != Phase.Idle && move == Move.Punch && Boxing)
+            {
+                guardUntil = Time.time + CombatSettings.Instance.guardTime;
+                HandToGuard();
+            }
             ReleaseLimb(activeEffector, activeChain);
             activeEffector = null;
             activeChain = null;
@@ -564,6 +703,20 @@ namespace UntitledPoolGame.Interaction
             phase = Phase.Idle;
             weight = 0f;
             bufferedPunch = false;
+        }
+
+        // R&D: the punching arm is handed over to the guard from where its
+        // fist is, so it eases back up instead of dropping. The active limb
+        // is cleared without releasing it: the guard drives it from now on.
+        private void HandToGuard()
+        {
+            if (activeEffector == null || guardWeight <= 0f) return;
+            int i = rightHand ? 1 : 0;
+            guardPos[i] = activeEffector.position;   // where the fist was driven this frame
+            guardPosValid[i] = true;
+            guardDriven[i] = true;
+            activeEffector = null;
+            activeChain = null;
         }
 
         // Punches strictly alternate hands — a chained punch must never
@@ -611,16 +764,20 @@ namespace UntitledPoolGame.Interaction
 
         private float StrikeTime()
         {
-            if (move == Move.Punch) return jabStrikeTime;
+            if (move == Move.Punch) return Boxing ? CombatSettings.Instance.strikeTime : jabStrikeTime;
             return charged ? chargedKickStrikeTime : kickStrikeTime;
         }
+
+        // The R&D punch comes back faster (the kick keeps its own timing).
+        private float RecoverTime() =>
+            move == Move.Punch && Boxing ? CombatSettings.Instance.recoverTime : recoverTime;
 
         private bool IsSpartan => move == Move.Kick && charged && charge >= spartanMinCharge;
 
         private string Describe()
         {
             if (move == Move.Kick) return IsSpartan ? "SPARTAN KICK" : charged ? "charged kick" : "kick";
-            return $"punch ({(rightHand ? "right" : "left")})";
+            return $"{(charged ? "charged punch" : "punch")} ({(rightHand ? "right" : "left")})";
         }
 
         // ---- Body (just before FBBIK solves) ----
@@ -629,8 +786,12 @@ namespace UntitledPoolGame.Interaction
         {
             if (viewTransform == null) return;
             if (fadeEffector != null) ApplyFade();
-            if (phase == Phase.Idle || activeEffector == null) return;
             BipedReferences r = fullBodyIK.references;
+            Vector3 flatForward = FlatForward();
+            // Animated punches: the guard is the clip's, not the IK's.
+            if (boxingPunches && !AnimatedPunches) ApplyGuard(r, flatForward);
+            if (AnimatedPunches) ApplyPunchAim(r);
+            if (phase == Phase.Idle || activeEffector == null) return;
 
             // Measured here, not in Begin: in Update the bones still hold
             // last frame's IK result; here they hold this frame's animation.
@@ -649,7 +810,6 @@ namespace UntitledPoolGame.Interaction
                     if (bone != null) bone.rotation = perBone * bone.rotation;
             }
 
-            Vector3 flatForward = FlatForward();
             fullBodyIK.solver.bodyEffector.positionOffset += flatForward * lean;
 
             Vector3 target;
@@ -667,8 +827,10 @@ namespace UntitledPoolGame.Interaction
                     // Knuckles along the punch, back of the hand up (then
                     // Fist Roll, mirrored for the left hand).
                     float side = rightHand ? 1f : -1f;
+                    // R&D: vertical in guard, turning palm down on the way.
+                    float roll = fistRoll + (Boxing ? CombatSettings.Instance.corkscrew * (1f - reach) : 0f);
                     Quaternion measured = Quaternion.LookRotation(fingersInHand, backInHand);
-                    Quaternion wanted = Quaternion.AngleAxis(side * fistRoll, punchDirection) * Quaternion.LookRotation(punchDirection, Vector3.up);
+                    Quaternion wanted = Quaternion.AngleAxis(side * roll, punchDirection) * Quaternion.LookRotation(punchDirection, Vector3.up);
                     activeEffector.rotation = wanted * Quaternion.Inverse(measured);
                     activeEffector.rotationWeight = weight * fistAlign;
                 }
@@ -698,9 +860,172 @@ namespace UntitledPoolGame.Interaction
             }
         }
 
+        // ---- R&D guard and closed fists ----
+
+        // Up while punching, and for Guard Time after the last punch — as
+        // long as the hands are free and the player is up.
+        private void UpdateGuard(float dt)
+        {
+            CombatSettings cfg = CombatSettings.Instance;
+            bool allowed = Boxing && cfg.guardTime > 0f && HandsFreeForFists();
+            bool want = allowed && ((phase != Phase.Idle && move == Move.Punch) || animPunching || IsBlocking || Time.time < guardUntil);
+            float time = want ? cfg.guardRaiseTime : cfg.guardLowerTime;
+            guardWeight = allowed ? Mathf.MoveTowards(guardWeight, want ? 1f : 0f, dt / Mathf.Max(0.01f, time)) : 0f;
+            if (guardWeight <= 0f) ReleaseGuard();
+        }
+
+        // Each hand not punching (and not easing back from a hook) is held
+        // in guard by the chin, fist vertical, elbow down.
+        private void ApplyGuard(BipedReferences r, Vector3 flatForward)
+        {
+            IKSolverFullBodyBiped solver = fullBodyIK.solver;
+            CombatSettings cfg = CombatSettings.Instance;
+            for (int i = 0; i < 2; i++)
+            {
+                bool right = i == 1;
+                IKEffector effector = right ? solver.rightHandEffector : solver.leftHandEffector;
+                bool active = phase != Phase.Idle && move == Move.Punch && effector == activeEffector;
+                fist[i] = active ? Mathf.Max(weight, guardWeight) : guardWeight;
+                if (active || effector == fadeEffector || guardWeight <= 0f) continue;
+
+                FBIKChain chain = right ? solver.rightArmChain : solver.leftArmChain;
+                if (!handMeasured[i])
+                {
+                    MeasureHandFor(r, right, out handFingers[i], out handBack[i]);
+                    handMeasured[i] = true;
+                }
+                Vector3 point = GuardPoint(r, right, flatForward, out Vector3 elbow);
+                guardPos[i] = guardPosValid[i] ? Vector3.Lerp(guardPos[i], point, 1f - Mathf.Exp(-25f * Time.deltaTime)) : point;
+                guardPosValid[i] = true;
+
+                if (!savedBend.ContainsKey(chain)) savedBend[chain] = (chain.bendConstraint.bendGoal, chain.bendConstraint.weight);
+                Transform goal = right ? rightElbowGoal : leftElbowGoal;
+                goal.position = elbow;
+                chain.bendConstraint.bendGoal = goal;
+                chain.bendConstraint.weight = guardWeight * 0.8f;
+                effector.position = guardPos[i];
+                effector.positionWeight = guardWeight;
+                if (handFingers[i] != Vector3.zero && fistAlign > 0f)
+                {
+                    float side = right ? 1f : -1f;
+                    Quaternion measured = Quaternion.LookRotation(handFingers[i], handBack[i]);
+                    Quaternion wanted = Quaternion.AngleAxis(side * (fistRoll + cfg.corkscrew), flatForward) * Quaternion.LookRotation(flatForward, Vector3.up);
+                    effector.rotation = wanted * Quaternion.Inverse(measured);
+                    effector.rotationWeight = guardWeight * fistAlign;
+                }
+                guardDriven[i] = true;
+            }
+        }
+
+        // The guard lets go of both hands (only those it was driving).
+        private void ReleaseGuard()
+        {
+            if (fullBodyIK == null) return;
+            IKSolverFullBodyBiped solver = fullBodyIK.solver;
+            for (int i = 0; i < 2; i++)
+            {
+                fist[i] = phase != Phase.Idle && move == Move.Punch && (i == 1) == rightHand ? weight : 0f;
+                if (!guardDriven[i]) continue;
+                IKEffector effector = i == 1 ? solver.rightHandEffector : solver.leftHandEffector;
+                if (effector == activeEffector) { guardDriven[i] = false; continue; }
+                ReleaseLimb(effector, i == 1 ? solver.rightArmChain : solver.leftArmChain);
+                guardDriven[i] = false;
+                guardPosValid[i] = false;
+                handMeasured[i] = false;
+            }
+        }
+
+        // Fist by the chin: the punch's start point (Start Forward / Height /
+        // Outward), elbow down and a little out.
+        private Vector3 GuardPoint(BipedReferences r, bool right, Vector3 flatForward, out Vector3 elbow)
+        {
+            Transform shoulderBone = right ? r.rightUpperArm : r.leftUpperArm;
+            Vector3 shoulder = shoulderBone != null ? shoulderBone.position : viewTransform.position - Vector3.up * 0.2f;
+            float armLength = LimbLength(shoulderBone, right ? r.rightForearm : r.leftForearm, right ? r.rightHand : r.leftHand, referenceArmLength);
+            float k0 = armLength / Mathf.Max(0.01f, referenceArmLength);
+            Vector3 f = flatForward * k0, u = Vector3.up * k0, rt = Vector3.Cross(Vector3.up, flatForward) * k0;
+            float side = right ? 1f : -1f;
+            elbow = shoulder + rt * (side * 0.15f) - u * 0.35f + f * 0.05f;
+            return WithinReach(shoulder, shoulder + f * startForward + u * startHeight + rt * (side * startOutward), armLength * maxLimbExtension);
+        }
+
+        private void MeasureHandFor(BipedReferences r, bool right, out Vector3 fingers, out Vector3 back)
+        {
+            Transform hand = right ? r.rightHand : r.leftHand;
+            Transform forearm = right ? r.rightForearm : r.leftForearm;
+            if (hand == null || forearm == null) { fingers = back = Vector3.zero; return; }
+            fingers = hand.InverseTransformDirection((hand.position - forearm.position).normalized);
+            back = hand.InverseTransformDirection(transform.right * (right ? 1f : -1f));
+        }
+
+        // After FBBIK: the fingers of each closed hand fold toward the palm
+        // (worked out from the bones' positions, whatever the rig's axes).
+        // The Animator writes the fingers every frame, so nothing builds up.
+        private void CurlFingers()
+        {
+            // Animated punches: the clips already close the hands.
+            if (!Boxing || bodyAnimator == null || !bodyAnimator.isHuman || AnimatedPunches) return;
+            CombatSettings cfg = CombatSettings.Instance;
+            for (int i = 0; i < 2; i++)
+                if (fist[i] > 0.001f) CurlHand(i == 1, fist[i], cfg);
+        }
+
+        private void CurlHand(bool right, float amount, CombatSettings cfg)
+        {
+            Transform Bone(HumanBodyBones b) => bodyAnimator.GetBoneTransform(b);
+            Transform hand = Bone(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
+            Transform index = Bone(right ? HumanBodyBones.RightIndexProximal : HumanBodyBones.LeftIndexProximal);
+            Transform middle = Bone(right ? HumanBodyBones.RightMiddleProximal : HumanBodyBones.LeftMiddleProximal);
+            Transform little = Bone(right ? HumanBodyBones.RightLittleProximal : HumanBodyBones.LeftLittleProximal);
+            if (hand == null || index == null || middle == null || little == null) return;
+
+            // Palm normal: fingers × (little → index) for the right hand,
+            // mirrored for the left.
+            Vector3 along = (middle.position - hand.position).normalized;
+            Vector3 across = index.position - little.position;
+            Vector3 palm = (right ? Vector3.Cross(along, across) : Vector3.Cross(across, along)).normalized;
+            if (palm.sqrMagnitude < 0.5f) return;
+
+            float angle = cfg.fingerCurl * amount;
+            if (right)
+            {
+                Curl(palm, angle, HumanBodyBones.RightIndexProximal, HumanBodyBones.RightIndexIntermediate, HumanBodyBones.RightIndexDistal);
+                Curl(palm, angle, HumanBodyBones.RightMiddleProximal, HumanBodyBones.RightMiddleIntermediate, HumanBodyBones.RightMiddleDistal);
+                Curl(palm, angle, HumanBodyBones.RightRingProximal, HumanBodyBones.RightRingIntermediate, HumanBodyBones.RightRingDistal);
+                Curl(palm, angle, HumanBodyBones.RightLittleProximal, HumanBodyBones.RightLittleIntermediate, HumanBodyBones.RightLittleDistal);
+                Curl(palm, cfg.thumbCurl * amount, HumanBodyBones.RightThumbProximal, HumanBodyBones.RightThumbIntermediate, HumanBodyBones.RightThumbDistal);
+            }
+            else
+            {
+                Curl(palm, angle, HumanBodyBones.LeftIndexProximal, HumanBodyBones.LeftIndexIntermediate, HumanBodyBones.LeftIndexDistal);
+                Curl(palm, angle, HumanBodyBones.LeftMiddleProximal, HumanBodyBones.LeftMiddleIntermediate, HumanBodyBones.LeftMiddleDistal);
+                Curl(palm, angle, HumanBodyBones.LeftRingProximal, HumanBodyBones.LeftRingIntermediate, HumanBodyBones.LeftRingDistal);
+                Curl(palm, angle, HumanBodyBones.LeftLittleProximal, HumanBodyBones.LeftLittleIntermediate, HumanBodyBones.LeftLittleDistal);
+                Curl(palm, cfg.thumbCurl * amount, HumanBodyBones.LeftThumbProximal, HumanBodyBones.LeftThumbIntermediate, HumanBodyBones.LeftThumbDistal);
+            }
+        }
+
+        // Each joint turns its bone toward the palm: about bone × palm.
+        private void Curl(Vector3 palm, float angle, HumanBodyBones a, HumanBodyBones b, HumanBodyBones c)
+        {
+            Transform[] bones = { bodyAnimator.GetBoneTransform(a), bodyAnimator.GetBoneTransform(b), bodyAnimator.GetBoneTransform(c) };
+            for (int k = 0; k < 3; k++)
+            {
+                Transform bone = bones[k];
+                if (bone == null) continue;
+                Transform next = k < 2 ? bones[k + 1] : bone.childCount > 0 ? bone.GetChild(0) : null;
+                Vector3 dir = next != null ? next.position - bone.position
+                    : k > 0 && bones[k - 1] != null ? bone.position - bones[k - 1].position : Vector3.zero;
+                if (dir.sqrMagnitude < 1e-8f) continue;
+                Vector3 axis = Vector3.Cross(dir.normalized, palm);
+                if (axis.sqrMagnitude < 1e-6f) continue;
+                bone.rotation = Quaternion.AngleAxis(angle, axis.normalized) * bone.rotation;
+            }
+        }
+
         private void ApplyFade()
         {
-            fadeWeight -= Time.deltaTime / Mathf.Max(0.01f, recoverTime);
+            fadeWeight -= Time.deltaTime / Mathf.Max(0.01f, Boxing ? CombatSettings.Instance.recoverTime : recoverTime);
             if (fadeWeight <= 0f) { ReleaseFade(); return; }
             fadeEffector.position = transform.TransformPoint(fadeTargetLocal);
             fadeEffector.positionWeight = fadeWeight * fadeWeight * (3f - 2f * fadeWeight);
@@ -734,7 +1059,8 @@ namespace UntitledPoolGame.Interaction
             // shoulder effector, see ApplyBody). Every point is measured from
             // the pushed shoulder, so the fist goes further by the same amount
             // instead of the arm just bending more.
-            shoulderPush = f * (shoulderReach * reach * weight);
+            float drive = Boxing ? CombatSettings.Instance.shoulderDrive : shoulderReach;
+            shoulderPush = f * (drive * reach * weight);
             shoulder += shoulderPush;
             float pitchLift = viewTransform.forward.y * punchReach * punchPitchFollow;
 
@@ -752,9 +1078,15 @@ namespace UntitledPoolGame.Interaction
                 center = (r.leftUpperArm.position + r.rightUpperArm.position) * 0.5f;
                 shoulderWidth = Vector3.Distance(r.leftUpperArm.position, r.rightUpperArm.position);
             }
-            Vector3 end = center + rtUnit * (side * shoulderWidth * 0.5f * fistSpread) + f * punchReach + u * (endHeight + pitchLift);
+            float spread = Boxing ? CombatSettings.Instance.fistSpread : fistSpread;
+            Vector3 end = center + rtUnit * (side * shoulderWidth * 0.5f * spread) + f * punchReach + u * (endHeight + pitchLift);
             lastShoulderWidth = shoulderWidth;
             punchDirection = (end - shoulder).sqrMagnitude > 1e-6f ? (end - shoulder).normalized : flatForward;
+
+            // R&D: from a straight punch (control on the guard → end line)
+            // to the full hook, by Hook Amount.
+            float hook = Boxing ? CombatSettings.Instance.hookAmount : 1f;
+            if (hook < 1f) control = Vector3.Lerp((guard + end) * 0.5f, control, hook);
 
             float maxDistance = armLength * maxLimbExtension;
             guard = WithinReach(shoulder, guard, maxDistance);
@@ -767,9 +1099,12 @@ namespace UntitledPoolGame.Interaction
             LogLimbOnce("arm", armLength, k0);
 
             // Elbow out to the side at about shoulder height: a hook's arm
-            // stays bent and horizontal, the torso turn does the work.
+            // stays bent and horizontal, the torso turn does the work. A
+            // straight punch keeps the elbow down and slightly out.
             float s = reach, k = 1f - s;
-            elbow = shoulder + rt * (side * 0.4f) - u * 0.05f - f * 0.05f;
+            Vector3 hookElbow = shoulder + rt * (side * 0.4f) - u * 0.05f - f * 0.05f;
+            Vector3 straightElbow = shoulder + rt * (side * 0.2f) - u * 0.3f;
+            elbow = Vector3.Lerp(straightElbow, hookElbow, hook);
             return WithinReach(shoulder, k * k * guard + 2f * k * s * control + s * s * end, maxDistance);
         }
 
@@ -864,7 +1199,13 @@ namespace UntitledPoolGame.Interaction
             hitSomething = true;
 
             float unpin, force;
-            if (move == Move.Punch)
+            CombatSettings cfg = CombatSettings.Instance;
+            if (move == Move.Punch && Boxing)
+            {
+                unpin = cfg.unpin;
+                force = cfg.force;
+            }
+            else if (move == Move.Punch)
             {
                 unpin = jabUnpin;
                 force = jabForce;
@@ -880,20 +1221,66 @@ namespace UntitledPoolGame.Interaction
             Vector3 push = move == Move.Punch && travel.sqrMagnitude > 1e-6f ? travel.normalized : move == Move.Punch ? viewTransform.forward : flatForward;
             Vector3 forceDirection = Vector3.Lerp(push, Vector3.up, upwardBias).normalized;
             Vector3 point = hit.ClosestPoint(contact);
-            broadcaster.Hit(unpin, forceDirection * force, point);
-
             BehaviourPuppet puppet = MeleeHit.FindPuppetBehaviour(target);
             bool spartan = IsSpartan && puppet != null;
-            if (spartan) puppet.SetState(BehaviourPuppet.State.Unpinned);
+
+            // R&D hit gauge: filled before the force goes in, so a blow that
+            // only staggers already has the steadier balance.
+            LocalHitGauge gauge = Boxing && cfg.useHitGauge ? LocalHitGauge.For(target) : null;
+            bool knockedOut = false, blocked = false, brokeGuard = false;
+            bool spartanKnockOut = spartan;
+            HitZone zone = HitZone.Body;
+            if (gauge != null)
+            {
+                // The zone comes from the muscle hit (head, body, legs).
+                if (broadcaster.muscleIndex >= 0 && broadcaster.muscleIndex < target.muscles.Length)
+                    zone = LocalHitGauge.ZoneOf(target.muscles[broadcaster.muscleIndex].props.group);
+
+                // The victim's guard (R&D): a blocked blow fills the gauge
+                // and pushes the body far less. The blow that empties the
+                // block meter is still blocked; it only breaks the guard, and
+                // from then on blows go to the hit gauge as usual — the first
+                // version also dazed (gauge pushed to 70 %), so the next blow
+                // knocked out: removed on 12/10 at the user's request.
+                LocalUnarmedMelee victim = gauge.GetComponent<LocalUnarmedMelee>();
+                if (victim != null && victim != this) blocked = victim.TryBlock(forceDirection, zone, move == Move.Kick, spartan, out brokeGuard);
+                // A Spartan kick taken on the guard only breaks it: no K.O.,
+                // no launch (CombatSettings.Spartan Breaks Guard Only).
+                if (blocked) spartanKnockOut = false;
+
+                float damage = move == Move.Punch ? cfg.punchDamage : cfg.kickDamage;
+                if (counterPunch && move == Move.Punch) { damage *= cfg.counterDamage; force *= cfg.counterDamage; }
+                if (move == Move.Punch && Tired) { damage *= cfg.tiredDamage; force *= cfg.tiredDamage; }
+                if (blocked)
+                {
+                    damage *= move == Move.Kick ? cfg.blockedKickDamage : cfg.blockedDamage;
+                    unpin *= cfg.blockedForce;
+                    force *= cfg.blockedForce;
+                }
+                knockedOut = gauge.TakeHit(damage, spartanKnockOut, zone, forceDirection, blocked);
+                if (brokeGuard && !knockedOut) gauge.PlayGuardBreakReaction(forceDirection);
+                lastGauge = gauge;
+                lastGaugeTime = Time.time;
+            }
+
+            broadcaster.Hit(unpin, forceDirection * force, point);
+            if (spartan && gauge == null) puppet.SetState(BehaviourPuppet.State.Unpinned);
 
             if (debugLogs)
                 Debug.Log($"[UnarmedMelee] {name} HIT {target.name} on '{hit.name}' — {Describe()}, charge {charge:F2}, unpin {unpin:F1}, force {force:F0}" +
-                          (spartan ? " → knockdown forced (Spartan kick)" : ""), this);
+                          (gauge != null ? $", zone {zone}, gauge {gauge.Fill:P0}{(knockedOut ? " → K.O." : "")}" : "") +
+                          (counterPunch && move == Move.Punch ? " [COUNTER]" : "") + (blocked ? " [BLOCKED]" : "") + (brokeGuard ? " [GUARD BROKEN]" : "") +
+                          (spartanKnockOut ? " → knockdown forced (Spartan kick)" : spartan ? " → Spartan kick on the guard" : ""), this);
 
-            if (effects != null) effects.PlayShotFeedback();
+            float strength = move == Move.Kick ? (spartanKnockOut ? 1f : 0.5f + 0.4f * charge) : 0.4f;
+            if (blocked) strength *= 0.3f;
+            if (Boxing && move == Move.Punch)
+                LocalPoolPowerEffectReceiver.PlayImpact(OwnIndex(), 0.018f * cfg.hitShake, 0.1f, Color.clear, 0f, 0f);
+            else if (effects != null) effects.PlayShotFeedback();
+            PlayerHit?.Invoke(OwnIndex(), VictimIndex(target), point, strength);
             if (spartan)
             {
-                StartCoroutine(Launch(target, flatForward));
+                if (spartanKnockOut) StartCoroutine(Launch(target, flatForward * launchSpeed + Vector3.up * launchLift));
                 if (fpsCamera != null && slowMoZoom > 0f)
                 {
                     if (zoomRoutine != null) { StopCoroutine(zoomRoutine); RestoreFov(); }
@@ -904,15 +1291,29 @@ namespace UntitledPoolGame.Interaction
                 StartCoroutine(MeleeHit.Hitstop(hitstopDuration, hitstopTimeScale));
         }
 
-        // Throws the whole ragdoll backwards. Waits one physics step so
+        // This player's index in the match (the side it plays in solo).
+        private int OwnIndex()
+        {
+            if (playerInput == null) return -1;
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            return rules != null ? rules.GetEffectivePlayerIndex(playerInput.playerIndex) : playerInput.playerIndex;
+        }
+
+        // The player hit, or -1 for a body that isn't a joined player (dummy).
+        private static int VictimIndex(PuppetMaster target)
+        {
+            PlayerInput victim = target != null ? target.GetComponentInParent<PlayerInput>() : null;
+            return victim != null && victim.enabled ? victim.playerIndex : -1;
+        }
+
+        // Throws the whole ragdoll along velocity. Waits one physics step so
         // BehaviourPuppet has actually released the muscles (SetState clamps
         // their velocity as it unpins, and the pins would pull a launched
         // body back toward the animation otherwise).
-        private IEnumerator Launch(PuppetMaster target, Vector3 flatForward)
+        private IEnumerator Launch(PuppetMaster target, Vector3 velocity)
         {
             yield return new WaitForFixedUpdate();
             if (target == null) yield break;
-            Vector3 velocity = flatForward * launchSpeed + Vector3.up * launchLift;
             foreach (Muscle muscle in target.muscles)
                 if (muscle.rigidbody != null) muscle.rigidbody.AddForce(velocity, ForceMode.VelocityChange);
             if (debugLogs) Debug.Log($"[UnarmedMelee] → {target.name} launched at {velocity.magnitude:F1} m/s", this);
@@ -953,21 +1354,50 @@ namespace UntitledPoolGame.Interaction
 
         private void OnGUI()
         {
-            if (!showChargeIndicator || phase != Phase.Windup || !charged || viewCamera == null) return;
+            if (!showChargeIndicator || viewCamera == null) return;
+            DrawTargetGauge();
+            DrawBlockMeter();
+            DrawStamina();
+            if (phase != Phase.Windup || !charged) return;
 
+            bool top = move == Move.Kick && charge >= spartanMinCharge;
+            DrawBar(0.22f, 140f, 10f, charge,
+                top ? new Color(1f, .78f, .15f) : Color.Lerp(new Color(.19f, .71f, .4f), new Color(1f, .3f, .24f), charge),
+                top ? "SPARTE !" : "PIED", 16);
+        }
+
+        // R&D: the hit gauge of the last target, for 2.5 s after a blow,
+        // under the crosshair of the attacker's half of the screen.
+        private void DrawTargetGauge()
+        {
+            if (lastGauge == null || Time.time - lastGaugeTime > 2.5f) return;
+            float fill = lastGauge.Fill;
+            string state = lastGauge.IsKnockedOut ? "K.O." : lastGauge.Dazed > 0f ? "SONNÉ" : lastGauge.IsProtected ? "réveil" : "";
+            DrawBar(0.36f, 160f, 8f, fill,
+                lastGauge.IsKnockedOut ? new Color(1f, .78f, .15f) : Color.Lerp(new Color(.19f, .71f, .4f), new Color(1f, .3f, .24f), fill),
+                $"{lastGauge.name}  {state}", 13);
+        }
+
+        // One provisional bar (until the new UI), centred in this player's
+        // half of the screen at heightFraction from the bottom, with an
+        // optional label above it. Styles are made once per font size: a new
+        // GUIStyle every OnGUI call was garbage every frame.
+        private static readonly Dictionary<int, GUIStyle> barStyles = new Dictionary<int, GUIStyle>();
+
+        private void DrawBar(float heightFraction, float width, float height, float fill, Color color, string label = null, int fontSize = 12)
+        {
             Rect view = viewCamera.pixelRect;
-            float x = view.x + view.width / 2f, y = Screen.height - view.yMin - view.height * 0.22f;
-
-            string label = charge >= spartanMinCharge ? "SPARTE !" : "PIED";
-            GUI.Label(new Rect(x - 60f, y - 30f, 120f, 26f), label, new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter });
-
-            const float w = 140f, h = 10f;
+            float x = view.x + view.width / 2f, y = Screen.height - view.yMin - view.height * heightFraction;
+            if (!string.IsNullOrEmpty(label))
+            {
+                if (!barStyles.TryGetValue(fontSize, out GUIStyle style))
+                    barStyles[fontSize] = style = new GUIStyle(GUI.skin.label) { fontSize = fontSize, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+                GUI.Label(new Rect(x - 90f, y - fontSize - 12f, 180f, fontSize + 10f), label, style);
+            }
             GUI.color = new Color(0f, 0f, 0f, .6f);
-            GUI.DrawTexture(new Rect(x - w / 2f, y, w, h), Texture2D.whiteTexture);
-            GUI.color = move == Move.Kick && charge >= spartanMinCharge
-                ? new Color(1f, .78f, .15f)
-                : Color.Lerp(new Color(.19f, .71f, .4f), new Color(1f, .3f, .24f), charge);
-            GUI.DrawTexture(new Rect(x - w / 2f, y, w * charge, h), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(x - width / 2f, y, width, height), Texture2D.whiteTexture);
+            GUI.color = color;
+            GUI.DrawTexture(new Rect(x - width / 2f, y, width * Mathf.Clamp01(fill), height), Texture2D.whiteTexture);
             GUI.color = Color.white;
         }
     }

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27139bb22120af245ae4f8dcaa8fbb58, type: 3}
+  m_Name: MovementSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Player.MovementSettings
+  walkSpeed: 4.5
+  sprintSpeed: 7.5
+  acceleration: 28
+  deceleration: 16
+  airControl: 0.35
+  jumpHeight: 1.1
+  gravity: -22
+  coyoteTime: 0.12
+  jumpBuffer: 0.12
+  ledgeMinHeight: 0.8
+  ledgeMaxHeight: 2.1
+  ledgeReach: 0.6
+  climbDuration: 0.6
+  relaxedArmStrength: 0.112
+  relaxedArmPin: 0.444
+  relaxedSpineStrength: 0.229
+  stiffnessBlendSpeed: 6
+  bodyLean: 0.08
+  bodyLeanSmoothing: 8
+  strafeCameraRoll: 2.5
+  headBob: 0.025
+  headBobFrequency: 1.9

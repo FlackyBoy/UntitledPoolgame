@@ -21,7 +21,7 @@ namespace UntitledPoolGame.PoolEditor
     // of the match in GameFeelSettings. Works outside Play mode.
     public class TextFxStudio : EditorWindow
     {
-        [MenuItem("Tools/Pool/Text FX Studio")]
+        [MenuItem("Tools/Pool/Text FX Studio", priority = 1)]
         private static void Open() => GetWindow<TextFxStudio>("Text FX Studio").minSize = new Vector2(760, 620);
 
         private const string SequenceFolder = "Assets/Feel/Sequences";

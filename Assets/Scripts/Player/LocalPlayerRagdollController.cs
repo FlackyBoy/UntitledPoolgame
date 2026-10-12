@@ -217,6 +217,13 @@ namespace UntitledPoolGame.Player
             if (handController != null && handController.HeldObject != null)
                 handController.ForceDrop();
 
+            // What was on before the fall is what comes back on after it — a
+            // dummy (controllers switched off on purpose) used to get up with
+            // its CharacterController and FPS controller turned back on.
+            // Only on the first knockdown: knocked down again while getting
+            // up, everything is already off.
+            if (!isRagdollCameraActive) RememberEnabled();
+
             characterController.enabled = false;
             if (fpsController != null) fpsController.enabled = false;
             if (aimController != null) aimController.enabled = false;
@@ -263,6 +270,26 @@ namespace UntitledPoolGame.Player
                 DetachCamera();
             }
             isRagdollCameraActive = true;
+        }
+
+        // Enabled state of what OnKnockedDown switches off, put back as is by
+        // OnRecovered. Defaults to all on (a player), for a recovery without
+        // a recorded knockdown.
+        private (bool characterController, bool fps, bool aim, bool anim, bool[] ik) wasEnabled = (true, true, true, true, null);
+
+        private void RememberEnabled()
+        {
+            bool[] ik = null;
+            if (ikComponents != null)
+            {
+                ik = new bool[ikComponents.Length];
+                for (int i = 0; i < ik.Length; i++) ik[i] = ikComponents[i] != null && ikComponents[i].enabled;
+            }
+            wasEnabled = (characterController.enabled,
+                fpsController != null && fpsController.enabled,
+                aimController != null && aimController.enabled,
+                animController != null && animController.enabled,
+                ik);
         }
 
         private void DetachCamera()
@@ -402,13 +429,13 @@ namespace UntitledPoolGame.Player
             }
 
             Debug.Log($"[Ragdoll] {name}: recovered — control handed back{(behindWall ? " (at the fall spot)" : "")}", this);
-            characterController.enabled = true;
-            if (fpsController != null) fpsController.enabled = true;
-            if (aimController != null) aimController.enabled = true;
-            if (animController != null) animController.enabled = true;
+            characterController.enabled = wasEnabled.characterController;
+            if (fpsController != null) fpsController.enabled = wasEnabled.fps;
+            if (aimController != null) aimController.enabled = wasEnabled.aim;
+            if (animController != null) animController.enabled = wasEnabled.anim;
             if (ikComponents != null)
-                foreach (IK ik in ikComponents)
-                    if (ik != null) ik.enabled = true;
+                for (int i = 0; i < ikComponents.Length; i++)
+                    if (ikComponents[i] != null) ikComponents[i].enabled = wasEnabled.ik == null || i >= wasEnabled.ik.Length || wasEnabled.ik[i];
 
             // The camera keeps going (UpdateFallCamera): usually already back
             // in the eyes, otherwise it finishes its return from there.

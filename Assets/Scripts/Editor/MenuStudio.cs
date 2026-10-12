@@ -22,7 +22,7 @@ namespace UntitledPoolGame.PoolEditor
     // mode with a draft asks first.
     public class MenuStudio : EditorWindow
     {
-        [MenuItem("Tools/Pool/Menu Studio")]
+        [MenuItem("Tools/Pool/Menu Studio", priority = 0)]
         private static void Open() => GetWindow<MenuStudio>("Menu Studio").minSize = new Vector2(1100, 640);
 
         private const float W = 1920f, H = 1080f;
