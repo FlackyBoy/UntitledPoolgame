@@ -974,8 +974,8 @@ namespace UntitledPoolGame.Pool
             // 8-ball call-shot: once a player's group is cleared, potting the
             // 8 in an uncalled (or wrong) pocket doesn't win — see
             // EightBallRuleSet.ResolveShot. The actual declaring happens in
-            // a top-down table view (LocalPoolAimController's
-            // HandleCallPocket, mirrors ball-in-hand placement) rather than
+            // a pocket pick (LocalPoolAimController's HandleCallPocket,
+            // looking at the pocket through LocalPocketPointer) rather than
             // buttons here — this is just a status line so it's clear from
             // the regular HUD whether a call is still needed.
             if (IsShootingForEightBall(CurrentPlayer))

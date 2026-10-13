@@ -104,7 +104,7 @@ sequenceDiagram
   A->>M: ConfirmBallPlaced()
 ```
 
-L'annonce de poche de la bille 8 suit le même schéma (vue de dessus, sélection avec Déplacer, validation avec Interagir → `CallEightBallPocket`).
+L'annonce de poche de la bille 8 se fait en vue normale, comme le choix du trou d'un pouvoir : `HandleCallPocket` appelle `LocalPocketPointer.Point()` à chaque image (pointeur blanc, la poche visée est entourée), puis Interagir → `CallEightBallPocket`. La visée attend que la poche soit annoncée.
 
 ## Pouvoirs : ramasser et activer
 

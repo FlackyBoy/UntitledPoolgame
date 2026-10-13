@@ -71,7 +71,7 @@ namespace UntitledPoolGame.Core
         public string outOfReachBanner = "Trop loin — contourne la table";
         [Tooltip("{0} = poche annoncée.")]
         public string eightCalledBannerFormat = "Poche annoncée : {0}";
-        public string eightToCallBanner = "Bille 8 : annonce ta poche (vue du dessus)";
+        public string eightToCallBanner = "Bille 8 : annonce ta poche (vise-la)";
         public string blastArmedBanner = "Bille destructrice armée : la 1re bille touchée explose";
         [Tooltip("Choix du trou d'un pouvoir. {0} = nom du pouvoir, {1} = trou visé.")]
         public string pickPocketBannerFormat = "{0} → {1} · E / Y pour valider · Q / B pour annuler";

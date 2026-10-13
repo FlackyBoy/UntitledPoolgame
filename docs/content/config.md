@@ -332,7 +332,8 @@ Sur `Assets/Prefabs/PlayerLocal/New.prefab`. Chaque champ a une infobulle dans l
 | **Local Object Hands** | Porter les objets (hors queue) | Léger ou lourd, poses, corps, durées |
 | **Local Cue Melee** | Coups de queue | Voir [Combat](config.html#config:combat) |
 | **Local Unarmed Melee** | Poings et pieds | Voir [Combat](config.html#config:combat) |
-| **Local Pool Power Controller** | Lancer son pouvoir, choisir un trou | Actions utilisées (*Next* : Q / B pour lancer ou annuler, *Interact* : E / Y pour valider le trou), *Max Point Angle* (8° : écart toléré entre le pointeur et un trou), *Pointer Size* (8 px : pointeur blanc) |
+| **Local Pool Power Controller** | Lancer son pouvoir, choisir un trou | Actions utilisées (*Next* : Q / B pour lancer ou annuler, *Interact* : E / Y pour valider le trou) |
+| **Local Pocket Pointer** (ajouté tout seul) | Choisir une poche en la visant : pouvoirs qui visent un trou, annonce de la 8 | *Max Point Angle* (8° : écart toléré entre le pointeur et une poche), *Pointer Size* (8 px : pointeur blanc) |
 | **Local Character Animation Controller** | Paramètres de l'Animator | Noms des paramètres, échelles de marche, inclinaison en tournant |
 | **Cue Charge Slide** (sur la queue) | Glissement de la queue dans les mains | Recul à la charge (0,15 m), longueur qui dépasse derrière la main (0,1 m), détection automatique de l'axe |
 

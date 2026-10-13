@@ -312,6 +312,8 @@ namespace UntitledPoolGame.Pool
         private LocalUnarmedMelee unarmedMelee;
         // Optional: while it's picking a pocket for a power, aiming stands aside.
         private LocalPoolPowerController powerController;
+        // The pocket pick for the 8-ball call (shared with the powers).
+        private LocalPocketPointer pocketPointer;
         private bool IsChoosingPowerPocket => powerController != null && powerController.IsChoosingPocket;
         private CharacterController characterController;
         private PlayerInput playerInput;
@@ -368,6 +370,7 @@ namespace UntitledPoolGame.Pool
             cinemachineBrain = GetComponentInChildren<CinemachineBrain>(true);
             characterController = GetComponent<CharacterController>();
             playerInput = GetComponent<PlayerInput>();
+            pocketPointer = LocalPocketPointer.For(gameObject);
 
             if (juiceSettings == null)
                 juiceSettings = PoolSettingsLoader.LoadOrDefault<PoolScreenJuiceSettings>("PoolScreenJuiceSettings");
@@ -461,7 +464,7 @@ namespace UntitledPoolGame.Pool
 
         public bool WantsInteractThisFrame(LocalGrabbable heldObject)
         {
-            if (IsChoosingPowerPocket) return true;
+            if (IsChoosingPowerPocket || callConfirmedFrame == Time.frameCount) return true;
             if (isAiming) return true;
             if (IsMyTurnToPlaceBall()) return true;
             if (IsMyTurnToCallPocket()) return true;
@@ -502,29 +505,24 @@ namespace UntitledPoolGame.Pool
         }
 
         private PoolBall placingCueBall;
-        // Own flag per top-down interaction (ball placement vs. pocket call
-        // below) rather than one shared bool — they used to share
-        // placementViewActive, which meant whichever handler ran second in
-        // Update() (HandleCallPocket, after HandleBallInHand) would see the
-        // OTHER one's flag already true, conclude "not my turn" (its own
-        // eligibility check is unrelated), and call EndPlacementView() on
-        // it — torn down and immediately restarted from scratch every
-        // single frame, resetting the pocket selector back to table center
-        // each time before its movement could ever accumulate.
+        // Own flag per interaction (ball placement vs. pocket call below)
+        // rather than one shared bool, so neither handler ever tears down
+        // the other one's state.
         private bool ballPlacementActive;
         private bool callPocketActive;
-        // Same reason as IsAiming above — either top-down view also drives
+        // Same reason as IsAiming above — the top-down view also drives
         // cameraTransform's WORLD position/rotation directly every frame, a
-        // THIRD state distinct from both aiming and normal FPS view.
-        public bool IsPlacementViewActive => ballPlacementActive || callPocketActive;
-        // Read by the in-game HUD (MatchHud): which top-down view is up, and
-        // the pocket currently pointed at in the 8-ball call view.
+        // THIRD state distinct from both aiming and normal FPS view. (The
+        // 8-ball call no longer counts: it's picked in the normal view.)
+        public bool IsPlacementViewActive => ballPlacementActive;
+        // Read by the in-game HUD (MatchHud): which interaction is up, and
+        // the pocket currently pointed at for the 8-ball call.
         public bool IsBallPlacementActive => ballPlacementActive;
         public bool IsCallPocketActive => callPocketActive;
         public PoolPocket HighlightedPocket => highlightedPocket;
         private Vector3 placementCameraRestLocalPosition;
         private Quaternion placementCameraRestLocalRotation;
-        [Tooltip("Logs [PlacementTrace] de la vue de dessus (bille en main, annonce de poche) : caméra, fenêtre, hauteur, plafond.")]
+        [Tooltip("Logs [PlacementTrace] de la vue de dessus (bille en main) : caméra, fenêtre, hauteur, plafond.")]
         [SerializeField] private bool tracePlacementView = true;
         private Vector3 placementCameraExpected;
         private int placementCheckFrames;
@@ -587,151 +585,54 @@ namespace UntitledPoolGame.Pool
         }
 
         private PoolPocket highlightedPocket;
-        // Edge-detected, not held-down — a single tap of a direction jumps
-        // straight to the next pocket, no crossing distance/speed involved
-        // at all (previous continuous drag-a-selector version still felt
-        // sluggish even once its speed scaled with table size). True while
-        // the stick/keys are past the threshold, so one physical press only
-        // fires one jump no matter how long it's held.
-        private bool directionHeldLastFrame;
-        private const float DirectionPressThreshold = 0.5f;
+        // The call was confirmed this frame: Interact still counts as taken
+        // for LocalPlayerHandController (WantsInteractThisFrame), which may
+        // run after this and would otherwise drop the cue on the same press.
+        private int callConfirmedFrame = -1;
 
-        // 8-ball call-shot: same top-down table view as ball-in-hand above
-        // (reuses StartPlacementView/EndPlacementView as-is — they're
-        // already generic "look straight down at the table" plumbing, not
-        // ball-specific). Each tap of Move jumps the highlight to whichever
-        // OTHER pocket best matches that on-screen direction from the
-        // currently highlighted one — not a fixed cycle order, so "right"
-        // always means "the pocket that's actually to the right on screen"
-        // regardless of which pocket happens to be highlighted right now.
-        // Confirmed with Interact. Consumes the frame (like HandleBallInHand)
-        // so normal aim-entry below doesn't also run.
+        // 8-ball call-shot: the same pocket pick as the powers aimed at a
+        // pocket (LocalPocketPointer) — the player looks at a pocket through
+        // the white pointer in the normal first-person view (they can still
+        // walk around the table), and Interact confirms. Aim entry waits
+        // until a pocket is called, as before (consumes the frame). (It used
+        // to be a top-down view with Move stepping from pocket to pocket.)
         private bool HandleCallPocket()
         {
-            if (!IsMyTurnToCallPocket())
+            // A power's pocket pick holds the pointer: the call waits for it.
+            if (!IsMyTurnToCallPocket() || IsChoosingPowerPocket)
             {
-                if (callPocketActive) EndCallPocketView();
+                if (callPocketActive) EndCallPocket();
                 return false;
             }
 
-            if (!callPocketActive) StartCallPocketView();
-
-            Vector2 moveInput = moveAction.ReadValue<Vector2>();
-            bool directionHeldNow = moveInput.magnitude > DirectionPressThreshold;
-            if (directionHeldNow && !directionHeldLastFrame)
+            if (!callPocketActive)
             {
-                // Same right/up = world X/Z convention as the camera orbit
-                // and ball-in-hand placement above — the top-down camera's
-                // own rotation never has any yaw, so these stay fixed
-                // regardless of which way the player's body is facing.
-                Vector3 screenDirection = cameraTransform.right * moveInput.x + cameraTransform.up * moveInput.y;
-                StepHighlightedPocketTowards(screenDirection);
+                callPocketActive = true;
+                if (isAiming) ExitAim();
             }
-            directionHeldLastFrame = directionHeldNow;
+
+            highlightedPocket = pocketPointer.Point();
 
             if (InteractPressedThisFrame() && highlightedPocket != null)
             {
                 PoolMatchRules.Instance.CallEightBallPocket(highlightedPocket);
-                EndCallPocketView();
+                EndCallPocket();
+                callConfirmedFrame = Time.frameCount;
             }
 
             return true;
         }
 
-        // A pocket only "counts" as being in the pressed direction once its
-        // offset is at least this well aligned with it (1 = dead-on, 0 =
-        // perpendicular) — screens out anything roughly sideways/behind so
-        // a press never jumps somewhere unrelated just because it was the
-        // least-misaligned option on the table.
-        private const float MinDirectionAlignment = 0.3f;
-
-        // Picks whichever OTHER pocket best matches screenDirection from the
-        // current one. On this table's layout a corner, the middle pocket on
-        // its same side, and the opposite corner all sit exactly on one
-        // line — direction alone can't tell them apart (identical alignment
-        // score), so scoring by alignment/distance instead makes a NEAR,
-        // well-aligned pocket win over a FAR one that happens to be exactly
-        // as aligned (the middle pocket instead of skipping straight past it
-        // to the far corner).
-        private void StepHighlightedPocketTowards(Vector3 screenDirection)
+        private void EndCallPocket()
         {
-            if (highlightedPocket == null) return;
-
-            screenDirection.y = 0f;
-            if (screenDirection.sqrMagnitude < 0.0001f) return;
-            screenDirection.Normalize();
-
-            PoolPocket best = null;
-            float bestScore = float.NegativeInfinity;
-            foreach (PoolPocket pocket in PoolPocket.Active)
-            {
-                if (pocket == highlightedPocket) continue;
-
-                Vector3 offset = pocket.transform.position - highlightedPocket.transform.position;
-                offset.y = 0f;
-                float distance = offset.magnitude;
-                if (distance < 0.0001f) continue;
-
-                float alignment = Vector3.Dot(offset / distance, screenDirection);
-                if (alignment < MinDirectionAlignment) continue;
-
-                float score = alignment / distance;
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    best = pocket;
-                }
-            }
-
-            if (best != null) SetHighlightedPocket(best);
-        }
-
-        private void SetHighlightedPocket(PoolPocket pocket)
-        {
-            if (pocket == highlightedPocket) return;
-            highlightedPocket?.SetSelectionHighlight(false);
-            highlightedPocket = pocket;
-            highlightedPocket?.SetSelectionHighlight(true);
-        }
-
-        private static PoolPocket FindNearestPocket(Vector3 position)
-        {
-            PoolPocket nearest = null;
-            float nearestDistanceSqr = float.MaxValue;
-            foreach (PoolPocket pocket in PoolPocket.Active)
-            {
-                float distanceSqr = (pocket.transform.position - position).sqrMagnitude;
-                if (distanceSqr < nearestDistanceSqr)
-                {
-                    nearestDistanceSqr = distanceSqr;
-                    nearest = pocket;
-                }
-            }
-            return nearest;
-        }
-
-        private void StartCallPocketView()
-        {
-            StartPlacementView();
-            callPocketActive = true;
-            directionHeldLastFrame = false;
-
-            // Start highlighted on whichever pocket is already nearest to
-            // the player, rather than an arbitrary one.
-            SetHighlightedPocket(FindNearestPocket(transform.position));
-        }
-
-        private void EndCallPocketView()
-        {
-            highlightedPocket?.SetSelectionHighlight(false);
+            pocketPointer.Release();
             highlightedPocket = null;
-            EndPlacementView();
             callPocketActive = false;
         }
 
-        // Pure camera plumbing shared by both top-down interactions above —
-        // doesn't track which one is active itself (see ballPlacementActive/
-        // callPocketActive), just moves the camera and hands FPS control
+        // Pure camera plumbing for the top-down view (ball in hand) —
+        // doesn't track whether it's active itself (see
+        // ballPlacementActive), just moves the camera and hands FPS control
         // back and forth.
         private void StartPlacementView()
         {
@@ -1386,13 +1287,7 @@ namespace UntitledPoolGame.Pool
             if (leanIK != null) leanIK.solver.OnPreUpdate -= ApplyLean;
             if (isAiming) LeaveAim(returnControlToPlayer: false);
 
-            if (callPocketActive)
-            {
-                highlightedPocket?.SetSelectionHighlight(false);
-                highlightedPocket = null;
-                callPocketActive = false;
-                EndPlacementView(returnControlToPlayer: false);
-            }
+            if (callPocketActive) EndCallPocket();
             if (ballPlacementActive)
             {
                 ballPlacementActive = false;
