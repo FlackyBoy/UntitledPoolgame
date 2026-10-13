@@ -236,14 +236,19 @@ namespace UntitledPoolGame.Pool
 
         public PoolPower GetHeldPower(int player) => heldPower[player];
 
-        // Returns false if the player wasn't holding anything.
-        public bool TryActivatePower(int player)
+        // Returns false if the player wasn't holding anything. target: the
+        // pocket picked for a PocketTargetPower (LocalPoolPowerController);
+        // without one, such a power falls back to a random open pocket.
+        public bool TryActivatePower(int player, PoolPocket target = null)
         {
             PoolPower power = heldPower[player];
             if (power == null) return false;
 
             heldPower[player] = null;
-            power.Activate(this, player);
+            if (target != null && power is PocketTargetPower targeted)
+                targeted.Activate(this, player, target);
+            else
+                power.Activate(this, player);
             return true;
         }
 
@@ -389,7 +394,7 @@ namespace UntitledPoolGame.Pool
         // when it applies immediately vs. waits for SwitchTurn().
         private PoolPocket closedPocket;
         private int closedPocketOwner;
-        private bool closePocketPending;
+        private PoolPocket pendingClosePocket;
         private int pendingClosePocketOwner;
 
         // Called by ClosePocketPower.Activate. If it's already the OPPONENT's
@@ -397,39 +402,130 @@ namespace UntitledPoolGame.Pool
         // nothing left of the activator's own turn to protect, so it closes
         // right away instead of waiting for a SwitchTurn() that might not
         // come for a while (the opponent could have several shots left).
-        // Otherwise (activated during the activator's own turn), the actual
-        // pocket pick happens later, in SwitchTurn(), once their turn is
+        // Otherwise (activated during the activator's own turn), the picked
+        // pocket only closes later, in SwitchTurn(), once their turn is
         // genuinely over — closing it immediately here would eat into their
         // OWN remaining shots instead of only hindering the opponent about
         // to receive it.
-        public void QueueClosePocket(int activatingPlayer)
+        public void QueueClosePocket(int activatingPlayer, PoolPocket pocket)
         {
             if (CurrentPlayer != activatingPlayer)
             {
-                ApplyRandomPocketClose(activatingPlayer);
+                ApplyPocketClose(activatingPlayer, pocket);
                 return;
             }
 
-            closePocketPending = true;
+            pendingClosePocket = pocket;
             pendingClosePocketOwner = activatingPlayer;
         }
 
-        // Picks a random currently-open pocket and closes it (see
-        // PoolPocket.SetClosed) — stays closed through the activating
-        // player's opponent's ENTIRE turn, reopened by SwitchTurn() once
-        // play actually comes back around to the activator.
-        private void ApplyRandomPocketClose(int owner)
+        // Closes the picked pocket (see PoolPocket.SetClosed) — stays closed
+        // through the activating player's opponent's ENTIRE turn, reopened
+        // by SwitchTurn() once play actually comes back around to the
+        // activator.
+        private void ApplyPocketClose(int owner, PoolPocket pocket)
         {
             closedPocket?.SetClosed(false);
             closedPocket = null;
+            if (pocket == null) return;
 
-            IReadOnlyList<PoolPocket> pockets = PoolPocket.Active;
-            if (pockets.Count == 0) return;
-
-            PoolPocket chosen = pockets[UnityEngine.Random.Range(0, pockets.Count)];
-            chosen.SetClosed(true);
-            closedPocket = chosen;
+            pocket.SetClosed(true);
+            closedPocket = pocket;
             closedPocketOwner = owner;
+        }
+
+        // Magnet (MagnetPower): armed with its picked pocket, it waits for
+        // the activating player's next shot, which consumes it
+        // (NotifyShotFired) — same lifecycle as Ball Blast below. During
+        // that shot, FixedUpdate catches one of the shooter's balls and
+        // pulls it into the pocket.
+        private readonly MagnetPower[] magnetArmed = new MagnetPower[2];
+        private readonly PoolPocket[] magnetArmedPocket = new PoolPocket[2];
+        private MagnetPower magnetThisShot;
+        private PoolPocket magnetPocketThisShot;
+        private int magnetShooter;
+        private PoolBall magnetCaught;
+        private float magnetCaughtAt;
+        // The pocket's looping VFX (MagnetPower.SpawnPocketVfx): from the
+        // pick until the magnet is done — handed over with the magnet itself
+        // from armed to this shot.
+        private readonly GameObject[] magnetArmedVfx = new GameObject[2];
+        private GameObject magnetVfxThisShot;
+
+        public void ArmMagnet(int player, MagnetPower power, PoolPocket pocket)
+        {
+            DisarmMagnet(player);
+            magnetArmed[player] = power;
+            magnetArmedPocket[player] = pocket;
+            magnetArmedVfx[player] = power.SpawnPocketVfx(pocket);
+        }
+
+        private void DisarmMagnet(int player)
+        {
+            if (magnetArmed[player] != null) magnetArmed[player].StopPocketVfx(magnetArmedVfx[player]);
+            magnetArmed[player] = null;
+            magnetArmedPocket[player] = null;
+            magnetArmedVfx[player] = null;
+        }
+
+        // The pocket an armed magnet will pull into, null when none is armed
+        // (HUD banner).
+        public PoolPocket GetArmedMagnetPocket(int player) => magnetArmed[player] != null ? magnetArmedPocket[player] : null;
+
+        // A ball caught by the magnet (the ball, the pocket) — feedback hook.
+        public static event Action<PoolBall, PoolPocket> MagnetCaught;
+
+        private void FixedUpdate()
+        {
+            if (magnetThisShot == null || !shotInProgress) return;
+
+            if (magnetCaught == null)
+            {
+                magnetCaught = magnetThisShot.FindCapture(this, magnetShooter, magnetPocketThisShot);
+                if (magnetCaught == null) return;
+                // The 8 into any pocket but the called one loses the game:
+                // the magnet never does that to its own user.
+                if (magnetCaught.Group == BallGroup.Eight && ruleSet is EightBallRuleSet
+                    && calledEightBallPocket != magnetPocketThisShot)
+                {
+                    magnetCaught = null;
+                    return;
+                }
+                magnetCaughtAt = Time.time;
+                MagnetCaught?.Invoke(magnetCaught, magnetPocketThisShot);
+            }
+
+            // Pocketed (deactivated), parked, or held too long (stuck against
+            // a cushion jaw — the shot would otherwise never settle): done.
+            if (!magnetCaught.isActiveAndEnabled || magnetCaught.Rigidbody.isKinematic
+                || Time.time - magnetCaughtAt > magnetThisShot.MaxPullDuration)
+            {
+                EndMagnetShot();
+                return;
+            }
+            magnetThisShot.Pull(magnetCaught, magnetPocketThisShot);
+        }
+
+        private void EndMagnetShot()
+        {
+            if (magnetThisShot != null) magnetThisShot.StopPocketVfx(magnetVfxThisShot);
+            magnetVfxThisShot = null;
+            magnetThisShot = null;
+            magnetPocketThisShot = null;
+            magnetCaught = null;
+        }
+
+        // The balls a player is "after" — what the magnet may catch for
+        // them. 8-ball: their group (the 8 once it's cleared); while the
+        // groups are still undecided, any solid or stripe, never the 8.
+        // Modes without groups (9-ball, 14.1): any object ball.
+        public bool IsOwnBall(int player, PoolBall ball)
+        {
+            if (ball.IsCueBall) return false;
+            if (!(ruleSet is EightBallRuleSet)) return true;
+            if (IsShootingForEightBall(player)) return ball.Group == BallGroup.Eight;
+            BallGroup group = GetGroup(player);
+            return group == BallGroup.Cue ? ball.Group != BallGroup.Eight : ball.Group == group;
         }
 
         // In split-screen (2 local PlayerInputs), a physical player always IS
@@ -524,6 +620,15 @@ namespace UntitledPoolGame.Pool
 
             ballBlastThisShot = ballBlastArmed[CurrentPlayer];
             ballBlastArmed[CurrentPlayer] = null;
+
+            EndMagnetShot();
+            magnetThisShot = magnetArmed[CurrentPlayer];
+            magnetPocketThisShot = magnetArmedPocket[CurrentPlayer];
+            magnetVfxThisShot = magnetArmedVfx[CurrentPlayer];
+            magnetShooter = CurrentPlayer;
+            magnetArmed[CurrentPlayer] = null;
+            magnetArmedPocket[CurrentPlayer] = null;
+            magnetArmedVfx[CurrentPlayer] = null;
         }
 
         // Which pocket a ball pocketed THIS shot actually fell into — null if
@@ -652,6 +757,7 @@ namespace UntitledPoolGame.Pool
             if (shotInProgress && !moving && wasMoving)
             {
                 shotInProgress = false;
+                EndMagnetShot();
                 ruleSet.ResolveShot(this, pocketedThisShot, cueBallPocketedThisShot, firstContactThisShot);
             }
 
@@ -686,10 +792,10 @@ namespace UntitledPoolGame.Pool
             // activator — not in QueueClosePocket()/Activate(), which could
             // still be mid-way through the activator's own turn (never
             // eats into their own remaining shots).
-            if (closePocketPending && CurrentPlayer != pendingClosePocketOwner)
+            if (pendingClosePocket != null && CurrentPlayer != pendingClosePocketOwner)
             {
-                closePocketPending = false;
-                ApplyRandomPocketClose(pendingClosePocketOwner);
+                ApplyPocketClose(pendingClosePocketOwner, pendingClosePocket);
+                pendingClosePocket = null;
             }
             TurnChanged?.Invoke(CurrentPlayer);
         }
@@ -734,10 +840,13 @@ namespace UntitledPoolGame.Pool
 
             closedPocket?.SetClosed(false);
             closedPocket = null;
-            closePocketPending = false;
+            pendingClosePocket = null;
             calledEightBallPocket = null;
             ballBlastArmed[0] = ballBlastArmed[1] = null;
             ballBlastThisShot = null;
+            DisarmMagnet(0);
+            DisarmMagnet(1);
+            EndMagnetShot();
 
             pocketedThisShot.Clear();
             pocketByBallThisShot.Clear();

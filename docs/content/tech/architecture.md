@@ -317,7 +317,16 @@ classDiagram
   class BoostedShotPower
   class VisionImpairPower
   class InvertedControlsPower
+  class PocketTargetPower {
+    <<abstract>>
+    +Activate(PoolMatchRules, int, PoolPocket)*
+    +CanTarget(PoolPocket)$
+  }
   class ClosePocketPower
+  class MagnetPower {
+    +FindCapture(PoolMatchRules, int, PoolPocket)
+    +Pull(PoolBall, PoolPocket)
+  }
   class BallBlastPower {
     +CanBlast(PoolBall)
     +PlayEffects(PoolBall)
@@ -350,8 +359,12 @@ classDiagram
   PoolPower <|-- BoostedShotPower
   PoolPower <|-- VisionImpairPower
   PoolPower <|-- InvertedControlsPower
-  PoolPower <|-- ClosePocketPower
+  PoolPower <|-- PocketTargetPower
+  PocketTargetPower <|-- ClosePocketPower
+  PocketTargetPower <|-- MagnetPower
   PoolPower <|-- BallBlastPower
+  MagnetPower ..> PoolMatchRules : ArmMagnet, attire une bille au prochain tir
+  LocalPoolPowerController ..> PoolPocket : choix du trou (SetTargeted)
   BallBlastPower ..> PoolMatchRules : ArmBallBlast, détruit au premier contact
   PoolPower --> PowerType
   PoolPowerCrateManager --> PoolPowerCrate : fait apparaître
@@ -366,6 +379,15 @@ classDiagram
 ```
 
 Ajouter un pouvoir = une nouvelle classe dérivée de `PoolPower` + un asset créé via **Create > Pool > Powers**, ajouté à `Available Powers` dans `PoolPowerSpawnSettings`.
+
+**Pouvoirs qui visent un trou** : dériver de `PocketTargetPower` plutôt que de `PoolPower`. `LocalPoolPowerController` ouvre alors un choix du trou à la place d'une activation directe.
+- **Pointage** : pointeur blanc au centre de la vue ; le trou retenu est le plus proche en angle du centre de la caméra du joueur (pas de raycast, un trou est trop petit).
+- **Repère** : `PoolPocket.SetTargeted` affiche le cercle et le halo. Il compte les joueurs, pour deux joueurs qui visent le même trou.
+- **Activation** : `PoolMatchRules.TryActivatePower(player, pocket)`.
+- **Touche Interact** : pendant le choix, `IsChoosingPocket` (vrai aussi pendant l'image où le choix se termine) écarte `LocalPoolAimController` et, par `WantsInteractThisFrame`, `LocalPlayerHandController`.
+- **Sans trou choisi** (contrôleur en ligne figé) : un trou ouvert au hasard.
+
+L'**aimant** suit le cycle de la bille destructrice : `ArmMagnet`, consommé par `NotifyShotFired`. Pendant le tir, `PoolMatchRules.FixedUpdate` capte une bille du joueur (`IsOwnBall`) puis appelle `MagnetPower.Pull` à chaque pas de physique, jusqu'à l'empochage, la fin du coup ou *Max Pull Duration*.
 
 ## Interface (menus et HUD)
 

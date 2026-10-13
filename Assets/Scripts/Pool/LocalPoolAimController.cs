@@ -270,6 +270,9 @@ namespace UntitledPoolGame.Pool
         private void Start()
         {
             EnableHeadLook(false);
+            // Start, not Awake: LocalPlayerHandController.Awake adds it when
+            // the prefab doesn't carry one, possibly after this Awake.
+            powerController = GetComponent<LocalPoolPowerController>();
         }
 
         // Extra yaw (degrees) added to the body on top of whatever lines the
@@ -307,6 +310,9 @@ namespace UntitledPoolGame.Pool
         // held pose, which the swing is temporarily moving).
         private LocalCueMelee cueMelee;
         private LocalUnarmedMelee unarmedMelee;
+        // Optional: while it's picking a pocket for a power, aiming stands aside.
+        private LocalPoolPowerController powerController;
+        private bool IsChoosingPowerPocket => powerController != null && powerController.IsChoosingPocket;
         private CharacterController characterController;
         private PlayerInput playerInput;
         // CinemachineBrain overwrites the actual camera's Transform every
@@ -455,6 +461,7 @@ namespace UntitledPoolGame.Pool
 
         public bool WantsInteractThisFrame(LocalGrabbable heldObject)
         {
+            if (IsChoosingPowerPocket) return true;
             if (isAiming) return true;
             if (IsMyTurnToPlaceBall()) return true;
             if (IsMyTurnToCallPocket()) return true;
@@ -818,6 +825,14 @@ namespace UntitledPoolGame.Pool
             CheckPlacementCamera();
             if (HandleBallInHand()) return;
             if (HandleCallPocket()) return;
+
+            // Picking a pocket for a power (LocalPoolPowerController): it
+            // takes Interact, and the pointer needs the normal FPS view.
+            if (IsChoosingPowerPocket)
+            {
+                if (isAiming) ExitAim();
+                return;
+            }
 
             if (!isAiming)
             {
