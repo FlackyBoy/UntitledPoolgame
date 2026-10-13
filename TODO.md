@@ -9,6 +9,15 @@ sera retravaillée au fur et à mesure que le scope se précise.
 Légende : ⬜ à faire · 🔄 en cours · ✅ fait
 
 ## En cours
+- 🔄 **Menu debug en jeu** (13/10, branche `feature/menu-debug`, compilé, non testé) : `Assets/Scripts/Core/DebugMenu.cs`, créé tout seul dans toute scène de partie.
+  - **Ouverture** : clic gauche maintenu + 4 clics droits rapides (1,5 s). Fermeture par le même geste ou le bouton « Fermer ».
+  - **Contenu** :
+    - donner un pouvoir à J1 / J2 ou vider sa main ;
+    - victoire / défaite du joueur actif, passer le tour ;
+    - phase « empocher la 8 » ;
+    - erreurs au choix : faute de J1 / J2, empocher une bille du groupe 1 / 2, première bille touchée du groupe 1 / 2.
+  - **Côté règles** : nouveaux points d'entrée `PoolMatchRules.Debug*`. Les coups simulés passent par le vrai `ResolveShot`, et les actions sont grisées tant que des billes roulent.
+  - **À tester en jeu**. Limite : en partie, le clic gauche maintenu déclenche aussi la charge (tir, lancer ou coup) pendant le geste.
 - 🔄 **R&D déplacements et combat de bagarre** (11/10, branche `feature/deplacements-combat`). Choix : vue FPS gardée, physique hybride améliorée (animation + réactions physiques, pas d'active ragdoll permanent), personnage actuel, tout sur la variante `New_PlayerVariant` (le joueur normal ne change pas). Étapes :
   - ✅ **1. Déplacement**, testé en jeu (12/10) :
     - **Le mouvement** : élan et freinage, sprint, saut (avec marge de tolérance au bord et appui gardé). Plongeon essayé puis retiré (11/10) : sans effet sur les autres, il n'apportait rien.

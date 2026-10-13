@@ -68,6 +68,7 @@ Assets/Scripts/
 │   ├── PhysicsLayerSetup.cs        couches ignorées par les billes (au lancement)
 │   ├── SplitScreenCheatSpawner.cs  C+P : faire rejoindre un 2e joueur
 │   ├── EightBallEndgameCheat.cs    C+W : fin de partie 8-ball directe
+│   ├── DebugMenu.cs                menu debug en jeu (clic gauche maintenu + 4 clics droits)
 │   ├── RagdollDummySpawner.cs      G : mannequin de test pour le ragdoll
 │   ├── ScenePlayerSpawner.cs       point d'apparition du joueur dans la scène
 │   ├── Level/                      données du Level Maker posées dans les scènes

@@ -609,6 +609,8 @@ En jeu, joueur sélectionné, la vue *Scene* dessine le trajet du poing (jaune) 
 
 Le récapitulatif des touches actuelles est dans [Contrôles](gdd.html#controles) (Game design). Si vous changez une touche affichée par le HUD (pouvoir, valider), changez aussi le texte correspondant dans HudSettings.
 
+**Menu debug** (test) : clic gauche maintenu + 4 clics droits rapides, lus directement sur la souris (pas une action de l'*Input Actions*). Le composant `DebugMenu` est créé tout seul dans toute scène de partie ; *Right Clicks To Toggle* (4) et *Combo Window* (1,5 s) se règlent sur l'objet « Debug Menu » en Play mode seulement. En éditeur il liste tous les assets de pouvoir du projet ; dans un build, ceux de PoolPowerSpawnSettings.
+
 ## Caméra (Cinemachine)
 
 - **Durée des transitions** (entrée et sortie de visée, retour après une chute) : composant *Cinemachine Brain* de la caméra de chaque joueur, champ *Default Blend*.
