@@ -49,6 +49,7 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Q | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, Q à nouveau pour l'annuler, E pour valider le trou visé avec le pointeur blanc |
 | C + P (maintenir) | Test : faire rejoindre un second joueur |
 | C + W | Test : aller directement à la fin d'une partie de 8-ball |
+| Clic gauche maintenu + 4 clics droits rapides | Test : ouvrir / fermer le **menu debug** (donner un pouvoir, victoire / défaite, phase « empocher la 8 », fautes et erreurs de groupe) |
 
 ## Manette
 

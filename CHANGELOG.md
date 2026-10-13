@@ -4,6 +4,16 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
+- **Menu debug en jeu** (`DebugMenu`, branche `feature/menu-debug` ; compilé, non testé).
+  - **Ouverture et fermeture** : clic gauche maintenu + 4 clics droits rapides, ou le bouton « Fermer ». Pendant qu'il est ouvert, les commandes des joueurs sont coupées et le curseur est libre, comme en pause.
+  - **Pouvoirs** : donner n'importe quel pouvoir à J1 ou J2 sans caisse (il remplace celui en main), ou vider la main.
+  - **Partie** : victoire ou défaite du joueur actif, passer le tour.
+  - **Phase de jeu** : « empocher la 8 » (le joueur actif a vidé son groupe, comme C+W).
+  - **Erreurs**, avec la condition au choix :
+    - faute de J1 ou de J2 (main libre pour l'autre) ;
+    - le joueur actif empoche une bille du groupe 1 (pleines) ou 2 (rayées) ;
+    - la blanche du joueur actif touche d'abord une bille du groupe 1 ou 2.
+  - Les coups simulés sont jugés par les vraies règles (`PoolMatchRules.DebugResolveShot`, `DebugFoul`, `DebugSetHeldPower`, `DebugSwitchTurn`).
 - **Annonce de la 8 avec le pointeur** (branche `feature/selection-poche-8` ; compilé, non testé).
   - **Fonctionnement** : l'annonce de la poche pour la 8 utilise le même choix que les pouvoirs qui visent un trou. Le joueur vise la poche avec le pointeur blanc, en vue normale, et valide avec Interact. Cela remplace la vue de dessus avec Déplacer.
   - **Code** :

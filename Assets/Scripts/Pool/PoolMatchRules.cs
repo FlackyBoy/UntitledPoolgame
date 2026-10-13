@@ -743,6 +743,53 @@ namespace UntitledPoolGame.Pool
             Debug.Log($"[EightBallEndgameCheat] Joueur {CurrentPlayer + 1} peut maintenant tirer la bille 8.");
         }
 
+        // ---------- Test-only entry points (DebugMenu) ----------
+        // They go through the same paths as real play (PowerGranted, the
+        // rule set's ResolveShot, RegisterFoul/SwitchTurn), so what they
+        // trigger looks and behaves like the real thing.
+
+        // A match is on and the table is still: the only time a fake shot
+        // or a turn change makes sense.
+        public bool DebugCanAct => MatchStarted && !GameOver && !shotInProgress && !PoolBall.AnyMoving();
+
+        // Puts power in player's hand, replacing what they held (unlike
+        // GrantPower, which wastes a pickup while one is held). Null empties it.
+        public void DebugSetHeldPower(int player, PoolPower power)
+        {
+            heldPower[player] = power;
+            if (power != null) PowerGranted?.Invoke(player);
+        }
+
+        public void DebugSwitchTurn()
+        {
+            if (DebugCanAct) SwitchTurn();
+        }
+
+        // A foul committed by player: the turn passes to the other one, with
+        // ball in hand — as after a scratch.
+        public void DebugFoul(int player)
+        {
+            if (!DebugCanAct) return;
+            if (CurrentPlayer != player) SwitchTurn();
+            RegisterFoul();
+            SwitchTurn();
+        }
+
+        // A shot by the current player, judged by the real rule set: pocketed
+        // (may be null) leaves the table as if potted, firstContact is what
+        // the cue ball touched first (null = touched nothing).
+        public void DebugResolveShot(PoolBall pocketed, PoolBall firstContact)
+        {
+            if (!DebugCanAct) return;
+            pocketedThisShot.Clear();
+            pocketByBallThisShot.Clear();
+            cueBallPocketedThisShot = false;
+            // Through OnPocketed: HandleBallPocketed records it (and plays the
+            // pot feedback) exactly as for a real pot.
+            if (pocketed != null) pocketed.OnPocketed();
+            ruleSet.ResolveShot(this, pocketedThisShot, cueBallPocketedThisShot, firstContact);
+        }
+
         private void Update()
         {
             if (!MatchStarted || GameOver)
