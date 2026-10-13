@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UntitledPoolGame — Projet</title>
-<meta name="description" content="Documentation du projet UntitledPoolGame : TODO, GDD, documentation technique, propositions d'UI et outil de niveau.">
+<meta name="description" content="Documentation du projet UntitledPoolGame : suivi, game design, réglages, outils, technique et process Git.">
 <link rel="stylesheet" href="assets/site.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
@@ -21,21 +21,66 @@
     <div class="stat"><b>…</b><span>faits</span></div>
   </div>
 
-  <div class="grid">
-    <a class="card" href="gdd.html#todo"><h3>TODO</h3><p>La liste des tâches, filtrable, toujours synchronisée avec <code>TODO.md</code>.</p></a>
-    <a class="card" href="gdd.html#gdd"><h3>GDD</h3><p>Concept, boucle de jeu, contrôles, modes, pouvoirs, dimensions.</p></a>
-    <a class="card" href="gdd.html#controles"><h3>Contrôles</h3><p>Récapitulatif des touches clavier / manette, général et selon la situation.</p></a>
-    <a class="card" href="gdd.html#combat"><h3>Réglages combat</h3><p>Coup de queue, poing, pied : déroulé et effet de chaque réglage de l'Inspector.</p></a>
-    <a class="card" href="gdd.html#pistes"><h3>Pistes &amp; suggestions</h3><p>Ce qui est envisagé mais pas décidé, et les propositions de Claude.</p></a>
-    <a class="card" href="tech.html"><h3>Documentation technique</h3><p>Architecture et classes, séquences, configuration, plugins, rendu, performances, arborescence, annexes.</p></a>
-    <a class="card" href="config.html"><h3>Configuration</h3><p>Tous les réglages : fichiers de configuration, pouvoirs, composants du joueur, touches, caméra, outils d'éditeur — où ils sont et comment les modifier.</p></a>
-    <a class="card" href="equipe.html"><h3>Travailler en équipe</h3><p>Organisation git : branches, Pull Requests, scènes Unity, et le cycle d'une tâche pas à pas dans GitHub Desktop. Aussi en PDF.</p></a>
-    <a class="card" href="ui.html"><h3>Propositions UI</h3><p>Maquettes à comparer écran par écran, en trois directions artistiques, avec choix et commentaires.</p></a>
-    <a class="card" href="level.html"><h3>Outil de niveau</h3><p>Cahier des charges du « Pool Level Maker » : scène jouable en quelques clics, salles façon BMT, dimensions.</p></a>
-  </div>
+  <section class="area">
+    <h2><a href="suivi.html">Suivi</a></h2>
+    <p>Où en est le projet.</p>
+    <div class="grid">
+      <a class="card" href="suivi.html#todo"><h3>TODO</h3><p>La liste des tâches, filtrable, toujours synchronisée avec <code>TODO.md</code>.</p></a>
+      <a class="card" href="suivi.html#changelog"><h3>Changelog</h3><p>Tout ce qui a changé, jour par jour, le plus récent en haut.</p></a>
+      <a class="card" href="suivi.html#prompts"><h3>Historique des prompts</h3><p>Les demandes faites à Claude au fil des sessions, et ce qu'on en a retenu.</p></a>
+    </div>
+  </section>
+
+  <section class="area">
+    <h2><a href="gdd.html">Game design</a></h2>
+    <p>Ce qu'est le jeu et comment il se joue.</p>
+    <div class="grid">
+      <a class="card" href="gdd.html#gdd"><h3>GDD</h3><p>Concept, boucle de jeu, joueur, billard, modes, pouvoirs, dimensions, combat, interface.</p></a>
+      <a class="card" href="gdd.html#controles"><h3>Contrôles</h3><p>Les touches clavier / souris et manette, selon la situation.</p></a>
+      <a class="card" href="ui.html"><h3>Propositions UI</h3><p>Les concepts d'interface et leurs prototypes interactifs, avec choix et commentaires.</p></a>
+      <a class="card" href="gdd.html#pistes"><h3>Pistes &amp; suggestions</h3><p>Ce qui est envisagé mais pas décidé, et les propositions de Claude.</p></a>
+    </div>
+  </section>
+
+  <section class="area">
+    <h2><a href="config.html">Réglages</a></h2>
+    <p>Tout ce qui se règle dans Unity sans toucher au code.</p>
+    <div class="grid">
+      <a class="card" href="config.html#config"><h3>Tous les réglages</h3><p>Fichiers de configuration, pouvoirs, composants du joueur, touches, caméra, outils d'éditeur : où ils sont et comment les modifier.</p></a>
+      <a class="card" href="config.html#config:combat"><h3>Combat</h3><p>Coup de queue, poing, pied : l'effet de chaque champ de l'Inspector.</p></a>
+    </div>
+  </section>
+
+  <section class="area">
+    <h2><a href="outils.html">Outils</a></h2>
+    <p>Les outils d'éditeur, dans <i>Tools &gt; Pool</i>.</p>
+    <div class="grid">
+      <a class="card" href="outils.html#tous"><h3>Tous les outils</h3><p>Chaque entrée de <i>Tools &gt; Pool</i> : éditeurs, projet, table, R&amp;D.</p></a>
+      <a class="card" href="outils.html#menu-studio"><h3>Menu Studio</h3><p>Modifier les écrans des menus : éléments, textes, effets, Feel.</p></a>
+      <a class="card" href="outils.html#text-fx-studio"><h3>Text FX Studio</h3><p>Animer les textes du jeu et les voir en direct.</p></a>
+      <a class="card" href="outils.html#level-maker"><h3>Level Maker</h3><p>Monter un niveau jouable : salle, table, joueurs, pouvoirs, ambiances.</p></a>
+    </div>
+  </section>
+
+  <section class="area">
+    <h2><a href="tech.html">Technique</a></h2>
+    <p>Comment le jeu est construit.</p>
+    <div class="grid">
+      <a class="card" href="tech.html#architecture"><h3>Documentation technique</h3><p>Architecture et classes, séquences, configuration, plugins, rendu, performances, arborescence, annexes.</p></a>
+    </div>
+  </section>
+
+  <section class="area">
+    <h2><a href="equipe.html">Process Git</a></h2>
+    <p>Comment on travaille à plusieurs sur le dépôt.</p>
+    <div class="grid">
+      <a class="card" href="equipe.html#equipe"><h3>Process Git</h3><p>Branches, Pull Requests, scènes Unity, et le cycle d'une tâche pas à pas dans GitHub Desktop. Aussi en PDF.</p></a>
+    </div>
+  </section>
 
   <h2 style="margin-top:40px">Dernières modifications</h2>
   <div class="prose" id="changelog"><p class="loading">Chargement du changelog…</p></div>
+  <p><a href="suivi.html#changelog">Tout le changelog →</a></p>
 </main>
 <footer class="site-footer">Contenu lu depuis le dépôt <a href="https://github.com/FlackyBoy/UntitledPoolgame">FlackyBoy/UntitledPoolgame</a> (branche master).</footer>
 <script>

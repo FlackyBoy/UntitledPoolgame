@@ -6,16 +6,17 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 
 - `TODO.md` — tâches (⬜ à faire · 🔄 en cours · ✅ fait) + notes techniques détaillées. **La version locale fait foi.**
 - `CHANGELOG.md` — historique, plus récent en haut, une section `## AAAA-MM-JJ` par jour.
-- `docs/` — site GitHub Pages (https://flackyboy.github.io/UntitledPoolgame/).
+- `docs/` — site GitHub Pages (https://flackyboy.github.io/UntitledPoolgame/). Sept rubriques, une page chacune avec menu latéral (`Site.renderDocPage` dans `docs/assets/site.js`) : **Suivi** `suivi.html` (TODO, changelog, prompts.md) · **Game design** `gdd.html` (GDD, contrôles, lien vers les propositions UI, pistes) · **Réglages** `config.html` (config.md, combat compris ; sommaire dans le menu latéral, `subnav`) · **Outils** `outils.html` (`content/outils/*.md` : tous les outils de *Tools > Pool*, Menu Studio, Text FX Studio, Level Maker) · **Technique** `tech.html` (`content/tech/*.md`) · **Process Git** `equipe.html` (equipe.md + PDF). Un nouvel outil d'éditeur = une ligne dans `outils/tous.md`, et une section à lui s'il a une fenêtre. Une nouvelle page de contenu = une section dans la rubrique qui lui correspond, pas une nouvelle entrée de menu ; un hash déplacé va dans `moved` pour que les anciens liens redirigent.
   - `docs/content/gdd.md` — GDD (statuts ✅ / 🔄 / 📌 par partie).
-  - `docs/content/controles.md` — récapitulatif des touches ; `docs/content/reglages-combat.md` — réglages de game design du combat (effet de chaque champ de l'Inspector). Onglets de la page TODO & GDD, **pas** dans la doc technique. À tenir à jour quand une touche ou un réglage change.
-  - `docs/content/config.md` — page « Configuration » du site : tous les réglages (fichiers de Resources, pouvoirs, composants du joueur, touches, caméra, éditeur), où ils sont et comment les modifier. À tenir à jour quand un réglage est ajouté, renommé ou déplacé.
+  - `docs/content/controles.md` — récapitulatif des touches (rubrique Game design). À tenir à jour quand une touche ou un réglage change.
+  - `docs/content/config.md` — « Tous les réglages » (rubrique Réglages) : fichiers de Resources, pouvoirs, composants du joueur, combat (effet de chaque champ de l'Inspector des coups), touches, caméra, éditeur, où ils sont et comment les modifier. À tenir à jour quand un réglage est ajouté, renommé ou déplacé.
   - `docs/content/pistes.md` — idées non décidées (utilisateur) et suggestions de Claude, séparées.
   - `docs/content/tech/*.md` — documentation technique (architecture, séquences, config, plugins, rendu, performances, arborescence, annexes). **À relire avant de toucher à une partie du code, et à mettre à jour quand l'architecture change.**
   - La TODO et le changelog du site sont lus depuis `TODO.md`/`CHANGELOG.md` sur master : ne pas les recopier dans `docs/`.
   - `docs/ui.html` — galerie des concepts d'UI ; `docs/ui/*.html` = un prototype interactif par concept (moteur commun `docs/ui/proto.js` + `proto.css`). L'utilisateur veut une UI pop, fun, originale (pas une copie de ses références). Il colle son récapitulatif de choix dans la conversation.
   - Vérifier un rendu : Chrome sans interface (`chrome.exe --headless=new --screenshot=… "file:///…/docs/ui/x.html#/ecran"`) puis lire l'image.
-  - `docs/content/level.md` — cahier des charges de l'outil de création de niveau (non implémenté, questions ouvertes en fin de page).
+  - `docs/content/outils/level-maker.md` — outil de création de niveau (rubrique Outils, `outils.html#level-maker`).
+  - `docs/content/prompts.md` — historique des prompts consolidés (rubrique Suivi).
 
 ## Conventions de code
 

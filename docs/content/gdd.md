@@ -1,6 +1,6 @@
 # Game Design Document
 
-> Document vivant, construit à partir de la TODO (état au 02/10/2026). Chaque partie distingue ce qui est **✅ implémenté**, **🔄 en cours** et **📌 décidé mais pas commencé**. Tout ce qui n'est pas encore tranché est dans l'onglet *Pistes & suggestions*.
+> Document vivant, construit à partir de la TODO (état au 02/10/2026). Chaque partie distingue ce qui est **✅ implémenté**, **🔄 en cours** et **📌 décidé mais pas commencé**. Tout ce qui n'est pas encore tranché est dans [Pistes & suggestions](gdd.html#pistes).
 
 ## 1. Concept
 
@@ -57,7 +57,7 @@ Voyager d'une **dimension** à l'autre, chacune avec sa salle, ses règles et se
 
 ## 3. Contrôles
 
-Le récapitulatif complet des touches clavier / manette, général et selon la situation, est dans l'onglet **[Contrôles](gdd.html#controles)**.
+Le récapitulatif complet des touches clavier / manette, général et selon la situation, est dans **[Contrôles](gdd.html#controles)**.
 
 En bref : ZQSD + souris (sticks) pour bouger et regarder, **E / Y** pour interagir, **clic gauche / X** pour le tir, le lancer et le coup de queue, **clic gauche / RB** pour le poing (mains vides), **clic droit / RT** pour le pied, **F / B (○)** pour le pouvoir.
 
@@ -138,7 +138,7 @@ Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoir
   | **La base spatiale** | Station orbitale, alarmes | **Billes en apesanteur**, gravité qui change, sas qui aspire billes et joueurs |
   | **Shooter miniature** | Le joueur rétréci sur la table | La queue devient une arme, les billes des ennemis |
 - La caméra de visée devra s'adapter à ces changements d'échelle et de vue.
-- **Salles et ambiances** 🔄 : les salles se construisent avec le **Level Maker** (outil d'éditeur : murs, portes, sols, étages, kits de décor interchangeables). Une même salle peut recevoir **plusieurs ambiances** (lumières, post-process, brouillard), chacune avec son éclairage précalculé, et en changer en cours de partie : c'est la base visuelle des dimensions. Détail dans la page *Outil de niveau*.
+- **Salles et ambiances** 🔄 : les salles se construisent avec le **Level Maker** (outil d'éditeur : murs, portes, sols, étages, kits de décor interchangeables). Une même salle peut recevoir **plusieurs ambiances** (lumières, post-process, brouillard), chacune avec son éclairage précalculé, et en changer en cours de partie : c'est la base visuelle des dimensions. Détail dans [Outil de niveau](outils.html#level-maker).
 
 ## 9. Combat et PNJ
 
@@ -177,7 +177,7 @@ Les temps forts ont leur interjection (« FAUTE ! », « Dans le mille ! », « 
 
 ### Parcours des menus 🔄 (intégré, à tester)
 
-Proposé le 05/10 dans le prototype [Parcours des menus](../ui/parcours.html), intégré dans Unity le 08/10 avec les variantes retenues (menu sur la table, pause en carte). Le menu a sa propre scène. Choisir un niveau le charge derrière un **écran de chargement** (variante « Le retour des billes » : carte postale du niveau, billes qui tombent dans la gouttière, astuces, puis chaque joueur appuie sur A). Les textes, les astuces et les images des niveaux sont modifiables sans toucher au code. Les sauvegardes, l'histoire, les niveaux prison et station et le jeu en ligne restent à venir.
+Proposé le 05/10 dans le prototype [Parcours des menus](ui/parcours.html), intégré dans Unity le 08/10 avec les variantes retenues (menu sur la table, pause en carte). Le menu a sa propre scène. Choisir un niveau le charge derrière un **écran de chargement** (variante « Le retour des billes » : carte postale du niveau, billes qui tombent dans la gouttière, astuces, puis chaque joueur appuie sur A). Les textes, les astuces et les images des niveaux sont modifiables sans toucher au code. Les sauvegardes, l'histoire, les niveaux prison et station et le jeu en ligne restent à venir.
 
 - **Menu principal** :
   - **Nouvelle partie** : histoire, avec tutoriel au début (à venir) ;
@@ -191,14 +191,14 @@ Proposé le 05/10 dans le prototype [Parcours des menus](../ui/parcours.html), i
 
 ### Mini-jeu : la borne d'arcade 📌 (aperçu jouable)
 
-Dans le bar, une borne d'arcade fait tourner **SUPER POOL SHOT**, un vrai billard d'arcade à niveaux façon console 8 bits, sur un vieil écran cathodique ([aperçu jouable](../ui/arcade.html)).
+Dans le bar, une borne d'arcade fait tourner **SUPER POOL SHOT**, un vrai billard d'arcade à niveaux façon console 8 bits, sur un vieil écran cathodique ([aperçu jouable](ui/arcade.html)).
 - **Le jeu** : physique réelle et effet sur la blanche. 7 niveaux à coups limités, dont 2 coups de maître. Combos, vies, CONTINUE?, et un mode 2 joueurs en alterné.
 - **La blague** : un code secret façon années 80 sur l'écran titre fait filer toutes les billes dans les poches.
 - **Usage** : un moment pour souffler entre deux parties, ou pour faire patienter l'autre joueur.
 
 ### Direction retenue 📌
 
-Validée le 29/09/2026 sur le prototype [Synthèse](../ui/synthese.html) (page **Propositions UI**) :
+Validée le 29/09/2026 sur le prototype [Synthèse](ui/synthese.html) (page **[Propositions UI](ui.html)**) :
 
 - **Style « billard pop »** : cartes crème à contour sombre et ombre pleine, couleurs de joueur (J1 bleu, J2 rouge), jaune pour ce qui est commun, typo épaisse (Bowlby One pour les titres, Titan One pour les menus, choisie le 01/10).
 - **Menus** (titre, joueurs, mode) : la table de billard posée dans le bar, éclairée par sa lampe ; on choisit en **visant une bille et en tirant**.

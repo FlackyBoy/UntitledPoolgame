@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TODO & GDD — UntitledPoolGame</title>
-<meta name="description" content="TODO, Game Design Document et pistes envisagées pour UntitledPoolGame.">
+<title>Game design — UntitledPoolGame</title>
+<meta name="description" content="Game design d'UntitledPoolGame : GDD, contrôles, pistes et suggestions, propositions d'interface.">
 <link rel="stylesheet" href="assets/site.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
@@ -13,68 +13,28 @@
 </head>
 <body>
 <main>
-  <h1>TODO &amp; GDD</h1>
-  <p class="lead">Ce qui reste à faire, le document de game design qui en découle, les contrôles, les réglages de game design, et les idées pas encore tranchées.</p>
-
-  <div class="tabs" role="tablist">
-    <button role="tab" id="tab-todo" aria-controls="todo" data-tab="todo">TODO</button>
-    <button role="tab" id="tab-gdd" aria-controls="gdd" data-tab="gdd">GDD</button>
-    <button role="tab" id="tab-controles" aria-controls="controles" data-tab="controles">Contrôles</button>
-    <button role="tab" id="tab-combat" aria-controls="combat" data-tab="combat">Réglages combat</button>
-    <button role="tab" id="tab-pistes" aria-controls="pistes" data-tab="pistes">Pistes &amp; suggestions</button>
+  <h1>Game design</h1>
+  <p class="lead">Ce qu'est le jeu et comment il se joue : ce qui est décidé (GDD, contrôles, interface) et ce qui ne l'est pas encore (pistes).</p>
+  <div class="doc">
+    <nav class="doc-nav" id="doc-nav" aria-label="Sections"></nav>
+    <div class="with-toc"><article class="prose" id="doc-body"><p class="loading">Chargement…</p></article><nav class="toc" id="doc-toc"></nav></div>
   </div>
-
-  <section class="tabpanel" id="todo" role="tabpanel" aria-labelledby="tab-todo">
-    <p class="loading">Chargement de TODO.md…</p>
-  </section>
-  <section class="tabpanel" id="gdd" role="tabpanel" aria-labelledby="tab-gdd" hidden>
-    <div class="with-toc"><article class="prose" id="gdd-body"><p class="loading">Chargement…</p></article><nav class="toc" id="gdd-toc"></nav></div>
-  </section>
-  <section class="tabpanel" id="controles" role="tabpanel" aria-labelledby="tab-controles" hidden>
-    <div class="with-toc"><article class="prose" id="controles-body"><p class="loading">Chargement…</p></article><nav class="toc" id="controles-toc"></nav></div>
-  </section>
-  <section class="tabpanel" id="combat" role="tabpanel" aria-labelledby="tab-combat" hidden>
-    <div class="with-toc"><article class="prose" id="combat-body"><p class="loading">Chargement…</p></article><nav class="toc" id="combat-toc"></nav></div>
-  </section>
-  <section class="tabpanel" id="pistes" role="tabpanel" aria-labelledby="tab-pistes" hidden>
-    <div class="with-toc"><article class="prose" id="pistes-body"><p class="loading">Chargement…</p></article><nav class="toc" id="pistes-toc"></nav></div>
-  </section>
 </main>
-<footer class="site-footer">Sources : <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/TODO.md">TODO.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/gdd.md">docs/content/gdd.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/controles.md">docs/content/controles.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/reglages-combat.md">docs/content/reglages-combat.md</a> · <a href="https://github.com/FlackyBoy/UntitledPoolgame/blob/master/docs/content/pistes.md">docs/content/pistes.md</a></footer>
+<footer class="site-footer">Sources : <a href="https://github.com/FlackyBoy/UntitledPoolgame/tree/master/docs/content">docs/content</a> (gdd.md, controles.md, pistes.md)</footer>
 <script>
-  Site.renderHeader('gdd');
-
-  const loaders = {
-    todo: () => Site.fetchRoot('TODO.md')
-      .then(md => Site.renderTodo(Site.parseTodo(md), document.getElementById('todo')))
-      .catch(err => Site.showError(document.getElementById('todo'), err)),
-    gdd: () => Site.fetchText('content/gdd.md')
-      .then(md => Site.renderMarkdown(md, document.getElementById('gdd-body'), document.getElementById('gdd-toc')))
-      .catch(err => Site.showError(document.getElementById('gdd-body'), err)),
-    controles: () => Site.fetchText('content/controles.md')
-      .then(md => Site.renderMarkdown(md, document.getElementById('controles-body'), document.getElementById('controles-toc')))
-      .catch(err => Site.showError(document.getElementById('controles-body'), err)),
-    combat: () => Site.fetchText('content/reglages-combat.md')
-      .then(md => Site.renderMarkdown(md, document.getElementById('combat-body'), document.getElementById('combat-toc')))
-      .catch(err => Site.showError(document.getElementById('combat-body'), err)),
-    pistes: () => Site.fetchText('content/pistes.md')
-      .then(md => Site.renderMarkdown(md, document.getElementById('pistes-body'), document.getElementById('pistes-toc')))
-      .catch(err => Site.showError(document.getElementById('pistes-body'), err)),
-  };
-  const loaded = {};
-
-  // Only the tab's own hash selects it; a heading anchor inside a tab keeps
-  // whichever tab is already open.
-  function select(tab, updateHash) {
-    document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-    document.querySelectorAll('.tabpanel').forEach(p => { p.hidden = p.id !== tab; });
-    if (!loaded[tab]) { loaded[tab] = true; loaders[tab](); }
-    if (updateHash) history.replaceState(null, '', '#' + tab);
-  }
-  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => select(b.dataset.tab, true)));
-  const initial = location.hash.slice(1);
-  select(loaders[initial] ? initial : 'todo', false);
-  addEventListener('hashchange', () => { const t = location.hash.slice(1); if (loaders[t]) select(t, false); });
+  Site.renderHeader('design');
+  Site.renderDocPage({
+    sections: [
+      { group: 'Décidé' },
+      { id: 'gdd', label: 'GDD', file: 'content/gdd.md' },
+      { id: 'controles', label: 'Contrôles', file: 'content/controles.md' },
+      { href: 'ui.html', label: 'Propositions UI' },
+      { group: 'À décider' },
+      { id: 'pistes', label: 'Pistes & suggestions', file: 'content/pistes.md' },
+    ],
+    // This page used to hold the TODO and the combat settings as tabs.
+    moved: { todo: 'suivi.html#todo', combat: 'config.html#config:combat' },
+  });
 </script>
 </body>
 </html>

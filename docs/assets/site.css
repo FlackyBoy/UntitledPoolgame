@@ -52,7 +52,7 @@ pre code { background: none; padding: 0; }
 
 /* Header / nav */
 .site-header { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); }
-.site-header .bar { max-width: 1100px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.site-header .bar { max-width: 1280px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .brand { font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -.01em; }
 .brand span { color: var(--accent); }
 .nav { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -62,7 +62,7 @@ pre code { background: none; padding: 0; }
 .nav .soon { opacity: .55; cursor: default; }
 .nav .soon small { font-size: 11px; margin-left: 4px; }
 
-main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 72px; }
+main { max-width: 1280px; margin: 0 auto; padding: 28px 16px 72px; }
 h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.2; margin: 0 0 8px; letter-spacing: -.02em; }
 .lead { color: var(--muted); font-size: 17px; max-width: 70ch; margin: 0 0 24px; }
 
@@ -129,9 +129,40 @@ a.card:hover { border-color: var(--accent); }
 .toc b { display: block; margin-bottom: 6px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
 .toc a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; }
 .toc a:hover { color: var(--accent); }
-@media (max-width: 900px) { .with-toc { grid-template-columns: 1fr; } .toc { display: none; } }
+@media (max-width: 900px) { .with-toc { grid-template-columns: minmax(0, 1fr); } .toc { display: none; } }
+
+/* Area pages: side menu + section + TOC (renderDocPage) */
+.doc { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 32px; align-items: start; }
+.doc-nav { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.doc-nav .group { margin: 14px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.doc-nav .group:first-child { margin-top: 0; }
+.doc-nav a { padding: 6px 10px; border-radius: 8px; color: var(--muted); text-decoration: none; }
+.doc-nav a:hover { background: var(--surface-2); color: var(--text); }
+.doc-nav a[aria-current="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.doc-nav select { display: none; }
+.doc-nav { max-height: calc(100vh - 96px); overflow-y: auto; }
+.doc-nav .subnav { display: flex; flex-direction: column; margin: 2px 0 8px 10px; padding-left: 8px; border-left: 1px solid var(--border); font-size: 13px; }
+.doc-nav .subnav a { padding: 3px 8px; }
+.doc-nav .subnav a.h3 { padding-left: 20px; font-size: 12.5px; }
+.doc-nav .subnav a.h4 { padding-left: 32px; font-size: 12px; }
+.doc .with-toc:has(.toc:empty) { grid-template-columns: minmax(0, 1fr); }
+.doc .toc:empty { display: none; }
+@media (max-width: 1180px) { .doc .with-toc { grid-template-columns: minmax(0, 1fr); } .doc .toc { display: none; } }
+@media (max-width: 900px) {
+  .doc { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .doc-nav { position: static; }
+  .doc-nav a, .doc-nav .group { display: none; }
+  .doc-nav select { display: block; width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+}
+
+/* Home: cards grouped by area */
+.area { margin-top: 32px; }
+.area > h2 { font-size: 20px; margin: 0 0 4px; }
+.area > h2 a { color: inherit; text-decoration: none; }
+.area > h2 a:hover { color: var(--accent); }
+.area > p { color: var(--muted); margin: 0 0 12px; font-size: 15px; }
 
 .mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; overflow-x: auto; margin: 16px 0; }
 .notice { padding: 12px 14px; border-radius: var(--radius); background: var(--warn-bg); color: var(--warn); font-size: 14px; }
 .loading { color: var(--muted); font-style: italic; }
-footer.site-footer { max-width: 1100px; margin: 0 auto; padding: 0 16px 40px; color: var(--muted); font-size: 13px; }
+footer.site-footer { max-width: 1280px; margin: 0 auto; padding: 0 16px 40px; color: var(--muted); font-size: 13px; }

@@ -1,4 +1,4 @@
-# Configuration
+# Tous les réglages
 
 > Tous les réglages du jeu : où ils se trouvent, comment les modifier et ce que fait chaque valeur. Les valeurs indiquées sont celles par défaut du code ; celles de ton projet peuvent différer si elles ont déjà été réglées.
 
@@ -127,7 +127,7 @@ Le nom, l'image et le twist du niveau viennent de GameFlowSettings.
 
 ### Menu Studio — les écrans des menus
 
-**Tools > Pool > Menu Studio** est l'éditeur graphique des écrans. Chaque écran est un fichier `Assets/Resources/Menus/<écran>.asset`, créé avec la disposition d'origine par *Ensure Config Assets Exist* :
+Chaque écran est un fichier `Assets/Resources/Menus/<écran>.asset`, créé avec la disposition d'origine par *Ensure Config Assets Exist* et modifié dans **Tools > Pool > Menu Studio** (mode d'emploi : [Outils > Menu Studio](outils.html#menu-studio)) :
 
 | Écran | Ce que c'est |
 |---|---|
@@ -139,60 +139,6 @@ Le nom, l'image et le twist du niveau viennent de GameFlowSettings.
 | Settings | le cadre de *Réglages > Touches* (menu et pause) |
 | Pause, PauseConfirm | la pause et la confirmation du retour au menu |
 | Loading | l'écran de chargement |
-
-**La fenêtre**
-- **En haut** :
-  - la liste des écrans ;
-  - les boutons pour ajouter une **bille**, une **carte**, un **texte**, une **image**, un **panneau** ou une **pilule** ;
-  - Dupliquer, Supprimer, Derrière / Devant ;
-  - *▶ Rejouer les effets* ;
-  - la grille ;
-  - *Réinitialiser l'écran*.
-- **À gauche** : la liste des éléments, de celui dessiné derrière à celui dessiné devant, plus les réglages de l'écran (⚙). Un ▸ marque les éléments qui ont une action.
-- **Au centre** : l'écran, dessiné comme dans le jeu.
-  - **Cliquer** sur un élément le choisit ; le **glisser** le place.
-  - Le **coin jaune** change sa taille.
-  - **Flèches** : déplacer d'un demi-pourcent (Maj : 2 %). **Suppr** : supprimer. **Ctrl+D** : dupliquer.
-  - La grille aimante au demi-pourcent ; Maj en glissant pour s'en passer.
-- **À droite** : toutes les propriétés de l'élément choisi. Chaque changement se voit tout de suite et s'annule avec Ctrl+Z.
-
-**Brouillon** : on travaille toujours sur une copie de l'écran. Rien ne change dans le jeu tant qu'on n'a pas cliqué sur **Enregistrer**.
-- Dès qu'il y a une modification, un **bandeau orange** l'indique, avec *Enregistrer* et *Abandonner*. Le titre de la fenêtre prend une étoile.
-- **Changer d'écran, fermer la fenêtre ou lancer le Play** avec un brouillon en cours ouvre une demande : enregistrer, abandonner, ou rester / garder le brouillon.
-- **Le brouillon survit** au rechargement des scripts et au passage en Play. Pendant le Play, le jeu montre la version enregistrée.
-- ***Réinitialiser l'écran*** et les séquences Feel créées passent aussi par le brouillon ; il faut enregistrer pour les garder.
-
-**Les propriétés d'un élément**
-
-| Groupe | Ce qu'on règle |
-|---|---|
-| Place | centre (en % de l'écran), taille (en pixels d'un écran 1080p), inclinaison, visible ou non |
-| Apparence | couleur (bille, fond de carte ou de panneau, teinte d'image), bille rayée, numéro, image, bordure, arrondi |
-| Texte | texte et petite ligne (balises de texte animé acceptées), tailles, couleur, police titre, ombre, lettres qui arrivent une à une |
-| Action | ce que fait le choix : ouvrir un écran, retour, emplacement de sauvegarde, Just for fun, Local, En ligne, C'est parti, lancer un type de partie (avec ses règles), réglages, quitter, et pour la pause : reprendre, menu principal, confirmer ; grossissement quand on vise |
-| Effets | arrivée (pop, chute, montée, glissé de gauche ou de droite, fondu, tour), son délai et sa durée ; mouvement permanent (flotte, pulse, se balance, gigote, tourne), force et vitesse |
-| Feel | séquence jouée quand l'élément est **visé**, et quand il est **choisi**. Le bouton crée une séquence vide dans `Assets/Feel/Sequences/` et la relie ; on la remplit dans l'Inspector de Feel (son, vibration…) |
-
-**Les réglages d'un écran** (⚙) :
-- le fond : le bar dessiné (avec ou sans lumières, avec ou sans table), une couleur, une image, ou un voile (pause) ;
-- la bille blanche et la queue, avec leur position et leur taille ;
-- l'écran ouvert par Retour ;
-- une séquence Feel jouée à l'ouverture.
-
-**Les éléments que le jeu remplit** gardent leur nom ; on peut les déplacer, les redimensionner et changer leurs couleurs, mais pas les renommer :
-
-| Nom | Écran | Contenu |
-|---|---|---|
-| `context` | Level, Mode, Loading | l'étiquette jaune (Just for fun · Le bar…) |
-| `levels` | Level | la rangée de cartes des niveaux, centrée sur la zone |
-| `rules` | Mode | la carte des règles du type de partie visé |
-| `slot1`, `slot2` et `slot1-label`, `slot2-label` | Lobby | les ronds des joueurs et leur texte |
-| `aim-hint` | Title, Mode… | le texte qui clignote |
-| `panel` | Settings | le cadre de l'écran des touches (place, taille, couleurs, titre) |
-| `who` | Pause | qui a mis en pause (sa couleur suit le joueur) |
-| `postcard`, `tip`, `status`, `ready`, `gutter`, `go` | Loading | la carte postale, l'astuce, le message, les joueurs prêts, la gouttière, « C'est parti ! » |
-
-**Ordre des choix** : sur les écrans avec la queue, on vise la bille la plus proche dans la direction poussée. Dans la pause, on passe d'un choix à l'autre dans l'ordre de la liste.
 
 ### MenuSettings — couleurs, polices, messages
 
@@ -226,17 +172,7 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 
 ### Texte animé — Text FX Studio, balises, TextFxSettings
 
-**Le plus simple : *Tools > Pool > Text FX Studio*.** La fenêtre permet de :
-- **choisir un texte du jeu** dans la liste du haut (HUD, menu, chargement, niveaux), ou d'écrire un texte libre ;
-- **ajouter des effets avec des boutons** : sélectionner des lettres puis cliquer sur `wave`, `shake`, `pop`… (sans sélection, tout le texte). Les curseurs *Force* et *Vitesse* règlent la balise posée ;
-- **voir le résultat en direct**, même sans lancer le jeu :
-  - en lecture fixe, avec les lettres qui arrivent ou en machine à écrire ;
-  - sur un fond de bar, de tapis ou de carte ;
-  - avec la police, la taille, la couleur et le contour du jeu ;
-  - en boucle ou avec la sortie ;
-- **enregistrer** le texte dans le réglage d'origine (*Enregistrer dans le jeu*, annulable avec Ctrl+Z) ;
-- **régler TextFxSettings** en bas de la fenêtre, avec l'effet visible tout de suite ;
-- **créer une séquence Feel** avec ce texte pour un moment de la partie (voir *GameFeelSettings*). *Tester sur le HUD* l'affiche en jeu pendant le Play.
+**Le plus simple : *Tools > Pool > Text FX Studio*** : choisir un texte du jeu, poser les effets avec des boutons, voir le résultat en direct et l'enregistrer (mode d'emploi : [Outils > Text FX Studio](outils.html#text-fx-studio)).
 
 **Les balises** : tous les textes des réglages d'interface (MenuSettings, HudSettings, LoadingScreenSettings, noms des niveaux…) acceptent des **balises d'animation**, écrites comme du texte enrichi. Exemple : `<shake>FAUTE !</shake>`, `C'est <wave>parti</wave> !`, `<rainbow a=0.5>Bravo</rainbow>`.
 
@@ -293,7 +229,7 @@ Sur le composant *Local Player Locomotion* lui-même : les noms des actions (Mov
 
 En R&D : ne s'applique qu'avec la case *Boxing Punches* cochée sur *Local Unarmed Melee*, c'est-à-dire sur la variante `New_PlayerVariant`.
 
-**Un seul outil prépare tout** : *Tools > Pool > R&D > Préparer le joueur de R&D*. Il met sur la variante le déplacement, les poings de boxe et la jauge d'encaissement, puis crée ou reconstruit les calques d'animation. On peut le relancer sans risque. *Créer l'arène de test* l'appelle aussi. Ces valeurs remplacent celles du composant pour le poing. La garde et la portée du poing, ainsi que tout le coup de pied (spartiate compris), restent réglés sur le composant (voir *Réglages combat*). Lu à chaque image.
+**Un seul outil prépare tout** : *Tools > Pool > R&D > Préparer le joueur de R&D*. Il met sur la variante le déplacement, les poings de boxe et la jauge d'encaissement, puis crée ou reconstruit les calques d'animation. On peut le relancer sans risque. *Créer l'arène de test* l'appelle aussi. Ces valeurs remplacent celles du composant pour le poing. La garde et la portée du poing, ainsi que tout le coup de pied (spartiate compris), restent réglés sur le composant (voir [Combat](config.html#config:combat)). Lu à chaque image.
 
 | Groupe | Ce qu'on règle | Défauts |
 |---|---|---|
@@ -388,8 +324,8 @@ Sur `Assets/Prefabs/PlayerLocal/New.prefab`. Chaque champ a une infobulle dans l
 | **Local Cue Holder** | Ramasser et tenir la queue | Portée et angle pour ramasser, prises des mains, posture (accroupi, penché), durées, coudes |
 | **Local Player Hand Controller** | Objets tenus et lancer | Portée de ramassage (2 m), puissance de lancer min / max (3 / 12), vitesse de charge |
 | **Local Object Hands** | Porter les objets (hors queue) | Léger ou lourd, poses, corps, durées |
-| **Local Cue Melee** | Coups de queue | Voir *Réglages combat* (onglet de la page TODO & GDD) |
-| **Local Unarmed Melee** | Poings et pieds | Voir *Réglages combat* |
+| **Local Cue Melee** | Coups de queue | Voir [Combat](config.html#config:combat) |
+| **Local Unarmed Melee** | Poings et pieds | Voir [Combat](config.html#config:combat) |
 | **Local Pool Power Controller** | Lancer son pouvoir | Action utilisée (*Next* : F / B) |
 | **Local Character Animation Controller** | Paramètres de l'Animator | Noms des paramètres, échelles de marche, inclinaison en tournant |
 | **Cue Charge Slide** (sur la queue) | Glissement de la queue dans les mains | Recul à la charge (0,15 m), longueur qui dépasse derrière la main (0,1 m), détection automatique de l'axe |
@@ -410,13 +346,262 @@ Sur `Assets/Prefabs/PlayerLocal/New.prefab`. Chaque champ a une infobulle dans l
 | Ball-in-hand placement | Hauteur de la vue du dessus, vitesse de déplacement de la bille, *Placement Clear Above* (rien n'est dessiné au-dessus de la table) |
 | Input | Noms des actions utilisées |
 
+## Combat
+
+Paramètres des composants de combat, dans l'ordre de l'Inspector. Un composant déjà placé garde ses valeurs quand les valeurs par défaut changent (*clic droit > Reset* pour les reprendre). Unpin = déséquilibre PuppetMaster (repère : 5 fait généralement tomber).
+
+### Coup de queue — Local Cue Melee
+
+#### Références
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Action Map Name | Action map du joueur dans l'asset d'input | Player |
+| Attack Action Name | Action qui charge (maintenir) et déclenche (relâcher) le coup | Attack |
+| View Transform | Caméra du joueur, dont le coup suit le repère (vide = trouvée seule) | — |
+| Full Body IK | IK du personnage (vide = trouvé seul ; sans lui, le buste ne suit pas) | — |
+
+#### Direction (rotation pendant la charge)
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Turn Threshold | Rotation à faire pendant la charge pour choisir le coup : droite = balayage vers la gauche, gauche = vers la droite, haut = vertical ; en dessous = estoc | 12° |
+| Thrust Stance Delay | Temps sans rotation avant que la queue passe en position de tir (estoc) | 0,2 s |
+| Pose Blend Time | Fondu quand la pose change (position de tir → balayage) | 0,1 s |
+
+#### Retour de la vue à la frappe
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Return View On Strike | Retour de la vue vers la cible à la frappe : 1 = complet, 0 = la vue ne bouge pas | 1 |
+| Max View Return | Rotation maximale imposée à la vue | 120° |
+| Assist Angle | Demi-angle du cône dans lequel un adversaire attire la vue (0 = pas d'assistance) | 40° |
+| Assist Range | Distance maximale de l'adversaire visé | 3 m |
+
+#### Charge et arcs
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Charge Time | Temps de maintien pour la charge maximale | 0,8 s |
+| Min Windup | Part de l'armé déjà là sans charge | 0,45 |
+| Shoulder Pivot | Centre de rotation de la queue : 1 = épaules (grands gestes), 0 = entre les mains | 1 |
+| Sweep Windup | Balayages : angle d'armé à pleine charge | 100° |
+| Sweep Follow Through | Balayages : angle atteint de l'autre côté | 110° |
+| Overhead Windup | Vertical : angle d'armé vers le haut | 95° |
+| Overhead Follow Through | Vertical : angle atteint vers le bas | 70° |
+
+#### Estoc (position de tir)
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Thrust Pull Back | Recul de la queue le long de son axe à pleine charge | 0,25 m |
+| Thrust Reach | Avancée de la queue à la frappe (portée de l'estoc) | 0,5 m |
+| Stance Side | Position de tir : décalage des mains à droite des épaules | 0,12 m |
+| Stance Height | Position de tir : hauteur des mains par rapport aux épaules | −0,25 m |
+| Stance Forward | Position de tir : distance des mains devant les épaules | 0,15 m |
+| Stance Blend Time | Temps pour passer en position de tir | 0,15 s |
+
+#### Corps
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Sweep Torso Twist | Part de l'angle du balayage reprise par le buste | 0,4 |
+| Overhead Torso Bend | Part de l'angle du vertical reprise par le buste (il se plie) | 0,25 |
+| Windup Lean Back | Recul du corps à pleine charge | 0,1 m |
+| Strike Lean | Engagement du corps dans le coup | 0,18 m |
+
+#### Rythme
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Strike Time | Durée de la frappe | 0,13 s |
+| Follow Through Hold | Pause en fin de geste | 0,08 s |
+| Recover Time | Retour à la pose de port | 0,3 s |
+| Cooldown | Délai minimal entre deux coups | 0,25 s |
+
+#### Touche et force
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Muscle Layers | Couches des muscles des ragdolls (vide = Ragdoll) | Ragdoll |
+| Hit Radius | Épaisseur de la zone de touche le long de la queue | 0,2 m |
+| Sub Steps | Tests de touche par image (évite de traverser un bras) | 4 |
+| Min Unpin / Max Unpin | Déséquilibre sans charge / à pleine charge | 1 / 8 |
+| Min Force / Max Force | Force sans charge / à pleine charge | 400 / 2500 N |
+| Guaranteed Knockdown At | Charge à partir de laquelle la cible tombe à coup sûr | 0,9 |
+| Upward Bias | Part de la force vers le haut | 0,15 |
+| Hitstop Duration | Micro-ralenti à l'impact, pour les deux joueurs (0 = désactivé) | 0,06 s |
+| Hitstop Time Scale | Vitesse du temps pendant ce ralenti | 0,05 |
+| Show Charge Indicator | Jauge et flèche de direction provisoires | oui |
+| Debug Logs | Chaque coup et chaque touche dans la console | oui |
+
+### Poing et pied — Local Unarmed Melee
+
+#### Références
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Action Map Name | Action map du joueur | Player |
+| Punch Action Name | Action du coup de poing (clic gauche / LB) ; poing gauche en R&D | Punch |
+| Kick Action Name | Action du coup de pied (F / RT) | Kick |
+| View Transform | Caméra du joueur (vide = trouvée seule) | — |
+| Full Body IK | IK du personnage, obligatoire (vide = trouvé seul) | — |
+| Fps Camera | Caméra Cinemachine FPS pour le zoom du spartiate (vide = celle dont le nom contient « FPS ») | — |
+
+#### R&D Boxe
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Boxing Punches | Un bouton par main (Punch = gauche, Punch Right = droite). Au premier coup, les deux poings fermés montent en garde près du menton et y restent un moment. Chaque poing part de la garde à l'appui, presque droit vers l'axe du corps, plus sec, en tournant le poignet, avec le corps derrière, puis y revient ; la vue l'accompagne. Durées, forme, force et ressenti : **CombatSettings** (page Configuration). Coché seulement sur la variante de R&D ; décoché = poings en crochet qui alternent sur un seul bouton, comme avant | non |
+| Punch Right Action Name | Action du poing droit (clic droit / RB) | PunchRight |
+
+Avec cette case, ne servent plus pour le poing : *Windup Time*, *Jab Strike Time*, *Hold Time*, *Recover Time*, *Jab Torso Twist*, *Shoulder Reach*, *Punch Lean*, *Fist Spread*, *Jab Unpin* et *Jab Force*. Le point de départ du coup (*Start Forward / Height / Outward*) sert aussi de position de garde. Leurs équivalents sont dans CombatSettings. Le coup de pied garde ses propres réglages.
+
+**Coups animés** (CombatSettings > *Use Animations*, après *Tools > Pool > R&D > Préparer le joueur de R&D*) : la garde et les deux poings sont des animations de boxe (pack PROTOFACTOR) au lieu d'être construits en IK. Le coup touche le long de la vraie main, pendant la fenêtre *Hit Window Start / End* de l'animation. L'autre main enchaîne à partir de *Chain From*, et le retour en garde commence à *Return At*. Si le poing gauche joue le coup du droit, cocher *Swap Hands*.
+
+**Jauge d'encaissement** (CombatSettings > *Encaissement*) : les coups de ce joueur ne font plus tomber directement. Ils remplissent la jauge de la cible.
+- Tant qu'elle n'est pas pleine, la cible titube.
+- Au-delà de *Dazed From*, elle est sonnée : plus lente, elle dérive sur le côté et sa vue tangue.
+- Pleine, ou sur un coup de pied spartiate, elle est K.O. pendant *Knock Out Time*.
+- Pour des K.O. plus rapides, monter *Punch Damage* / *Kick Damage*. Pour des combats plus longs, monter *Drain Rate*. Si un coup fait encore tomber avant que la jauge soit pleine, monter *Stagger Drift* (écart toléré) ou *Stagger Resistance*. S'il ne fait plus assez tituber, baisser *Stagger Resistance*.
+
+**Garde** (CombatSettings > *Garde*, maintenir Ctrl gauche / LT) :
+- **Ce qu'elle couvre** : les coups de face (dans *Block Angle*), à la tête et au corps. Les jambes, les côtés et le dos ne sont pas couverts.
+- **Coup bloqué** : il ne remplit plus que *Blocked Damage* de la jauge (*Blocked Kick Damage* pour un pied, qui passe en partie) et ne pousse plus que de *Blocked Force*.
+- **Jauge de garde** : chaque coup bloqué lui coûte *Block Cost Punch / Kick*.
+- **Coup de pied spartiate sur une garde** : avec *Spartan Breaks Guard Only* (coché par défaut), il brise la garde sans K.O. ni projection. Décoché, il passe à travers.
+- **Garde brisée** : jauge de garde vide, ou coup de pied spartiate. Le joueur ne peut plus garder pendant *Guard Break Time* et les coups suivants comptent normalement sur sa jauge d'encaissement. La rupture elle-même n'y retire rien : le coup qui vide la jauge de garde est encore bloqué.
+- **Contre-attaque** : un poing donné dans *Counter Window* après un blocage part *Counter Speed* fois plus vite et compte *Counter Damage* fois plus.
+- **Équilibrage** :
+  - si tout le monde garde tout le temps, monter *Block Cost Punch* ou baisser *Block Move Speed* ;
+  - si la garde ne sert à rien, monter *Block Regen Rate*.
+
+**Endurance** (CombatSettings > *Endurance de celui qui frappe*) : chaque coup coûte de l'endurance (*Punch Stamina* 0,15, *Kick Stamina* 0,3, plus *Spartan Stamina* pour un spartiate). Sans assez d'endurance, le coup ne part pas.
+- Sous *Tired Below*, les poings sont plus lents (*Tired Speed*) et plus faibles (*Tired Damage*).
+- Repère : environ 6 poings d'affilée, dont les 2 derniers fatigués, puis une pause d'environ 2 s pour tout récupérer.
+- Pour des rafales plus longues, baisser *Punch Stamina* ou monter *Stamina Regen Rate*.
+
+**Coups localisés** (CombatSettings > *Coups localisés*) : la zone touchée change ce que le coup remplit (*Head / Body / Leg Damage*), l'animation de coup reçu (lourde à la tête) et la chute du K.O. :
+- tête : il s'écroule en arrière ;
+- corps : il se plie ;
+- jambes : ses jambes se dérobent.
+
+Si le personnage réagit du mauvais côté, cocher *Hit Reaction Swap Sides*. Pour une chute plus spectaculaire, monter *Knock Out Push*.
+
+#### Taille des membres
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Reference Arm Length | Bras pour lequel les distances du poing sont écrites ; elles sont mises à l'échelle du bras réel (↑ = gestes plus petits) | 0,6 m |
+| Reference Leg Length | Idem pour la jambe et le pied | 0,9 m |
+| Max Limb Extension | Distance maximale d'une cible, en part de la longueur du membre (1 = tendu à fond) | 0,95 |
+
+#### Appui
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Tap Time | Pied : relâché avant ce délai = coup simple, au-delà = chargé | 0,18 s |
+| Charge Time | Pied : temps de charge jusqu'au maximum | 0,7 s |
+| Windup Time | Temps pour mettre le poing en garde / lever le genou ; le poing part ensuite tout seul | 0,08 s |
+
+#### Poing
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Start Forward | Départ (garde) : distance du poing devant l'épaule | 0,12 m |
+| Start Height | Départ : hauteur du poing par rapport à l'épaule | 0,08 m |
+| Start Outward | Départ : décalage vers l'extérieur (négatif = devant la poitrine) | 0,05 m |
+| Mid Forward | Mi-course : avancée en part de la portée (↓ = crochet plus large) | 0,5 |
+| Mid Outward | Mi-course : écart vers l'extérieur (trop grand = bras tendu sur le côté) | 0,2 m |
+| Mid Height | Mi-course : hauteur par rapport à l'épaule | 0,06 m |
+| Punch Reach | Arrivée : distance du poing devant les épaules | 0,6 m |
+| End Height | Arrivée : hauteur par rapport à l'épaule | 0 m |
+| Fist Spread | Arrivée : écart entre les deux poings en largeurs d'épaules (1 = bras parallèles, < 1 = vers le centre) | 1,1 |
+| Punch Pitch Follow | Part du regard haut/bas reprise par la hauteur du coup | 0,3 |
+| Elbow Out | Force qui écarte le coude sur le côté | 0,6 |
+| Fist Align | Orientation du poing : 1 = jointures vers la cible, paume vers le bas ; 0 = celle de l'animation | 1 |
+| Fist Roll | Rotation du poignet en plus (90 = poing vertical) | 0° |
+| Jab Torso Twist | Rotation du buste dans le coup | 12° |
+| Shoulder Reach | Avancée de l'épaule qui frappe au bout du coup (allonge) ; le poing va plus loin d'autant (0 = l'épaule ne bouge pas) | 0,1 m |
+| Punch Lean | Engagement du corps | 0,12 m |
+
+#### Pied
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Kick Reach | Distance du pied devant la hanche, jambe tendue | 0,95 m |
+| Kick Height | Hauteur du pied par rapport à la hanche, jambe tendue | 0,1 m |
+| Kick Pitch Follow | Part du regard haut/bas reprise par la hauteur du coup | 0,4 |
+| Chamber Forward | Genou levé : distance du pied devant la hanche | 0,12 m |
+| Chamber Height | Genou levé : hauteur du pied par rapport à la hanche | −0,2 m |
+| Chamber Raise | Genou levé : hauteur ajoutée à pleine charge | 0,12 m |
+| Knee Forward | Force qui tire le genou vers l'avant | 0,6 |
+| Foot Sole Forward | 1 = semelle face à la cible, orteils vers le haut ; 0 = orientation de l'animation | 1 |
+| Kick Lean Back | Recul du buste pendant le coup de pied | 0,25 m |
+| Kick Lunge | Pas en avant pendant un coup de pied simple | 0,2 m |
+| Spartan Lunge | Pas en avant à pleine charge | 0,55 m |
+
+#### Rythme
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Jab Strike Time | Durée de la frappe du poing | 0,09 s |
+| Kick Strike Time | Durée de la frappe d'un coup de pied simple | 0,12 s |
+| Charged Kick Strike Time | Durée de la frappe d'un coup de pied chargé | 0,15 s |
+| Hold Time | Pause bras tendu | 0,05 s |
+| Kick Hold Time | Pause jambe tendue | 0,12 s |
+| Recover Time | Retour à la pose normale (et relâchement du bras précédent quand on enchaîne) | 0,2 s |
+| Cooldown | Délai après un coup terminé (l'enchaînement des poings n'attend pas) | 0,05 s |
+
+#### Touche
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Muscle Layers | Couches des muscles des ragdolls (vide = Ragdoll) | Ragdoll |
+| Fist Radius | Zone de touche autour du poing | 0,15 m |
+| Foot Radius | Zone de touche autour du pied | 0,2 m |
+| Sub Steps | Tests de touche par image | 3 |
+
+#### Force
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Jab Unpin | Déséquilibre d'un coup de poing | 1,5 |
+| Jab Force | Force d'un coup de poing | 500 N |
+| Kick Unpin | Déséquilibre d'un coup de pied simple | 2,5 |
+| Kick Force | Force d'un coup de pied simple | 900 N |
+| Charged Kick Unpin | Déséquilibre d'un coup de pied à pleine charge | 8 |
+| Charged Kick Force | Force d'un coup de pied à pleine charge | 2500 N |
+| Upward Bias | Part de la force vers le haut | 0,15 |
+
+#### Coup de pied spartiate (pied chargé)
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Spartan Min Charge | Charge à partir de laquelle le coup de pied devient spartiate (chute garantie, projection, zoom) | 0,8 |
+| Launch Speed | Vitesse de projection de tout le corps de la cible vers l'arrière | 9 m/s |
+| Launch Lift | Vitesse vers le haut ajoutée à la projection | 2,5 m/s |
+| Slow Mo Zoom | Champ de vision retiré à la caméra de l'attaquant au contact (0 = pas de zoom). Le nom date de l'ancien ralenti, retiré | 12° |
+| Spartan Zoom Duration | Durée du zoom, retour compris | 0,5 s |
+
+#### Divers
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Hitstop Duration | Micro-ralenti à l'impact de chaque coup, spartiate compris (0 = désactivé) | 0,05 s |
+| Hitstop Time Scale | Vitesse du temps pendant ce ralenti | 0,05 |
+| Show Charge Indicator | Jauge de charge provisoire du coup de pied | oui |
+| Debug Logs | Coups, touches, longueurs de membres mesurées dans la console | oui |
+
+En jeu, joueur sélectionné, la vue *Scene* dessine le trajet du poing (jaune) et sa cible (rouge) pendant un coup.
+
 ## Touches
 
 **Par le joueur, en jeu** : Menu principal > Réglages (ou Pause > Réglages). Les touches choisies sont des *binding overrides* de l'Input System, gardées dans les `PlayerPrefs` (clé `UntitledPoolGame.KeyBindings`, registre Windows de l'utilisateur) et appliquées à chaque joueur qui rejoint. « Réinitialiser » revient aux touches du fichier ci-dessous.
 
 **Les touches par défaut** : `Assets/InputManagers/InputSystem_Actions_Local.inputactions` : double-clic pour ouvrir l'éditeur d'*Input Actions*. Chaque action (*Attack*, *Interact*, *Next*…) a une liaison clavier / souris et une manette ; on peut en ajouter, en retirer ou en changer, puis *Save Asset*.
 
-Le récapitulatif des touches actuelles est dans l'onglet **Contrôles** de la page *TODO & GDD*. Si vous changez une touche affichée par le HUD (pouvoir, valider), changez aussi le texte correspondant dans HudSettings.
+Le récapitulatif des touches actuelles est dans [Contrôles](gdd.html#controles) (Game design). Si vous changez une touche affichée par le HUD (pouvoir, valider), changez aussi le texte correspondant dans HudSettings.
 
 ## Caméra (Cinemachine)
 
@@ -432,20 +617,8 @@ Le récapitulatif des touches actuelles est dans l'onglet **Contrôles** de la p
 | Palettes (PrefabPalette) | Où vous les créez (*Create > Pool > Level Maker Palette*) | Étape Salle | Variantes de murs, portes, fenêtres, piliers, sols, plafonds, escaliers, garde-corps, props ; axe des murs, retournement, largeur de module, ajustement des dalles |
 | Ambiances (AmbiencePreset) | Créées par l'étape Ambiance (*Create > Pool > Level Maker Ambience*) | Étape Ambiance | Scénario d'éclairage, ciel, lumière ambiante, lumière principale, post-process, brouillard, teinte et intensité des lumières du décor |
 
-Le détail de l'outil de niveau est sur la page **Outil de niveau**.
-
-## Le menu Tools > Pool
-
-Rangé par familles, séparées par un trait :
-
-| Famille | Outils |
-|---|---|
-| Éditeurs | *Menu Studio* (écrans des menus) · *Text FX Studio* (textes animés, séquences Feel) · *Level Maker* (salles et niveaux) |
-| Projet | *Ensure Config Assets Exist* (crée les fichiers de réglages manquants, sans toucher aux autres) · *Create Main Menu Scene* · *Sync Build Scenes (menu + levels)* |
-| Table | *Build Table* · *Attach Physics To Custom Table* · *Select Custom Table Settings* · *Add Power Spawn System To Selected Table* |
-| R&D | *Préparer le joueur de R&D* : composants et calques d'animation de la variante, en un passage · *Créer l'arène de test* : la scène de test, qui prépare aussi le joueur |
+Le détail de l'outil de niveau est dans [Outils > Level Maker](outils.html#level-maker), et tous les outils de *Tools > Pool* dans [Outils](outils.html).
 
 ## Pour aller plus loin
 
-- *Doc technique > Configuration* : comment une valeur réglée dans un fichier finit par changer l'image (chargement, simulation, rendu).
-- *TODO & GDD > Réglages combat* : chaque champ des coups de queue, poings et pieds.
+- [Technique > Configuration → rendu](tech.html#config) : comment une valeur réglée dans un fichier finit par changer l'image (chargement, simulation, rendu).

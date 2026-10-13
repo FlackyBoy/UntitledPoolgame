@@ -1,4 +1,4 @@
-# Travailler en équipe
+# Process Git
 
 > Comment on s'organise avec git et GitHub sur UntitledPoolGame : les règles, la mise en place, et le cycle d'une tâche pas à pas dans **GitHub Desktop**. Le pense-bête d'une page est à la fin.
 
