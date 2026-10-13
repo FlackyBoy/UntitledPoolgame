@@ -3,6 +3,22 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-13
+- **Site réorganisé en six rubriques** : Accueil · Suivi · Game design · Réglages · Technique · Équipe. Chaque rubrique a la même mise en page, avec un menu latéral et un sommaire. Avant, il y avait sept entrées de menu, des onglets sur une page et un menu latéral sur une autre.
+  - **Suivi** (`suivi.html`, nouvelle page) : la TODO, qui était un onglet de *TODO & GDD*, et le changelog, qui était une annexe de la doc technique.
+  - **Game design** (`gdd.html`) : GDD, Contrôles, Propositions UI (lien vers la galerie) et Pistes & suggestions.
+  - **Réglages** (`config.html`) : tous les réglages, plus les *Réglages du combat* (avant, un onglet de *TODO & GDD*).
+  - **Technique** (`tech.html`) : la doc technique, plus l'*Outil de niveau*, qui était une page à part.
+  - **Équipe** (`equipe.html`) : *Travailler en équipe*, son PDF, et l'*Historique des prompts* (avant, une annexe de la doc technique). Le fichier a déménagé de `docs/content/tech/prompts.md` vers `docs/content/prompts.md`.
+  - **Accueil** : les cartes sont regroupées par rubrique, avec un lien vers tout le changelog.
+  - **Anciens liens** : `gdd.html#todo`, `gdd.html#combat`, `tech.html#changelog`, `tech.html#prompts`, `level.html` et `TODO.html` redirigent vers leur nouvelle place.
+  - **Code** : le menu latéral de la doc technique devient commun à toutes les rubriques (`Site.renderDocPage` dans `docs/assets/site.js`, styles dans `site.css`). Le site passe à 1280 px de large.
+  - **Renvois** : les « onglet … » et les liens vers `level.html` pointent vers les nouvelles adresses. Les liens du GDD vers les prototypes d'UI (`../ui/…`) étaient cassés et sont corrigés.
+  - **Deuxième passe, d'après les retours** :
+    - **Rubrique Outils** (`outils.html`, contenus dans `docs/content/outils/`). Elle contient *Tous les outils*, la liste commentée de chaque entrée de *Tools > Pool* et du menu *Create > Pool*. Chaque éditeur a sa section : Menu Studio, Text FX Studio et Level Maker. Le Level Maker vient de Technique (`level.md` → `outils/level-maker.md`). Les modes d'emploi de Menu Studio et de Text FX Studio sortent de *Tous les réglages*, qui garde les fichiers, les balises et un renvoi.
+    - **Réglages** : le combat n'est plus une section à part. C'est la catégorie *Combat* de *Tous les réglages*, placée après les composants du joueur : `reglages-combat.md` est fusionné dans `config.md` et supprimé. Le menu latéral sert de sommaire. Il liste toutes les catégories jusqu'aux groupes de l'Inspector du combat, et un clic va au titre. Les titres répétés (« Rythme », « Références ») ont maintenant chacun leur ancre.
+    - **Équipe devient Process Git**, page et titre. L'historique des prompts passe dans Suivi.
+
 ## 2026-10-12
 - **Passe de nettoyage et d'optimisation de la R&D** (compilé, non testé).
   - **Outils** : *Tools > Pool* est rangé par familles, séparées par un trait (éditeurs, projet, table, R&D), sans changer les noms.

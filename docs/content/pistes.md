@@ -59,7 +59,7 @@ Autres idées autour des pouvoirs :
 
 ### Outils et confort
 
-- **Créateur de niveau** : fait en grande partie (page *Outil de niveau*) ; restent les chemins de décor, les dimensions et la génération procédurale ci-dessous.
+- **Créateur de niveau** : fait en grande partie ([Level Maker](outils.html#level-maker)) ; restent les chemins de décor, les dimensions et la génération procédurale ci-dessous.
 - **Menu de réglages de sensibilité** en jeu, souris et manette, sauvegardé.
 - **Génération procédurale des salles**, à refaire plus tard (une première version maison a été retirée le 01/10). Références retenues :
 

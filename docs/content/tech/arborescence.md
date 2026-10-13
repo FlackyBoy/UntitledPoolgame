@@ -10,9 +10,12 @@ UntitledPoolgame/
 ├── Packages/               manifest des packages Unity
 ├── ProjectSettings/        réglages du projet (physique, qualité, input, couches…)
 ├── docs/                   site GitHub Pages (cette documentation)
-│   ├── index.html, gdd.html, tech.html, ui.html, level.html   pages du site
-│   ├── assets/             site.css, site.js (menu, Markdown, diagrammes)
-│   └── content/            textes en Markdown (gdd.md, pistes.md, level.md, tech/*.md)
+│   ├── index.html          accueil
+│   ├── suivi.html, gdd.html, config.html, outils.html, tech.html, equipe.html   une page par rubrique (menu latéral)
+│   ├── ui.html, ui/        galerie et prototypes d'interface
+│   ├── level.html, TODO.html   redirections vers les anciennes adresses
+│   ├── assets/             site.css, site.js (menu, rubriques, Markdown, diagrammes)
+│   └── content/            textes en Markdown (gdd.md, pistes.md, config.md, prompts.md, outils/*.md, tech/*.md…)
 ├── TODO.md                 tâches + notes techniques détaillées
 ├── CHANGELOG.md            historique, plus récent en haut
 ├── CLAUDE.md               carte du projet et conventions pour Claude

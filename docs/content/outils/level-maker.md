@@ -1,4 +1,4 @@
-# Outil de création de niveau
+# Level Maker — outil de création de niveau
 
 > **Statut : lots 1, 2 et 3 faits et validés (01/10) ; lot 4 fait et validé (chemins de décor reportés)** — fenêtre **Tools > Pool > Level Maker**, voir *Ce qui est fait* ci-dessous. Décisions du 01/10 en fin de page.
 
@@ -16,7 +16,7 @@
 
 **Étages** (écrit, non testé) : « Étage actif » dans l'étape Salle — le tracé se fait à la hauteur de cet étage (un étage = la hauteur des murs du kit), la salle retient son étage. Outil **Escaliers** : clic sur le sol d'une salle fermée (R pour tourner, Maj + clic pour retirer) ; l'escalier est étiré à la hauteur d'un étage, perce le sol de la salle au-dessus et reçoit une rampe invisible pour que le personnage monte sans buter. Pas de plafond sous une salle d'étage. Ouvertures **Garde-corps** et **Vide** ; une salle peut avoir un vide dans son sol (mezzanine) bordé de garde-corps. Palette : listes *Stairs* et *Railings*.
 
-**Génération procédurale** : une première version (plan de salles, thèmes et types de pièce) a été retirée le 01/10, résultat pas assez cohérent. À refaire plus tard sur le modèle de RoomGen et de Procedural Generation Grid : voir l'onglet Pistes.
+**Génération procédurale** : une première version (plan de salles, thèmes et types de pièce) a été retirée le 01/10, résultat pas assez cohérent. À refaire plus tard sur le modèle de RoomGen et de Procedural Generation Grid : voir [Pistes & suggestions](gdd.html#pistes).
 
 **Lot 3 — références automatiques** : la scène n'a plus rien à câbler sur le joueur. Table, règles et queues sont trouvées au lancement. Ce que le joueur posé dans BarSplitscreen recevait à la main, à savoir les lignes d'aperçu de trajectoire, est retrouvé parmi les enfants du joueur ou créé. Le reste qui pouvait être vide est retrouvé ou créé de la même façon : cible du regard en visée, Look At IK, caméras. Ce que le joueur ne peut pas trouver seul (ses propres composants) est contrôlé par la vérification « Prefab joueur ».
 

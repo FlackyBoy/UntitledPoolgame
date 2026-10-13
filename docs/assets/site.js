@@ -6,14 +6,16 @@
 (function () {
   const RAW = 'https://raw.githubusercontent.com/FlackyBoy/UntitledPoolgame/master/';
 
+  // One entry per area of the site; each area page lists its own sections in
+  // a side menu (renderDocPage), so the top bar stays short.
   const PAGES = [
     { key: 'home', href: 'index.html', label: 'Accueil' },
-    { key: 'gdd', href: 'gdd.html', label: 'TODO & GDD' },
-    { key: 'tech', href: 'tech.html', label: 'Doc technique' },
-    { key: 'config', href: 'config.html', label: 'Configuration' },
-    { key: 'equipe', href: 'equipe.html', label: 'Travailler en équipe' },
-    { key: 'ui', href: 'ui.html', label: 'Propositions UI' },
-    { key: 'level', href: 'level.html', label: 'Outil de niveau' },
+    { key: 'suivi', href: 'suivi.html', label: 'Suivi' },
+    { key: 'design', href: 'gdd.html', label: 'Game design' },
+    { key: 'config', href: 'config.html', label: 'Réglages' },
+    { key: 'outils', href: 'outils.html', label: 'Outils' },
+    { key: 'tech', href: 'tech.html', label: 'Technique' },
+    { key: 'equipe', href: 'equipe.html', label: 'Process Git' },
   ];
 
   // base: path prefix back to docs/ for pages in a subfolder (e.g. '../').
@@ -62,11 +64,22 @@
     await mermaid.run({ nodes: root.querySelectorAll('.mermaid') });
   }
 
+  // Heading ids from their text; a repeated title ("Rythme" under two
+  // components) gets -2, -3… so each anchor lands on its own heading.
+  function assignIds(root) {
+    const seen = {};
+    root.querySelectorAll('h2, h3, h4').forEach(h => {
+      if (h.id) return;
+      const base = slugify(h.textContent);
+      seen[base] = (seen[base] || 0) + 1;
+      h.id = seen[base] > 1 ? `${base}-${seen[base]}` : base;
+    });
+  }
+
   // Renders Markdown into el, gives headings ids, optionally fills a TOC.
   async function renderMarkdown(md, el, tocEl) {
     el.innerHTML = toHtml(md);
-    const headings = el.querySelectorAll('h2, h3');
-    headings.forEach(h => { if (!h.id) h.id = slugify(h.textContent); });
+    assignIds(el);
     if (tocEl) {
       const items = [...el.querySelectorAll('h2')];
       tocEl.innerHTML = items.length
@@ -198,5 +211,99 @@
     return parts.length > 1 ? '## ' + parts[1] : md;
   }
 
-  window.Site = { renderHeader, fetchText, fetchRoot, renderMarkdown, showError, parseTodo, countStatuses, renderTodo, latestChangelogEntry };
+  // --- Area pages ----------------------------------------------------------
+  // An area page = side menu + one section shown at a time, chosen by the
+  // hash. A section is { id, label } plus one of:
+  //   file: 'content/x.md'  (relative), root: 'X.md' (repo root on master),
+  //   render: async el => …  (custom content, e.g. the TODO),
+  //   href: 'page.html'      (menu link to another page).
+  // { group: 'Titre' } entries are headings in the menu. moved maps old hashes
+  // to their new URL so links from before the reorganisation keep working.
+  // subnav: every section's h2/h3/h4 are listed in the side menu (instead of
+  // the right-hand TOC), for long reference pages.
+  function renderDocPage({ sections, moved = {}, subnav = false }) {
+    const pages = sections.filter(s => s.id);
+    const nav = document.getElementById('doc-nav');
+    const body = document.getElementById('doc-body');
+    const toc = document.getElementById('doc-toc');
+
+    nav.innerHTML =
+      sections.map(s => s.group ? `<div class="group">${s.group}</div>`
+        : s.href ? `<a href="${s.href}">${s.label} <span aria-hidden="true">↗</span></a>`
+        : `<a href="#${s.id}" data-id="${s.id}">${s.label}</a>`).join('') +
+      `<select aria-label="Section">${sections.filter(s => s.id || s.href).map(s =>
+        `<option value="${s.id || s.href}">${s.label}</option>`).join('')}</select>`;
+    nav.querySelector('select').addEventListener('change', e => {
+      const v = e.target.value;
+      if (pages.some(s => s.id === v)) location.hash = v; else location.href = v;
+    });
+
+    const cache = {};
+    const load = section => cache[section.id] ??= section.root ? fetchRoot(section.root) : fetchText(section.file);
+
+    let shown = null;
+    async function show(section, headingId) {
+      if (shown !== section.id) {
+        shown = section.id;
+        nav.querySelectorAll('a[data-id]').forEach(a => a.setAttribute('aria-current', String(a.dataset.id === section.id)));
+        nav.querySelector('select').value = section.id;
+        body.innerHTML = '<p class="loading">Chargement…</p>';
+        body.classList.toggle('prose', !section.render); // the TODO has its own styles
+        toc.innerHTML = '';
+        try {
+          if (section.render) await section.render(body);
+          else await renderMarkdown(await load(section), body, subnav ? null : toc);
+        } catch (err) {
+          showError(body, err);
+        }
+      }
+      const target = headingId && document.getElementById(headingId);
+      if (target) target.scrollIntoView(); else window.scrollTo(0, 0);
+    }
+
+    // Every section's h2/h3/h4, listed under it in the side menu, whichever
+    // section is open: a link is "#section:heading" so it can open another
+    // section and scroll to the heading in one click.
+    async function buildSubnav() {
+      for (const section of pages) {
+        if (section.render) continue;
+        const scratch = document.createElement('div');
+        try { scratch.innerHTML = toHtml(await load(section)); } catch { continue; }
+        assignIds(scratch);
+        const heads = [...scratch.querySelectorAll('h2, h3, h4')];
+        if (!heads.length) continue;
+        const list = document.createElement('div');
+        list.className = 'subnav';
+        list.innerHTML = heads.map(h =>
+          `<a href="#${section.id}:${h.id}" class="${h.tagName.toLowerCase()}">${h.textContent}</a>`).join('');
+        nav.querySelector(`a[data-id="${section.id}"]`).after(list);
+      }
+    }
+
+    // The section is the hash itself (or "section:heading" from the subnav);
+    // any other anchor is a heading of the open section (from the TOC), which
+    // the browser scrolls to on its own.
+    function route() {
+      const hash = location.hash.slice(1);
+      if (moved[hash]) { location.replace(moved[hash]); return; }
+      const [id, headingId] = hash.split(':');
+      const section = pages.find(s => s.id === id);
+      if (section) show(section, headingId);
+      else if (!shown) show(pages[0]);
+    }
+    addEventListener('hashchange', route);
+    // Clicking the link already in the hash fires no hashchange: scroll anyway.
+    nav.addEventListener('click', e => {
+      const a = e.target.closest('a[href^="#"]');
+      if (a && a.getAttribute('href') === location.hash) route();
+    });
+    route();
+    if (subnav) buildSubnav();
+  }
+
+  function renderTodoInto(el) {
+    return fetchRoot('TODO.md').then(md => renderTodo(parseTodo(md), el));
+  }
+
+  window.Site = { renderHeader, fetchText, fetchRoot, renderMarkdown, showError, parseTodo, countStatuses, renderTodo, renderTodoInto, latestChangelogEntry, renderDocPage };
 })();
