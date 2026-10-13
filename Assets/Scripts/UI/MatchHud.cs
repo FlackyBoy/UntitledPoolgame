@@ -76,6 +76,7 @@ namespace UntitledPoolGame.Core
         {
             public PlayerInput input;
             public LocalPoolAimController aim;
+            public LocalPoolPowerController powerCtl;
             public int player = -1;          // PoolMatchRules index shown on this half
             public VisualElement frame, content, dim, fx;
             public VisualElement who, plateBalls, tag, ring, ringIcon, power, spin, spinDot, banner;
@@ -419,6 +420,7 @@ namespace UntitledPoolGame.Core
                 {
                     h.input = inputs[i];
                     h.aim = h.input.GetComponent<LocalPoolAimController>();
+                    h.powerCtl = h.input.GetComponent<LocalPoolPowerController>();
                     h.plateKey = null;
                 }
                 h.player = Mathf.Clamp(rules.GetEffectivePlayerIndex(h.input.playerIndex), 0, 1);
@@ -624,9 +626,14 @@ namespace UntitledPoolGame.Core
         private void UpdateBanner(Half h, PoolMatchRules rules, bool myTurn)
         {
             LocalPoolAimController aim = h.aim;
+            LocalPoolPowerController powerCtl = h.powerCtl;
             string text = null;
             if (aim != null && aim.IsBallPlacementActive)
                 text = cfg.ballInHandBanner;
+            else if (powerCtl != null && powerCtl.ChoosingPower != null)
+                text = powerCtl.TargetedPocket != null
+                    ? Format(cfg.pickPocketBannerFormat, powerCtl.ChoosingPower.PowerName, powerCtl.TargetedPocket.DescribeLocation())
+                    : Format(cfg.pickPocketNoneFormat, powerCtl.ChoosingPower.PowerName);
             else if (aim != null && aim.IsCallPocketActive)
                 text = aim.HighlightedPocket != null
                     ? Format(cfg.callPocketBannerFormat, aim.HighlightedPocket.DescribeLocation())
@@ -639,6 +646,8 @@ namespace UntitledPoolGame.Core
                     : cfg.eightToCallBanner;
             else if (myTurn && rules.IsBallBlastArmed(h.player))
                 text = cfg.blastArmedBanner;
+            else if (myTurn && rules.GetArmedMagnetPocket(h.player) != null)
+                text = Format(cfg.magnetArmedBannerFormat, rules.GetArmedMagnetPocket(h.player).DescribeLocation());
             // An emptied text in the settings hides that banner.
             if (string.IsNullOrEmpty(text)) text = null;
             h.banner.style.display = text != null && !rules.GameOver ? DisplayStyle.Flex : DisplayStyle.None;
@@ -1063,10 +1072,10 @@ namespace UntitledPoolGame.Core
 
         // A text from the settings with its number / name in place of {0};
         // a mistyped format shows as written rather than breaking the HUD.
-        private static string Format(string format, object value)
+        private static string Format(string format, params object[] values)
         {
             if (string.IsNullOrEmpty(format)) return "";
-            try { return string.Format(format, value); }
+            try { return string.Format(format, values); }
             catch (FormatException) { return format; }
         }
 

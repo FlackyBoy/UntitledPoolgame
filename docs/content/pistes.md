@@ -8,7 +8,7 @@
 
 | Idée | Catégorie pressentie |
 |---|---|
-| Aimant : la bille jouée est attirée vers la poche la plus proche | Effet |
+| Aimant : la bille jouée est attirée vers une poche (implémenté le 13/10 vers un trou choisi, voir le GDD) | Effet |
 | Ralentisseur (bille ou contrôles adverses, à préciser) | Attaque |
 | Désactiver la visée adverse | Attaque |
 | Faire exploser sa propre bille, comptée comme empochée | Effet |

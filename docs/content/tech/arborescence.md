@@ -41,7 +41,7 @@ Assets/
 ├── Resources/              réglages chargés au lancement (4 ScriptableObjects)
 │   ├── PoolPhysicsSettings.asset, PoolScreenJuiceSettings.asset
 │   └── PoolPotEffectSettings.asset, PoolPowerSpawnSettings.asset
-├── Powers/                 un asset par pouvoir (BoostedShot, VisionImpair, InvertedControls, ClosePocket, BallBlast, IdenticalGroups)
+├── Powers/                 un asset par pouvoir (BoostedShot, VisionImpair, InvertedControls, ClosePocket, BallBlast, Magnet, IdenticalGroups)
 ├── Editor/                 PoolTableAssetSettings.asset (dimensions de la table), LevelMakerSettings.asset (outil de niveau)
 ├── InputManagers/          InputSystem_Actions.inputactions (online) et _Local (écran partagé)
 ├── Settings/               URP : PC/Mobile RPAsset + Renderer, Volume profiles
@@ -161,9 +161,10 @@ Assets/Scripts/
     ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOneRuleSet.cs   règles par mode
     ├── PoolGameMode.cs, PoolPartyMode.cs   modes et sous-modes Party
     ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre, poche de la 8)
-    ├── LocalPoolPowerController.cs activation du pouvoir
+    ├── LocalPoolPowerController.cs activation du pouvoir, choix du trou (pointeur blanc)
     ├── LocalPoolPowerEffectReceiver.cs   effets d'écran : pouvoirs, secousses, flashs
-    ├── PoolPower.cs, PowerType.cs + BoostedShot/VisionImpair/InvertedControls/ClosePocket/BallBlast/IdenticalGroupsPower.cs
+    ├── PoolPower.cs, PowerType.cs + BoostedShot/VisionImpair/InvertedControls/BallBlast/IdenticalGroupsPower.cs
+    ├── PocketTargetPower.cs + ClosePocket/MagnetPower.cs   pouvoirs qui visent un trou
     ├── BallDisguise.cs             aspect commun des billes (Groupe identique), restauré ensuite
     ├── PoolPowerCrate.cs, PoolPowerCrateManager.cs, PoolPowerSpawnPoint.cs   caisses
     ├── PowerBall.cs, PoolPowerBallRotator.cs   bille à pouvoir

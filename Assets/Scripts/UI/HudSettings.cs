@@ -73,6 +73,12 @@ namespace UntitledPoolGame.Core
         public string eightCalledBannerFormat = "Poche annoncée : {0}";
         public string eightToCallBanner = "Bille 8 : annonce ta poche (vue du dessus)";
         public string blastArmedBanner = "Bille destructrice armée : la 1re bille touchée explose";
+        [Tooltip("Choix du trou d'un pouvoir. {0} = nom du pouvoir, {1} = trou visé.")]
+        public string pickPocketBannerFormat = "{0} → {1} · E / Y pour valider · Q / B pour annuler";
+        [Tooltip("Choix du trou, aucun trou visé. {0} = nom du pouvoir.")]
+        public string pickPocketNoneFormat = "{0} : vise un trou · Q / B pour annuler";
+        [Tooltip("{0} = trou choisi.")]
+        public string magnetArmedBannerFormat = "Aimant prêt : ta bille ira dans {0}";
 
         [Header("Interjections")]
         [Tooltip("Une au hasard quand une bille rentre.")]

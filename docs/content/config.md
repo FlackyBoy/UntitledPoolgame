@@ -10,7 +10,7 @@
 | **Scène du menu** | `Assets/Scenes/MainMenu.unity` | *Tools > Pool > Create Main Menu Scene* | Le menu principal, première scène du jeu |
 | **Écrans des menus** | `Assets/Resources/Menus/*.asset` | *Ensure Config Assets Exist*, modifiés dans *Tools > Pool > Menu Studio* | Accueil, pages du menu, réglages, pause, chargement : éléments, positions, textes, effets, Feel |
 | **Séquences Feel** | `Assets/Feel/Sequences/*.prefab`, liées dans `Resources/GameFeelSettings` | *Tools > Pool > Text FX Studio* ou à la main | Son, vibration, texte du HUD, secousse… à un moment de la partie |
-| **Un fichier par pouvoir** | `Assets/Powers/*.asset` | *Create > Pool > Powers > …* (ou l'outil ci-dessus pour la bille destructrice) | Nom et paramètres de chaque pouvoir |
+| **Un fichier par pouvoir** | `Assets/Powers/*.asset` | *Create > Pool > Powers > …* (ou l'outil ci-dessus pour la bille destructrice et l'aimant) | Nom et paramètres de chaque pouvoir |
 | **Composants du joueur** | Prefab `Assets/Prefabs/PlayerLocal/New.prefab` | Déjà sur le prefab | Déplacement, visée, ragdoll, prise de la queue, combat |
 | **Touches** | `Assets/InputManagers/InputSystem_Actions_Local.inputactions` | Déjà présent | Clavier, souris, manette |
 | **Réglages d'éditeur** | `Assets/Editor/*.asset`, palettes et ambiances | Outils d'éditeur | Dimensions de table, outil de niveau |
@@ -66,7 +66,8 @@ Tous dans `Assets/Resources`, créés par **Tools > Pool > Ensure Config Assets 
 |---|---|---|
 | Halo lumineux | couleur, intensité, portée, durée | or, 8, 0,6 m, 0,35 s |
 | Aura qui monte | prefab (Cartoon FX *Magic Aura A*), durée active, marge de disparition, échelle, vitesse | 1,2 s, 4 s, 0,4, ×1,8 |
-| Annonce de la 8 | intensité de surbrillance de la poche visée | 6 |
+| Annonce de la 8 | intensité de surbrillance de la poche visée (sert aussi au trou visé par un pouvoir) | 6 |
+| Trou visé par un pouvoir (*Pocket targeted by a power*) | couleur du cercle, rayon (× rayon de la poche), épaisseur, hauteur au-dessus de la poche, battements par seconde, amplitude du battement | blanc, ×1,3, 0,008 m, 0,004 m, 2,5, 0,12 |
 | Poche fermée (pouvoir) | prefab du bouchon (facultatif), échelle | —, 1 |
 | Ralenti | échelle de temps, durée | 0,3, 0,12 s |
 
@@ -288,7 +289,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Taille | Taille globale du HUD (1 = calé pour une moitié de 1920 × 1080), taille des interjections, de « À toi ! », des bandeaux |
 | Couleurs | J1, J2, encre des contours, fond des cartes, mise en avant (jaune), danger (rouge), « BOUM ! », voile du joueur qui attend, jauge (début, milieu, fin) |
 | Textes : tour et plaque | « À toi ! », « Tour de J{0} », « J{0} », groupe à décider, « Prochaine », « Puissance », touche du pouvoir |
-| Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée |
+| Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
 | Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
 | Interjections | Liste tirée au hasard quand une bille rentre, blanche rentrée, faute, main libre, tir plein, pouvoir lancé, « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
 | Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} », noms des catégories |
@@ -308,9 +309,12 @@ Dans `Assets/Powers`. Champs communs : **Power Name** (nom affiché) et **Requir
 | Tir boosté | `BoostedShotPower` | Shot Power Multiplier (1,6) : puissance du prochain tir |
 | Vision brouillée | `VisionImpairPower` | Sensitivity Multiplier (0,3) : sensibilité de la visée de l'adversaire |
 | Commandes inversées | `InvertedControlsPower` | Sensitivity Multiplier (1,8) |
-| Poche fermée | `ClosePocketPower` | — (le visuel du bouchon est dans PoolPotEffectSettings) |
+| Poche fermée | `ClosePocketPower` | — (poche choisie par le joueur ; le visuel du bouchon est dans PoolPotEffectSettings) |
 | Groupe identique | `IdenticalGroupsPower` | Look (*Colorless* : aspect uni · *Like Ball* : aspect d'une bille), Look Ball Number (8 : bille copiée, 1 à 15), Colorless Material (facultatif), Colorless Color (gris clair, si pas de matériau). *Requires Own Turn* décoché à la création (attaque) |
 | Bille destructrice | `BallBlastPower` | Explosion Prefab (*CFXR2 WW Explosion*), Explosion Scale (0,15), Explosion Lifetime (4 s), Spare Eight Ball (oui), Blast Speed (0,5 m/s, 0 = pas de souffle), Blast Radius (0,3 m) |
+| Aimant | `MagnetPower` | Capture Radius (0,4 m : distance du trou où la bille est captée), Min Capture Speed (0,05 m/s : une bille immobile n'est pas captée), Pull Acceleration (1,5 m/s² : force d'attraction), Steering (4/s : correction de trajectoire, 0 = aucune), Max Pull Duration (4 s : lâche une bille coincée) ; *VFX dans la poche* : Pocket Vfx Prefab (*CFXR Electrified 3*, vide = aucun), Pocket Vfx Scale (0,2), Pocket Vfx Height (0,02 m), Pocket Vfx Fade Out (1,5 s) |
+
+**Pouvoirs qui visent un trou** (Poche fermée, Aimant) : le choix du trou se règle sur *Local Pool Power Controller* (voir *Composants du joueur*) et le cercle dans PoolPotEffectSettings. L'asset de l'aimant est créé par *Ensure Config Assets Exist*, comme celui de la bille destructrice.
 
 **Ajouter un pouvoir existant** : clic droit dans `Assets/Powers` > *Create > Pool > Powers > …*, renseigner les champs, puis l'ajouter à *Available Powers* de PoolPowerSpawnSettings.
 
@@ -328,7 +332,7 @@ Sur `Assets/Prefabs/PlayerLocal/New.prefab`. Chaque champ a une infobulle dans l
 | **Local Object Hands** | Porter les objets (hors queue) | Léger ou lourd, poses, corps, durées |
 | **Local Cue Melee** | Coups de queue | Voir [Combat](config.html#config:combat) |
 | **Local Unarmed Melee** | Poings et pieds | Voir [Combat](config.html#config:combat) |
-| **Local Pool Power Controller** | Lancer son pouvoir | Action utilisée (*Next* : F / B) |
+| **Local Pool Power Controller** | Lancer son pouvoir, choisir un trou | Actions utilisées (*Next* : Q / B pour lancer ou annuler, *Interact* : E / Y pour valider le trou), *Max Point Angle* (8° : écart toléré entre le pointeur et un trou), *Pointer Size* (8 px : pointeur blanc) |
 | **Local Character Animation Controller** | Paramètres de l'Animator | Noms des paramètres, échelles de marche, inclinaison en tournant |
 | **Cue Charge Slide** (sur la queue) | Glissement de la queue dans les mains | Recul à la charge (0,15 m), longueur qui dépasse derrière la main (0,1 m), détection automatique de l'axe |
 
