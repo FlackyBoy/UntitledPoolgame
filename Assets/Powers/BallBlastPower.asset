@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4fa07fbc786e9143baefa1ed32fd304, type: 3}
   m_Name: BallBlastPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.BallBlastPower
-  powerName: Power
+  powerName: Boom !
   requiresOwnTurn: 1
   explosionPrefab: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50, type: 3}
   explosionScale: 0.15

@@ -21,12 +21,13 @@ MonoBehaviour:
   chainFrom: 0.4
   returnAt: 0.85
   swapHands: 0
-  punchAimLeft: 72
+  punchAimLeft: 50
   punchAimRight: 0
   punchPitchFollow: 0.8
   punchPitchSpineShare: 0.5
   punchPitchMaxDown: 60
   punchPitchMaxUp: 40
+  combatHeadClamp: 0
   guardTime: 1.5
   guardRaiseTime: 0.08
   guardLowerTime: 0.35
