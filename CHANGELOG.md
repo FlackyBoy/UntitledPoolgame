@@ -4,6 +4,16 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
+- **Pouvoir « Groupe identique »** (`IdenticalGroupsPower`, Attaque ; branche `feature/pouvoir-groupe-identique`). **Validé en jeu par l'utilisateur.**
+  - **Effet** : pendant le tour de l'adversaire, toutes les billes sauf la blanche ont le même aspect, la 8 comprise. Les règles ne changent pas.
+  - **Aspect réglable** sur l'asset : incolore (matériau ou couleur unie) ou l'aspect d'une bille choisie (1 à 15).
+  - **HUD** : la plaque des billes restantes est masquée pendant l'effet.
+  - **Fin** : les vrais aspects reviennent à la fin du tour visé, en fin de partie ou à la revanche.
+  - **Code** :
+    - `BallDisguise` (nouveau) remplace et restaure les matériaux de tous les rendus des billes.
+    - `PowerBall` passe par lui pour son matériau de catégorie.
+    - `PoolMatchRules` : `QueueIdenticalGroups`, fin dans `SwitchTurn`, `Win` et `Restart`, et `AreGroupsDisguised` pour le HUD.
+    - L'asset est créé par *Ensure Config Assets Exist*.
 - **Pouvoir « Aimant » et choix du trou pour les pouvoirs** (branche `feature/pouvoir-aimant`). **Validé en jeu par l'utilisateur.**
   - **Choix du trou** : les pouvoirs qui visent un trou (`PocketTargetPower`, nouveau) ne s'activent plus d'un coup.
     - La touche de pouvoir affiche un pointeur blanc au centre de la vue. Le trou visé est entouré d'un cercle blanc qui bat et s'éclaire.

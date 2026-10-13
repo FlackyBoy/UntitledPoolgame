@@ -120,6 +120,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Poche fermée** | Attaque | La poche choisie par le joueur est bouchée | Tour de l'adversaire |
 | **Bille destructrice** | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
 | **Aimant** | Effet | La bille du joueur qui roule vers le trou choisi est captée et tirée dedans (la plus proche si plusieurs, une seule par tir). La 8 n'est attirée que vers la poche annoncée | Prochain tir |
+| **Groupe identique** | Attaque | Toutes les billes sauf la blanche prennent le même aspect (incolore, ou celui d'une bille choisie dans les réglages), la 8 comprise ; la plaque des billes restantes est masquée. Les règles ne changent pas | Tour de l'adversaire |
 
 Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 

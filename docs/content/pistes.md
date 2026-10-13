@@ -17,7 +17,7 @@
 | Bille interdite : faute si l'adversaire la touche | Attaque (piège) |
 | Trajectoire courbée pour l'adversaire | Attaque |
 | Traverser les billes adverses sans faute | Effet |
-| Faire disparaître pleines / rayées (plus moyen de distinguer son groupe) | Attaque |
+| Faire disparaître pleines / rayées (plus moyen de distinguer son groupe) (implémenté le 13/10 : « Groupe identique », voir le GDD) | Attaque |
 | Vent qui dévie les billes | Attaque |
 | Rendre une bille lourde | Attaque |
 | Échanger la bille blanche avec la bille visée | Défense |

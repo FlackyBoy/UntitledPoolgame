@@ -79,6 +79,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePowerSpawnSettingsAsset();
             EnsureBallBlastPowerAsset();
             EnsureMagnetPowerAsset();
+            EnsureIdenticalGroupsPowerAsset();
             EnsureHudSettingsAsset();
             GameFlowTools.EnsureAssets();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
@@ -144,6 +145,15 @@ namespace UntitledPoolGame.PoolEditor
             EditorUtility.SetDirty(spawn);
             AssetDatabase.SaveAssets();
             Debug.Log($"[PoolTableBuilder] {powerName} added to PoolPowerSpawnSettings > Available Powers.");
+        }
+
+        // The "Groupe identique" power asset (IdenticalGroupsPower): an
+        // attack, so usable during the opponent's turn (Requires Own Turn
+        // off).
+        private static void EnsureIdenticalGroupsPowerAsset()
+        {
+            EnsurePowerAsset<IdenticalGroupsPower>("IdenticalGroupsPower", "Groupe identique",
+                serialized => serialized.FindProperty("requiresOwnTurn").boolValue = false);
         }
 
         // Bridges an EXISTING table (built before PoolPowerCrateManager/

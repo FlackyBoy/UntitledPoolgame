@@ -290,6 +290,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Couleurs | J1, J2, encre des contours, fond des cartes, mise en avant (jaune), danger (rouge), « BOUM ! », voile du joueur qui attend, jauge (début, milieu, fin) |
 | Textes : tour et plaque | « À toi ! », « Tour de J{0} », « J{0} », groupe à décider, « Prochaine », « Puissance », touche du pouvoir |
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
+| Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
 | Interjections | Liste tirée au hasard quand une bille rentre, blanche rentrée, faute, main libre, tir plein, pouvoir lancé, « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
 | Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} », noms des catégories |
 | Fin de partie | « J{0} gagne ! », « Revanche », aide des touches, confettis |
@@ -309,6 +310,7 @@ Dans `Assets/Powers`. Champs communs : **Power Name** (nom affiché) et **Requir
 | Vision brouillée | `VisionImpairPower` | Sensitivity Multiplier (0,3) : sensibilité de la visée de l'adversaire |
 | Commandes inversées | `InvertedControlsPower` | Sensitivity Multiplier (1,8) |
 | Poche fermée | `ClosePocketPower` | — (poche choisie par le joueur ; le visuel du bouchon est dans PoolPotEffectSettings) |
+| Groupe identique | `IdenticalGroupsPower` | Look (*Colorless* : aspect uni · *Like Ball* : aspect d'une bille), Look Ball Number (8 : bille copiée, 1 à 15), Colorless Material (facultatif), Colorless Color (gris clair, si pas de matériau). *Requires Own Turn* décoché à la création (attaque) |
 | Bille destructrice | `BallBlastPower` | Explosion Prefab (*CFXR2 WW Explosion*), Explosion Scale (0,15), Explosion Lifetime (4 s), Spare Eight Ball (oui), Blast Speed (0,5 m/s, 0 = pas de souffle), Blast Radius (0,3 m) |
 | Aimant | `MagnetPower` | Capture Radius (0,4 m : distance du trou où la bille est captée), Min Capture Speed (0,05 m/s : une bille immobile n'est pas captée), Pull Acceleration (1,5 m/s² : force d'attraction), Steering (4/s : correction de trajectoire, 0 = aucune), Max Pull Duration (4 s : lâche une bille coincée) ; *VFX dans la poche* : Pocket Vfx Prefab (*CFXR Electrified 3*, vide = aucun), Pocket Vfx Scale (0,2), Pocket Vfx Height (0,02 m), Pocket Vfx Fade Out (1,5 s) |
 

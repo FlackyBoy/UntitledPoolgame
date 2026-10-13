@@ -23,6 +23,7 @@ namespace UntitledPoolGame.Pool
         // texture) — cached once so ClearGlow() can restore it after a
         // custom PowerType material was swapped in.
         private Material originalMaterial;
+        public Material OriginalMaterial => originalMaterial;
 
         private void Awake()
         {
@@ -58,8 +59,11 @@ namespace UntitledPoolGame.Pool
             // sharedMaterial, not material: this is meant to be the SAME
             // asset across every ball currently carrying this PowerType, not
             // a per-ball instance — nothing here ever edits its properties.
+            // Through BallDisguise: while the balls all look alike
+            // (IdenticalGroupsPower), the swap waits for the real looks to
+            // come back instead of singling this ball out.
             if (ballRenderer != null && material != null)
-                ballRenderer.sharedMaterial = material;
+                BallDisguise.SetBaseMaterial(ballRenderer, material);
         }
 
         // Called by PoolPowerBallRotator when it's this ball's turn to stop
@@ -69,7 +73,7 @@ namespace UntitledPoolGame.Pool
             power = null;
             if (glowLight != null) glowLight.enabled = false;
             if (ballRenderer != null && originalMaterial != null)
-                ballRenderer.sharedMaterial = originalMaterial;
+                BallDisguise.SetBaseMaterial(ballRenderer, originalMaterial);
         }
     }
 }

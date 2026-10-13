@@ -160,7 +160,18 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
     - Trajectoire de la bille courbée, en malus pour l'adversaire (Attaque)
     - ✅ Commandes inversées pour l'adversaire (Attaque) — `InvertedControlsPower.cs` implémenté, voir plus bas.
     - Bille qui traverse les billes adverses sans faute (mais pas les siennes) (PowerUp)
-    - Faire disparaître les types de billes (rayées/pleines) — plus moyen de distinguer visuellement son groupe de celui de l'adversaire (Attaque)
+    - ✅ **Groupe identique** (`IdenticalGroupsPower`, Attaque ; 13/10, branche `feature/pouvoir-groupe-identique`, **validé en jeu par l'utilisateur le 13/10**) :
+      - **Effet** : pendant le prochain tour de l'adversaire (ou son tour en cours si activé pendant celui-ci), toutes les billes sauf la blanche ont le même aspect : pleines, rayées et la 8.
+      - **Règles inchangées** : toucher une mauvaise bille en premier reste une faute, et la 8 rentrée trop tôt fait toujours perdre.
+      - **Fin** : les vrais aspects reviennent à la fin du tour visé, en fin de partie ou à la revanche.
+      - **Aspect réglable** sur l'asset (*Look*) :
+        - *Colorless* : un matériau uni, *Colorless Material*, ou à défaut une couleur, *Colorless Color* ;
+        - *Like Ball* : l'aspect de la bille *Look Ball Number* (1 à 15).
+      - **HUD** : la plaque des billes restantes est remplacée par « ??? Billes brouillées » sur les deux moitiés d'écran, sinon compter les billes restantes trahirait les groupes.
+      - **Code** :
+        - `BallDisguise` remplace et restaure les matériaux de tous les rendus de chaque bille, quel que soit le modèle.
+        - `PowerBall` passe par `BallDisguise.SetBaseMaterial`, pour que le matériau de catégorie d'une bille à pouvoir ne la trahisse pas pendant l'effet.
+      - **Asset** : *Tools > Pool > Ensure Config Assets Exist* crée `Assets/Powers/IdenticalGroupsPower.asset`, avec *Requires Own Turn* décoché, et l'ajoute aux pouvoirs distribués.
     - ✅ Fermer un pocket (Attaque) — `ClosePocketPower`, poche choisie depuis le 13/10.
     - Force du vent — dévie la trajectoire des billes en jeu (Attaque)
     - Rendre une bille lourde, plus dure à déplacer (Attaque)

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15068c46995eb0341b945a9b394b48c3, type: 3}
+  m_Name: IdenticalGroupsPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.IdenticalGroupsPower
+  powerName: Daltonien ?!
+  requiresOwnTurn: 1
+  look: 1
+  lookBallNumber: 8
+  colorlessMaterial: {fileID: 0}
+  colorlessColor: {r: 0.82, g: 0.82, b: 0.8, a: 1}

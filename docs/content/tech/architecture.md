@@ -323,6 +323,15 @@ classDiagram
     +CanTarget(PoolPocket)$
   }
   class ClosePocketPower
+  class IdenticalGroupsPower {
+    +BuildLook()
+  }
+  class BallDisguise {
+    <<static>>
+    +Apply(looks)$
+    +Restore()$
+    +SetBaseMaterial(Renderer, Material)$
+  }
   class MagnetPower {
     +FindCapture(PoolMatchRules, int, PoolPocket)
     +Pull(PoolBall, PoolPocket)
@@ -365,6 +374,10 @@ classDiagram
   PoolPower <|-- BallBlastPower
   MagnetPower ..> PoolMatchRules : ArmMagnet, attire une bille au prochain tir
   LocalPoolPowerController ..> PoolPocket : choix du trou (SetTargeted)
+  PoolPower <|-- IdenticalGroupsPower
+  IdenticalGroupsPower ..> PoolMatchRules : QueueIdenticalGroups (tour de l'adversaire)
+  PoolMatchRules ..> BallDisguise : Apply / Restore
+  PowerBall ..> BallDisguise : SetBaseMaterial
   BallBlastPower ..> PoolMatchRules : ArmBallBlast, détruit au premier contact
   PoolPower --> PowerType
   PoolPowerCrateManager --> PoolPowerCrate : fait apparaître
