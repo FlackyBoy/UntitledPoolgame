@@ -4,7 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
-- **Pouvoir « Aimant » et choix du trou pour les pouvoirs** (branche `feature/pouvoir-aimant` ; compilé, non testé).
+- **Pouvoir « Aimant » et choix du trou pour les pouvoirs** (branche `feature/pouvoir-aimant`). **Validé en jeu par l'utilisateur.**
   - **Choix du trou** : les pouvoirs qui visent un trou (`PocketTargetPower`, nouveau) ne s'activent plus d'un coup.
     - La touche de pouvoir affiche un pointeur blanc au centre de la vue. Le trou visé est entouré d'un cercle blanc qui bat et s'éclaire.
     - Interact valide. La touche de pouvoir annule, et le pouvoir reste en main.
