@@ -41,7 +41,7 @@ MonoBehaviour:
   callPocketNoneBanner: 'Bille 8 : vise une poche'
   outOfReachBanner: "Trop loin \u2014 contourne la table"
   eightCalledBannerFormat: "Poche annonc\xE9e : {0}"
-  eightToCallBanner: 'Bille 8 : annonce ta poche (vue du dessus)'
+  eightToCallBanner: 'Bille 8 : annonce ta poche (vise-la)'
   blastArmedBanner: "Bille destructrice arm\xE9e : la 1re bille touch\xE9e explose"
   potShouts:
   - Dans le mille !

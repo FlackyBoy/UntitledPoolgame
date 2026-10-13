@@ -40,16 +40,16 @@ namespace UntitledPoolGame.Pool
         public float risingAuraScale = 0.4f;
         public float risingAuraSpeedMultiplier = 1.8f;
 
-        [Header("8-ball call-shot selection (top-down pocket picker)")]
-        // Steady (no decay) intensity for whichever pocket is currently
-        // nearest the selector while calling a shot on the 8 — reuses
+        [Header("Pocket pick: halo (8-ball call, powers aimed at a pocket)")]
+        // Steady (no decay) intensity for the pocket currently pointed at
+        // during a pocket pick (LocalPocketPointer) — reuses
         // haloColor/haloRange above rather than a separate color/range pair,
         // since it's the same light and the same "this pocket matters right
         // now" visual language as the pot halo, just held steady instead of
         // fired-and-decaying.
         public float selectionHighlightIntensity = 6f;
 
-        [Header("Pocket targeted by a power (Aimant, Bloquer une poche)")]
+        [Header("Pocket pick: ring (8-ball call, powers aimed at a pocket)")]
         [Tooltip("Couleur du cercle autour du trou visé pendant le choix.")]
         public Color targetRingColor = Color.white;
         [Tooltip("Rayon du cercle, en multiple du rayon de la poche.")]

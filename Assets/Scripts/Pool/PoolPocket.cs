@@ -110,9 +110,9 @@ namespace UntitledPoolGame.Pool
             haloLight.enabled = false;
         }
 
-        // While the current player is calling a pocket for the 8 (see
-        // LocalPoolAimController's top-down HandleCallPocket),
-        // whichever pocket is nearest the selector lights up steadily — reuses
+        // While a player is picking a pocket (LocalPocketPointer: a power
+        // aimed at a pocket, or the 8-ball call), the pocket pointed at
+        // lights up steadily, with SetTargeted's ring — reuses
         // this same haloLight rather than a second one, but skipped while a
         // real pot's decay/aura (PlayHalo/HaloRoutine) is already running on
         // it so the two never fight over the same light's intensity.

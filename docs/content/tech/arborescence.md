@@ -160,7 +160,8 @@ Assets/Scripts/
     ├── PoolMatchRules.cs           partie : tours, fautes, main libre, pouvoirs, HUD
     ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOneRuleSet.cs   règles par mode
     ├── PoolGameMode.cs, PoolPartyMode.cs   modes et sous-modes Party
-    ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre, poche de la 8)
+    ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre), annonce de la 8
+    ├── LocalPocketPointer.cs       choix d'une poche en la visant (pouvoirs, annonce de la 8)
     ├── LocalPoolPowerController.cs activation du pouvoir, choix du trou (pointeur blanc)
     ├── LocalPoolPowerEffectReceiver.cs   effets d'écran : pouvoirs, secousses, flashs
     ├── PoolPower.cs, PowerType.cs + BoostedShot/VisionImpair/InvertedControls/BallBlast/IdenticalGroupsPower.cs

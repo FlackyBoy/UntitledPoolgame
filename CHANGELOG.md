@@ -4,6 +4,14 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
+- **Annonce de la 8 avec le pointeur** (branche `feature/selection-poche-8` ; compilé, non testé).
+  - **Fonctionnement** : l'annonce de la poche pour la 8 utilise le même choix que les pouvoirs qui visent un trou. Le joueur vise la poche avec le pointeur blanc, en vue normale, et valide avec Interact. Cela remplace la vue de dessus avec Déplacer.
+  - **Code** :
+    - Le pointage est sorti dans `LocalPocketPointer` (nouveau, ajouté tout seul au joueur), partagé par `LocalPoolPowerController` et `LocalPoolAimController`.
+    - L'ancienne navigation de poche en poche est retirée.
+    - `IsPlacementViewActive` ne concerne plus que la main libre.
+  - **Bandeau** d'annonce de la 8 mis à jour (« vise-la » au lieu de « vue du dessus »).
+  - La poche fermée utilisait déjà ce choix depuis l'Aimant.
 - **Pouvoir « Groupe identique »** (`IdenticalGroupsPower`, Attaque ; branche `feature/pouvoir-groupe-identique`). **Validé en jeu par l'utilisateur.**
   - **Effet** : pendant le tour de l'adversaire, toutes les billes sauf la blanche ont le même aspect, la 8 comprise. Les règles ne changent pas.
   - **Aspect réglable** sur l'asset : incolore (matériau ou couleur unie) ou l'aspect d'une bille choisie (1 à 15).

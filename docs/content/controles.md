@@ -38,9 +38,9 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 
 | Touche | Action |
 |---|---|
-| Z Q S D / W A S D, flèches | Se déplacer · en visée : déplacer le point de frappe · vue de dessus : déplacer la bille, changer de poche |
-| Souris | Regarder · en visée : tourner autour de la bille |
-| E | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche |
+| Z Q S D / W A S D, flèches | Se déplacer · en visée : déplacer le point de frappe · vue de dessus (main libre) : déplacer la bille |
+| Souris | Regarder · en visée : tourner autour de la bille · choix d'une poche (annonce de la 8, pouvoir) : viser la poche avec le pointeur blanc |
+| E | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche visée |
 | Clic gauche | Mains vides : **coup de poing** (spammer pour enchaîner ; en R&D : **poing gauche**) · objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
 | Entrée | Comme le clic gauche pour tirer, lancer et le coup de queue (pas le poing) |
 | Clic droit | En R&D seulement : **poing droit** |
@@ -54,9 +54,9 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 
 | Bouton (Xbox / PlayStation) | Action |
 |---|---|
-| Stick gauche | Se déplacer · en visée : déplacer le point de frappe · vue de dessus : déplacer la bille, changer de poche |
-| Stick droit | Regarder · en visée : tourner autour de la bille |
-| Y / △ | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche |
+| Stick gauche | Se déplacer · en visée : déplacer le point de frappe · vue de dessus (main libre) : déplacer la bille |
+| Stick droit | Regarder · en visée : tourner autour de la bille · choix d'une poche (annonce de la 8, pouvoir) : viser la poche avec le pointeur blanc |
+| Y / △ | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche visée |
 | X / □ | Objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
 | B / ○ | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, B / ○ à nouveau pour l'annuler, Y / △ pour valider le trou visé avec le pointeur blanc |
 | LB / L1 | Mains vides : **coup de poing** (spammer pour enchaîner ; en R&D : **poing gauche**) |
