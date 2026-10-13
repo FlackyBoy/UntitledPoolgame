@@ -18,7 +18,7 @@ MonoBehaviour:
   levelFolder: Assets/Scenes/Levels
   volumeProfile: {fileID: 11400000, guid: ab09877e2e707104187f6f83e2f62510, type: 2}
   addTemporaryFloor: 1
-  palette: {fileID: 11400000, guid: 3c1fa38ae9893af4a9d3010402711bfb, type: 2}
+  palette: {fileID: 11400000, guid: e49fe815652b8c0469dd829e22efd4e1, type: 2}
   gridStep: 0.5
   floorHeight: 0
   cueCount: 2
