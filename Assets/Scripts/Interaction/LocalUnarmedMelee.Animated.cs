@@ -40,6 +40,9 @@ namespace UntitledPoolGame.Interaction
         private Vector3 aimFrom, aimFarthest;
         private float aimFarthestDistance;
         private float aimWeight, aimAngle;
+        // The view's pitch when the hit window opened (Debug Logs: compared
+        // with the fist's own slope).
+        private float aimViewPitch;
 
         // Animated punches in use: ticked in CombatSettings, and the layer
         // is there (otherwise the IK punches stay).
@@ -203,32 +206,135 @@ namespace UntitledPoolGame.Interaction
                 float error = Vector3.SignedAngle(FlatForward(), travel, Vector3.up);
                 float current = rightHand ? cfg.punchAimRight : cfg.punchAimLeft;
                 aim = $" — direction {error:+0;-0}° from the view ({(Mathf.Abs(error) < 5f ? "OK" : $"set Punch Aim {(rightHand ? "Right" : "Left")} to {Mathf.Clamp(current - error, -90f, 90f):0}")})";
+
+                // Hit where you look: the fist's slope (positive = down)
+                // against the view's, with Punch Pitch Follow as it is.
+                Vector3 path = aimFarthest - aimFrom;
+                float fistPitch = -Mathf.Atan2(path.y, travel.magnitude) * Mathf.Rad2Deg;
+                aim += $"; slope {fistPitch:+0;-0}° vs view {aimViewPitch:+0;-0}° (Punch Pitch Follow {cfg.punchPitchFollow:F2}, {SlopeAdvice(fistPitch, aimViewPitch)})";
             }
             Debug.Log($"[UnarmedMelee] {name}: {(rightHand ? "right" : "left")} punch — hand fastest at {animPeakTime:F2} of the clip " +
                       $"({animPeakSpeed:F1} m/s), window {cfg.hitWindowStart:F2}–{cfg.hitWindowEnd:F2}" +
                       (hitSomething ? ", hit" : ", missed") + aim, this);
         }
 
+        private static string SlopeAdvice(float fistPitch, float viewPitch)
+        {
+            if (Mathf.Abs(fistPitch - viewPitch) < 8f) return "OK";
+            // Looking level: the follow does nothing, the gap is the clip's own.
+            if (Mathf.Abs(viewPitch) < 5f) return "the clip itself slopes — nothing to set";
+            bool tooLevel = Mathf.Abs(fistPitch) < Mathf.Abs(viewPitch) && Mathf.Sign(fistPitch) == Mathf.Sign(viewPitch);
+            return tooLevel ? "fist stays too level: raise it" : "fist overshoots: lower it";
+        }
+
         // From where the hand enters the hit window to where it gets
         // farthest from its shoulder: the way the fist actually goes.
         private void MeasureAim(Vector3 hand)
         {
-            if (!aimMeasuring) { aimMeasuring = true; aimFrom = hand; aimFarthest = hand; }
+            if (!aimMeasuring) { aimMeasuring = true; aimFrom = hand; aimFarthest = hand; aimViewPitch = ViewPitch(CombatSettings.Instance); }
             Transform shoulder = bodyAnimator.GetBoneTransform(rightHand ? HumanBodyBones.RightUpperArm : HumanBodyBones.LeftUpperArm);
             float d = shoulder != null ? Vector3.Distance(shoulder.position, hand) : Vector3.Distance(aimFrom, hand);
             if (d > aimFarthestDistance) { aimFarthestDistance = d; aimFarthest = hand; }
         }
 
-        // Just before FBBIK solves (ApplyBody): the spine turns by Punch Aim
-        // during an animated punch, eased in and out so it doesn't pop.
+        // During an animated punch, eased in and out so it doesn't pop:
+        //   - the spine turns by Punch Aim (the clip's bladed stance);
+        //   - "hit where you look": the clips always strike at the height
+        //     they were recorded at, so the fist is tilted toward the view's
+        //     pitch (Punch Pitch Follow) — partly by bending the spine
+        //     (Punch Pitch Spine Share), the rest at the punching shoulder.
+        //     The hits are swept along the real hand bone, so they follow:
+        //     looking at the head aims at the head, looking down at the legs.
+        // The body already turns with the view (its yaw is the look yaw), so
+        // left / right needs nothing more.
+        // Runs before the head's Look At IK solves (see AimBeforeLook), or
+        // just before FBBIK when there's no Look At IK running; once a frame.
         private void ApplyPunchAim(RootMotion.BipedReferences r)
         {
+            punchAimFrame = Time.frameCount;
             aimWeight = Mathf.MoveTowards(aimWeight, animPunching ? 1f : 0f, Time.deltaTime / 0.08f);
-            float angle = aimAngle * aimWeight;
-            if (Mathf.Abs(angle) < 0.01f || r.spine == null || r.spine.Length == 0) return;
-            Quaternion perBone = Quaternion.AngleAxis(angle / r.spine.Length, Vector3.up);
+            if (aimWeight <= 0f || r.spine == null || r.spine.Length == 0) return;
+
+            float yaw = aimAngle * aimWeight;
+            if (Mathf.Abs(yaw) >= 0.01f)
+            {
+                Quaternion perBone = Quaternion.AngleAxis(yaw / r.spine.Length, Vector3.up);
+                foreach (Transform bone in r.spine)
+                    if (bone != null) bone.rotation = perBone * bone.rotation;
+            }
+
+            CombatSettings cfg = CombatSettings.Instance;
+            float pitch = ViewPitch(cfg) * cfg.punchPitchFollow * aimWeight;
+            if (Mathf.Abs(pitch) < 0.01f) return;
+            // Positive = down, as the view's pitch: about the body's right axis.
+            Vector3 right = Vector3.Cross(Vector3.up, FlatForward());
+            float spinePitch = pitch * cfg.punchPitchSpineShare;
+            Quaternion spineStep = Quaternion.AngleAxis(spinePitch / r.spine.Length, right);
             foreach (Transform bone in r.spine)
-                if (bone != null) bone.rotation = perBone * bone.rotation;
+                if (bone != null) bone.rotation = spineStep * bone.rotation;
+            Transform upperArm = rightHand ? r.rightUpperArm : r.leftUpperArm;
+            if (upperArm != null)
+                upperArm.rotation = Quaternion.AngleAxis(pitch - spinePitch, right) * upperArm.rotation;
+        }
+
+        // The head keeps the orientation the player's Look At IK gives it
+        // (it follows the view: its target is the look target under
+        // CM_FPS) during the guard and the punches too. Two things got in
+        // the way:
+        //   - the clips turn the torso side-on (up to 90° for the jab), the
+        //     head with it, and Look At IK's Clamp Weight Head (0.5 on the
+        //     prefab) fades its effect out as the target gets that far from
+        //     where the animation points the head: it all but gave up. While
+        //     the combat layer is in use the clamp is eased to Combat Head
+        //     Clamp, and back to the prefab's value afterwards;
+        //   - the punch's spine turn (ApplyPunchAim) ran just before FBBIK,
+        //     i.e. after Look At IK (execution order 9997 < 9999), and
+        //     carried the already-aimed head away. It now runs in Look At
+        //     IK's own OnPreUpdate, before the head is aimed.
+        private RootMotion.FinalIK.LookAtIK lookAtIK;
+        private float lookAtClampRest = -1f;
+        private float lookAtCombatWeight;
+        private int punchAimFrame = -1;
+
+        private void HookLookAt(bool on)
+        {
+            if (lookAtIK == null) lookAtIK = GetComponentInChildren<RootMotion.FinalIK.LookAtIK>(true);
+            if (lookAtIK == null) return;
+            lookAtIK.solver.OnPreUpdate -= AimBeforeLook;
+            if (on)
+            {
+                lookAtIK.solver.OnPreUpdate += AimBeforeLook;
+                return;
+            }
+            // Never leave the prefab's clamp changed behind.
+            if (lookAtClampRest >= 0f) lookAtIK.solver.clampWeightHead = lookAtClampRest;
+            lookAtCombatWeight = 0f;
+        }
+
+        private void AimBeforeLook()
+        {
+            if (fullBodyIK != null && AnimatedPunches) ApplyPunchAim(fullBodyIK.references);
+        }
+
+        // Every frame (from ApplyBody): the head clamp eased toward Combat
+        // Head Clamp while the combat layer is in use, back to the prefab's
+        // value otherwise.
+        private void UpdateLookAtClamp()
+        {
+            if (lookAtIK == null) return;
+            if (lookAtClampRest < 0f) lookAtClampRest = lookAtIK.solver.clampWeightHead;
+            CombatSettings cfg = CombatSettings.Instance;
+            bool combatPose = (animPunching || LayerBusy) && !IsDown();
+            lookAtCombatWeight = Mathf.MoveTowards(lookAtCombatWeight, combatPose ? 1f : 0f, Time.deltaTime / Mathf.Max(0.01f, cfg.animationFade + 0.05f));
+            lookAtIK.solver.clampWeightHead = Mathf.Lerp(lookAtClampRest, cfg.combatHeadClamp, lookAtCombatWeight);
+        }
+
+        // The view's pitch in degrees, positive looking down, within the
+        // limits of the punch's look-follow.
+        private float ViewPitch(CombatSettings cfg)
+        {
+            float pitch = -Mathf.Asin(Mathf.Clamp(viewTransform.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+            return Mathf.Clamp(pitch, -cfg.punchPitchMaxUp, cfg.punchPitchMaxDown);
         }
 
         // Back to the IK punches, or disabled: the layer lets go.

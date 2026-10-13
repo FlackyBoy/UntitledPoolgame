@@ -370,6 +370,7 @@ namespace UntitledPoolGame.Interaction
                 fullBodyIK.solver.OnPreUpdate += ApplyBody;
                 fullBodyIK.solver.OnPostUpdate += CurlFingers;
             }
+            HookLookAt(true);
         }
 
         private void OnDisable()
@@ -379,6 +380,7 @@ namespace UntitledPoolGame.Interaction
                 fullBodyIK.solver.OnPreUpdate -= ApplyBody;
                 fullBodyIK.solver.OnPostUpdate -= CurlFingers;
             }
+            HookLookAt(false);
             ReleaseFade();
             EndBlow();
             guardWeight = 0f;
@@ -790,7 +792,12 @@ namespace UntitledPoolGame.Interaction
             Vector3 flatForward = FlatForward();
             // Animated punches: the guard is the clip's, not the IK's.
             if (boxingPunches && !AnimatedPunches) ApplyGuard(r, flatForward);
-            if (AnimatedPunches) ApplyPunchAim(r);
+            if (AnimatedPunches)
+            {
+                UpdateLookAtClamp();
+                // Normally already done before the head's Look At IK solved.
+                if (punchAimFrame != Time.frameCount) ApplyPunchAim(r);
+            }
             if (phase == Phase.Idle || activeEffector == null) return;
 
             // Measured here, not in Begin: in Update the bones still hold

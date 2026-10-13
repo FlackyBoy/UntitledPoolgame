@@ -466,6 +466,16 @@ Avec cette case, ne servent plus pour le poing : *Windup Time*, *Jab Strike Time
 
 **Coups animés** (CombatSettings > *Use Animations*, après *Tools > Pool > R&D > Préparer le joueur de R&D*) : la garde et les deux poings sont des animations de boxe (pack PROTOFACTOR) au lieu d'être construits en IK. Le coup touche le long de la vraie main, pendant la fenêtre *Hit Window Start / End* de l'animation. L'autre main enchaîne à partir de *Chain From*, et le retour en garde commence à *Return At*. Si le poing gauche joue le coup du droit, cocher *Swap Hands*.
 
+**Frapper là où l'on regarde** (CombatSettings, sous les coups animés). Les animations frappent toujours à la hauteur où elles ont été enregistrées. Le poing animé est donc incliné vers le regard, vers le haut ou vers le bas. Comme le coup touche le long de la vraie main, regarder la tête vise la tête et regarder bas vise les jambes. Pour la gauche et la droite, il n'y a rien à faire : le corps tourne déjà avec la vue.
+- *Punch Pitch Follow* (0,8) : part de l'inclinaison de la vue que suit le poing. 0 = hauteur de l'animation, 1 = suit tout le regard.
+- *Punch Pitch Spine Share* (0,5) : part prise par le buste qui se penche. Le reste passe par le bras qui frappe, à l'épaule. Plus de buste = coup plus « engagé », plus de bras = corps plus droit.
+- *Punch Pitch Max Down / Up* (60° / 40°) : au-delà, le poing ne suit plus.
+- **Réglage** : avec *Debug Logs*, la console compare après chaque coup la pente du poing à celle de la vue (« slope … vs view … ») et dit s'il faut monter ou baisser *Punch Pitch Follow*.
+- Le coup de pied suit déjà un peu le regard vertical : *Kick Pitch Follow* (0,4), sur Local Unarmed Melee.
+
+**La tête pendant les coups** (CombatSettings, même groupe) : la tête garde l'orientation que lui donne le Look At IK du joueur (elle suit le regard), y compris pendant la garde et les coups. Les animations de boxe mettent le buste de profil, jusqu'à 90° pour le jab, et la limite du Look At (*Clamp Weight Head*, 0,5 sur le prefab) le faisait abandonner : la tête partait avec le buste.
+- *Combat Head Clamp* (0) : la limite utilisée pendant la garde et les coups. 0 = aucune limite. La valeur du prefab revient hors combat.
+
 **Jauge d'encaissement** (CombatSettings > *Encaissement*) : les coups de ce joueur ne font plus tomber directement. Ils remplissent la jauge de la cible.
 - Tant qu'elle n'est pas pleine, la cible titube.
 - Au-delà de *Dazed From*, elle est sonnée : plus lente, elle dérive sur le côté et sa vue tangue.
