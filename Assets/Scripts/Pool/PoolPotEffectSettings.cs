@@ -49,6 +49,20 @@ namespace UntitledPoolGame.Pool
         // fired-and-decaying.
         public float selectionHighlightIntensity = 6f;
 
+        [Header("Pocket targeted by a power (Aimant, Bloquer une poche)")]
+        [Tooltip("Couleur du cercle autour du trou visé pendant le choix.")]
+        public Color targetRingColor = Color.white;
+        [Tooltip("Rayon du cercle, en multiple du rayon de la poche.")]
+        public float targetRingRadiusScale = 1.3f;
+        [Tooltip("Épaisseur du trait (mètres).")]
+        public float targetRingWidth = 0.008f;
+        [Tooltip("Hauteur (mètres) du cercle au-dessus du centre de la poche, pour qu'il ne passe pas sous le tapis.")]
+        public float targetRingHeight = 0.004f;
+        [Tooltip("Battements par seconde du cercle (il grossit et rétrécit).")]
+        public float targetRingPulseRate = 2.5f;
+        [Tooltip("Amplitude du battement, en fraction du rayon (0 = fixe).")]
+        public float targetRingPulseAmount = 0.12f;
+
         [Header("Closed pocket (ClosePocketPower)")]
         // Optional — a prefab to show over a pocket while ClosePocketPower
         // has it blocked, instead of the auto-generated flat red cylinder

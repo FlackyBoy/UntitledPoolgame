@@ -4,6 +4,24 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
+- **Pouvoir « Aimant » et choix du trou pour les pouvoirs** (branche `feature/pouvoir-aimant`). **Validé en jeu par l'utilisateur.**
+  - **Choix du trou** : les pouvoirs qui visent un trou (`PocketTargetPower`, nouveau) ne s'activent plus d'un coup.
+    - La touche de pouvoir affiche un pointeur blanc au centre de la vue. Le trou visé est entouré d'un cercle blanc qui bat et s'éclaire.
+    - Interact valide. La touche de pouvoir annule, et le pouvoir reste en main.
+    - Interact n'est alors pris ni par la visée ni par la queue.
+    - Plus tard, on désignera le trou du doigt et on validera en levant le pouce.
+  - **Aimant** (`MagnetPower`, Effet, son propre tour) : sur le prochain tir, la bille du joueur qui roule vers le trou choisi est captée et tirée dedans. Si plusieurs billes s'en approchent, c'est la plus proche.
+    - Une seule bille par tir.
+    - La 8 n'est attirée que vers la poche annoncée.
+    - La bille est lâchée au bout de 4 s si elle reste coincée.
+    - Bandeau « Aimant prêt » dans le HUD.
+    - Effet en boucle dans la poche choisie tant que l'aimant est actif (*CFXR Electrified 3* par défaut, réglable sur l'asset).
+  - **Poche fermée** : la poche est choisie par le joueur au lieu d'être tirée au hasard.
+  - **Code** :
+    - `PoolMatchRules` : `TryActivatePower(player, pocket)`, `QueueClosePocket(player, pocket)`, `ArmMagnet`, `IsOwnBall`, `FixedUpdate` de l'aimant et événement `MagnetCaught`.
+    - `PoolPocket.SetTargeted` : cercle et halo, comptés pour deux joueurs qui visent le même trou.
+    - Nouveaux réglages du cercle dans `PoolPotEffectSettings`, nouveaux textes de bandeau dans `HudSettings`.
+    - *Ensure Config Assets Exist* crée aussi `MagnetPower.asset`. La création des assets de pouvoir passe par un helper commun (`EnsurePowerAsset<T>`).
 - **Site réorganisé en six rubriques** : Accueil · Suivi · Game design · Réglages · Technique · Équipe. Chaque rubrique a la même mise en page, avec un menu latéral et un sommaire. Avant, il y avait sept entrées de menu, des onglets sur une page et un menu latéral sur une autre.
   - **Suivi** (`suivi.html`, nouvelle page) : la TODO, qui était un onglet de *TODO & GDD*, et le changelog, qui était une annexe de la doc technique.
   - **Game design** (`gdd.html`) : GDD, Contrôles, Propositions UI (lien vers la galerie) et Pistes & suggestions.

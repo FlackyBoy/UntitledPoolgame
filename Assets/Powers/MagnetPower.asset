@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1fd193f1a634da44b9597ccfd6552fb, type: 3}
+  m_Name: MagnetPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.MagnetPower
+  powerName: Aimant
+  requiresOwnTurn: 1
+  captureRadius: 0.4
+  minCaptureSpeed: 0.05
+  pullAcceleration: 1.5
+  steering: 4
+  maxPullDuration: 4
+  pocketVfxPrefab: {fileID: 9027514048236820045, guid: effb650189dc5714e9e9801b1cfb3991, type: 3}
+  pocketVfxScale: 0.2
+  pocketVfxHeight: 0.02
+  pocketVfxFadeOut: 1.5

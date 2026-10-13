@@ -64,7 +64,10 @@ Lu par `PoolPowerCrateManager`, `PoolPowerBallRotator`, `PoolPowerCrate`, `Power
 Chaque pouvoir est son propre asset (`Create > Pool > Powers > …`) : nom, `Requires Own Turn`, et ses paramètres. Exemples :
 - tir boosté : multiplicateur de puissance ;
 - vision brouillée : multiplicateur de sensibilité ;
-- bille destructrice : VFX d'explosion et son échelle, bille 8 épargnée, souffle (vitesse et rayon).
+- bille destructrice : VFX d'explosion et son échelle, bille 8 épargnée, souffle (vitesse et rayon) ;
+- aimant : rayon et vitesse minimale de capture, force d'attraction, correction de trajectoire, durée maximale (lu par `PoolMatchRules.FixedUpdate`) ; VFX en boucle dans la poche (prefab, échelle, hauteur, fondu), instancié et arrêté par `PoolMatchRules` (`ArmMagnet` → `EndMagnetShot`).
+
+Le cercle du trou visé par un pouvoir est réglé dans `PoolPotEffectSettings` (lu par `PoolPocket`). Le pointage (angle toléré, taille du pointeur) est réglé sur `LocalPoolPowerController`.
 
 ### HudSettings — UI en jeu
 

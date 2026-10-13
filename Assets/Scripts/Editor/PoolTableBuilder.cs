@@ -78,6 +78,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePotEffectSettingsAsset();
             EnsurePowerSpawnSettingsAsset();
             EnsureBallBlastPowerAsset();
+            EnsureMagnetPowerAsset();
             EnsureHudSettingsAsset();
             GameFlowTools.EnsureAssets();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
@@ -97,19 +98,41 @@ namespace UntitledPoolGame.PoolEditor
         // there yet (the spawn settings asset itself is otherwise left as is).
         private static void EnsureBallBlastPowerAsset()
         {
-            EnsureFolder("Assets/Powers");
-            const string path = "Assets/Powers/BallBlastPower.asset";
-            BallBlastPower power = AssetDatabase.LoadAssetAtPath<BallBlastPower>(path);
-            if (power == null)
+            EnsurePowerAsset<BallBlastPower>("BallBlastPower", "Bille destructrice", serialized =>
             {
-                power = ScriptableObject.CreateInstance<BallBlastPower>();
-                AssetDatabase.CreateAsset(power, path);
-                var serialized = new SerializedObject(power);
-                serialized.FindProperty("powerName").stringValue = "Bille destructrice";
                 const string explosionPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Explosions/CFXR2 WW Explosion.prefab";
                 serialized.FindProperty("explosionPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(explosionPath);
+            });
+        }
+
+        // The "Aimant" power asset (MagnetPower), with Cartoon FX Remaster's
+        // looping "CFXR Electrified 3" as its in-pocket VFX.
+        private static void EnsureMagnetPowerAsset()
+        {
+            EnsurePowerAsset<MagnetPower>("MagnetPower", "Aimant", serialized =>
+            {
+                const string vfxPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Electric/CFXR Electrified 3.prefab";
+                serialized.FindProperty("pocketVfxPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(vfxPath);
+            });
+        }
+
+        // Creates Assets/Powers/<fileName>.asset when missing (named, then
+        // configure applied), and adds it to the powers handed out if it
+        // isn't there yet (the spawn settings asset is otherwise left as is).
+        private static void EnsurePowerAsset<T>(string fileName, string powerName, System.Action<SerializedObject> configure) where T : PoolPower
+        {
+            EnsureFolder("Assets/Powers");
+            string path = $"Assets/Powers/{fileName}.asset";
+            T power = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (power == null)
+            {
+                power = ScriptableObject.CreateInstance<T>();
+                AssetDatabase.CreateAsset(power, path);
+                var serialized = new SerializedObject(power);
+                serialized.FindProperty("powerName").stringValue = powerName;
+                configure?.Invoke(serialized);
                 serialized.ApplyModifiedPropertiesWithoutUndo();
-                Debug.Log($"[PoolTableBuilder] Created {path} (explosion: CFXR2 WW Explosion).");
+                Debug.Log($"[PoolTableBuilder] Created {path}.");
             }
 
             PoolPowerSpawnSettings spawn = AssetDatabase.LoadAssetAtPath<PoolPowerSpawnSettings>("Assets/Resources/PoolPowerSpawnSettings.asset");
@@ -120,7 +143,7 @@ namespace UntitledPoolGame.PoolEditor
             spawn.availablePowers = list.ToArray();
             EditorUtility.SetDirty(spawn);
             AssetDatabase.SaveAssets();
-            Debug.Log("[PoolTableBuilder] Bille destructrice added to PoolPowerSpawnSettings > Available Powers.");
+            Debug.Log($"[PoolTableBuilder] {powerName} added to PoolPowerSpawnSettings > Available Powers.");
         }
 
         // Bridges an EXISTING table (built before PoolPowerCrateManager/

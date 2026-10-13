@@ -108,6 +108,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 - **Deux sources** : des **caisses** qui apparaissent sur la table à des emplacements aléatoires et réapparaissent après ramassage, et une **bille à pouvoir** (lumineuse, change régulièrement) qu'il faut empocher.
 - **Trois catégories**, chacune avec sa couleur, son matériau et son modèle de caisse : **Attaque**, **Défense**, **Effet**.
 - **Activation** avec le bouton de pouvoir. Chaque pouvoir indique s'il est réservé à son propre tour ; les attaques s'utilisent pendant le tour adverse et prennent effet **immédiatement**.
+- **Pouvoirs qui visent un trou** : le bouton de pouvoir ouvre d'abord un **choix du trou**. Un pointeur blanc au centre de la vue désigne le trou, qui est entouré d'un cercle. Interact valide, le bouton de pouvoir annule. À terme, le joueur **pointera du doigt** et **lèvera le pouce** pour valider.
 
 ### Pouvoirs implémentés ✅
 
@@ -116,8 +117,9 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Tir boosté** | Effet | Le prochain tir est plus puissant | Prochain tir |
 | **Vision brouillée** | Attaque | L'écran de l'adversaire blanchit et sa visée devient moins sensible | Tour de l'adversaire |
 | **Commandes inversées** | Attaque | Regard inversé, sensibilité augmentée, ligne de trajectoire masquée | Tour de l'adversaire |
-| **Poche fermée** | Attaque | Une poche au hasard est bouchée | Tour de l'adversaire |
+| **Poche fermée** | Attaque | La poche choisie par le joueur est bouchée | Tour de l'adversaire |
 | **Bille destructrice** | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
+| **Aimant** | Effet | La bille du joueur qui roule vers le trou choisi est captée et tirée dedans (la plus proche si plusieurs, une seule par tir). La 8 n'est attirée que vers la poche annoncée | Prochain tir |
 
 Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 
