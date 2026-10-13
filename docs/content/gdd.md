@@ -118,7 +118,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Commandes inversées** | Attaque | Regard inversé, sensibilité augmentée, ligne de trajectoire masquée | Tour de l'adversaire |
 | **Poche fermée** | Attaque | Une poche au hasard est bouchée | Tour de l'adversaire |
 | **Bille destructrice** | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
-| **Groupe identique** 🔄 | Attaque | Toutes les billes sauf la blanche prennent le même aspect (incolore, ou celui d'une bille choisie dans les réglages), la 8 comprise ; la plaque des billes restantes est masquée. Les règles ne changent pas | Tour de l'adversaire |
+| **Groupe identique** | Attaque | Toutes les billes sauf la blanche prennent le même aspect (incolore, ou celui d'une bille choisie dans les réglages), la 8 comprise ; la plaque des billes restantes est masquée. Les règles ne changent pas | Tour de l'adversaire |
 
 Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 

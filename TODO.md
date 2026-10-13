@@ -157,7 +157,7 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
     - Trajectoire de la bille courbée, en malus pour l'adversaire (Attaque)
     - ✅ Commandes inversées pour l'adversaire (Attaque) — `InvertedControlsPower.cs` implémenté, voir plus bas.
     - Bille qui traverse les billes adverses sans faute (mais pas les siennes) (PowerUp)
-    - 🔄 **Groupe identique** (`IdenticalGroupsPower`, Attaque, activable hors tour ; 13/10, branche `feature/pouvoir-groupe-identique`, compilé, non testé) :
+    - ✅ **Groupe identique** (`IdenticalGroupsPower`, Attaque ; 13/10, branche `feature/pouvoir-groupe-identique`, **validé en jeu par l'utilisateur le 13/10**) :
       - **Effet** : pendant le prochain tour de l'adversaire (ou son tour en cours si activé pendant celui-ci), toutes les billes sauf la blanche ont le même aspect : pleines, rayées et la 8.
       - **Règles inchangées** : toucher une mauvaise bille en premier reste une faute, et la 8 rentrée trop tôt fait toujours perdre.
       - **Fin** : les vrais aspects reviennent à la fin du tour visé, en fin de partie ou à la revanche.

@@ -4,7 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
-- **Pouvoir « Groupe identique »** (`IdenticalGroupsPower`, Attaque, activable hors tour ; branche `feature/pouvoir-groupe-identique`, compilé, non testé).
+- **Pouvoir « Groupe identique »** (`IdenticalGroupsPower`, Attaque ; branche `feature/pouvoir-groupe-identique`). **Validé en jeu par l'utilisateur.**
   - **Effet** : pendant le tour de l'adversaire, toutes les billes sauf la blanche ont le même aspect, la 8 comprise. Les règles ne changent pas.
   - **Aspect réglable** sur l'asset : incolore (matériau ou couleur unie) ou l'aspect d'une bille choisie (1 à 15).
   - **HUD** : la plaque des billes restantes est masquée pendant l'effet.
