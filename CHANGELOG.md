@@ -4,6 +4,15 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
+- **Combat : frapper là où l'on regarde** (branche `feature/update-combat` ; compilé, non testé).
+  - **Avant** : les poings animés partaient toujours à hauteur de l'animation, quel que soit le regard.
+  - **Maintenant** : pendant le coup, le poing est incliné vers le regard. Le buste se penche, et le bras qui frappe s'incline à l'épaule. Regarder la tête vise la tête, regarder bas vise les jambes.
+  - **Réglages** (CombatSettings) : *Punch Pitch Follow* (0,8), *Punch Pitch Spine Share* (0,5), *Punch Pitch Max Down / Up* (60° / 40°).
+  - **Côtés** : rien à changer, le corps tourne déjà avec la vue.
+  - **Diagnostic** (*Debug Logs*) : après chaque coup, la pente du poing est comparée à celle de la vue, avec la marche à suivre.
+  - **La tête pendant les coups** : elle garde l'orientation du Look At IK (elle suit le regard), y compris pendant le jab qui met le buste de profil. Avant, elle partait avec le buste. Deux causes :
+    - la limite du Look At (*Clamp Weight Head* 0,5) le faisait abandonner : elle passe à *Combat Head Clamp* (CombatSettings, 0) pendant la garde et les coups ;
+    - la rotation de colonne du coup se faisait après le Look At : elle passe avant.
 - **Menu debug en jeu** (`DebugMenu`, branche `feature/menu-debug` ; compilé, non testé).
   - **Ouverture et fermeture** : clic gauche maintenu + 4 clics droits rapides, ou le bouton « Fermer ». Pendant qu'il est ouvert, les commandes des joueurs sont coupées et le curseur est libre, comme en pause.
   - **Pouvoirs** : donner n'importe quel pouvoir à J1 ou J2 sans caisse (il remplace celui en main), ou vider la main.

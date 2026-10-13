@@ -40,6 +40,16 @@ namespace UntitledPoolGame.Interaction
         [Range(-90f, 90f)] public float punchAimLeft;
         [Tooltip("Correction de la direction du poing droit, en degrés (voir le poing gauche).")]
         [Range(-90f, 90f)] public float punchAimRight;
+        [Tooltip("Frapper là où l'on regarde : part de l'inclinaison de la vue (haut / bas) que suit le poing animé. 0 = le poing part toujours à hauteur de l'animation, 1 = il suit entièrement le regard. La console (Debug Logs) compare après chaque coup la pente du poing à celle de la vue.")]
+        [Range(0f, 1f)] public float punchPitchFollow = 0.8f;
+        [Tooltip("Comment le suivi du regard se partage : part prise par le buste qui se penche (le reste par le bras qui frappe, à l'épaule). 1 = tout au buste, 0 = tout au bras.")]
+        [Range(0f, 1f)] public float punchPitchSpineShare = 0.5f;
+        [Tooltip("Suivi du regard : angle maximal vers le bas, en degrés (au-delà, le poing ne descend plus).")]
+        [Range(0f, 90f)] public float punchPitchMaxDown = 60f;
+        [Tooltip("Suivi du regard : angle maximal vers le haut, en degrés.")]
+        [Range(0f, 90f)] public float punchPitchMaxUp = 40f;
+        [Tooltip("Pendant la garde et les coups animés, limite (Clamp Weight Head) du Look At IK de la tête, qui lui fait suivre le regard. Les animations de boxe mettent le buste de profil (jusqu'à 90° pour le jab) : avec la valeur du prefab (0,5), le Look At abandonnait et la tête partait avec le buste. 0 = aucune limite, la tête garde l'orientation du regard ; la valeur du prefab revient hors combat.")]
+        [Range(0f, 1f)] public float combatHeadClamp = 0f;
 
         [Header("Garde")]
         [Tooltip("Combien de temps les poings restent levés en garde après le dernier coup, en secondes (0 = pas de garde : les bras retombent après chaque coup).")]

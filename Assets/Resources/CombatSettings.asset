@@ -21,8 +21,12 @@ MonoBehaviour:
   chainFrom: 0.4
   returnAt: 0.85
   swapHands: 0
-  punchAimLeft: 0
+  punchAimLeft: 72
   punchAimRight: 0
+  punchPitchFollow: 0.8
+  punchPitchSpineShare: 0.5
+  punchPitchMaxDown: 60
+  punchPitchMaxUp: 40
   guardTime: 1.5
   guardRaiseTime: 0.08
   guardLowerTime: 0.35
@@ -70,6 +74,7 @@ MonoBehaviour:
   blockRegenDelay: 1
   blockRegenRate: 0.5
   guardBreakTime: 1.5
+  spartanBreaksGuardOnly: 1
   counterWindow: 0.6
   counterSpeed: 1.5
   counterDamage: 1.5

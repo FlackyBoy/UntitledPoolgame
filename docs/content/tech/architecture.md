@@ -178,6 +178,14 @@ classDiagram
       - **Direction** : les clips gardent l'orientation de leur garde de profil, et le jab partait de biais.
         - **Mesure** : à chaque coup, la direction horizontale de la main, de son entrée dans la fenêtre de touche jusqu'à son point le plus loin de l'épaule, est comparée à la vue. La console donne l'angle et la valeur à mettre.
         - **Correction** : `ApplyPunchAim` tourne la colonne (avant FBBIK) de *Punch Aim Left/Right*, en fondu de 0,08 s.
+      - **Frapper là où l'on regarde** : dans le même `ApplyPunchAim` et avec le même fondu, le poing est incliné vers le tangage de la vue (`ViewPitch`, borné par *Punch Pitch Max Down/Up*, multiplié par *Punch Pitch Follow*). La rotation se fait autour de l'axe droit du corps. Une part (*Punch Pitch Spine Share*) est répartie sur les os de la colonne, le reste est appliqué au haut du bras qui frappe.
+        - Les touches suivent sans rien de plus, puisque `DetectHits` balaie la vraie main.
+        - Le lacet n'a pas besoin de correction : le corps porte déjà le lacet de la vue (`LocalFpsPlayerController`).
+        - **Mesure** (*Debug Logs*) : la pente du trajet du poing dans la fenêtre de touche est comparée au tangage de la vue à l'ouverture de la fenêtre (`SlopeAdvice`).
+      - **Tête** : elle garde l'orientation du Look At IK du joueur, dont la cible suit la vue (`normalLookTarget`, sous CM_FPS). Deux choses l'en empêchaient pendant les coups :
+        - **Le clamp** : les clips mettent le buste et la tête de profil, et le *Clamp Weight Head* du prefab (0,5) annule presque l'effet du Look At quand la cible est à 90° de là où l'animation fait regarder la tête. `UpdateLookAtClamp` (appelé depuis `ApplyBody`) l'amène en fondu à *Combat Head Clamp* tant que le calque de combat sert, puis remet la valeur du prefab. `HookLookAt(false)` la remet aussi quand le composant se coupe.
+        - **L'ordre** : le Look At IK passe avant FBBIK (ordre d'exécution 9997 contre 9999). `ApplyPunchAim`, appelé juste avant FBBIK, tournait donc la colonne après le Look At et emportait la tête. Il est maintenant appelé dans le `solver.OnPreUpdate` du Look At IK (`AimBeforeLook`), avant que la tête soit orientée. `ApplyBody` ne le refait que si le Look At n'a pas tourné à cette image (`punchAimFrame`).
+        - La caméra n'est pas concernée : `CameraPivot` est directement sous la racine du joueur.
       - **Calques** : construits par `RnDCombatAnimationTools.BuildLayers`, appelé par *Tools > Pool > R&D > Préparer le joueur de R&D* (`RnDArenaTools`). Ils sont supprimés puis recréés dans le contrôleur de la variante.
       - **Outils** :
         - `RnDArenaTools.PreparePlayer` ajoute ce qui manque sur la variante (`LocalPlayerLocomotion`, `LocalHitGauge`, *Boxing Punches*), puis construit les calques. *Créer l'arène de test* l'appelle.

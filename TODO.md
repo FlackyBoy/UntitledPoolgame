@@ -59,10 +59,27 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
       - Animations `GetHit` selon le côté d'où vient le coup ; `Stunned` quand il est sonné.
       - Chute du K.O. selon la zone du dernier coup.
     - 🔄 **Direction du jab** : correction *Punch Aim Left/Right* à régler d'après la console.
-    - ⬜ **Frapper là où l'on regarde** (demande du 12/10) : le coup doit suivre le regard (haut, bas, côtés), pas seulement partir droit devant.
-      - Les coups animés frappent toujours à hauteur de l'animation. Les coups en IK suivaient un peu le regard (*Punch Pitch Follow*).
-      - Piste : pencher le buste et les bras vers le regard pendant le coup, par exemple avec un Aim IK sur la colonne, ou un effecteur de main tiré vers la ligne de visée dans la fenêtre de touche. Le coup de pied pourrait faire de même (*Kick Pitch Follow*).
-      - Lien avec les zones : regarder la tête vise la tête, regarder bas vise les jambes.
+    - 🔄 **Frapper là où l'on regarde** (demande du 12/10 ; fait le 13/10, branche `feature/update-combat`, compilé, non testé) : le coup doit suivre le regard (haut, bas, côtés), pas seulement partir droit devant.
+      - **Avant** : les coups animés frappaient toujours à hauteur de l'animation, alors que les coups en IK suivaient un peu le regard (*Punch Pitch Follow*).
+      - **Fait** : pendant un poing animé, le poing est incliné vers le regard.
+        - Une part passe par le buste qui se penche, le reste par le bras qui frappe, à l'épaule.
+        - Réglages dans CombatSettings : *Punch Pitch Follow* 0,8, *Punch Pitch Spine Share* 0,5, *Punch Pitch Max Down / Up* 60° / 40°.
+        - Les touches suivent la vraie main : regarder la tête vise la tête, regarder bas vise les jambes.
+      - **Côtés** : rien à faire, le corps tourne déjà avec la vue (lacet du corps = lacet du regard).
+      - **Réglage** : avec *Debug Logs*, la console compare après chaque coup la pente du poing à celle de la vue, et dit s'il faut monter ou baisser *Punch Pitch Follow*.
+      - **Coup de pied** : il suit déjà un peu le regard (*Kick Pitch Follow* 0,4, en IK). À revoir après le test des poings si ce n'est pas assez.
+      - **Tête pendant les coups** (retour du 13/10 : au jab, l'animation met le buste de profil et la tête part avec, le joueur ne regarde plus devant lui).
+        - Une première version tournait la tête vers l'avant du corps. **Refusée** : la tête doit garder l'orientation que lui donne le Look At IK (elle suit le regard).
+        - **Causes trouvées** :
+          - le *Clamp Weight Head* du Look At (0,5 sur le prefab) annulait presque son effet avec la tête de profil ;
+          - la rotation de colonne du coup passait après le Look At (ordre d'exécution FinalIK) et emportait la tête.
+        - **Correction** :
+          - le clamp passe à *Combat Head Clamp* (CombatSettings, 0) pendant la garde et les coups, puis revient à la valeur du prefab ;
+          - la rotation de colonne se fait maintenant avant le Look At.
+        - Compilé, non testé.
+      - **À tester** :
+        - frapper un mannequin en regardant sa tête, puis ses jambes ;
+        - vérifier que le buste ne se plie pas trop vers le bas : sinon baisser *Punch Pitch Spine Share* ou *Punch Pitch Max Down*.
     - ✅ **Garde** (12/10, testée en jeu), Ctrl gauche / LT maintenu.
       - Bloque les coups de face à la tête et au corps. Plus lent, ni poing ni pied en garde.
       - Jauge de garde, garde brisée, contre-attaque après un blocage.
@@ -186,7 +203,21 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
     - Rendre une bille lourde, plus dure à déplacer (Attaque)
     - Intervertir la bille blanche avec la bille visée au moment de viser (Défense)
     - Calcul de trajectoire prenant en compte les rebonds en plus du premier contact — actuellement la prévisualisation (`LocalPoolAimController.UpdatePreview`) ne montre que le premier contact, pas de rebonds sur bande (Défense)
-    - Faire apparaître un trou sur la table (catégorie Attaque ou Défense selon l'usage — à trancher)
+    - ⬜ **Faire apparaître un trou sur la table** (pouvoir de « destruction » ; faisabilité étudiée le 13/10, rien d'implémenté) :
+      - **Version 1, trou simple** (à faire d'abord pour tester si c'est fun) : poser une `PoolPocket` temporaire à l'endroit choisi, avec un visuel (disque noir ou decal, bord déchiré, particules d'explosion). Le tapis reste solide : la bille disparaît en passant sur le trou, comme dans les vraies poches. Les règles, le HUD et le feel suivent sans changement (`ball.OnPocketed`, `PoolPocket.Active`). Même principe que `ClosePocketPower`, qui modifie déjà une poche en cours de partie.
+      - **Version 2, vraie chute** (si la v1 plaît) :
+        - physique : laisser la bille traverser le tapis (un seul pavé étiré, `PoolTableSurface`) dans le rayon du trou, soit avec `Physics.IgnoreCollision` bille ↔ tapis tant que son centre est dans le trou, soit en découpant le collider du tapis en plusieurs morceaux ;
+        - visuel : percer le tapis avec un shader qui découpe un cercle à une position donnée, plus un cylindre noir dessous pour la profondeur ;
+        - piège : une bille qui tombe sous la table est aujourd'hui une sortie de table, donc une faute (`offTableDropThreshold`). Le trou doit la compter comme empochée avant.
+      - **Questions à trancher** :
+        - Catégorie : Attaque ou Défense, selon l'usage ?
+        - Le trou compte-t-il comme une poche normale (bonne bille = empochée, blanche = faute) ?
+        - Bille 8 : peut-on annoncer le trou comme poche ? Que se passe-t-il si la 8 y tombe sans annonce ?
+        - Durée : un tour, X tours ou toute la partie ? Le trou se referme-t-il, et que devient une bille posée dessus quand il apparaît (empochée tout de suite, ou poussée sur le côté) ?
+        - Placement : le joueur vise un point du tapis (comme la bille en main), le centre de la table, ou un endroit au hasard ? Faut-il éviter les billes, les poches et les caisses ?
+        - Taille : fixe, ou réglable sur l'asset ? Plusieurs trous peuvent-ils se cumuler (avec le niveau 2 d'un pouvoir cumulé) ?
+        - Bille en main : interdire de placer la blanche sur le trou (comme `PoolPocket.AvoidAllPockets` pour les poches).
+      - **Destructions voisines** (même famille, à garder en tête) : bande cassée (on désactive le collider d'un segment, les billes sortent, la faute de sortie de table existe déjà), débris ou obstacle éjecté sur le tapis. Cratère ou bosse déconseillés pour l'instant (collider déformable, physique des billes fragile). Voir aussi **Earthquake** ci-dessous.
     - Dédoublement de la bille blanche (catégorie à trancher)
     - Invoquer des minions ? (idée exploratoire, pas encore de mécanique précise)
     - **Earthquake** : le billard se brise en plusieurs morceaux — pourrait être un pouvoir OU un mode de jeu à part entière (à trancher), voir aussi l'item "Prévoir d'autres modes de jeu" plus bas
