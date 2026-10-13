@@ -78,6 +78,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePotEffectSettingsAsset();
             EnsurePowerSpawnSettingsAsset();
             EnsureBallBlastPowerAsset();
+            EnsureIdenticalGroupsPowerAsset();
             EnsureHudSettingsAsset();
             GameFlowTools.EnsureAssets();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
@@ -121,6 +122,36 @@ namespace UntitledPoolGame.PoolEditor
             EditorUtility.SetDirty(spawn);
             AssetDatabase.SaveAssets();
             Debug.Log("[PoolTableBuilder] Bille destructrice added to PoolPowerSpawnSettings > Available Powers.");
+        }
+
+        // The "Groupe identique" power asset (IdenticalGroupsPower): an
+        // attack, so usable during the opponent's turn (Requires Own Turn
+        // off). Added to the powers handed out if it isn't there yet.
+        private static void EnsureIdenticalGroupsPowerAsset()
+        {
+            EnsureFolder("Assets/Powers");
+            const string path = "Assets/Powers/IdenticalGroupsPower.asset";
+            IdenticalGroupsPower power = AssetDatabase.LoadAssetAtPath<IdenticalGroupsPower>(path);
+            if (power == null)
+            {
+                power = ScriptableObject.CreateInstance<IdenticalGroupsPower>();
+                AssetDatabase.CreateAsset(power, path);
+                var serialized = new SerializedObject(power);
+                serialized.FindProperty("powerName").stringValue = "Groupe identique";
+                serialized.FindProperty("requiresOwnTurn").boolValue = false;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                Debug.Log($"[PoolTableBuilder] Created {path}.");
+            }
+
+            PoolPowerSpawnSettings spawn = AssetDatabase.LoadAssetAtPath<PoolPowerSpawnSettings>("Assets/Resources/PoolPowerSpawnSettings.asset");
+            if (spawn == null) return;
+            var list = new System.Collections.Generic.List<PoolPower>(spawn.availablePowers ?? new PoolPower[0]);
+            if (list.Contains(power)) return;
+            list.Add(power);
+            spawn.availablePowers = list.ToArray();
+            EditorUtility.SetDirty(spawn);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[PoolTableBuilder] Groupe identique added to PoolPowerSpawnSettings > Available Powers.");
         }
 
         // Bridges an EXISTING table (built before PoolPowerCrateManager/

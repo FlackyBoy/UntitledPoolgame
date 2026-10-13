@@ -529,7 +529,9 @@ namespace UntitledPoolGame.Core
             foreach (PoolBall ball in PoolBall.Active)
                 if (!ball.IsCueBall) onTable.Add(ball.Number);
 
-            if (hasScore) key = $"score {score}/{target}";
+            // Groupe identique: the balls left would tell the groups apart.
+            if (rules.AreGroupsDisguised) key = "disguised";
+            else if (hasScore) key = $"score {score}/{target}";
             else if (rules.Mode == PoolGameMode.NineBall) key = $"nine {nextNine}";
             else if (group == BallGroup.Solid || group == BallGroup.Stripe)
             {
@@ -542,7 +544,9 @@ namespace UntitledPoolGame.Core
             h.plateKey = key;
 
             h.plateBalls.Clear();
-            if (hasScore)
+            if (rules.AreGroupsDisguised)
+                Text(h.plateBalls, cfg.groupsDisguisedText, bodyFont, 22, Ink);
+            else if (hasScore)
             {
                 Text(h.plateBalls, $"{score}", titleFont, 34, Ink);
                 Text(h.plateBalls, $" / {target}", bodyFont, 24, new Color(Ink.r, Ink.g, Ink.b, 0.6f));

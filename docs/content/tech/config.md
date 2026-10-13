@@ -64,7 +64,8 @@ Lu par `PoolPowerCrateManager`, `PoolPowerBallRotator`, `PoolPowerCrate`, `Power
 Chaque pouvoir est son propre asset (`Create > Pool > Powers > …`) : nom, `Requires Own Turn`, et ses paramètres. Exemples :
 - tir boosté : multiplicateur de puissance ;
 - vision brouillée : multiplicateur de sensibilité ;
-- bille destructrice : VFX d'explosion et son échelle, bille 8 épargnée, souffle (vitesse et rayon).
+- bille destructrice : VFX d'explosion et son échelle, bille 8 épargnée, souffle (vitesse et rayon) ;
+- groupe identique : aspect commun des billes (incolore ou celui d'une bille numérotée), matériau ou couleur unie (lu par `IdenticalGroupsPower.BuildLook`, appliqué par `BallDisguise`).
 
 ### HudSettings — UI en jeu
 

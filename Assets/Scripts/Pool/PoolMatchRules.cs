@@ -153,6 +153,8 @@ namespace UntitledPoolGame.Pool
             // Safety net: never leave the game stuck slowed down if this
             // gets destroyed (scene reload, etc.) mid-dip.
             Time.timeScale = 1f;
+            // Static state: not left pointing at this scene's balls.
+            BallDisguise.Restore();
         }
 
         private void OnEnable()
@@ -432,6 +434,44 @@ namespace UntitledPoolGame.Pool
             closedPocketOwner = owner;
         }
 
+        // Fourth Attack-type turn-bound power (IdenticalGroupsPower): every
+        // ball but the cue ball looks the same for the target's whole turn.
+        // A shared table effect like Close Pocket, so a single slot: the
+        // player it targets, -1 when none.
+        private int identicalGroupsTarget = -1;
+        private IdenticalGroupsPower pendingIdenticalGroups;
+        private int pendingIdenticalGroupsTarget;
+
+        // True while the balls are disguised — the HUD hides its plate
+        // (balls left per group), which would otherwise give them away.
+        public bool AreGroupsDisguised => identicalGroupsTarget >= 0;
+
+        // Same rule as QueueVisionImpair: already the target's turn (off-turn
+        // activation) = right now; otherwise once their turn starts
+        // (SwitchTurn), never eating into the activator's own turn.
+        public void QueueIdenticalGroups(int targetPlayer, IdenticalGroupsPower power)
+        {
+            if (CurrentPlayer == targetPlayer)
+            {
+                ApplyIdenticalGroups(targetPlayer, power);
+                return;
+            }
+            pendingIdenticalGroups = power;
+            pendingIdenticalGroupsTarget = targetPlayer;
+        }
+
+        private void ApplyIdenticalGroups(int targetPlayer, IdenticalGroupsPower power)
+        {
+            BallDisguise.Apply(power.BuildLook());
+            identicalGroupsTarget = targetPlayer;
+        }
+
+        private void EndIdenticalGroups()
+        {
+            BallDisguise.Restore();
+            identicalGroupsTarget = -1;
+        }
+
         // In split-screen (2 local PlayerInputs), a physical player always IS
         // the same index throughout — returns it unchanged. In hot-seat solo
         // testing (1 local PlayerInput, PlayerInput.playerIndex always 0),
@@ -680,7 +720,16 @@ namespace UntitledPoolGame.Pool
                 closedPocket = null;
             }
 
+            // The disguised balls get their looks back once the target's turn is over.
+            if (identicalGroupsTarget == CurrentPlayer) EndIdenticalGroups();
+
             CurrentPlayer = 1 - CurrentPlayer;
+
+            if (pendingIdenticalGroups != null && CurrentPlayer == pendingIdenticalGroupsTarget)
+            {
+                ApplyIdenticalGroups(pendingIdenticalGroupsTarget, pendingIdenticalGroups);
+                pendingIdenticalGroups = null;
+            }
 
             // Applied right here, the moment control actually leaves the
             // activator — not in QueueClosePocket()/Activate(), which could
@@ -696,6 +745,9 @@ namespace UntitledPoolGame.Pool
 
         public void Win(int player)
         {
+            // The end of the match shows the table as it really is.
+            EndIdenticalGroups();
+            pendingIdenticalGroups = null;
             GameOver = true;
             Winner = player;
         }
@@ -735,6 +787,8 @@ namespace UntitledPoolGame.Pool
             closedPocket?.SetClosed(false);
             closedPocket = null;
             closePocketPending = false;
+            EndIdenticalGroups();
+            pendingIdenticalGroups = null;
             calledEightBallPocket = null;
             ballBlastArmed[0] = ballBlastArmed[1] = null;
             ballBlastThisShot = null;

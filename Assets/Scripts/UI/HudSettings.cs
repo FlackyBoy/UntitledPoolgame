@@ -56,6 +56,8 @@ namespace UntitledPoolGame.Core
         [Tooltip("{0} = numéro du joueur.")]
         public string playerTagFormat = "J{0}";
         public string groupUndecidedText = "Groupe à décider";
+        [Tooltip("Plaque pendant « Groupe identique » : remplace les billes restantes, qui trahiraient les groupes.")]
+        public string groupsDisguisedText = "??? Billes brouillées";
         public string nextBallText = "Prochaine ";
         public string powerGaugeText = "Puissance";
         [Tooltip("Touche affichée sous le pouvoir en stock.")]

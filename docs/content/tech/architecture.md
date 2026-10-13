@@ -318,6 +318,15 @@ classDiagram
   class VisionImpairPower
   class InvertedControlsPower
   class ClosePocketPower
+  class IdenticalGroupsPower {
+    +BuildLook()
+  }
+  class BallDisguise {
+    <<static>>
+    +Apply(looks)$
+    +Restore()$
+    +SetBaseMaterial(Renderer, Material)$
+  }
   class BallBlastPower {
     +CanBlast(PoolBall)
     +PlayEffects(PoolBall)
@@ -352,6 +361,10 @@ classDiagram
   PoolPower <|-- InvertedControlsPower
   PoolPower <|-- ClosePocketPower
   PoolPower <|-- BallBlastPower
+  PoolPower <|-- IdenticalGroupsPower
+  IdenticalGroupsPower ..> PoolMatchRules : QueueIdenticalGroups (tour de l'adversaire)
+  PoolMatchRules ..> BallDisguise : Apply / Restore
+  PowerBall ..> BallDisguise : SetBaseMaterial
   BallBlastPower ..> PoolMatchRules : ArmBallBlast, détruit au premier contact
   PoolPower --> PowerType
   PoolPowerCrateManager --> PoolPowerCrate : fait apparaître

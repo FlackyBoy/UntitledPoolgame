@@ -4,6 +4,16 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-13
+- **Pouvoir « Groupe identique »** (`IdenticalGroupsPower`, Attaque, activable hors tour ; branche `feature/pouvoir-groupe-identique`, compilé, non testé).
+  - **Effet** : pendant le tour de l'adversaire, toutes les billes sauf la blanche ont le même aspect, la 8 comprise. Les règles ne changent pas.
+  - **Aspect réglable** sur l'asset : incolore (matériau ou couleur unie) ou l'aspect d'une bille choisie (1 à 15).
+  - **HUD** : la plaque des billes restantes est masquée pendant l'effet.
+  - **Fin** : les vrais aspects reviennent à la fin du tour visé, en fin de partie ou à la revanche.
+  - **Code** :
+    - `BallDisguise` (nouveau) remplace et restaure les matériaux de tous les rendus des billes.
+    - `PowerBall` passe par lui pour son matériau de catégorie.
+    - `PoolMatchRules` : `QueueIdenticalGroups`, fin dans `SwitchTurn`, `Win` et `Restart`, et `AreGroupsDisguised` pour le HUD.
+    - L'asset est créé par *Ensure Config Assets Exist*.
 - **Site réorganisé en six rubriques** : Accueil · Suivi · Game design · Réglages · Technique · Équipe. Chaque rubrique a la même mise en page, avec un menu latéral et un sommaire. Avant, il y avait sept entrées de menu, des onglets sur une page et un menu latéral sur une autre.
   - **Suivi** (`suivi.html`, nouvelle page) : la TODO, qui était un onglet de *TODO & GDD*, et le changelog, qui était une annexe de la doc technique.
   - **Game design** (`gdd.html`) : GDD, Contrôles, Propositions UI (lien vers la galerie) et Pistes & suggestions.
