@@ -364,6 +364,10 @@ classDiagram
     <<ScriptableObject>>
   }
   class LocalPoolPowerController
+  class LocalPocketPointer {
+    +Point() PoolPocket
+    +Release()
+  }
 
   PoolPower <|-- BoostedShotPower
   PoolPower <|-- VisionImpairPower
@@ -373,7 +377,8 @@ classDiagram
   PocketTargetPower <|-- MagnetPower
   PoolPower <|-- BallBlastPower
   MagnetPower ..> PoolMatchRules : ArmMagnet, attire une bille au prochain tir
-  LocalPoolPowerController ..> PoolPocket : choix du trou (SetTargeted)
+  LocalPoolPowerController --> LocalPocketPointer : choix du trou
+  LocalPocketPointer ..> PoolPocket : SetTargeted
   PoolPower <|-- IdenticalGroupsPower
   IdenticalGroupsPower ..> PoolMatchRules : QueueIdenticalGroups (tour de l'adversaire)
   PoolMatchRules ..> BallDisguise : Apply / Restore
@@ -394,7 +399,7 @@ classDiagram
 Ajouter un pouvoir = une nouvelle classe dérivée de `PoolPower` + un asset créé via **Create > Pool > Powers**, ajouté à `Available Powers` dans `PoolPowerSpawnSettings`.
 
 **Pouvoirs qui visent un trou** : dériver de `PocketTargetPower` plutôt que de `PoolPower`. `LocalPoolPowerController` ouvre alors un choix du trou à la place d'une activation directe.
-- **Pointage** : pointeur blanc au centre de la vue ; le trou retenu est le plus proche en angle du centre de la caméra du joueur (pas de raycast, un trou est trop petit).
+- **Pointage** (`LocalPocketPointer`, partagé avec l'annonce de la 8 de `LocalPoolAimController`) : pointeur blanc au centre de la vue ; le trou retenu est le plus proche en angle du centre de la caméra du joueur (pas de raycast, un trou est trop petit). Chaque utilisateur appelle `Point()` à chaque image de son choix et `Release()` à la fin, et lit lui-même sa validation. Le choix d'un pouvoir attend que l'annonce de la 8 soit faite, et inversement.
 - **Repère** : `PoolPocket.SetTargeted` affiche le cercle et le halo. Il compte les joueurs, pour deux joueurs qui visent le même trou.
 - **Activation** : `PoolMatchRules.TryActivatePower(player, pocket)`.
 - **Touche Interact** : pendant le choix, `IsChoosingPocket` (vrai aussi pendant l'image où le choix se termine) écarte `LocalPoolAimController` et, par `WantsInteractThisFrame`, `LocalPlayerHandController`.

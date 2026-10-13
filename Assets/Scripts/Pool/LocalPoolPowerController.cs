@@ -13,29 +13,23 @@ namespace UntitledPoolGame.Pool
     // player automatically by LocalPlayerHandController when missing.
     //
     // A PocketTargetPower (Aimant, Bloquer une poche) first needs a pocket:
-    // the press starts a pick instead — a white pointer at the centre of
-    // this player's view, the pocket closest to it gets a ring, Interact
-    // confirms, "Next" again cancels (the power stays in hand).
+    // the press starts a pick instead (LocalPocketPointer: look at the
+    // pocket), Interact confirms, "Next" again cancels (the power stays in
+    // hand).
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPoolPowerController : MonoBehaviour
     {
         [SerializeField] private string actionMapName = "Player";
         [SerializeField] private string usePowerActionName = "Next";
         [SerializeField] private string interactActionName = "Interact";
-        [Tooltip("Choix du trou : angle maximal (degrés) entre le centre de la vue et un trou pour qu'il soit visé. Plus grand = plus tolérant, mais deux trous proches deviennent durs à départager de loin.")]
-        [SerializeField] private float maxPointAngle = 8f;
-        [Tooltip("Taille (pixels) du pointeur blanc affiché pendant le choix du trou.")]
-        [SerializeField] private float pointerSize = 8f;
 
         private PlayerInput playerInput;
         private InputAction usePowerAction;
         private InputAction interactAction;
         private LocalPoolAimController aimController;
-        private Camera viewCamera;
-        private float minPointDot;
+        private LocalPocketPointer pointer;
 
         private PocketTargetPower choosingPower;
-        private PoolPocket targetedPocket;
         // The pick ended (confirmed or cancelled) this frame: Interact must
         // still count as taken for the scripts running after this one
         // (aim entry, cue pickup), or the confirming press would also grab
@@ -46,23 +40,16 @@ namespace UntitledPoolGame.Pool
         // Interact for itself) and the HUD (banner).
         public bool IsChoosingPocket => choosingPower != null || choiceEndedFrame == Time.frameCount;
         public PocketTargetPower ChoosingPower => choosingPower;
-        public PoolPocket TargetedPocket => targetedPocket;
+        public PoolPocket TargetedPocket => choosingPower != null ? pointer.Pointed : null;
 
         private void Awake()
         {
             playerInput = GetComponent<PlayerInput>();
             aimController = GetComponent<LocalPoolAimController>();
+            pointer = LocalPocketPointer.For(gameObject);
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             usePowerAction = map.FindAction(usePowerActionName, throwIfNotFound: true);
             interactAction = map.FindAction(interactActionName, throwIfNotFound: true);
-            minPointDot = Mathf.Cos(maxPointAngle * Mathf.Deg2Rad);
-        }
-
-        private void Start()
-        {
-            // Start, not Awake: PlayerInputManager assigns the split-screen
-            // camera after the player's Awake.
-            viewCamera = playerInput.camera != null ? playerInput.camera : GetComponentInChildren<Camera>(true);
         }
 
         private void OnDisable() => EndChoice();
@@ -99,15 +86,18 @@ namespace UntitledPoolGame.Pool
 
             if (power is PocketTargetPower targeted)
             {
-                // The top-down views (ball in hand, 8-ball call) own the
-                // camera and Interact; the pick waits until they're done.
-                if (aimController != null && aimController.IsPlacementViewActive) return;
+                // Ball in hand owns the camera and Interact, the 8-ball call
+                // owns the pointer: the pick waits until they're done.
+                if (IsPointerTakenByAim()) return;
                 choosingPower = targeted;
                 return;
             }
 
             rules.TryActivatePower(effectivePlayer);
         }
+
+        private bool IsPointerTakenByAim() =>
+            aimController != null && (aimController.IsPlacementViewActive || aimController.IsCallPocketActive);
 
         // Only Effect powers (change the holder's own next shot) are
         // actually restricted to their own turn — see PoolPower.
@@ -122,8 +112,8 @@ namespace UntitledPoolGame.Pool
         private void UpdateChoice(PoolMatchRules rules, int effectivePlayer)
         {
             // The power is no longer the one in hand (turn passed in
-            // hot-seat solo, match restarted), or no longer usable now, or a
-            // top-down view took over the camera: drop the pick, keep the power.
+            // hot-seat solo, match restarted), or no longer usable now, or
+            // ball in hand took over the camera: drop the pick, keep the power.
             PoolPower held = rules.GetHeldPower(effectivePlayer);
             if (held != choosingPower || !CanActivate(rules, held, effectivePlayer)
                 || (aimController != null && aimController.IsPlacementViewActive)
@@ -133,81 +123,33 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            SetTargetedPocket(FindPointedPocket());
-
-            if (targetedPocket != null && (interactAction.WasPressedThisFrame() || interactAction.WasPerformedThisFrame()))
+            PoolPocket picked = pointer.Point();
+            if (picked != null && (interactAction.WasPressedThisFrame() || interactAction.WasPerformedThisFrame()))
             {
-                PoolPocket picked = targetedPocket;
                 EndChoice();
                 rules.TryActivatePower(effectivePlayer, picked);
             }
         }
 
-        // The open pocket closest to the centre of this player's view, within
-        // maxPointAngle. By angle rather than a raycast: a pocket is a small
-        // hole, hard to hit exactly from across the table.
-        private PoolPocket FindPointedPocket()
-        {
-            if (viewCamera == null) return null;
-            Transform view = viewCamera.transform;
-            Vector3 origin = view.position, forward = view.forward;
-
-            PoolPocket best = null;
-            float bestDot = minPointDot;
-            foreach (PoolPocket pocket in PoolPocket.Active)
-            {
-                if (!PocketTargetPower.CanTarget(pocket)) continue;
-                Vector3 toPocket = pocket.transform.position - origin;
-                float distance = toPocket.magnitude;
-                if (distance < 1e-4f) continue;
-                float dot = Vector3.Dot(toPocket / distance, forward);
-                if (dot > bestDot)
-                {
-                    bestDot = dot;
-                    best = pocket;
-                }
-            }
-            return best;
-        }
-
-        private void SetTargetedPocket(PoolPocket pocket)
-        {
-            if (pocket == targetedPocket) return;
-            if (targetedPocket != null) targetedPocket.SetTargeted(false);
-            targetedPocket = pocket;
-            if (targetedPocket != null) targetedPocket.SetTargeted(true);
-        }
-
         private void EndChoice()
         {
             if (choosingPower == null) return;
-            SetTargetedPocket(null);
+            pointer.Release();
             choosingPower = null;
             choiceEndedFrame = Time.frameCount;
         }
 
-        private static readonly Color PointerOutline = new Color(0f, 0f, 0f, 0.6f);
-
-        // Provisional (OnGUI, like the combat bars): the white pointer at the
-        // centre of this player's viewport while picking a pocket, plus a
-        // hint line when the UI Toolkit HUD isn't there to show its banner.
+        // Hint line when the UI Toolkit HUD isn't there to show its banner
+        // (the pointer itself is drawn by LocalPocketPointer).
         private void OnGUI()
         {
-            if (choosingPower == null || viewCamera == null) return;
-
-            Rect view = viewCamera.pixelRect;
-            float x = view.x + view.width / 2f, y = Screen.height - view.y - view.height / 2f;
-            float outline = pointerSize + 4f;
-            GUI.color = PointerOutline;
-            GUI.DrawTexture(new Rect(x - outline / 2f, y - outline / 2f, outline, outline), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-            GUI.DrawTexture(new Rect(x - pointerSize / 2f, y - pointerSize / 2f, pointerSize, pointerSize), Texture2D.whiteTexture);
-
-            if (PoolMatchRules.ExternalHud) return;
-            string hint = targetedPocket != null
-                ? $"{choosingPower.PowerName} → {targetedPocket.DescribeLocation()} (Interact pour valider, pouvoir pour annuler)"
+            if (choosingPower == null || PoolMatchRules.ExternalHud || pointer.ViewCamera == null) return;
+            Rect view = pointer.ViewCamera.pixelRect;
+            PoolPocket pocket = pointer.Pointed;
+            string hint = pocket != null
+                ? $"{choosingPower.PowerName} → {pocket.DescribeLocation()} (Interact pour valider, pouvoir pour annuler)"
                 : $"{choosingPower.PowerName} : vise un trou (pouvoir pour annuler)";
-            GUI.Box(new Rect(x - 220f, Screen.height - view.yMax + 20f, 440f, 28f), hint);
+            GUI.Box(new Rect(view.x + view.width / 2f - 220f, Screen.height - view.yMax + 20f, 440f, 28f), hint);
         }
     }
 }
