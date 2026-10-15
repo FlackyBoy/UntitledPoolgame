@@ -41,7 +41,7 @@ Assets/
 ├── Resources/              réglages chargés au lancement (4 ScriptableObjects)
 │   ├── PoolPhysicsSettings.asset, PoolScreenJuiceSettings.asset
 │   └── PoolPotEffectSettings.asset, PoolPowerSpawnSettings.asset
-├── Powers/                 un asset par pouvoir (BoostedShot, VisionImpair, InvertedControls, ClosePocket, BallBlast, Magnet, IdenticalGroups)
+├── Powers/                 un asset par pouvoir (BoostedShot, VisionImpair, InvertedControls, ClosePocket, BallBlast, Magnet, IdenticalGroups, TableHole)
 ├── Editor/                 PoolTableAssetSettings.asset (dimensions de la table), LevelMakerSettings.asset (outil de niveau)
 ├── InputManagers/          InputSystem_Actions.inputactions (online) et _Local (écran partagé)
 ├── Settings/               URP : PC/Mobile RPAsset + Renderer, Volume profiles
@@ -90,6 +90,7 @@ Assets/Scripts/
 │   ├── PoolTableBuilder.cs         menus Tools > Pool (table, physique, config, pouvoirs)
 │   ├── PoolTableAssetSettings.cs   dimensions de la table
 │   ├── PoolBallTextureGenerator.cs textures numérotées des billes
+│   ├── TableHoleScorchGenerator.cs decal du contour brûlé des trous (texture, matériau, vérification URP)
 │   └── LevelMaker/                 Tools > Pool > Level Maker (outil de niveau)
 │       ├── LevelMakerWindow.cs     fenêtre en 6 étapes + outils de la vue Scène
 │       ├── LevelMakerWindow.Room.cs  étape Salle : tracé des murs, ouvertures, props
@@ -122,6 +123,7 @@ Assets/Scripts/
 │   ├── TextFxSettings.cs           force et vitesse des effets de texte, apparition, machine à écrire, asset dans Resources
 │   ├── UiKit.cs                    palette et polices (lues dans MenuSettings), constructeurs d'éléments partagés par les menus
 │   ├── MatchHud.cs                 UI en jeu (UI Toolkit, direction Synthèse) : HUD par joueur, interjections, fin de partie ; créé tout seul
+│   ├── SkipMainMenu.cs             « Lancer sans le menu » : scène de test lancée directement, partie démarrée seule
 │   └── SyntheseMenu.cs             menu principal et ses pages (UI Toolkit, direction Synthèse), créé tout seul
 ├── Feel/                           pont avec le plugin Feel (sans le modifier)
 │   ├── GameFeel.cs                 écoute la partie et joue la séquence Feel de chaque moment
@@ -162,12 +164,14 @@ Assets/Scripts/
     ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOneRuleSet.cs   règles par mode
     ├── PoolGameMode.cs, PoolPartyMode.cs   modes et sous-modes Party
     ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre), annonce de la 8
-    ├── LocalPocketPointer.cs       choix d'une poche en la visant (pouvoirs, annonce de la 8)
+    ├── LocalPocketPointer.cs       choix d'une poche ou d'un point de la table en le visant (pouvoirs, annonce de la 8)
+    ├── RingLine.cs                 cercle tracé au LineRenderer (poche visée, aperçu sur la table, bord d'un trou)
     ├── LocalPoolPowerController.cs activation du pouvoir, choix du trou (pointeur blanc)
     ├── LocalPoolPowerEffectReceiver.cs   effets d'écran : pouvoirs, secousses, flashs
     ├── PoolPower.cs, PowerType.cs + BoostedShot/VisionImpair/InvertedControls/BallBlast/IdenticalGroupsPower.cs
     ├── PocketTargetPower.cs + ClosePocket/MagnetPower.cs   pouvoirs qui visent un trou
     ├── BallDisguise.cs             aspect commun des billes (Groupe identique), restauré ensuite
+    ├── TablePointPower.cs + TableHolePower.cs, TableHole.cs, TableHoleMeteor.cs   pouvoir Trou (météore, trou, billes tombées)
     ├── PoolPowerCrate.cs, PoolPowerCrateManager.cs, PoolPowerSpawnPoint.cs   caisses
     ├── PowerBall.cs, PoolPowerBallRotator.cs   bille à pouvoir
     ├── PoolPhysicsSettings.cs, PoolScreenJuiceSettings.cs, PoolPotEffectSettings.cs, PoolPowerSpawnSettings.cs   config

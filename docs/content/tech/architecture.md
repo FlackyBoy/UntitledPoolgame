@@ -331,6 +331,22 @@ classDiagram
     +CanTarget(PoolPocket)$
   }
   class ClosePocketPower
+  class TablePointPower {
+    <<abstract>>
+    +Activate(PoolMatchRules, int, Vector3)*
+    +Margin(int)*
+    +PreviewRadius(int)*
+  }
+  class TableHolePower {
+    +HoleCount(int)
+    +BlastBalls(Vector3)
+    +Impact$
+  }
+  class TableHoleMeteor
+  class TableHole {
+    +Active$
+    +Close(bool)
+  }
   class IdenticalGroupsPower {
     +BuildLook()
   }
@@ -387,6 +403,12 @@ classDiagram
   MagnetPower ..> PoolMatchRules : ArmMagnet, attire une bille au prochain tir
   LocalPoolPowerController --> LocalPocketPointer : choix du trou
   LocalPocketPointer ..> PoolPocket : SetTargeted
+  PoolPower <|-- TablePointPower
+  TablePointPower <|-- TableHolePower
+  TableHolePower ..> TableHoleMeteor : lance (un par trou)
+  TableHoleMeteor ..> TableHole : ouvre à l'impact
+  TableHoleMeteor ..> PoolMatchRules : AddTableHole
+  TableHole ..> PoolMatchRules : HandleBallFellInTableHole
   PoolPower <|-- IdenticalGroupsPower
   IdenticalGroupsPower ..> PoolMatchRules : QueueIdenticalGroups (tour de l'adversaire)
   PoolMatchRules ..> BallDisguise : Apply / Restore
@@ -412,6 +434,46 @@ Ajouter un pouvoir = une nouvelle classe dérivée de `PoolPower` + un asset cr�
 - **Activation** : `PoolMatchRules.TryActivatePower(player, pocket)`.
 - **Touche Interact** : pendant le choix, `IsChoosingPocket` (vrai aussi pendant l'image où le choix se termine) écarte `LocalPoolAimController` et, par `WantsInteractThisFrame`, `LocalPlayerHandController`.
 - **Sans trou choisi** (contrôleur en ligne figé) : un trou ouvert au hasard.
+
+**Niveau d'un pouvoir** : `PoolMatchRules` garde un niveau par pouvoir en main (`heldPowerLevel`, 1 par défaut, remis à 1 au ramassage et à l'activation) et l'expose pendant l'activation (`ActivatingPowerLevel`). Seul le menu debug le monte pour l'instant (`DebugSetHeldPower(…, level)`).
+
+**Pouvoirs qui visent la table** : ils dérivent de `TablePointPower`. `LocalPoolPowerController` ouvre alors un choix sur la table.
+- **Pointage** : `LocalPocketPointer.PointTable` lance un rayon depuis le centre de la vue sur le seul collider du tapis (`PoolTableSurface.Felt`). Le point est gardé à *Margin* des bandes et des poches (`ClampToTable`), et un cercle de *PreviewRadius* l'entoure (`RingLine`).
+- **Activation** : `TryActivatePower(player, point)`. Sans choix (contrôleur en ligne figé), un point au hasard sur le tapis.
+
+**Trou** (`TableHolePower`) :
+- **Lancement** : `Activate` calcule les centres et les passe à `PoolMatchRules.QueueTableHoles`.
+  - Un seul trou : le point visé.
+  - Un groupe (`HoleCenters`) : un angle au hasard pour chaque trou. La distance est prise sur l'anneau *Spread* ± *Jitter*, ou dans le disque intérieur avec la probabilité *Inside Chance*. Jusqu'à 24 essais par trou pour respecter *Min Gap* avec les autres ; sinon le plus dégagé est gardé.
+  - **Pendant le tour du lanceur** : les centres sont mis en attente, chacun marqué d'un cercle au sol, et `SwitchTurn` les lance quand le tour passe à l'adversaire (`LaunchPendingTableHoles`), comme pour Poche fermée.
+  - **Pendant le tour adverse** : ils sont lancés tout de suite.
+  - `LaunchMeteors` crée un `TableHoleMeteor` par trou, décalés dans le temps.
+- **Impact** : le météore tombe en diagonale. À l'impact, il crée l'effet, appelle `BlastBalls` (billes posées sur l'endroit remises au bord, puis souffle), crée le `TableHole` et l'enregistre (`PoolMatchRules.AddTableHole`). Il lance aussi la secousse et le flash (`LocalPoolPowerEffectReceiver.PlayImpact(-1, …)`), la vibration des manettes de chaque `PlayerInput` (`Gamepad.SetMotorSpeeds`, puis `ResetHaptics`) et l'événement `TableHolePower.Impact` (moment Feel `TableHoleImpact`).
+- **Météore périmé** : `MatchGeneration` change à chaque revanche. Un météore encore en chute ne crée alors rien.
+- **Détection** : à chaque pas de physique, `TableHole` repère les billes qui roulent et dont le centre passe au-dessus. Il appelle `HandleBallFellInTableHole` :
+  - **blanche** : `OnPocketed`, une faute comme une blanche rentrée ;
+  - **autre bille** : `FallIntoTableHole` (cinématique, sans collision, glisse au centre, s'enfonce sous le tapis, rendus masqués ; elle reste active donc « sur la table » pour les règles) ;
+  - **hors d'un tir** : remise au bord du trou.
+- **Retour** : les positions de toutes les billes sont relevées à `NotifyShotFired`. À la fin du tir, une bille encore en chute compte comme « en mouvement » (`AnyBallSinking`). Avant `ResolveShot`, `ReturnBallsFromTableHoles` remet chaque bille à sa place d'avant le tir, ou à la place libre la plus proche (`FreeSpotNear` : anneaux de recherche, hors billes, trous et poches).
+- **Fermeture** (`CloseTableHoles`, selon *Duration*) :
+  - tour de l'adversaire et N tours : dans `SwitchTurn` ;
+  - prochain tir : après `ResolveShot`, en sautant le tir déjà en cours à la création ;
+  - toute la partie : à la revanche (`ClearTableHoles`).
+- **Main libre** : `TableHole.AvoidAll` écarte la blanche des trous, comme `PoolPocket.AvoidAllPockets`.
+- **Bord fondu** : le maillage a trois anneaux, et les couleurs aux sommets font le dégradé (`Sprites/Default` les multiplie par sa teinte blanche) :
+  - noir plein jusqu'à l'anneau intérieur ;
+  - braises sur le contour, avec une intensité tirée d'un bruit sur le cercle (*Ember Amount*) ;
+  - fondu jusqu'à transparent à l'anneau extérieur (*Edge Softness*).
+- **Forme du trou** : un contour tiré au hasard à chaque impact. C'est un tableau de 96 rayons, un par direction (`edge`) :
+  - bruit de Perlin lu sur un cercle, donc refermé sans raccord (*Shape Roughness*) ;
+  - plus quelques éclats en pointe (*Shape Spikes*, *Shape Spike Length*) ;
+  - au moins la moitié de *Hole Radius*.
+  - **Utilisation** : il sert au maillage noir (éventail, `Sprites/Default` en file de rendu 2450, avec l'opaque, pour que la fumée et les effets transparents passent toujours par-dessus ; juste au-dessus du tapis), à la détection (`Contains`, avec `RadiusToward` interpolé entre deux directions), au souffle (`BlastBalls`), à la main libre (`AvoidAll`), au retour des billes (`Overlaps`) et au cercle sans decal.
+  - **Modèle** : avec *Hole Prefab*, le contour est un cercle et le modèle est tourné au hasard.
+- **Contour brûlé** : un `DecalProjector` URP (*Scorch Decal*), projeté vers le bas à travers une tranche fine centrée sur le tapis (*Scorch Depth*), avec un fondu d'angle de 30° à 60° pour ne pas marquer les billes. Il est tourné au hasard et étiré (*Scorch Stretch*). Sans matériau, c'est un tracé `LineRenderer` du contour.
+  - **Génération** : `TableHoleScorchGenerator` (Éditeur, appelé par *Ensure Config Assets Exist*) produit la texture (feutre brûlé sous le trou, plaque carbonisée bruitée avec des traînées en rayons, braises autour du bord, pas de disque noir) et le matériau au shader `Shader Graphs/Decal` (propriété `Base_Map`). Il les branche sur l'asset s'il n'en a pas, et prévient si aucun `UniversalRendererData` n'a de `DecalRendererFeature`.
+  - **Version** : notée dans les réglages d'import de la texture (`userData`). Une texture générée plus ancienne est refaite.
+- **Fumée** : le débit d'émission de chaque `ParticleSystem` du prefab est multiplié par *Smoke Rate*. Avec *Smoke Duration*, l'émission s'arrête au bout de ce temps.
 
 L'**aimant** suit le cycle de la bille destructrice : `ArmMagnet`, consommé par `NotifyShotFired`. Pendant le tir, `PoolMatchRules.FixedUpdate` capte une bille du joueur (`IsOwnBall`) puis appelle `MagnetPower.Pull` à chaque pas de physique, jusqu'à l'empochage, la fin du coup ou *Max Pull Duration*.
 
@@ -452,6 +514,7 @@ Deux composants UI Toolkit (`UntitledPoolGame.Core`, `Assets/Scripts/UI/`) suive
   - **Lancement** : la partie démarre par `PoolMatchRules.RequestStart`, et le menu OnGUI provisoire est coupé (`PoolMatchRules.ExternalMenu`).
 - **Du menu au niveau** :
   - La scène **`MainMenu`** (marqueur `MainMenuScene`) n'a que le menu. `SyntheseMenu` s'affiche dans cette scène, ou dans un niveau lancé directement depuis l'éditeur (`PoolMatchRules` présent, pas de session en cours).
+  - **`SkipMainMenu`** (composant *Pool > Lancer sans le menu*, posé dans une scène de test) : `SyntheseMenu` ne se crée pas, et la partie démarre toute seule par `PoolMatchRules.RequestStart`, dans le mode réglé sur le composant. Sans effet dans un niveau lancé depuis le menu (`GameSession.Active`).
   - **Joueurs** : J1 est l'appareil qui navigue dans le menu. En Local, J2 rejoint dans la salle d'attente.
   - **Lancement** : choisir le niveau puis le mode enregistre la session dans **`GameSession`** (niveau, mode, appareils), une classe statique qui survit au changement de scène.
   - **`LevelLoader`** (gardé d'une scène à l'autre le temps du chargement) affiche l'écran de chargement. Il charge la scène en arrière-plan (`LoadSceneAsync`, activation retenue jusqu'à la durée minimale), coupe l'arrivée des joueurs par bouton (`PlayerInputManager.DisableJoining`) et fait entrer les joueurs avec les appareils de la session (`JoinPlayer`). Il attend ensuite que chacun appuie, puis lance `PoolMatchRules.RequestStart`.

@@ -108,6 +108,8 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 - **Deux sources** : des **caisses** qui apparaissent sur la table à des emplacements aléatoires et réapparaissent après ramassage, et une **bille à pouvoir** (lumineuse, change régulièrement) qu'il faut empocher.
 - **Trois catégories**, chacune avec sa couleur, son matériau et son modèle de caisse : **Attaque**, **Défense**, **Effet**.
 - **Activation** avec le bouton de pouvoir. Chaque pouvoir indique s'il est réservé à son propre tour ; les attaques s'utilisent pendant le tour adverse et prennent effet **immédiatement**.
+- **Niveaux** 🔄 : un pouvoir a un niveau (1 ou 2, version renforcée). Le passage au niveau 2 en ramassant deux fois le même pouvoir reste à faire ; le menu debug donne déjà le niveau 2 pour tester.
+- **Pouvoirs qui visent la table** 🔄 (Trou) : même choix que pour une poche, mais le pointeur vise un point du tapis, avec un cercle d'aperçu de la zone touchée.
 - **Pouvoirs qui visent un trou** : le bouton de pouvoir ouvre d'abord un **choix du trou**. Un pointeur blanc au centre de la vue désigne le trou, qui est entouré d'un cercle. Interact valide, le bouton de pouvoir annule. À terme, le joueur **pointera du doigt** et **lèvera le pouce** pour valider.
 
 ### Pouvoirs implémentés ✅
@@ -121,6 +123,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Bille destructrice** | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
 | **Aimant** | Effet | La bille du joueur qui roule vers le trou choisi est captée et tirée dedans (la plus proche si plusieurs, une seule par tir). La 8 n'est attirée que vers la poche annoncée | Prochain tir |
 | **Groupe identique** | Attaque | Toutes les billes sauf la blanche prennent le même aspect (incolore, ou celui d'une bille choisie dans les réglages), la 8 comprise ; la plaque des billes restantes est masquée. Les règles ne changent pas | Tour de l'adversaire |
+| **Trou** 🔄 | Attaque | Le joueur vise un point de la table. Lancé pendant son tour, l'endroit est marqué et la boule de feu tombe au début du tour de l'adversaire (pendant le tour adverse, en écran partagé : tout de suite). Elle s'écrase et creuse un trou, avec une secousse et une vibration des manettes pour les deux joueurs. Une bille qui passe dessus tombe et revient à sa place d'avant le tir à la fin du coup ; la blanche, elle, est une faute. Niveau 2 : un groupe de trous répartis au hasard autour du point visé, parfois au milieu | Réglable : tour de l'adversaire, prochain tir, toute la partie ou N tours |
 
 Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 

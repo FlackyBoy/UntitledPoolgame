@@ -266,7 +266,7 @@ Les masques sont dans `Assets/Animations/Combat/`. Ordre des calques : sonné, c
 ### GameFeelSettings — Feel aux moments de la partie
 
 Associe un **moment de la partie** à une **séquence Feel** (un prefab avec un *MMF Player*) :
-- **moments** : bille rentrée, blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse) ;
+- **moments** : bille rentrée, blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*) ;
 - **pour chaque ligne** : le moment, la séquence, l'intensité (1 = normale). Plusieurs lignes pour le même moment jouent toutes ;
 - **aussi** : un interrupteur général et le seuil du « tir plein » (0,95).
 
@@ -291,6 +291,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Textes : tour et plaque | « À toi ! », « Tour de J{0} », « J{0} », groupe à décider, « Prochaine », « Puissance », touche du pouvoir |
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
 | Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
+| Bandeau du choix sur la table | *Pick Table Banner Format* (pouvoir Trou) |
 | Interjections | Liste tirée au hasard quand une bille rentre, blanche rentrée, faute, main libre, tir plein, pouvoir lancé, « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
 | Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} », noms des catégories |
 | Fin de partie | « J{0} gagne ! », « Revanche », aide des touches, confettis |
@@ -310,9 +311,12 @@ Dans `Assets/Powers`. Champs communs : **Power Name** (nom affiché) et **Requir
 | Vision brouillée | `VisionImpairPower` | Sensitivity Multiplier (0,3) : sensibilité de la visée de l'adversaire |
 | Commandes inversées | `InvertedControlsPower` | Sensitivity Multiplier (1,8) |
 | Poche fermée | `ClosePocketPower` | — (poche choisie par le joueur ; le visuel du bouchon est dans PoolPotEffectSettings) |
+| Trou | `TableHolePower` | **Trous** : Hole Radius (7,5 cm), Level 1 Holes (1), Level 2 Holes (3), répartis au hasard : Level 2 Spread (0,2 m : rayon du cercle où tombent la plupart des trous), Level 2 Spread Jitter (0,3 : la distance varie de 70 % à 130 % du rayon), Level 2 Inside Chance (0,3 : chance qu'un trou tombe à l'intérieur du cercle), Level 2 Center Hole (non : un trou toujours sur le point visé), Level 2 Min Gap (2 cm entre deux trous). **Durée** : Duration (*Opponent Turn* = tour de l'adversaire, *Next Shot*, *Whole Match*, *Turns*), Turns (2), comptée à partir de l'ouverture du trou. Lancé pendant son propre tour, le trou ne s'ouvre qu'au début du tour de l'adversaire (l'endroit est marqué en attendant, aux couleurs du bord : *Rim Color / Width*). **Météore** : Meteor Prefab (*CFXR Fire*), Meteor Scale (0,25), Fall Height (2,5 m), Fall Side Offset (1,5 m), Fall Time (0,55 s), Level 2 Stagger (0,18 s), Impact Prefab (*CFXR3 Fire Explosion B*), Impact Scale (0,25), Impact Lifetime (3 s). **Le trou** : une forme d'explosion tirée au hasard à chaque impact — Shape Roughness (0,35 : contour plus ou moins bosselé), Shape Spikes (5 éclats plus longs), Shape Spike Length (0,5 × le rayon) ; les billes tombent selon cette forme. Edge Softness (0,45 : bord fondu vers le brûlé, 0 = net), Ember Amount (0,7 : braises qui suivent le bord, plus ou moins chaudes au hasard), Ember Color. Hole Prefab (facultatif, à la place de la forme générée, tourné au hasard), Hole Prefab Scale, Hole Color, **Scorch Decal** (contour brûlé projeté sur le tapis : matériau *TableHoleScorch* généré par *Ensure Config Assets Exist* ; demande la fonction *Decal* dans le renderer URP, voir plus bas), Scorch Scale (×2,2 le diamètre), Scorch Depth (2 cm), Scorch Opacity (1), Scorch Stretch (0,25 : étirement au hasard ; le decal est aussi tourné au hasard), Rim Color / Width (cercle de bord sans decal, et cercles qui marquent l'endroit visé en attendant), Smoke Prefab (*CFXR Smoke Source 3D*), Smoke Scale (0,3), Smoke Rate (1 : débit de la fumée, multiplie celui du prefab), Smoke Duration (0 : fume tant que le trou est ouvert, sinon s'éteint au bout de ce temps), Sink Time (0,35 s), Close Time (0,3 s). **Impact** : Blast Speed (0,6 m/s) / Radius (0,3 m), Shake Magnitude / Duration, Flash Color / Alpha / Duration, Rumble Low / High / Duration (vibration des manettes). *Requires Own Turn* décoché à la création (attaque) |
 | Groupe identique | `IdenticalGroupsPower` | Look (*Colorless* : aspect uni · *Like Ball* : aspect d'une bille), Look Ball Number (8 : bille copiée, 1 à 15), Colorless Material (facultatif), Colorless Color (gris clair, si pas de matériau). *Requires Own Turn* décoché à la création (attaque) |
 | Bille destructrice | `BallBlastPower` | Explosion Prefab (*CFXR2 WW Explosion*), Explosion Scale (0,15), Explosion Lifetime (4 s), Spare Eight Ball (oui), Blast Speed (0,5 m/s, 0 = pas de souffle), Blast Radius (0,3 m) |
 | Aimant | `MagnetPower` | Capture Radius (0,4 m : distance du trou où la bille est captée), Min Capture Speed (0,05 m/s : une bille immobile n'est pas captée), Pull Acceleration (1,5 m/s² : force d'attraction), Steering (4/s : correction de trajectoire, 0 = aucune), Max Pull Duration (4 s : lâche une bille coincée) ; *VFX dans la poche* : Pocket Vfx Prefab (*CFXR Electrified 3*, vide = aucun), Pocket Vfx Scale (0,2), Pocket Vfx Height (0,02 m), Pocket Vfx Fade Out (1,5 s) |
+
+**Decal du Trou** : le contour brûlé est un decal URP. Il ne s'affiche que si le renderer utilisé a la fonction *Decal* : sélectionner `Assets/Settings/PC_Renderer` (et `Mobile_Renderer`), *Add Renderer Feature > Decal*. La technique *Automatic* convient ; elle a un petit coût de rendu, payé deux fois en écran partagé. Pour un autre aspect, mettre son propre matériau de decal dans *Scorch Decal*. La texture générée (`Assets/Textures/Decals/TableHoleScorch.png`) peut être régénérée par l'outil quand sa version change.
 
 **Pouvoirs qui visent un trou** (Poche fermée, Aimant) : le choix du trou se règle sur *Local Pool Power Controller* (voir *Composants du joueur*) et le cercle dans PoolPotEffectSettings. L'asset de l'aimant est créé par *Ensure Config Assets Exist*, comme celui de la bille destructrice.
 
@@ -333,7 +337,7 @@ Sur `Assets/Prefabs/PlayerLocal/New.prefab`. Chaque champ a une infobulle dans l
 | **Local Cue Melee** | Coups de queue | Voir [Combat](config.html#config:combat) |
 | **Local Unarmed Melee** | Poings et pieds | Voir [Combat](config.html#config:combat) |
 | **Local Pool Power Controller** | Lancer son pouvoir, choisir un trou | Actions utilisées (*Next* : Q / B pour lancer ou annuler, *Interact* : E / Y pour valider le trou) |
-| **Local Pocket Pointer** (ajouté tout seul) | Choisir une poche en la visant : pouvoirs qui visent un trou, annonce de la 8 | *Max Point Angle* (8° : écart toléré entre le pointeur et une poche), *Pointer Size* (8 px : pointeur blanc) |
+| **Local Pocket Pointer** (ajouté tout seul) | Choisir une poche en la visant (pouvoirs qui visent un trou, annonce de la 8) ou un point de la table (pouvoir Trou, cercle d'aperçu aux couleurs de *Pocket pick: ring* de PoolPotEffectSettings) | *Max Point Angle* (8° : écart toléré entre le pointeur et une poche), *Pointer Size* (8 px : pointeur blanc) |
 | **Local Character Animation Controller** | Paramètres de l'Animator | Noms des paramètres, échelles de marche, inclinaison en tournant |
 | **Cue Charge Slide** (sur la queue) | Glissement de la queue dans les mains | Recul à la charge (0,15 m), longueur qui dépasse derrière la main (0,1 m), détection automatique de l'axe |
 
@@ -611,6 +615,18 @@ Si le personnage réagit du mauvais côté, cocher *Hit Reaction Swap Sides*. Po
 | Debug Logs | Coups, touches, longueurs de membres mesurées dans la console | oui |
 
 En jeu, joueur sélectionné, la vue *Scene* dessine le trajet du poing (jaune) et sa cible (rouge) pendant un coup.
+
+## Lancer une scène sans le menu
+
+Une scène qui contient une table de billard, lancée directement depuis l'éditeur, affiche le menu principal : c'est lui qui démarre la partie. Pour une scène de test (l'arène de R&D par exemple), on peut s'en passer : *Add Component > Pool > Lancer sans le menu* (`SkipMainMenu`), sur n'importe quel objet de la scène.
+
+| Paramètre | Ce qu'il fait | Défaut |
+|---|---|---|
+| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs) | Party |
+| Party Mode | Sous-mode, si Party | Classic |
+| Target Score | Score à atteindre, si 14.1 | 150 |
+
+Le composant n'a aucun effet quand le niveau est lancé depuis le menu. Le retirer (ou le désactiver) fait revenir le menu.
 
 ## Touches
 

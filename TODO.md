@@ -106,6 +106,54 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
 - ⬜ **Félicitations affichées pour une bille du mauvais groupe** (demande du 13/10) : quand le joueur rentre une bille qui n'est pas de son groupe, les interjections de félicitations (« Dans le mille ! »…) s'affichent quand même. Elles ne devraient se déclencher que pour une bille de son groupe (ou une bille légale selon le mode).
 - ⬜ **Bille adverse rentrée par ricochet : félicitations et pas de faute** (demande du 13/10) : le joueur touche d'abord une bille de son groupe, qui rentre une bille du groupe adverse → l'interjection de félicitations s'affiche et le coup n'est pas compté comme faute. Demande : pas de félicitations, et compter une faute. À trancher : en 8-ball classique ce n'est pas une faute (le tour passe simplement, sauf si une bille du groupe du joueur est aussi rentrée) — faute dans tous les modes, ou seulement en Party ?
 - ⬜ **Cumul de deux pouvoirs identiques = niveau 2** (demande du 13/10) : ramasser un pouvoir qu'on a déjà en stock sans l'avoir utilisé le fait passer au niveau 2 (version renforcée) au lieu de simplement le remplacer. Aujourd'hui `PoolMatchRules` garde un seul pouvoir par joueur et l'écrase au ramassage. À cadrer : effet du niveau 2 pour chaque pouvoir, niveau max (2 ou plus ?), affichage du niveau dans le HUD.
+  - **Déjà en place (15/10, avec le pouvoir Trou)** :
+    - `PoolMatchRules` garde un niveau par pouvoir en main (`GetHeldPowerLevel`) et le passe au pouvoir pendant son activation (`ActivatingPowerLevel`) ;
+    - le menu debug donne un pouvoir au niveau 2 ;
+    - le premier pouvoir à s'en servir est le Trou (niveau 2 = un groupe de trous).
+  - **Reste** : le ramassage qui fait passer au niveau 2, et l'affichage du niveau dans le HUD.
+- 🔄 **Pouvoir « Trou »** (`TableHolePower`, Attaque, activable hors tour ; 15/10, branche `feature/pouvoir-trou`, compilé, non testé) :
+  - **Visée** : le joueur vise un point de la table avec le pointeur blanc. Un cercle montre la zone touchée (le groupe entier au niveau 2), E / Y valide, Q / B annule. Le point est gardé sur le tapis et hors des poches. Le pointage passe par `LocalPocketPointer.PointTable`, et la base commune est `TablePointPower`.
+  - **Météore** (`TableHoleMeteor`) : une boule de feu (*CFXR Fire*) arrive en diagonale et en accélérant. À l'impact :
+    - une explosion (*CFXR3 Fire Explosion B*) ;
+    - les billes posées sur l'endroit sont sorties au bord, puis les billes proches sont soufflées ;
+    - le trou s'ouvre ;
+    - la vue des deux joueurs tremble, avec un flash orange, et les manettes vibrent ;
+    - le moment Feel « impact de météore » est joué.
+  - **Forme d'explosion** (demande du 15/10 : le trou était trop rond) : à chaque impact, un contour au hasard.
+    - Le contour est bosselé (*Shape Roughness*), avec quelques éclats plus longs (*Shape Spikes*, *Shape Spike Length*).
+    - Il est dessiné en maillage noir, et les billes tombent selon ce contour (`TableHole.RadiusToward`).
+    - Le decal est tourné et étiré au hasard (*Scorch Stretch*).
+    - La texture générée n'a plus de disque noir rond au centre, ni de cercle de braises (v3, régénérée par l'outil).
+    - Retour du 15/10 « le trou est très net comparé au tour » :
+      - le maillage a maintenant un bord fondu (*Edge Softness*, couleurs aux sommets) ;
+      - les braises suivent la forme du trou (*Ember Amount*, *Ember Color*) ;
+      - le contour a deux fois plus de points, avec du bruit fin.
+  - **Fumée** : débit (*Smoke Rate*, multiplie celui du prefab) et durée (*Smoke Duration*, 0 = tant que le trou est ouvert).
+    - Retour du 15/10 : le trou passait par-dessus la fumée. Il était trié avec les transparents ; il est maintenant dessiné avec l'opaque (file de rendu 2450), donc avant tous les effets.
+  - **Le trou** (`TableHole`) : sa forme noire, avec de la fumée. Son contour brûlé est un **decal** URP projeté sur le tapis (demande du 15/10) :
+    - texture et matériau générés par *Ensure Config Assets Exist* (`TableHoleScorch`) ;
+    - ⬜ **à faire dans Unity** : ajouter la fonction *Decal* au renderer URP (`PC_Renderer` et `Mobile_Renderer` > *Add Renderer Feature > Decal*). Sans elle, le contour reste invisible et l'outil le signale dans la console ;
+    - sans matériau de decal sur l'asset, c'est un simple cercle orange. Le tapis reste plein : c'est le centre de la bille qui passe au-dessus qui la fait tomber.
+  - **Bille tombée** : elle va au centre, s'enfonce et disparaît, mais reste « sur la table » pour les règles.
+    - À la fin du tir (le tir attend la fin de sa chute), elle revient à sa place d'avant le tir, ou à la place libre la plus proche, hors des trous et des poches.
+    - La blanche, elle, est une faute, comme une blanche rentrée.
+    - Hors d'un tir (poussée par le souffle), une bille est remise au bord du trou.
+  - **Niveaux** : 1 trou au niveau 1. Au niveau 2, *Level 2 Holes* (3), avec un météore chacun, décalés de *Level 2 Stagger*.
+    - **Répartition au hasard** (retour du 15/10 : le cercle régulier était trop prévisible) : la plupart des trous tombent autour du cercle de *Level 2 Spread*, à un angle au hasard et à une distance qui varie (*Spread Jitter*).
+    - Certains tombent à l'intérieur (*Inside Chance*). Un trou peut être forcé au point visé (*Center Hole*).
+    - Les trous ne se chevauchent pas (*Min Gap*).
+  - **Moment d'effet** (retour du 15/10 : il gênait celui qui le lançait) :
+    - lancé pendant son propre tour, le Trou est pour le **tour de l'adversaire** : le point est verrouillé tout de suite et marqué d'un cercle orange au sol, mais le météore ne tombe qu'au début du tour adverse (`PoolMatchRules.QueueTableHoles`, comme Poche fermée) ;
+    - lancé pendant le tour de l'adversaire (écran partagé ; pas possible en solo à un seul appareil), il tombe tout de suite.
+  - **Durée** (au choix sur l'asset, comptée à partir de l'ouverture du trou) :
+    - tour de l'adversaire de celui qui le lance ;
+    - prochain tir ;
+    - toute la partie ;
+    - N changements de tour.
+  - **Main libre** : on ne peut pas poser la blanche sur un trou.
+  - **Asset** : *Tools > Pool > Ensure Config Assets Exist* crée `Assets/Powers/TableHolePower.asset` (avec les effets) et l'ajoute aux pouvoirs distribués.
+  - **À tester et régler en jeu** : taille du trou, échelle des effets, force de la vibration, lisibilité du cercle d'aperçu.
+- 🔄 **Lancer une scène sans le menu** (demande du 15/10 ; compilé, non testé) : composant *Pool > Lancer sans le menu* (`SkipMainMenu`) à poser dans une scène de test. Le menu principal ne s'affiche pas, et la partie démarre seule dans le mode choisi. Sans effet quand le niveau vient du menu.
 - ⬜ **Gestion du combat pendant une partie** — à cadrer (mode de jeu ? pouvoirs ?). Suggestions de Claude à discuter :
   - combat seulement en mode Party, ou réglable par mode (8-ball « propre » sans coups) ;
   - frapper le joueur qui vise lui fait rater ou perdre son coup (faute) — le combat devient une défense de la table ;
@@ -203,7 +251,7 @@ Légende : ⬜ à faire · 🔄 en cours · ✅ fait
     - Rendre une bille lourde, plus dure à déplacer (Attaque)
     - Intervertir la bille blanche avec la bille visée au moment de viser (Défense)
     - Calcul de trajectoire prenant en compte les rebonds en plus du premier contact — actuellement la prévisualisation (`LocalPoolAimController.UpdatePreview`) ne montre que le premier contact, pas de rebonds sur bande (Défense)
-    - ⬜ **Faire apparaître un trou sur la table** (pouvoir de « destruction » ; faisabilité étudiée le 13/10, rien d'implémenté) :
+    - 🔄 **Faire apparaître un trou sur la table** : fait le 15/10, c'est le pouvoir « Trou » (voir plus haut). Choix de l'utilisateur, qui diffèrent des pistes ci-dessous : la bille tombée n'est pas empochée, elle revient à sa place d'avant le tir ; la blanche est une faute ; le joueur vise le point ; la durée et la taille sont réglables ; le niveau 2 crée un groupe de trous. La « vraie chute » (version 2) reste une piste. Étude du 13/10 :
       - **Version 1, trou simple** (à faire d'abord pour tester si c'est fun) : poser une `PoolPocket` temporaire à l'endroit choisi, avec un visuel (disque noir ou decal, bord déchiré, particules d'explosion). Le tapis reste solide : la bille disparaît en passant sur le trou, comme dans les vraies poches. Les règles, le HUD et le feel suivent sans changement (`ball.OnPocketed`, `PoolPocket.Active`). Même principe que `ClosePocketPower`, qui modifie déjà une poche en cours de partie.
       - **Version 2, vraie chute** (si la v1 plaît) :
         - physique : laisser la bille traverser le tapis (un seul pavé étiré, `PoolTableSurface`) dans le rayon du trou, soit avec `Physics.IgnoreCollision` bille ↔ tapis tant que son centre est dans le trou, soit en découpant le collider du tapis en plusieurs morceaux ;

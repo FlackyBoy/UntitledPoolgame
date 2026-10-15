@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: PoolPowerSpawnSettings
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPowerSpawnSettings
   availablePowers:
-  - {fileID: 11400000, guid: d62d443b63597664a98f04d2e2255f6c, type: 2}
+  - {fileID: 11400000, guid: f2375f8a8b2cc3348b8da85bc9c20c7f, type: 2}
+  - {fileID: 11400000, guid: 974c043049835f3458008baac53b3385, type: 2}
   - {fileID: 11400000, guid: c1502caf75b868c47baee5b6f3b463ce, type: 2}
-  - {fileID: 11400000, guid: 6c5cef1506611b64583efac5c14837e6, type: 2}
+  - {fileID: 11400000, guid: d62d443b63597664a98f04d2e2255f6c, type: 2}
   attackColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   defenseColor: {r: 0.25, g: 0.55, b: 1, a: 1}
   effectColor: {r: 0.3, g: 0.9, b: 0.4, a: 1}

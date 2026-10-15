@@ -12,10 +12,10 @@ namespace UntitledPoolGame.Pool
     // input asset; it used to share X-Square with Attack). Added to the
     // player automatically by LocalPlayerHandController when missing.
     //
-    // A PocketTargetPower (Aimant, Bloquer une poche) first needs a pocket:
-    // the press starts a pick instead (LocalPocketPointer: look at the
-    // pocket), Interact confirms, "Next" again cancels (the power stays in
-    // hand).
+    // A PocketTargetPower (Aimant, Bloquer une poche) first needs a pocket,
+    // a TablePointPower (Trou) a point of the table: the press starts a pick
+    // instead (LocalPocketPointer: look at the pocket / the felt),
+    // Interact confirms, "Next" again cancels (the power stays in hand).
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPoolPowerController : MonoBehaviour
     {
@@ -29,7 +29,8 @@ namespace UntitledPoolGame.Pool
         private LocalPoolAimController aimController;
         private LocalPocketPointer pointer;
 
-        private PocketTargetPower choosingPower;
+        // A PocketTargetPower or a TablePointPower while picking, else null.
+        private PoolPower choosingPower;
         // The pick ended (confirmed or cancelled) this frame: Interact must
         // still count as taken for the scripts running after this one
         // (aim entry, cue pickup), or the confirming press would also grab
@@ -39,8 +40,9 @@ namespace UntitledPoolGame.Pool
         // Read by LocalPoolAimController (stays out of the way, keeps
         // Interact for itself) and the HUD (banner).
         public bool IsChoosingPocket => choosingPower != null || choiceEndedFrame == Time.frameCount;
-        public PocketTargetPower ChoosingPower => choosingPower;
-        public PoolPocket TargetedPocket => choosingPower != null ? pointer.Pointed : null;
+        public PoolPower ChoosingPower => choosingPower;
+        public bool IsChoosingTablePoint => choosingPower is TablePointPower;
+        public PoolPocket TargetedPocket => choosingPower is PocketTargetPower ? pointer.Pointed : null;
 
         private void Awake()
         {
@@ -84,12 +86,12 @@ namespace UntitledPoolGame.Pool
             PoolPower power = rules.GetHeldPower(effectivePlayer);
             if (!CanActivate(rules, power, effectivePlayer)) return;
 
-            if (power is PocketTargetPower targeted)
+            if (power is PocketTargetPower || power is TablePointPower)
             {
                 // Ball in hand owns the camera and Interact, the 8-ball call
                 // owns the pointer: the pick waits until they're done.
                 if (IsPointerTakenByAim()) return;
-                choosingPower = targeted;
+                choosingPower = power;
                 return;
             }
 
@@ -123,8 +125,20 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
+            bool confirm = interactAction.WasPressedThisFrame() || interactAction.WasPerformedThisFrame();
+            if (choosingPower is TablePointPower tablePower)
+            {
+                int level = rules.GetHeldPowerLevel(effectivePlayer);
+                if (pointer.PointTable(tablePower.Margin(level), tablePower.PreviewRadius(level), out Vector3 point) && confirm)
+                {
+                    EndChoice();
+                    rules.TryActivatePower(effectivePlayer, point);
+                }
+                return;
+            }
+
             PoolPocket picked = pointer.Point();
-            if (picked != null && (interactAction.WasPressedThisFrame() || interactAction.WasPerformedThisFrame()))
+            if (picked != null && confirm)
             {
                 EndChoice();
                 rules.TryActivatePower(effectivePlayer, picked);
@@ -146,9 +160,11 @@ namespace UntitledPoolGame.Pool
             if (choosingPower == null || PoolMatchRules.ExternalHud || pointer.ViewCamera == null) return;
             Rect view = pointer.ViewCamera.pixelRect;
             PoolPocket pocket = pointer.Pointed;
-            string hint = pocket != null
-                ? $"{choosingPower.PowerName} → {pocket.DescribeLocation()} (Interact pour valider, pouvoir pour annuler)"
-                : $"{choosingPower.PowerName} : vise un trou (pouvoir pour annuler)";
+            string hint = IsChoosingTablePoint
+                ? $"{choosingPower.PowerName} : vise la table (Interact pour valider, pouvoir pour annuler)"
+                : pocket != null
+                    ? $"{choosingPower.PowerName} → {pocket.DescribeLocation()} (Interact pour valider, pouvoir pour annuler)"
+                    : $"{choosingPower.PowerName} : vise un trou (pouvoir pour annuler)";
             GUI.Box(new Rect(view.x + view.width / 2f - 220f, Screen.height - view.yMax + 20f, 440f, 28f), hint);
         }
     }

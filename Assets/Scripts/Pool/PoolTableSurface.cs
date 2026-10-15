@@ -25,7 +25,16 @@ namespace UntitledPoolGame.Pool
             this.halfWidth = halfWidth;
         }
 
-        private void Awake() => Instance = this;
+        // The felt's own collider: a power aimed at the table raycasts it
+        // alone (nothing in the way counts), and its top is the felt height.
+        public Collider Felt { get; private set; }
+        public float FeltTopY => Felt != null ? Felt.bounds.max.y : transform.position.y;
+
+        private void Awake()
+        {
+            Instance = this;
+            Felt = GetComponent<Collider>();
+        }
 
         private void OnDestroy()
         {

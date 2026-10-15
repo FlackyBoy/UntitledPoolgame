@@ -3,6 +3,27 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-15
+- **Pouvoir « Trou »** (`TableHolePower`, Attaque ; branche `feature/pouvoir-trou` ; compilé, non testé).
+  - **Visée** : le joueur vise un point de la table avec le pointeur blanc, et un cercle montre la zone touchée.
+  - **Impact** : une boule de feu s'y écrase et creuse un trou dans le tapis. Les billes proches sont soufflées, l'écran des deux joueurs tremble et leurs manettes vibrent. Nouveau moment Feel « impact de météore ».
+  - **Bille tombée** : une bille qui passe sur le trou y tombe, puis revient à sa place d'avant le tir quand tout est arrêté. La blanche, elle, est une faute.
+  - **Niveaux** : niveau 1 = un trou. Niveau 2 = un groupe de trous répartis au hasard autour du point visé : surtout autour du cercle, parfois dedans, sans se chevaucher. Tout est réglable.
+  - **Pour le tour adverse** : lancé pendant son propre tour, le point est verrouillé (cercle orange au sol) et le météore tombe au début du tour de l'adversaire, pour ne pas gêner le lanceur. Lancé pendant le tour adverse (écran partagé), il tombe tout de suite.
+  - **Durée** au choix : tour de l'adversaire, prochain tir, toute la partie ou N tours.
+  - **Niveaux de pouvoir** : `PoolMatchRules` garde le niveau du pouvoir en main et le passe à son activation. Le menu debug peut donner le niveau 2. Le ramassage en double reste à faire.
+  - **Code** :
+    - `TablePointPower` (base des pouvoirs qui visent la table), `TableHole`, `TableHoleMeteor` ;
+    - `LocalPocketPointer.PointTable` ;
+    - `RingLine` (cercle commun au choix de poche, à l'aperçu sur la table et au bord du trou) ;
+    - `PoolBall.FallIntoTableHole / ReturnFromTableHole` ;
+    - `PoolTableSurface.Felt / FeltTopY`.
+  - **Main libre** : on ne peut pas poser la blanche sur un trou.
+  - **Forme d'explosion** : chaque trou a un contour tiré au hasard (bosselé, avec des éclats), et les billes tombent selon cette forme. Son bord est fondu vers le brûlé, avec des braises qui suivent la forme. Le decal de brûlure est tourné et étiré au hasard.
+  - **Fumée** : débit et durée réglables.
+  - **Contour en decal** : le bord brûlé du trou est un decal URP projeté sur le tapis. Texture (centre noir, bord carbonisé irrégulier, braises) et matériau générés par *Ensure Config Assets Exist*. Il faut ajouter la fonction *Decal* au renderer URP pour le voir ; l'outil le signale sinon.
+- **Lancer une scène sans le menu** (même branche ; compilé, non testé) : nouveau composant *Pool > Lancer sans le menu* (`SkipMainMenu`). Posé dans une scène de test, il empêche le menu principal de s'afficher quand on lance la scène depuis l'éditeur, et démarre la partie tout seul dans le mode choisi (Party par défaut). Il est sans effet dans un niveau lancé depuis le menu.
+
 ## 2026-10-13
 - **Combat : frapper là où l'on regarde** (branche `feature/update-combat` ; compilé, non testé).
   - **Avant** : les poings animés partaient toujours à hauteur de l'animation, quel que soit le regard.

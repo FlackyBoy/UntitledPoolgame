@@ -14,7 +14,7 @@
 
 | Outil | Ce qu'il fait |
 |---|---|
-| **Ensure Config Assets Exist** | Crée les fichiers de réglages manquants (`Assets/Resources`, écrans des menus), sans toucher à ceux qui existent. Pour repartir des valeurs par défaut : supprimer le fichier, puis relancer |
+| **Ensure Config Assets Exist** | Crée les fichiers de réglages manquants (`Assets/Resources`, écrans des menus, assets des pouvoirs dans `Assets/Powers`), sans toucher à ceux qui existent. Pour le pouvoir Trou, génère aussi le decal du contour brûlé (`Assets/Textures/Decals`, `Assets/Materials/Decals`) et prévient si le renderer URP n'a pas la fonction Decal. Pour repartir des valeurs par défaut : supprimer le fichier, puis relancer |
 | **Create Main Menu Scene** | Crée la scène `MainMenu` si elle manque, puis lance *Sync Build Scenes* |
 | **Sync Build Scenes (menu + levels)** | Met la scène du menu en premier dans les scènes du build, suivie des niveaux de `GameFlowSettings`. Les niveaux *Coming Soon* et ceux sans scène sont ignorés |
 

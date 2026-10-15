@@ -75,6 +75,8 @@ namespace UntitledPoolGame.Core
         public string blastArmedBanner = "Bille destructrice armée : la 1re bille touchée explose";
         [Tooltip("Choix du trou d'un pouvoir. {0} = nom du pouvoir, {1} = trou visé.")]
         public string pickPocketBannerFormat = "{0} → {1} · E / Y pour valider · Q / B pour annuler";
+        [Tooltip("Choix d'un point de la table (pouvoir Trou). {0} = nom du pouvoir.")]
+        public string pickTableBannerFormat = "{0} : vise la table · E / Y pour valider · Q / B pour annuler";
         [Tooltip("Choix du trou, aucun trou visé. {0} = nom du pouvoir.")]
         public string pickPocketNoneFormat = "{0} : vise un trou · Q / B pour annuler";
         [Tooltip("{0} = trou choisi.")]

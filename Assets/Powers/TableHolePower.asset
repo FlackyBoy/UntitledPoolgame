@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05e15e32b44115c42a5c3a2873b63f05, type: 3}
+  m_Name: TableHolePower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.TableHolePower
+  powerName: Trou
+  requiresOwnTurn: 0
+  holeRadius: 0.09
+  level1Holes: 1
+  level2Holes: 3
+  level2Spread: 0.2
+  level2SpreadJitter: 0.3
+  level2InsideChance: 0.3
+  level2CenterHole: 0
+  level2MinGap: 0.02
+  duration: 1
+  turns: 1
+  meteorPrefab: {fileID: 6294508013172393196, guid: 043176b6a68be2b43b073aaaa4782c7d, type: 3}
+  meteorScale: 0.25
+  fallHeight: 2.5
+  fallSideOffset: 1.5
+  fallTime: 0.55
+  level2Stagger: 0.18
+  impactPrefab: {fileID: 8194992990867289339, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
+  impactScale: 0.25
+  impactLifetime: 3
+  shapeRoughness: 0.35
+  shapeSpikes: 5
+  shapeSpikeLength: 0.5
+  edgeSoftness: 0.45
+  emberAmount: 0.7
+  emberColor: {r: 1, g: 0.42, b: 0.08, a: 1}
+  holePrefab: {fileID: 0}
+  holePrefabScale: 1
+  holeColor: {r: 0, g: 0, b: 0, a: 1}
+  scorchDecal: {fileID: 2100000, guid: 1153115c1968c3841bcc53bf05bd1103, type: 2}
+  scorchScale: 2.2
+  scorchDepth: 0.02
+  scorchOpacity: 1
+  scorchStretch: 0.25
+  rimColor: {r: 1, g: 0.45, b: 0.1, a: 1}
+  rimWidth: 0.012
+  smokePrefab: {fileID: 8656522925564163052, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+  smokeScale: 0.5
+  smokeRate: 0.1
+  smokeDuration: 0
+  sinkTime: 0.35
+  closeTime: 0.3
+  blastSpeed: 0.6
+  blastRadius: 0.3
+  shakeMagnitude: 0.06
+  shakeDuration: 0.4
+  flashColor: {r: 1, g: 0.55, b: 0.15, a: 1}
+  flashAlpha: 0.15
+  flashDuration: 0.25
+  rumbleLow: 0.7
+  rumbleHigh: 1
+  rumbleDuration: 0.35

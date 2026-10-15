@@ -131,48 +131,29 @@ namespace UntitledPoolGame.Pool
         private int targetCount;
         private LineRenderer targetRing;
         private float targetRingRadius;
-        private const int TargetRingSegments = 40;
 
         public void SetTargeted(bool targeted)
         {
             targetCount = Mathf.Max(0, targetCount + (targeted ? 1 : -1));
             bool on = targetCount > 0;
-            if (on && targetRing == null) targetRing = CreateTargetRing();
+            if (on && targetRing == null)
+            {
+                targetRing = RingLine.Create(transform, "TargetRing", settings.targetRingWidth, settings.targetRingColor);
+                targetRingRadius = Radius * settings.targetRingRadiusScale;
+            }
             if (targetRing != null) targetRing.enabled = on;
             SetSelectionHighlight(on);
         }
 
-        private LineRenderer CreateTargetRing()
-        {
-            var ringObject = new GameObject("TargetRing");
-            ringObject.transform.SetParent(transform, worldPositionStays: false);
-            LineRenderer ring = ringObject.AddComponent<LineRenderer>();
-            ring.useWorldSpace = true;
-            ring.loop = true;
-            ring.positionCount = TargetRingSegments;
-            ring.widthMultiplier = settings.targetRingWidth;
-            ring.startColor = ring.endColor = settings.targetRingColor;
-            ring.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            ring.receiveShadows = false;
-            // Same unlit, colour-tinted material as the aim preview lines.
-            ring.sharedMaterial = new Material(Shader.Find("Sprites/Default"));
-            targetRingRadius = Radius * settings.targetRingRadiusScale;
-            return ring;
-        }
+        // The ring's pulse, shared with the table-point preview (LocalPocketPointer).
+        public static float RingPulse() => settings == null ? 1f :
+            1f + settings.targetRingPulseAmount * Mathf.Sin(Time.unscaledTime * settings.targetRingPulseRate * Mathf.PI * 2f);
 
         // Only does anything while a player is pointing at this pocket.
         private void Update()
         {
             if (targetCount == 0 || targetRing == null) return;
-
-            float pulse = 1f + settings.targetRingPulseAmount * Mathf.Sin(Time.unscaledTime * settings.targetRingPulseRate * Mathf.PI * 2f);
-            float radius = targetRingRadius * pulse;
-            Vector3 center = transform.position + Vector3.up * settings.targetRingHeight;
-            for (int i = 0; i < TargetRingSegments; i++)
-            {
-                float angle = i * Mathf.PI * 2f / TargetRingSegments;
-                targetRing.SetPosition(i, center + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius);
-            }
+            RingLine.Set(targetRing, transform.position + Vector3.up * settings.targetRingHeight, targetRingRadius * RingPulse());
         }
 
         private void Reset()

@@ -80,6 +80,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureBallBlastPowerAsset();
             EnsureMagnetPowerAsset();
             EnsureIdenticalGroupsPowerAsset();
+            EnsureTableHolePowerAsset();
             EnsureHudSettingsAsset();
             GameFlowTools.EnsureAssets();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
@@ -104,6 +105,23 @@ namespace UntitledPoolGame.PoolEditor
                 const string explosionPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Explosions/CFXR2 WW Explosion.prefab";
                 serialized.FindProperty("explosionPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(explosionPath);
             });
+        }
+
+        // The "Trou" power asset (TableHolePower): an attack, usable during
+        // the opponent's turn, with Cartoon FX Remaster's fire for the
+        // meteor, its fire explosion for the impact and its smoke for the hole.
+        private static void EnsureTableHolePowerAsset()
+        {
+            EnsurePowerAsset<TableHolePower>("TableHolePower", "Trou", serialized =>
+            {
+                const string cfxr = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/";
+                serialized.FindProperty("requiresOwnTurn").boolValue = false;
+                serialized.FindProperty("meteorPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cfxr + "Fire/CFXR Fire.prefab");
+                serialized.FindProperty("impactPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cfxr + "Explosions/CFXR3 Fire Explosion B.prefab");
+                serialized.FindProperty("smokePrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cfxr + "Misc/CFXR Smoke Source 3D.prefab");
+            });
+            // The scorch decal, also for an asset created before it existed.
+            TableHoleScorchGenerator.Ensure("Assets/Powers/TableHolePower.asset");
         }
 
         // The "Aimant" power asset (MagnetPower), with Cartoon FX Remaster's

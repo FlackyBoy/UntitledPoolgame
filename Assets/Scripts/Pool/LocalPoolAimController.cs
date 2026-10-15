@@ -569,6 +569,8 @@ namespace UntitledPoolGame.Pool
                 Vector3 rawTarget = placingCueBall.transform.position + delta;
                 Vector3 clamped = surface.ClampToPlayArea(rawTarget, placingCueBall.Radius);
                 clamped = PoolPocket.AvoidAllPockets(clamped, placingCueBall.Radius);
+                // Nor on a hole smashed in the felt (TableHolePower).
+                clamped = TableHole.AvoidAll(clamped, placingCueBall.Radius);
                 placingCueBall.PlaceAt(clamped + Vector3.up * placingCueBall.Radius);
             }
 

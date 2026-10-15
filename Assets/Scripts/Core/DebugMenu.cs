@@ -55,7 +55,7 @@ namespace UntitledPoolGame.Core
         private readonly List<PoolPower> powers = new List<PoolPower>();
         private ErrorKind errorKind;
         private string status = "";
-        private Rect window = new Rect(20f, 20f, 400f, 620f);
+        private Rect window = new Rect(20f, 20f, 460f, 620f);
         private Vector2 scroll;
 
         private void Update()
@@ -174,12 +174,14 @@ namespace UntitledPoolGame.Core
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{power.PowerName} ({power.Type})");
-                for (int p = 0; p < 2; p++)
-                    if (GUILayout.Button($"J{p + 1}", GUILayout.Width(40f)))
-                    {
-                        rules.DebugSetHeldPower(p, power);
-                        status = $"{power.PowerName} donné à J{p + 1}.";
-                    }
+                // Level 1, then level 2 (power levels: PoolMatchRules.GetHeldPowerLevel).
+                for (int level = 1; level <= 2; level++)
+                    for (int p = 0; p < 2; p++)
+                        if (GUILayout.Button(level == 1 ? $"J{p + 1}" : $"J{p + 1} N2", GUILayout.Width(level == 1 ? 34f : 48f)))
+                        {
+                            rules.DebugSetHeldPower(p, power, level);
+                            status = $"{power.PowerName} niveau {level} donné à J{p + 1}.";
+                        }
                 GUILayout.EndHorizontal();
             }
             if (powers.Count == 0) GUILayout.Label("Aucun asset de pouvoir trouvé.");
@@ -198,7 +200,9 @@ namespace UntitledPoolGame.Core
         private static string HeldName(PoolMatchRules rules, int player)
         {
             PoolPower held = rules.GetHeldPower(player);
-            return held != null ? held.PowerName : "—";
+            if (held == null) return "—";
+            int level = rules.GetHeldPowerLevel(player);
+            return level > 1 ? $"{held.PowerName} (niv. {level})" : held.PowerName;
         }
 
         private void DrawMatch(PoolMatchRules rules, int current)
