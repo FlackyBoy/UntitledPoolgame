@@ -22,7 +22,7 @@
 | Rendre une bille lourde | Attaque |
 | Échanger la bille blanche avec la bille visée | Défense |
 | Trajectoire affichée avec les rebonds sur bande | Défense |
-| Faire apparaître un trou sur la table | À trancher |
+| Faire apparaître un trou sur la table (implémenté le 15/10 : pouvoir « Trou », voir le GDD) | Attaque |
 | Dédoubler la bille blanche | À trancher |
 | Invoquer des minions | À explorer |
 | Earthquake : la table se brise en morceaux | Pouvoir ou mode |

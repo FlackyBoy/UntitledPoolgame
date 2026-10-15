@@ -40,12 +40,13 @@ namespace UntitledPoolGame.Core
 
         // Shown in the main menu scene (MainMenuScene marker), and in a level
         // played straight from the editor (a PoolMatchRules, no session from
-        // the menu) — not in a level the menu just launched.
+        // the menu) — not in a level the menu just launched, nor in a scene
+        // that asks to skip it (SkipMainMenu, which starts the match itself).
         private static void TryCreate()
         {
             if (FindAnyObjectByType<SyntheseMenu>() != null) return;
             bool menuScene = FindAnyObjectByType<MainMenuScene>() != null;
-            bool levelPlayedDirectly = FindAnyObjectByType<PoolMatchRules>() != null && !GameSession.Active;
+            bool levelPlayedDirectly = FindAnyObjectByType<PoolMatchRules>() != null && !GameSession.Active && !SkipMainMenu.InScene;
             if (!menuScene && !levelPlayedDirectly) return;
             var go = new GameObject("Menu (Synthèse)");
             go.SetActive(false);

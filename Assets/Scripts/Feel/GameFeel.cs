@@ -58,6 +58,7 @@ namespace UntitledPoolGame.Core
             UntitledPoolGame.Interaction.LocalUnarmedMelee.PlayerHit += OnPlayerHit;
             UntitledPoolGame.Interaction.LocalHitGauge.KnockedOut += OnKnockedOut;
             UntitledPoolGame.Interaction.LocalUnarmedMelee.GuardBroken += OnGuardBroken;
+            TableHolePower.Impact += OnTableHoleImpact;
         }
 
         private void OnDisable()
@@ -71,7 +72,11 @@ namespace UntitledPoolGame.Core
             UntitledPoolGame.Interaction.LocalUnarmedMelee.PlayerHit -= OnPlayerHit;
             UntitledPoolGame.Interaction.LocalHitGauge.KnockedOut -= OnKnockedOut;
             UntitledPoolGame.Interaction.LocalUnarmedMelee.GuardBroken -= OnGuardBroken;
+            TableHolePower.Impact -= OnTableHoleImpact;
         }
+
+        // Everyone feels it: the table shook for both.
+        private void OnTableHoleImpact(Vector3 point, int owner) => Play(GameFeelEvent.TableHoleImpact, -1, point);
 
         // The victim's moment (its screen for the HUD text), scaled by how
         // hard the blow was.

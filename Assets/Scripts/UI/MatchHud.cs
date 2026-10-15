@@ -630,6 +630,8 @@ namespace UntitledPoolGame.Core
             string text = null;
             if (aim != null && aim.IsBallPlacementActive)
                 text = cfg.ballInHandBanner;
+            else if (powerCtl != null && powerCtl.IsChoosingTablePoint)
+                text = Format(cfg.pickTableBannerFormat, powerCtl.ChoosingPower.PowerName);
             else if (powerCtl != null && powerCtl.ChoosingPower != null)
                 text = powerCtl.TargetedPocket != null
                     ? Format(cfg.pickPocketBannerFormat, powerCtl.ChoosingPower.PowerName, powerCtl.TargetedPocket.DescribeLocation())

@@ -233,24 +233,43 @@ namespace UntitledPoolGame.Pool
             if (heldPower[player] != null) return;
 
             heldPower[player] = power;
+            heldPowerLevel[player] = 1;
             PowerGranted?.Invoke(player);
         }
 
         public PoolPower GetHeldPower(int player) => heldPower[player];
 
+        // Power levels: 1 normally, 2 for a stronger version (e.g. Trou:
+        // several holes). Nothing raises it in play yet — picking up the
+        // same power twice is meant to (see TODO.md) — the debug menu can.
+        // The power reads it during its Activate (ActivatingPowerLevel).
+        private readonly int[] heldPowerLevel = { 1, 1 };
+        public int GetHeldPowerLevel(int player) => heldPowerLevel[player];
+        public int ActivatingPowerLevel { get; private set; } = 1;
+
         // Returns false if the player wasn't holding anything. target: the
         // pocket picked for a PocketTargetPower (LocalPoolPowerController);
         // without one, such a power falls back to a random open pocket.
-        public bool TryActivatePower(int player, PoolPocket target = null)
+        public bool TryActivatePower(int player, PoolPocket target = null) => ActivateHeld(player, target, null);
+
+        // Same for a TablePointPower, with the point of the table picked.
+        public bool TryActivatePower(int player, Vector3 tablePoint) => ActivateHeld(player, null, tablePoint);
+
+        private bool ActivateHeld(int player, PoolPocket pocket, Vector3? tablePoint)
         {
             PoolPower power = heldPower[player];
             if (power == null) return false;
 
             heldPower[player] = null;
-            if (target != null && power is PocketTargetPower targeted)
-                targeted.Activate(this, player, target);
+            ActivatingPowerLevel = heldPowerLevel[player];
+            heldPowerLevel[player] = 1;
+            if (pocket != null && power is PocketTargetPower targeted)
+                targeted.Activate(this, player, pocket);
+            else if (tablePoint.HasValue && power is TablePointPower pointed)
+                pointed.Activate(this, player, tablePoint.Value);
             else
                 power.Activate(this, player);
+            ActivatingPowerLevel = 1;
             return true;
         }
 
@@ -669,6 +688,218 @@ namespace UntitledPoolGame.Pool
             magnetArmed[CurrentPlayer] = null;
             magnetArmedPocket[CurrentPlayer] = null;
             magnetArmedVfx[CurrentPlayer] = null;
+
+            // Where every ball stood before the shot: a ball that falls in a
+            // table hole comes back there.
+            shotStartPositions.Clear();
+            foreach (PoolBall ball in PoolBall.Active)
+                shotStartPositions[ball] = ball.transform.position;
+        }
+
+        // ---------- Table holes (TableHolePower) ----------
+
+        private class TableHoleEntry
+        {
+            public TableHole hole;
+            public int owner;
+            public TableHoleDuration duration;
+            public int turnsLeft;
+            // Opened while a shot was rolling: "next shot" means the one
+            // after it, not the one already under way.
+            public bool skipNextResolve;
+        }
+
+        private readonly List<TableHoleEntry> tableHoles = new List<TableHoleEntry>();
+        private readonly List<PoolBall> ballsInTableHoles = new List<PoolBall>();
+        private readonly Dictionary<PoolBall, Vector3> shotStartPositions = new Dictionary<PoolBall, Vector3>();
+
+        // Bumped by every restart: a meteor still falling from the previous
+        // match lands without opening anything (TableHoleMeteor).
+        public int MatchGeneration { get; private set; }
+
+        // Holes waiting for the activator's opponent's turn (TableHolePower
+        // used during the activator's own turn, same idea as Close Pocket):
+        // the spots are locked, each marked by a ring on the felt, and the
+        // meteors fall in SwitchTurn once the turn has passed.
+        private class PendingTableHoles
+        {
+            public TableHolePower power;
+            public List<Vector3> centers;
+            public int owner;
+            public readonly List<GameObject> markers = new List<GameObject>();
+        }
+
+        private readonly List<PendingTableHoles> pendingTableHoles = new List<PendingTableHoles>();
+
+        public void QueueTableHoles(TableHolePower power, List<Vector3> centers, int owner)
+        {
+            // Already the opponent's turn (split screen): right now.
+            if (CurrentPlayer != owner)
+            {
+                power.LaunchMeteors(centers, owner, MatchGeneration);
+                return;
+            }
+
+            var pending = new PendingTableHoles { power = power, centers = centers, owner = owner };
+            foreach (Vector3 center in centers)
+            {
+                LineRenderer ring = RingLine.Create(null, "TableHoleTarget", power.RimWidth, power.RimColor);
+                RingLine.Set(ring, center + Vector3.up * 0.003f, power.HoleRadius);
+                pending.markers.Add(ring.gameObject);
+            }
+            pendingTableHoles.Add(pending);
+        }
+
+        // From SwitchTurn, CurrentPlayer being the player whose turn starts.
+        private void LaunchPendingTableHoles()
+        {
+            for (int i = pendingTableHoles.Count - 1; i >= 0; i--)
+            {
+                PendingTableHoles pending = pendingTableHoles[i];
+                if (CurrentPlayer == pending.owner) continue;
+                pending.power.LaunchMeteors(pending.centers, pending.owner, MatchGeneration);
+                DestroyMarkers(pending);
+                pendingTableHoles.RemoveAt(i);
+            }
+        }
+
+        private static void DestroyMarkers(PendingTableHoles pending)
+        {
+            foreach (GameObject marker in pending.markers)
+                if (marker != null) Destroy(marker);
+        }
+
+        public void AddTableHole(TableHole hole, int owner, TableHolePower power)
+        {
+            tableHoles.Add(new TableHoleEntry
+            {
+                hole = hole,
+                owner = owner,
+                duration = power.Duration,
+                turnsLeft = power.Turns,
+                skipNextResolve = shotInProgress,
+            });
+        }
+
+        // A ball rolled over a table hole. The cue ball is a foul, as if
+        // potted (scratch: respawn, ball in hand once the shot is judged).
+        // Any other ball sinks out of sight and comes back to where it was
+        // before the shot once everything has stopped
+        // (ReturnBallsFromTableHoles). Outside a shot (pushed by the meteor's
+        // blast, say) it's simply set back on the hole's edge.
+        public void HandleBallFellInTableHole(PoolBall ball, TableHole hole)
+        {
+            if (!MatchStarted || GameOver) return;
+            if (!shotInProgress)
+            {
+                Vector3 away = ball.transform.position - hole.transform.position;
+                away.y = 0f;
+                Vector3 direction = away.sqrMagnitude > 1e-8f ? away.normalized : Vector3.forward;
+                Vector3 edge = hole.transform.position + direction * (hole.RadiusToward(direction) + ball.Radius + 0.005f);
+                ball.Rigidbody.linearVelocity = Vector3.zero;
+                ball.PlaceAt(new Vector3(edge.x, ball.transform.position.y, edge.z));
+                return;
+            }
+            if (ball.IsCueBall)
+            {
+                ball.OnPocketed();
+                return;
+            }
+            ball.FallIntoTableHole(hole.transform.position, hole.Power != null ? hole.Power.SinkTime : 0.35f);
+            ballsInTableHoles.Add(ball);
+        }
+
+        private bool AnyBallSinking()
+        {
+            foreach (PoolBall ball in ballsInTableHoles)
+                if (ball != null && ball.IsSinking) return true;
+            return false;
+        }
+
+        private void ReturnBallsFromTableHoles()
+        {
+            foreach (PoolBall ball in ballsInTableHoles)
+            {
+                if (ball == null || !ball.InTableHole) continue;
+                Vector3 target = shotStartPositions.TryGetValue(ball, out Vector3 before) ? before : ball.transform.position;
+                ball.ReturnFromTableHole(FreeSpotNear(target, ball));
+            }
+            ballsInTableHoles.Clear();
+        }
+
+        // target if nothing's there, otherwise the closest free spot around
+        // it (rings of growing size): not on another ball, a hole or a
+        // pocket, and on the felt.
+        private static Vector3 FreeSpotNear(Vector3 target, PoolBall ball)
+        {
+            if (IsFreeSpot(target, ball)) return target;
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            for (int ring = 1; ring <= 8; ring++)
+            {
+                float distance = ring * ball.Radius * 1.5f;
+                for (int i = 0; i < 12; i++)
+                {
+                    float angle = i * Mathf.PI * 2f / 12f;
+                    Vector3 candidate = target + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * distance;
+                    if (surface != null) candidate = surface.ClampToPlayArea(candidate, ball.Radius);
+                    candidate = PoolPocket.AvoidAllPockets(candidate, ball.Radius);
+                    candidate.y = target.y;
+                    if (IsFreeSpot(candidate, ball)) return candidate;
+                }
+            }
+            return target;
+        }
+
+        private static bool IsFreeSpot(Vector3 point, PoolBall ball)
+        {
+            if (TableHole.Overlaps(point, ball.Radius)) return false;
+            foreach (PoolBall other in PoolBall.Active)
+            {
+                if (other == ball || other.InTableHole) continue;
+                float min = ball.Radius + other.Radius + 0.002f;
+                if ((other.transform.position - point).sqrMagnitude < min * min) return false;
+            }
+            return true;
+        }
+
+        // Ends the holes whose time is up. CurrentPlayer is the player whose
+        // turn is ending, when called from SwitchTurn.
+        private void CloseTableHoles(bool turnEnding, bool shotResolved)
+        {
+            for (int i = tableHoles.Count - 1; i >= 0; i--)
+            {
+                TableHoleEntry entry = tableHoles[i];
+                bool close = entry.hole == null;
+                switch (entry.duration)
+                {
+                    case TableHoleDuration.OpponentTurn:
+                        close |= turnEnding && CurrentPlayer != entry.owner;
+                        break;
+                    case TableHoleDuration.Turns:
+                        if (turnEnding && --entry.turnsLeft <= 0) close = true;
+                        break;
+                    case TableHoleDuration.NextShot:
+                        if (shotResolved)
+                        {
+                            if (entry.skipNextResolve) entry.skipNextResolve = false;
+                            else close = true;
+                        }
+                        break;
+                }
+                if (!close) continue;
+                if (entry.hole != null) entry.hole.Close(instant: false);
+                tableHoles.RemoveAt(i);
+            }
+        }
+
+        private void ClearTableHoles()
+        {
+            foreach (TableHoleEntry entry in tableHoles)
+                if (entry.hole != null) entry.hole.Close(instant: true);
+            tableHoles.Clear();
+            ballsInTableHoles.Clear();
+            foreach (PendingTableHoles pending in pendingTableHoles) DestroyMarkers(pending);
+            pendingTableHoles.Clear();
         }
 
         // Which pocket a ball pocketed THIS shot actually fell into — null if
@@ -754,9 +985,10 @@ namespace UntitledPoolGame.Pool
 
         // Puts power in player's hand, replacing what they held (unlike
         // GrantPower, which wastes a pickup while one is held). Null empties it.
-        public void DebugSetHeldPower(int player, PoolPower power)
+        public void DebugSetHeldPower(int player, PoolPower power, int level = 1)
         {
             heldPower[player] = power;
+            heldPowerLevel[player] = Mathf.Max(1, level);
             if (power != null) PowerGranted?.Invoke(player);
         }
 
@@ -839,13 +1071,19 @@ namespace UntitledPoolGame.Pool
 
             if (!MatchStarted || GameOver) return;
 
-            bool moving = PoolBall.AnyMoving();
+            // A ball still sinking into a table hole counts as moving: the shot
+            // is judged once it's gone, not halfway down.
+            bool moving = PoolBall.AnyMoving() || AnyBallSinking();
 
             if (shotInProgress && !moving && wasMoving)
             {
                 shotInProgress = false;
                 EndMagnetShot();
+                // Back on the table before the shot is judged: a ball that
+                // fell in a table hole was never pocketed.
+                ReturnBallsFromTableHoles();
                 ruleSet.ResolveShot(this, pocketedThisShot, cueBallPocketedThisShot, firstContactThisShot);
+                CloseTableHoles(turnEnding: false, shotResolved: true);
             }
 
             wasMoving = moving;
@@ -876,7 +1114,11 @@ namespace UntitledPoolGame.Pool
             // The disguised balls get their looks back once the target's turn is over.
             if (identicalGroupsTarget == CurrentPlayer) EndIdenticalGroups();
 
+            CloseTableHoles(turnEnding: true, shotResolved: false);
+
             CurrentPlayer = 1 - CurrentPlayer;
+
+            LaunchPendingTableHoles();
 
             if (pendingIdenticalGroups != null && CurrentPlayer == pendingIdenticalGroupsTarget)
             {
@@ -925,6 +1167,9 @@ namespace UntitledPoolGame.Pool
 
             heldPower[0] = null;
             heldPower[1] = null;
+            heldPowerLevel[0] = heldPowerLevel[1] = 1;
+            ClearTableHoles();
+            MatchGeneration++;
             shotPowerMultiplier[0] = 1f;
             shotPowerMultiplier[1] = 1f;
 

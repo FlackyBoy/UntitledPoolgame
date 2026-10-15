@@ -5,7 +5,8 @@ namespace UntitledPoolGame.Pool
 {
     // Picking a pocket by looking at it, shared by everything that asks the
     // player for one: a PocketTargetPower (LocalPoolPowerController) and the
-    // 8-ball call (LocalPoolAimController). While a pick is on, a white
+    // 8-ball call (LocalPoolAimController). Also picks a point of the felt
+    // for a TablePointPower (PointTable). While a pick is on, a white
     // pointer sits at the centre of this player's view and the open pocket
     // closest to it gets PoolPocket's ring and halo. Only the looking part
     // lives here; each user reads its own confirm/cancel input. (Later the
@@ -52,8 +53,31 @@ namespace UntitledPoolGame.Pool
         public PoolPocket Point()
         {
             showing = true;
+            ShowTableRing(false);
             SetPointed(FindPointedPocket());
             return pointed;
+        }
+
+        // Same, for a point of the table (TablePointPower): where the view
+        // meets the felt, kept margin from the cushions and pockets, with a
+        // ring of previewRadius around it. False when not looking at the felt.
+        public bool PointTable(float margin, float previewRadius, out Vector3 point)
+        {
+            showing = true;
+            SetPointed(null);
+            point = Vector3.zero;
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            if (surface == null || surface.Felt == null || viewCamera == null
+                || !surface.Felt.Raycast(new Ray(viewCamera.transform.position, viewCamera.transform.forward), out RaycastHit hit, MaxTableDistance))
+            {
+                ShowTableRing(false);
+                return false;
+            }
+
+            point = TablePointPower.ClampToTable(hit.point, margin);
+            ShowTableRing(true);
+            RingLine.Set(tableRing, point + Vector3.up * RingSettings.targetRingHeight, previewRadius * PoolPocket.RingPulse());
+            return true;
         }
 
         // End of a pick (confirmed, cancelled or abandoned).
@@ -61,6 +85,22 @@ namespace UntitledPoolGame.Pool
         {
             showing = false;
             SetPointed(null);
+            ShowTableRing(false);
+        }
+
+        private const float MaxTableDistance = 20f;
+        private LineRenderer tableRing;
+        private static PoolPotEffectSettings ringSettings;
+
+        // The pocket ring's look (PoolPotEffectSettings), for the table ring too.
+        private static PoolPotEffectSettings RingSettings =>
+            ringSettings != null ? ringSettings : ringSettings = PoolSettingsLoader.LoadOrDefault<PoolPotEffectSettings>("PoolPotEffectSettings");
+
+        private void ShowTableRing(bool show)
+        {
+            if (show && tableRing == null)
+                tableRing = RingLine.Create(transform, "TablePointRing", RingSettings.targetRingWidth, RingSettings.targetRingColor);
+            if (tableRing != null) tableRing.enabled = show;
         }
 
         // By angle rather than a raycast: a pocket is a small hole, hard to

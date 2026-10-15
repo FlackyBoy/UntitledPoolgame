@@ -167,6 +167,59 @@ namespace UntitledPoolGame.Pool
             rb.isKinematic = false;
         }
 
+        // Table hole (TableHolePower): the ball rolls to the hole's centre,
+        // sinks below the felt and is hidden — still on the table as far as
+        // the rules go (enabled, in Active), parked like a ball in hand until
+        // PoolMatchRules brings it back (ReturnFromTableHole).
+        public bool InTableHole { get; private set; }
+        public bool IsSinking => tableHoleRoutine != null;
+        private Coroutine tableHoleRoutine;
+        private Renderer[] renderers;
+
+        public void FallIntoTableHole(Vector3 holeCenter, float sinkTime)
+        {
+            BeginBallInHand();
+            InTableHole = true;
+            if (tableHoleRoutine != null) StopCoroutine(tableHoleRoutine);
+            tableHoleRoutine = StartCoroutine(SinkRoutine(holeCenter, Mathf.Max(0.01f, sinkTime)));
+        }
+
+        private System.Collections.IEnumerator SinkRoutine(Vector3 holeCenter, float time)
+        {
+            Vector3 from = transform.position;
+            Vector3 over = new Vector3(holeCenter.x, from.y, holeCenter.z);
+            Vector3 under = over + Vector3.down * radius * 3f;
+            for (float t = 0f; t < time; t += Time.deltaTime)
+            {
+                float k = t / time;
+                // First to the centre, then down (speeding up).
+                Vector3 p = k < 0.4f ? Vector3.Lerp(from, over, k / 0.4f) : Vector3.Lerp(over, under, Mathf.Pow((k - 0.4f) / 0.6f, 2f));
+                PlaceAt(p);
+                yield return null;
+            }
+            SetVisible(false);
+            tableHoleRoutine = null;
+        }
+
+        public void ReturnFromTableHole(Vector3 position)
+        {
+            if (tableHoleRoutine != null) { StopCoroutine(tableHoleRoutine); tableHoleRoutine = null; }
+            InTableHole = false;
+            SetVisible(true);
+            PlaceAt(position);
+            EndBallInHand();
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        private void SetVisible(bool visible)
+        {
+            if (renderers == null) renderers = GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer r in renderers)
+                // Lights, lines and particles on the ball (power glow) keep theirs.
+                if (r is MeshRenderer || r is SkinnedMeshRenderer) r.enabled = visible;
+        }
+
         private void FixedUpdate()
         {
             // Kinematic while parked for ball-in-hand — its Y is being driven
@@ -277,6 +330,7 @@ namespace UntitledPoolGame.Pool
         // per-ball state is needed here.
         public void ResetToSpawn()
         {
+            if (InTableHole) ReturnFromTableHole(spawnPosition);
             gameObject.SetActive(true);
             rb.isKinematic = false;
             sphereCollider.enabled = true;
