@@ -83,8 +83,10 @@ namespace UntitledPoolGame.Core
         public string magnetArmedBannerFormat = "Aimant prêt : ta bille ira dans {0}";
 
         [Header("Interjections")]
-        [Tooltip("Une au hasard quand une bille rentre.")]
+        [Tooltip("Une au hasard quand le joueur rentre une de ses billes (en 8-ball : son groupe, ou n'importe laquelle tant que les groupes ne sont pas décidés ; en 9-ball et 14.1 : toutes).")]
         public string[] potShouts = { "Dans le mille !", "Quel coup !", "Et hop !" };
+        [Tooltip("Une au hasard quand le joueur rentre une bille de l'adversaire (8-ball, groupes décidés). Elle compte pour l'autre, et c'est une faute si aucune bille du joueur ne rentre avec. Liste vide = pas d'interjection.")]
+        public string[] opponentBallPotShouts = { "Cadeau pour l'adversaire !", "Mauvaise bille…", "Merci pour lui !" };
         public string cueBallPottedShout = "Oups !";
         public string foulShout = "FAUTE !";
         public string ballInHandShout = "Main libre !";

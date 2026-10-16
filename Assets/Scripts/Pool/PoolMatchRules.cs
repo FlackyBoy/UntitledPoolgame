@@ -21,6 +21,10 @@ namespace UntitledPoolGame.Pool
         // progress) find it without a hand-wired Inspector reference.
         public static PoolMatchRules Instance { get; private set; }
 
+        [Tooltip("Diagnostic : à la fin de chaque tir, la console donne la 1re bille touchée, les billes rentrées et pourquoi c'est une faute ou non ([ShotTrace]).")]
+        [SerializeField] private bool traceShots = true;
+        public bool TraceShots => traceShots;
+
         public int CurrentPlayer { get; private set; }
         public bool GameOver { get; private set; }
         public int Winner { get; private set; } = -1;
@@ -585,6 +589,25 @@ namespace UntitledPoolGame.Pool
             if (IsShootingForEightBall(player)) return ball.Group == BallGroup.Eight;
             BallGroup group = GetGroup(player);
             return group == BallGroup.Cue ? ball.Group != BallGroup.Eight : ball.Group == group;
+        }
+
+        // What a numbered ball potted during the current player's shot
+        // means for them — for the HUD's shout and Feel, at the moment it
+        // drops (the rules judge the whole shot at its end, separately):
+        //   Good       one of theirs (any ball outside 8-ball group play);
+        //   Opponent   one of the other group: nothing to cheer (on its own
+        //              it even makes the shot a foul — EightBallRuleSet);
+        //   EarlyEight the 8 before their group is cleared: the game is
+        //              lost, the end screen says so.
+        // Read while the ball is still on the table (PoolBall.Pocketed is
+        // raised before it's removed), so potting one's last ball still
+        // counts as one's own.
+        public enum PotMeaning { Good, Opponent, EarlyEight }
+
+        public PotMeaning MeaningOfPot(PoolBall ball)
+        {
+            if (IsOwnBall(CurrentPlayer, ball)) return PotMeaning.Good;
+            return ball.Group == BallGroup.Eight ? PotMeaning.EarlyEight : PotMeaning.Opponent;
         }
 
         // In split-screen (2 local PlayerInputs), a physical player always IS

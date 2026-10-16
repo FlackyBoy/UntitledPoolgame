@@ -664,9 +664,26 @@ namespace UntitledPoolGame.Core
             if (rules == null || !rules.MatchStarted || rules.GameOver) return;
             // Destroyed by Ball Blast: "BOUM !" already said it.
             if (ball == lastBlasted) { lastBlasted = null; return; }
-            if (ball.IsCueBall) Shout(rules.CurrentPlayer, cfg.cueBallPottedShout, Red, false);
-            else if (cfg.showPotShouts && cfg.potShouts != null && cfg.potShouts.Length > 0)
-                Shout(rules.CurrentPlayer, cfg.potShouts[UnityEngine.Random.Range(0, cfg.potShouts.Length)], Yellow, true);
+            if (ball.IsCueBall) { Shout(rules.CurrentPlayer, cfg.cueBallPottedShout, Red, false); return; }
+            if (!cfg.showPotShouts) return;
+            // Cheered only when it's one of the shooter's balls: an opponent's
+            // ball gets its own (rueful) shout, the early 8 none.
+            switch (rules.MeaningOfPot(ball))
+            {
+                case PoolMatchRules.PotMeaning.Good:
+                    ShoutOneOf(rules.CurrentPlayer, cfg.potShouts, Yellow, true);
+                    break;
+                case PoolMatchRules.PotMeaning.Opponent:
+                    ShoutOneOf(rules.CurrentPlayer, cfg.opponentBallPotShouts, Red, false);
+                    break;
+            }
+        }
+
+        // One of the texts at random; nothing when the list is empty.
+        private void ShoutOneOf(int player, string[] texts, Color color, bool burst)
+        {
+            if (texts == null || texts.Length == 0) return;
+            Shout(player, texts[UnityEngine.Random.Range(0, texts.Length)], color, burst);
         }
 
         private PoolBall lastBlasted;

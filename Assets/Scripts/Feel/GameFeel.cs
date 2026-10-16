@@ -99,7 +99,12 @@ namespace UntitledPoolGame.Core
         private void OnPocketed(PoolBall ball, PoolPocket pocket)
         {
             Vector3 at = pocket != null ? pocket.transform.position : ball.transform.position;
-            Play(ball.IsCueBall ? GameFeelEvent.CueBallPotted : GameFeelEvent.BallPotted, Shooter, at);
+            if (ball.IsCueBall) { Play(GameFeelEvent.CueBallPotted, Shooter, at); return; }
+            // The celebration only for one of the shooter's own balls.
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            PoolMatchRules.PotMeaning meaning = rules != null ? rules.MeaningOfPot(ball) : PoolMatchRules.PotMeaning.Good;
+            if (meaning == PoolMatchRules.PotMeaning.Good) Play(GameFeelEvent.BallPotted, Shooter, at);
+            else if (meaning == PoolMatchRules.PotMeaning.Opponent) Play(GameFeelEvent.OpponentBallPotted, Shooter, at);
         }
 
         private void OnFoul() => Play(GameFeelEvent.Foul, Shooter, Vector3.zero);

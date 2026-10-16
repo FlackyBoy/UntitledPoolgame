@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
     // Casual 8-ball, 2 players: no called shots/pockets for the group balls —
-    // any legally pocketed ball from your own group keeps your turn. The 8
+    // any legally pocketed ball from your own group keeps your turn; potting
+    // only balls of the opponent's group is a foul (even after a legal first
+    // contact), potting one along with one of yours is fine. The 8
     // itself IS called (see IsShootingForEightBall/PoolMatchRules'
     // call-shot prompt) — real-world call-shot is almost always enforced at
     // least for the money ball, even in otherwise casual rule sets. Also
@@ -31,6 +34,11 @@ namespace UntitledPoolGame.Pool
             BallGroup groupAtShotStart = playerGroup[player];
             bool pocketedOwnBall = false;
             bool pocketedEightBall = false;
+            // A ball of the other group (groups already decided). Legal along
+            // with one of one's own; on its own it's a foul (user's rule,
+            // 16/10: "tu n'as pas le droit d'empocher uniquement une bille
+            // adverse", even after a legal first contact).
+            bool pocketedOpponentBall = false;
             PoolBall eightBall = null;
             BallGroup myGroup = groupAtShotStart;
 
@@ -60,6 +68,10 @@ namespace UntitledPoolGame.Pool
                 {
                     pocketedOwnBall = true;
                 }
+                else
+                {
+                    pocketedOpponentBall = true;
+                }
             }
 
             bool groupCleared = myGroup != BallGroup.Cue && IsGroupCleared(myGroup);
@@ -69,7 +81,15 @@ namespace UntitledPoolGame.Pool
             bool legalContact = firstContact != null && (groupAtShotStart == BallGroup.Cue
                 || firstContact.Group == groupAtShotStart
                 || (groupCleared && firstContact.Group == BallGroup.Eight));
-            bool foul = !legalContact || cueBallPocketed;
+            bool onlyOpponentBall = pocketedOpponentBall && !pocketedOwnBall;
+            bool foul = !legalContact || cueBallPocketed || onlyOpponentBall;
+
+            if (match.TraceShots)
+                Debug.Log($"[ShotTrace] 8-ball, J{player + 1} ({Describe(groupAtShotStart)}) : 1re bille touchée {(firstContact != null ? $"la {firstContact.Number} ({Describe(firstContact.Group)})" : "AUCUNE (contact non détecté)")}, " +
+                          $"rentrées [{DescribeBalls(pocketedThisShot)}]{(cueBallPocketed ? ", blanche rentrée" : "")} → " +
+                          (pocketedEightBall ? "bille 8 rentrée (fin de partie)"
+                           : foul ? $"FAUTE : {(cueBallPocketed ? "blanche rentrée" : firstContact == null ? "la blanche n'a touché aucune bille" : !legalContact ? "1re bille touchée hors de son groupe" : "seule une bille de l'adversaire est rentrée")}"
+                           : pocketedOwnBall ? "pas de faute, il garde la main" : "pas de faute, au tour de l'adversaire"));
 
             if (pocketedEightBall)
             {
@@ -92,6 +112,22 @@ namespace UntitledPoolGame.Pool
             }
 
             if (!pocketedOwnBall) match.SwitchTurn();
+        }
+
+        private static string Describe(BallGroup group) => group switch
+        {
+            BallGroup.Solid => "pleines",
+            BallGroup.Stripe => "rayées",
+            BallGroup.Eight => "la 8",
+            _ => "groupe pas décidé",
+        };
+
+        private static string DescribeBalls(IReadOnlyList<PoolBall> balls)
+        {
+            if (balls.Count == 0) return "aucune";
+            var names = new string[balls.Count];
+            for (int i = 0; i < balls.Count; i++) names[i] = balls[i].Number.ToString();
+            return string.Join(", ", names);
         }
 
         private static bool IsGroupCleared(BallGroup group)

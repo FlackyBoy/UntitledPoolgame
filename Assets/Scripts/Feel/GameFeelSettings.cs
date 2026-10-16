@@ -8,7 +8,7 @@ namespace UntitledPoolGame.Core
     // The moments of a match that can trigger a Feel sequence.
     public enum GameFeelEvent
     {
-        BallPotted,       // a numbered ball goes in
+        BallPotted,       // one of the shooter's balls goes in (see PoolMatchRules.MeaningOfPot)
         CueBallPotted,    // the cue ball goes in
         Foul,
         Shot,             // any shot
@@ -21,6 +21,7 @@ namespace UntitledPoolGame.Core
         PlayerKnockedOut, // the hit gauge is full: K.O. (R&D combat)
         GuardBroken,      // a player's guard breaks (R&D combat)
         TableHoleImpact,  // a meteor of the Trou power hits the table (rumble, shake…)
+        OpponentBallPotted, // a ball of the opponent's group goes in (8-ball): nothing to cheer
         // New moments go at the end: assets store the number.
     }
 
