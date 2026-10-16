@@ -124,14 +124,17 @@ sequenceDiagram
   PB-->>M: via PoolBall.Pocketed : GrantPower si la bille porte un pouvoir
   M-->>FX: PowerGranted (secousse, flash)
 
-  PC->>M: GetHeldPower(joueur)
-  alt RequiresOwnTurn et pas son tour
-    PC-->>PC: refusé
+  PC->>M: CheckPowerUse(joueur)
+  Note over M: réglages du pouvoir : RequiresOwnTurn, AllowDuringOwnTurn, AllowWhileBallsMoving (règles de tour ignorées en solo)
+  alt refusé (ou pointeur pris par la blanche / l'annonce de la 8)
+    PC->>M: NotifyPowerRefused(joueur, raison)
+    M-->>FX: PowerRefused (HUD : la pastille tremble + raison ; Feel PowerRefused)
   else autorisé
     PC->>M: TryActivatePower(joueur)
     M->>P: Activate(match, joueur)
     P->>M: ex. QueueVisionImpair(adversaire)
     Note over M: appliqué tout de suite si c'est déjà le tour de la cible, sinon à sa prochaine visée
+    M-->>FX: PowerActivated(joueur, pouvoir, attend le tour adverse) (HUD : « Envoyé ! » + carte chez la cible ; Feel PowerActivated / PowerReceived)
   end
   FX->>M: IsVisionImpaired / IsControlsInverted (chaque image)
   FX->>FX: voile à l'écran, sensibilité, inversion

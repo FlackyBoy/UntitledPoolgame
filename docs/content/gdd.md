@@ -59,7 +59,7 @@ Voyager d'une **dimension** à l'autre, chacune avec sa salle, ses règles et se
 
 Le récapitulatif complet des touches clavier / manette, général et selon la situation, est dans **[Contrôles](gdd.html#controles)**.
 
-En bref : ZQSD + souris (sticks) pour bouger et regarder, **E / Y** pour interagir, **clic gauche / X** pour le tir, le lancer et le coup de queue, **clic gauche / RB** pour le poing (mains vides), **clic droit / RT** pour le pied, **F / B (○)** pour le pouvoir.
+En bref : ZQSD + souris (sticks) pour bouger et regarder, **E / Y** pour interagir, **clic gauche / X** pour le tir, le lancer et le coup de queue, **clic gauche / RB** pour le poing (mains vides), **clic droit / RT** pour le pied, **Q / B (○)** pour le pouvoir.
 
 ## 4. Le joueur
 
@@ -104,13 +104,14 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 ### Règles ✅
 
 - **Mode Party uniquement.**
-- **Un seul pouvoir en stock par joueur** (façon Mario Kart) : un pouvoir ramassé alors qu'on en a déjà un est perdu.
+- **Un seul pouvoir en stock par joueur** (façon Mario Kart) : un pouvoir ramassé alors qu'on en a déjà un est perdu. 📌 Décidé le 16/10, à faire : **deux pouvoirs en stock**, avec une touche pour choisir celui qu'on lance ; ramasser un pouvoir qu'on a déjà le fait passer au niveau 2.
 - **Deux sources** : des **caisses** qui apparaissent sur la table à des emplacements aléatoires et réapparaissent après ramassage, et une **bille à pouvoir** (lumineuse, change régulièrement) qu'il faut empocher.
 - **Trois catégories**, chacune avec sa couleur, son matériau et son modèle de caisse : **Attaque**, **Défense**, **Effet**.
-- **Activation** avec le bouton de pouvoir. Chaque pouvoir indique s'il est réservé à son propre tour ; les attaques s'utilisent pendant le tour adverse et prennent effet **immédiatement**.
+- **Activation** avec le bouton de pouvoir. **Quand** on peut le lancer se règle pour chaque pouvoir : réservé à son propre tour (Effets), ou utilisable pendant le tour adverse (Attaques). Une attaque lancée pendant le tour adverse prend effet **immédiatement** ; lancée pendant son propre tour, elle attend le début du tour adverse, ou elle est refusée si le pouvoir le demande. Un pouvoir peut aussi être interdit pendant que les billes roulent.
+- **Retour à l'envoi** 🔄 : le lanceur voit « Envoyé ! » (ou « Activé ! »), l'adversaire reçoit une carte « J1 T'ENVOIE … » qui dit si ça frappe tout de suite ou au début de son tour, et chacun a son moment Feel. Un appui au mauvais moment fait trembler la pastille du pouvoir avec la raison. Le personnage **pointe** la cible pendant le choix et **lève le pouce** une fois le pouvoir envoyé, pour que l'adversaire le voie aussi dans la salle.
 - **Niveaux** 🔄 : un pouvoir a un niveau (1 ou 2, version renforcée). Le passage au niveau 2 en ramassant deux fois le même pouvoir reste à faire ; le menu debug donne déjà le niveau 2 pour tester.
 - **Pouvoirs qui visent la table** 🔄 (Trou) : même choix que pour une poche, mais le pointeur vise un point du tapis, avec un cercle d'aperçu de la zone touchée.
-- **Pouvoirs qui visent un trou** : le bouton de pouvoir ouvre d'abord un **choix du trou**. Un pointeur blanc au centre de la vue désigne le trou, qui est entouré d'un cercle. Interact valide, le bouton de pouvoir annule. À terme, le joueur **pointera du doigt** et **lèvera le pouce** pour valider.
+- **Pouvoirs qui visent un trou** : le bouton de pouvoir ouvre d'abord un **choix du trou**. Un pointeur blanc au centre de la vue désigne le trou, qui est entouré d'un cercle. Interact valide, le bouton de pouvoir annule. Le personnage **pointe du doigt** l'endroit visé pendant le choix, puis **lève le pouce** une fois le pouvoir envoyé 🔄.
 
 ### Pouvoirs implémentés ✅
 

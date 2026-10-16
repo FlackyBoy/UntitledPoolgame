@@ -61,7 +61,7 @@ Lu par `PoolPowerCrateManager`, `PoolPowerBallRotator`, `PoolPowerCrate`, `Power
 
 ### Les pouvoirs (PoolPower)
 
-Chaque pouvoir est son propre asset (`Create > Pool > Powers > …`) : nom, `Requires Own Turn`, et ses paramètres. Exemples :
+Chaque pouvoir est son propre asset (`Create > Pool > Powers > …`) : nom, quand il peut être lancé (`Requires Own Turn`, `Allow During Own Turn`, `Allow While Balls Moving`, vérifiés par `PoolMatchRules.CheckPowerUse`), et ses paramètres. Exemples :
 - tir boosté : multiplicateur de puissance ;
 - vision brouillée : multiplicateur de sensibilité ;
 - bille destructrice : VFX d'explosion et son échelle, bille 8 épargnée, souffle (vitesse et rayon) ;

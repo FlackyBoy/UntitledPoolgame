@@ -46,8 +46,9 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Clic droit | En R&D seulement : **poing droit** |
 | F | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |
 | Ctrl gauche (maintenir) | En R&D seulement : **garde** |
-| Q | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, Q à nouveau pour l'annuler, E pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table |
-| C + P (maintenir) | Test : faire rejoindre un second joueur |
+| Q | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, Q à nouveau pour l'annuler, E pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table · au mauvais moment (pas son tour, billes qui roulent…), la pastille du pouvoir tremble et dit pourquoi |
+| C + P (maintenir) | Test : faire rejoindre un joueur de plus (avec une manette libre s'il y en a une ; sinon il prend le clavier et la souris, et l'autre joueur attend sans bouger), dans toute scène avec un PlayerInputManager |
+| Tab | Test, à plusieurs joueurs : passer le clavier et la souris au joueur suivant (celui qui les perd récupère la manette de l'autre, s'il en avait une). Aussi dans le menu debug, rubrique *Joueurs* |
 | C + W | Test : aller directement à la fin d'une partie de 8-ball |
 | Clic gauche maintenu + 4 clics droits rapides | Test : ouvrir / fermer le **menu debug** (donner un pouvoir, victoire / défaite, phase « empocher la 8 », fautes et erreurs de groupe) |
 
@@ -59,7 +60,7 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Stick droit | Regarder · en visée : tourner autour de la bille · choix d'une poche (annonce de la 8, pouvoir) : viser la poche avec le pointeur blanc |
 | Y / △ | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche visée |
 | X / □ | Objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
-| B / ○ | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, B / ○ à nouveau pour l'annuler, Y / △ pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table |
+| B / ○ | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, B / ○ à nouveau pour l'annuler, Y / △ pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table · au mauvais moment, la pastille du pouvoir tremble et dit pourquoi |
 | LB / L1 | Mains vides : **coup de poing** (spammer pour enchaîner ; en R&D : **poing gauche**) |
 | RB / R1 | En R&D seulement : **poing droit** |
 | RT / R2 | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |
