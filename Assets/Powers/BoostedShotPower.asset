@@ -13,5 +13,8 @@ MonoBehaviour:
   m_Name: BoostedShotPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.BoostedShotPower
   powerName: Boost
+  tokenPrefab: {fileID: 905239369730107011, guid: e4ebe76aa12ce384a956386e8cf22f08, type: 3}
   requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
   shotPowerMultiplier: 3

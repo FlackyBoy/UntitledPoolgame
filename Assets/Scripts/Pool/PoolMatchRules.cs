@@ -389,6 +389,19 @@ namespace UntitledPoolGame.Pool
         // between shots for the rest of their turn.
         public void EndVisionImpair(int player) => visionImpaired[player] = false;
 
+        // Leaving aim WITHOUT shooting (put the cue down, walked off): the
+        // debuff isn't spent, it goes back to pending and comes back at the
+        // player's next EnterAim this turn. Ending it there (as a shot does)
+        // let the target shake it off just by backing out once. SwitchTurn
+        // drops what's left pending for the player whose turn ends.
+        public void SuspendVisionImpair(int player)
+        {
+            if (!visionImpaired[player]) return;
+            visionImpaired[player] = false;
+            visionImpairPending[player] = true;
+            pendingVisionImpairSensitivity[player] = visionImpairedSensitivity[player];
+        }
+
         public bool IsVisionImpaired(int player) => visionImpaired[player];
 
         // 1 while active, 0 otherwise — no fade anymore, since there's no
@@ -439,6 +452,15 @@ namespace UntitledPoolGame.Pool
         }
 
         public void EndInvertedControls(int player) => invertedControls[player] = false;
+
+        // Same as SuspendVisionImpair.
+        public void SuspendInvertedControls(int player)
+        {
+            if (!invertedControls[player]) return;
+            invertedControls[player] = false;
+            invertedControlsPending[player] = true;
+            pendingInvertedControlsSensitivity[player] = invertedControlsSensitivity[player];
+        }
 
         // Also gates hiding the trajectory preview (LocalPoolAimController.
         // UpdateAim()) — no separate flag, it's the same "controls are
@@ -1158,6 +1180,11 @@ namespace UntitledPoolGame.Pool
             // this is the safety net for a turn ending without one.)
             visionImpaired[CurrentPlayer] = false;
             invertedControls[CurrentPlayer] = false;
+            // Suspended by backing out of aim (Suspend*): the turn is over.
+            // Nothing else can be pending for the player whose turn ends —
+            // an attack sent during their own turn applies at once.
+            visionImpairPending[CurrentPlayer] = false;
+            invertedControlsPending[CurrentPlayer] = false;
 
             // Reopens once the CLOSING player's opponent's turn actually
             // ends (CurrentPlayer here is whoever's turn is finishing) —
