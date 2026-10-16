@@ -76,7 +76,7 @@ Le total d'un parent = somme de ses sous-tâches. Quand le temps réel dépasse 
 ### `start <tâche>`
 1. Trouver la page (commentaire dans la TODO, sinon recherche Notion ; la créer si elle n'existe pas).
 2. Statut → `En cours`, renseigner la Branche. Passer la ligne de la TODO à 🔄.
-3. Démarrer le chrono : écrire l'ID de la page dans `.claude/time/current-task` (créer le dossier). Les hooks `UserPromptSubmit`/`Stop` journalisent alors chaque tour dans `.claude/time/log`.
+3. Démarrer le chrono : `bash .claude/hooks/time-task.sh <page-id>`. Il note l'heure du changement de tâche dans `.claude/time/log` ; les hooks `UserPromptSubmit`/`Stop` y notent le début et la fin de chaque tour. Le temps d'un tour va à la tâche active à chaque instant : une tâche démarrée en plein tour compte à partir de là. Ne pas écrire `current-task` à la main (le changement ne serait pas daté).
 
 ### `pr`
 À la création de la PR (`gh pr create`) :
@@ -88,7 +88,7 @@ Au merge de la PR (`gh pr merge`), ou quand l'utilisateur le demande :
 1. Temps : `bash .claude/hooks/time-total.sh <page-id>` → écrire dans `Temps Claude (h)` (ajouter à la valeur existante si la tâche a été reprise dans plusieurs sessions et que le log a été vidé).
 2. Statut → `À tester` si la fonctionnalité n'a pas encore été essayée dans Unity (cas général), `Fait` si l'utilisateur l'a validée en jeu. Refléter dans la TODO (section « À tester en jeu » ou ✅).
 3. Si toutes les sous-tâches d'un parent sont `Fait`, passer le parent à `Fait`.
-4. Vider `.claude/time/current-task`.
+4. Arrêter le chrono : `bash .claude/hooks/time-task.sh` (sans argument).
 5. Résumer à l'utilisateur : estimation vs temps réel.
 
 Plusieurs tâches en parallèle : `current-task` n'en suit qu'une ; changer de tâche = refaire `start` (le chrono de la précédente s'arrête de lui-même).
