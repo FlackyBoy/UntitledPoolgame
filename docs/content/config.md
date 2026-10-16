@@ -288,13 +288,14 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Groupe | Ce qu'on règle |
 |---|---|
 | Polices | Police des textes et police des titres (vide = Titan One / Bowlby One) |
-| Taille | Taille globale du HUD (1 = calé pour une moitié de 1920 × 1080), taille des interjections, de « À toi ! », des bandeaux |
+| Taille | Taille globale du HUD (1 = calé pour une moitié de 1920 × 1080), taille du bloc des pouvoirs en haut à droite (*Power Slot Scale*, 1,35 : anneaux, icônes, nom, touche, second pouvoir), taille des interjections, de « À toi ! », des bandeaux |
 | Couleurs | J1, J2, encre des contours, fond des cartes, mise en avant (jaune), danger (rouge), « BOUM ! », voile du joueur qui attend, jauge (début, milieu, fin) |
 | Textes : tour et plaque | « À toi ! », « Tour de J{0} », « J{0} », groupe à décider, « Prochaine », « Puissance », touche du pouvoir |
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
 | Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
 | Bandeau du choix sur la table | *Pick Table Banner Format* (pouvoir Trou) |
 | Interjections | Liste tirée au hasard quand le joueur rentre une de ses billes (*Pot Shouts*), une autre quand il rentre une bille de l'adversaire (*Opponent Ball Pot Shouts* ; liste vide = rien), blanche rentrée, faute, main libre, tir plein, pouvoir lancé (« Envoyé ! » pour une Attaque, « Activé ! » pour un Effet ou une Défense), « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
+| Deux pouvoirs en stock | Texte sous le pouvoir quand il y en a deux (« Molette · ◀ ▶ »), badge de niveau (« N{0} »), interjection du passage au niveau supérieur (« NIVEAU {0} ! »), et du pouvoir ramassé mais perdu (« Déjà plein ! », vide = rien) |
 | Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} · Q / B pour le lancer », noms des catégories |
 | Pouvoir lancé : carte chez l'adversaire | Quand un joueur lance un pouvoir, une carte arrive sur l'écran de l'autre joueur (par la droite). Afficher ou non, aussi pour les Effets et Défenses ou non, en-têtes (« J{0} T'ENVOIE », « J{0} ACTIVE »), ligne sous le nom (« Tout de suite ! », « Au début de ton tour… », « Pour son prochain coup »), durée (2,6 s) |
 | Pouvoir refusé | Texte sous la pastille du pouvoir quand la touche est pressée au mauvais moment : rien en stock (vide = la pastille tremble sans texte), pendant son tour seulement, pendant le tour adverse seulement, billes qui roulent, placement de la blanche ou annonce de la 8 en cours ; durée (1,4 s) |
@@ -310,6 +311,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 Dans `Assets/Powers`. Champs communs, qui décident **quand le pouvoir peut être lancé** (touche Q / B) :
 
 - **Power Name** : nom affiché.
+- **Hud Icon** : l'icône du pouvoir dans le HUD (blanche sur fond transparent), assortie à son jeton, générée par *Tools > Pool > Générer les jetons de pouvoir* dans `Assets/Textures/PowerHudIcons`. Vide = l'icône de sa catégorie. Un vrai dessin peut la remplacer.
 - **Token Prefab** : le jeton posé sur la table pour ce pouvoir (une forme 3D qui le représente, sur un anneau à la couleur de sa catégorie), fait par *Tools > Pool > Générer les jetons de pouvoir*. Vide = le prefab de la catégorie. Le jeton tourne et flotte grâce à *PowerTokenFloat*, réglable sur le prefab : vitesse de rotation (70°/s), inclinaison (8° sur les jetons générés), amplitude (1,2 cm) et durée (1,8 s) du flottement.
 - **Requires Own Turn** : ne peut être lancé que pendant son propre tour (pouvoirs d'Effet).
 - **Allow During Own Turn** (coché par défaut) : pour un pouvoir utilisable hors de son tour (*Requires Own Turn* décoché). Coché, lancé pendant son propre tour, il attend le début du tour adverse. Décoché, il est refusé pendant son tour et ne part que pendant le tour de l'adversaire.

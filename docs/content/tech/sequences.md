@@ -122,7 +122,9 @@ sequenceDiagram
   C->>M: GrantPower(joueur courant, pouvoir)
   C->>CM: NotifyCollected() (réapparition plus tard)
   PB-->>M: via PoolBall.Pocketed : GrantPower si la bille porte un pouvoir
-  M-->>FX: PowerGranted (secousse, flash)
+  Note over M: GrantPower : même pouvoir en stock → niveau 2 (max 2) ; sinon une des deux places libres ; sinon perdu
+  M-->>FX: PowerGranted (secousse, flash) ; PowerPickedUp → HUD (sponsor, « NIVEAU 2 ! », « Déjà plein ! »)
+  PC->>M: CycleSelectedPower (molette / D-pad) : choisit lequel des deux est lancé
 
   PC->>M: CheckPowerUse(joueur)
   Note over M: réglages du pouvoir : RequiresOwnTurn, AllowDuringOwnTurn, AllowWhileBallsMoving (règles de tour ignorées en solo)
