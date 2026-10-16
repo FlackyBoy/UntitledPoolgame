@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.TableHolePower
   powerName: Trou
   requiresOwnTurn: 0
-  holeRadius: 0.09
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  holeRadius: 0.2
   level1Holes: 1
   level2Holes: 3
-  level2Spread: 0.2
+  level2Spread: 0.17
   level2SpreadJitter: 0.3
   level2InsideChance: 0.3
   level2CenterHole: 0
   level2MinGap: 0.02
-  duration: 1
+  duration: 0
   turns: 1
   meteorPrefab: {fileID: 6294508013172393196, guid: 043176b6a68be2b43b073aaaa4782c7d, type: 3}
   meteorScale: 0.25
@@ -50,8 +52,8 @@ MonoBehaviour:
   rimColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   rimWidth: 0.012
   smokePrefab: {fileID: 8656522925564163052, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
-  smokeScale: 0.5
-  smokeRate: 0.1
+  smokeScale: 0.25
+  smokeRate: 0.5
   smokeDuration: 0
   sinkTime: 0.35
   closeTime: 0.3

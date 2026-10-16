@@ -155,6 +155,7 @@ namespace UntitledPoolGame.Core
                 GUILayout.Label("Les billes roulent : attendre qu'elles s'arrêtent.");
 
             scroll = GUILayout.BeginScrollView(scroll);
+            DrawPlayers();
             DrawPowers(rules);
             DrawMatch(rules, current);
             DrawErrors(rules, current);
@@ -162,6 +163,24 @@ namespace UntitledPoolGame.Core
 
             if (!string.IsNullOrEmpty(status)) GUILayout.Label(status);
             GUI.DragWindow();
+        }
+
+        // Split-screen tests with one keyboard (same as C+P and Tab).
+        private void DrawPlayers()
+        {
+            Section("Joueurs");
+            PlayerInput owner = SplitScreenCheatSpawner.KeyboardOwner();
+            GUILayout.Label($"{PlayerInput.all.Count} joueur(s) · clavier : {(owner != null ? $"J{owner.playerIndex + 1}" : "personne")}");
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Ajouter un joueur", GUILayout.Width(140f))) status = SplitScreenCheatSpawner.JoinPlayer();
+            GUILayout.Label("Clavier à", GUILayout.Width(60f));
+            foreach (PlayerInput player in PlayerInput.all)
+                if (GUILayout.Button($"J{player.playerIndex + 1}", GUILayout.Width(40f)))
+                {
+                    status = SplitScreenCheatSpawner.GiveKeyboardTo(player, activate: false);
+                    break;   // PlayerInput.all may change order
+                }
+            GUILayout.EndHorizontal();
         }
 
         private void DrawPowers(PoolMatchRules rules)

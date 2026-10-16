@@ -96,6 +96,8 @@ namespace UntitledPoolGame.Interaction
             // prefab had lost both (no power could be triggered any more).
             if (GetComponent<LocalPoolPowerController>() == null) gameObject.AddComponent<LocalPoolPowerController>();
             if (GetComponent<LocalPoolPowerEffectReceiver>() == null) gameObject.AddComponent<LocalPoolPowerEffectReceiver>();
+            // Pointing at a power's target, thumbs up once sent.
+            if (GetComponent<LocalPowerGesture>() == null) gameObject.AddComponent<LocalPowerGesture>();
             playerInput = GetComponent<PlayerInput>();
             // The throw direction: the player's own camera when left empty.
             if (cameraTransform == null)

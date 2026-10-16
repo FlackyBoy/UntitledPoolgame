@@ -91,7 +91,10 @@ namespace UntitledPoolGame.Core
         public string foulShout = "FAUTE !";
         public string ballInHandShout = "Main libre !";
         public string fullPowerShout = "OHHH !";
+        [Tooltip("Chez le lanceur, quand il envoie une Attaque.")]
         public string powerUsedShout = "Envoyé !";
+        [Tooltip("Chez le lanceur, quand il active un pouvoir d'Effet ou de Défense (pour lui-même).")]
+        public string powerActivatedShout = "Activé !";
         public string blastShout = "BOUM !";
         [Tooltip("Afficher les interjections quand une bille rentre.")]
         public bool showPotShouts = true;
@@ -104,10 +107,40 @@ namespace UntitledPoolGame.Core
         [Tooltip("Ajouté après le nom du pouvoir.")]
         public string sponsorNameSuffix = "™";
         [Tooltip("{0} = catégorie du pouvoir.")]
-        public string sponsorLineFormat = "Pouvoir {0} · F / B pour le lancer";
+        public string sponsorLineFormat = "Pouvoir {0} · Q / B pour le lancer";
         public string attackLabel = "Attaque";
         public string defenseLabel = "Défense";
         public string effectLabel = "Effet";
+
+        [Header("Pouvoir lancé : carte chez l'adversaire")]
+        [Tooltip("Quand un joueur lance un pouvoir, une carte le dit à l'autre joueur, sur son écran.")]
+        public bool showIncomingCard = true;
+        [Tooltip("Aussi pour les pouvoirs d'Effet et de Défense (le lanceur se renforce) ; décoché = seulement les Attaques.")]
+        public bool showOpponentBuffCard = true;
+        [Tooltip("En-tête pour une Attaque. {0} = numéro du lanceur.")]
+        public string incomingAttackHeaderFormat = "J{0} T'ENVOIE";
+        [Tooltip("En-tête pour un Effet ou une Défense. {0} = numéro du lanceur.")]
+        public string incomingBuffHeaderFormat = "J{0} ACTIVE";
+        [Tooltip("Attaque lancée pendant le tour adverse : elle frappe tout de suite.")]
+        public string incomingNowLine = "Tout de suite !";
+        [Tooltip("Attaque lancée pendant le tour du lanceur : elle attend le tour de la cible.")]
+        public string incomingNextTurnLine = "Au début de ton tour…";
+        [Tooltip("Effet ou Défense : ligne sous le nom.")]
+        public string incomingBuffLine = "Pour son prochain coup";
+        public float incomingDuration = 2.6f;
+
+        [Header("Pouvoir refusé (touche pressée au mauvais moment)")]
+        [Tooltip("Rien en stock. Vide = la pastille tremble, sans texte.")]
+        public string refusedNoPowerText = "";
+        [Tooltip("Pouvoir réservé à son propre tour (Requires Own Turn).")]
+        public string refusedOwnTurnOnlyText = "Pendant ton tour seulement";
+        [Tooltip("Pouvoir qui ne part que pendant le tour adverse (Allow During Own Turn décoché).")]
+        public string refusedOpponentTurnOnlyText = "Pendant le tour adverse seulement";
+        [Tooltip("Pouvoir refusé pendant que les billes roulent (Allow While Balls Moving décoché).")]
+        public string refusedBallsMovingText = "Attends que les billes s'arrêtent";
+        [Tooltip("Placement de la blanche ou annonce de la 8 en cours.")]
+        public string refusedPointerBusyText = "Termine d'abord ta visée";
+        public float refusedDuration = 1.4f;
 
         [Header("Fin de partie")]
         [Tooltip("{0} = numéro du gagnant.")]

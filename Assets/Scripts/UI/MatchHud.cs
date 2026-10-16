@@ -80,7 +80,7 @@ namespace UntitledPoolGame.Core
             public int player = -1;          // PoolMatchRules index shown on this half
             public VisualElement frame, content, dim, fx;
             public VisualElement who, plateBalls, tag, ring, ringIcon, power, spin, spinDot, banner;
-            public Label whoText, tagText, powerName, powerKey, bannerText;
+            public Label whoText, tagText, powerName, powerKey, bannerText, refusedHint;
             public readonly VisualElement[] segments = new VisualElement[Segments];
             public string plateKey;
             public PoolPower shownPower;
@@ -93,6 +93,10 @@ namespace UntitledPoolGame.Core
             public VisualElement element;
             public float time, life;
             public Action<Fx, float> animate;   // (fx, 0..1)
+            // Kept on screen at the end (scale/rotate reset) instead of
+            // removed. Per effect, not per element: an element can run
+            // several effects at once (the power ring pops and wiggles).
+            public bool keep;
         }
 
         private UIDocument document;
@@ -107,7 +111,6 @@ namespace UntitledPoolGame.Core
         private PoolPowerSpawnSettings powerSettings;
         private float endShownAt = -1f;
         private bool foulPending;
-        private readonly bool[] hadPower = new bool[2];
 
         private void OnEnable()
         {
@@ -139,6 +142,8 @@ namespace UntitledPoolGame.Core
             PoolBall.Pocketed += OnPocketed;
             PoolMatchRules.Fouled += OnFouled;
             PoolMatchRules.PowerGranted += OnPowerGranted;
+            PoolMatchRules.PowerActivated += OnPowerActivated;
+            PoolMatchRules.PowerRefused += OnPowerRefused;
             PoolMatchRules.TurnChanged += OnTurnChanged;
             PoolMatchRules.BallBlasted += OnBallBlasted;
             LocalPoolAimController.ShotTaken += OnShotTaken;
@@ -150,6 +155,8 @@ namespace UntitledPoolGame.Core
             PoolBall.Pocketed -= OnPocketed;
             PoolMatchRules.Fouled -= OnFouled;
             PoolMatchRules.PowerGranted -= OnPowerGranted;
+            PoolMatchRules.PowerActivated -= OnPowerActivated;
+            PoolMatchRules.PowerRefused -= OnPowerRefused;
             PoolMatchRules.TurnChanged -= OnTurnChanged;
             PoolMatchRules.BallBlasted -= OnBallBlasted;
             LocalPoolAimController.ShotTaken -= OnShotTaken;
@@ -593,13 +600,6 @@ namespace UntitledPoolGame.Core
         private void UpdatePowerSlot(Half h, PoolMatchRules rules)
         {
             PoolPower held = rules.GetHeldPower(h.player);
-            // Held, then gone during play: it was just used (a "Revanche"
-            // also empties it — not counted, hadPower is dropped at the end).
-            // Per match player, not per half: in solo the one half shows
-            // whoever's turn it is.
-            if (!rules.GameOver && hadPower[h.player] && held == null)
-                Shout(h.player, cfg.powerUsedShout, Yellow, false);
-            hadPower[h.player] = !rules.GameOver && held != null;
             if (held == h.shownPower) return;
             h.shownPower = held;
 
@@ -725,6 +725,54 @@ namespace UntitledPoolGame.Core
             PoolMatchRules rules = PoolMatchRules.Instance;
             PoolPower power = rules != null ? rules.GetHeldPower(player) : null;
             if (power != null && cfg.showSponsorCard) Sponsor(player, power);
+        }
+
+        // The launcher hears it went, the other player gets a card saying
+        // what's coming and when.
+        private void OnPowerActivated(int player, PoolPower power, bool waitsForOpponentTurn)
+        {
+            if (power == null) return;
+            Shout(player, power.TargetsOpponent ? cfg.powerUsedShout : cfg.powerActivatedShout, Yellow, false);
+            if (!cfg.showIncomingCard || (!power.TargetsOpponent && !cfg.showOpponentBuffCard)) return;
+            string line = !power.TargetsOpponent ? cfg.incomingBuffLine
+                : waitsForOpponentTurn ? cfg.incomingNextTurnLine : cfg.incomingNowLine;
+            string header = Format(power.TargetsOpponent ? cfg.incomingAttackHeaderFormat : cfg.incomingBuffHeaderFormat, player + 1);
+            Incoming(1 - player, power, header, line);
+        }
+
+        // The slot shakes, with a word on why (an emptied text = no word).
+        private void OnPowerRefused(int player, PowerRefusal reason)
+        {
+            Half h = HalfOf(player);
+            if (h == null) return;
+            Wiggle(h.ring, 0.35f);
+            string text = reason switch
+            {
+                PowerRefusal.OwnTurnOnly => cfg.refusedOwnTurnOnlyText,
+                PowerRefusal.OpponentTurnOnly => cfg.refusedOpponentTurnOnlyText,
+                PowerRefusal.BallsMoving => cfg.refusedBallsMovingText,
+                PowerRefusal.PointerBusy => cfg.refusedPointerBusyText,
+                _ => cfg.refusedNoPowerText,
+            };
+            if (string.IsNullOrEmpty(text)) return;
+            // One at a time: a mashed button doesn't stack the hints.
+            h.refusedHint?.RemoveFromHierarchy();
+            Label hint = Text(h.fx, text, bodyFont, 18, Ink);
+            h.refusedHint = hint;
+            hint.style.position = Position.Absolute;
+            hint.style.right = Length.Percent(3);
+            hint.style.top = 170;
+            hint.style.backgroundColor = Color.white;
+            hint.style.paddingLeft = hint.style.paddingRight = 10;
+            hint.style.paddingTop = hint.style.paddingBottom = 4;
+            Radius(hint, 8);
+            Border(hint, 3, Red);
+            AddFx(hint, Mathf.Max(0.3f, cfg.refusedDuration), (fx, u) =>
+            {
+                float k = Mathf.Clamp01(u / 0.12f);
+                fx.element.style.scale = new Scale(new Vector3(Mathf.Lerp(0.6f, 1f, BackOut(k)), Mathf.Lerp(0.6f, 1f, BackOut(k)), 1f));
+                fx.element.style.opacity = u > 0.8f ? 1f - (u - 0.8f) / 0.2f : 1f;
+            });
         }
 
         private void OnShotTaken(int inputIndex, float charge)
@@ -862,6 +910,65 @@ namespace UntitledPoolGame.Core
             });
         }
 
+        // "J1 T'ENVOIE Vision brouillée — Au début de ton tour…": the card
+        // the target gets when a power is launched, sliding in from the
+        // right (the sponsor card comes from the left, so both can show).
+        private void Incoming(int player, PoolPower power, string header, string line)
+        {
+            Half h = HalfOf(player);
+            if (h == null) return;
+            Color color = powerSettings != null ? powerSettings.GetColor(power.Type) : Red;
+
+            VisualElement card = PopCard(h.fx, "incoming");
+            card.style.position = Position.Absolute;
+            card.style.right = Length.Percent(4);
+            card.style.top = Length.Percent(24);
+            card.style.width = Length.Percent(52);
+            card.style.overflow = Overflow.Hidden;
+            card.style.paddingLeft = card.style.paddingRight = card.style.paddingTop = 0;
+            card.style.paddingBottom = 10;
+            VisualElement head = Box(card, "head");
+            head.style.backgroundColor = color;
+            head.style.paddingLeft = head.style.paddingRight = 16;
+            head.style.paddingTop = head.style.paddingBottom = 5;
+            head.style.borderBottomWidth = 3;
+            head.style.borderBottomColor = Ink;
+            Label headText = Text(head, header, bodyFont, 16, Color.white);
+            headText.style.unityTextAlign = TextAnchor.MiddleLeft;
+            Label name = Text(card, power.PowerName, titleFont, 36, Ink);
+            name.style.unityTextAlign = TextAnchor.MiddleLeft;
+            name.style.marginLeft = 16;
+            name.style.marginTop = 6;
+            TextFx.Reveal(name, power.PowerName);
+            if (!string.IsNullOrEmpty(line))
+            {
+                Label small = Text(card, line, bodyFont, 20, new Color(Ink.r, Ink.g, Ink.b, 0.75f));
+                small.style.unityTextAlign = TextAnchor.MiddleLeft;
+                small.style.marginLeft = 16;
+            }
+
+            float life = Mathf.Max(1f, cfg.incomingDuration);
+            AddFx(card, life, (fx, u) =>
+            {
+                float t = u * life, x;
+                if (t < 0.4f) { float k = t / 0.4f; x = 120f * (1f - BackOut(k)); }
+                else if (t > life - 0.3f) x = 130f * ((t - (life - 0.3f)) / 0.3f);
+                else x = 0f;
+                fx.element.style.translate = new Translate(Length.Percent(x), 0);
+                fx.element.style.rotate = new Rotate(new Angle(t < 0.4f ? 6f * (1f - t / 0.4f) : 0f, AngleUnit.Degree));
+            });
+        }
+
+        // A quick "no" shake, sideways: leaves scale/rotate to Pop.
+        private void Wiggle(VisualElement e, float duration)
+        {
+            AddFx(e, duration, (fx, u) =>
+            {
+                float x = u < 1f ? Mathf.Sin(u * Mathf.PI * 6f) * 10f * (1f - u) : 0f;
+                fx.element.style.translate = new Translate(x, 0);
+            }, removeAtEnd: false);
+        }
+
         private void Pop(VisualElement e, float duration)
         {
             AddFx(e, duration, (fx, u) =>
@@ -872,12 +979,9 @@ namespace UntitledPoolGame.Core
             }, removeAtEnd: false);
         }
 
-        private readonly HashSet<VisualElement> keepAfterFx = new HashSet<VisualElement>();
-
         private void AddFx(VisualElement e, float life, Action<Fx, float> animate, bool removeAtEnd = true)
         {
-            var fx = new Fx { element = e, life = life, animate = animate };
-            if (!removeAtEnd) keepAfterFx.Add(e);
+            var fx = new Fx { element = e, life = life, animate = animate, keep = !removeAtEnd };
             effects.Add(fx);
             animate(fx, 0f);
         }
@@ -892,7 +996,7 @@ namespace UntitledPoolGame.Core
                 fx.animate(fx, u);
                 if (u < 1f) continue;
                 effects.RemoveAt(i);
-                if (keepAfterFx.Remove(fx.element))
+                if (fx.keep)
                 {
                     fx.element.style.scale = new Scale(Vector3.one);
                     fx.element.style.rotate = new Rotate(new Angle(0f, AngleUnit.Degree));

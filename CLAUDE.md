@@ -31,6 +31,10 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 - Pas d'itération à l'aveugle sur des réglages visuels/IK : diagnostiquer (logs, lecture du code du plugin) avant de changer, et retirer tout de suite ce que l'utilisateur demande de retirer.
 - Ne pas toucher à `Assets/Scenes/BarSplitscreen.unity` sans demande explicite (configuration de l'utilisateur) et ne pas le commiter.
 - Je ne peux pas lancer Unity : le dire quand une modification n'est ni compilée ni testée.
+- Suivi Notion : skill `notion-todo` (`.claude/skills/notion-todo/SKILL.md`). `start` en commençant une tâche de la TODO, `pr` à la création d'une PR, `done` au merge. Le temps passé vient des hooks, jamais d'une estimation de tête.
+  - **Chaque ligne ajoutée à la TODO est aussi créée dans Notion** (descriptif, « Comment tester », statut, rubrique, estimation) avec son commentaire `<!-- notion:… -->`.
+  - **Chaque changement de statut dans la TODO est reporté dans Notion** (À faire, En cours, En revue, À tester, Fait).
+  - Les idées non décidées vont dans `pistes.md` et la page Notion **Pistes**, pas dans la base des tâches.
 - À chaque fonctionnalité ou correctif : mettre à jour `TODO.md` et `CHANGELOG.md` ; mettre à jour le GDD quand le statut d'une fonctionnalité change ; la doc technique quand une classe, un flux ou un réglage change ; ajouter aux pistes ce qui est seulement envisagé.
 - Commit / push uniquement quand l'utilisateur le demande, en ne commitant que les fichiers concernés.
 - **Avant chaque commit, faire une passe sur ce qui a été fait** :

@@ -3,6 +3,28 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-16
+- **Tests à plusieurs avec un seul clavier** (branche `feature/declenchement-pouvoirs` ; compilé, non testé). C+P ajoute de nouveau un joueur, dans toute scène : avant, la triche n'existait que dans l'arène de R&D et refusait quand le nombre de joueurs est illimité. Sans manette libre, le nouveau joueur prend le clavier (créé sans appareil, il bougeait comme J1). **Tab** passe le clavier et la souris au joueur suivant. Mêmes actions dans le menu debug (rubrique *Joueurs*).
+- **Le personnage n'était plus animé après le menu pause** (branche `feature/declenchement-pouvoirs` ; compilé, non testé). En pause, le temps est arrêté et le calcul de la vitesse de rotation divisait par zéro. La valeur invalide restait ensuite dans l'Animator pour toujours. Corrigé dans `LocalCharacterAnimationController`.
+- **Envoi des pouvoirs** (branche `feature/declenchement-pouvoirs` ; compilé, non testé).
+  - **Quand un pouvoir peut partir, réglé pour chaque pouvoir** : en plus de *Requires Own Turn*, *Allow During Own Turn* (décoché = une attaque ne part que pendant le tour adverse) et *Allow While Balls Moving* (décoché = refusé pendant qu'un tir roule). Cochés par défaut, donc rien ne change sans y toucher. En solo, les règles de tour sont ignorées.
+  - **Les deux joueurs voient l'envoi** : « Envoyé ! » ou « Activé ! » chez le lanceur, une carte « J1 T'ENVOIE … » chez l'adversaire, qui dit si ça frappe tout de suite ou au début de son tour.
+  - **Appui au mauvais moment** : la pastille du pouvoir tremble et dit pourquoi (« Pendant ton tour seulement »…), au lieu de ne rien faire.
+  - **Trois moments Feel** : pouvoir lancé, attaque reçue, pouvoir refusé.
+  - **Gestes du personnage** : pendant le choix d'un trou ou d'un point de la table, le bras se tend et l'index pointe l'endroit visé (en restant devant le corps ; quand le pointeur quitte le billard, le bras se baisse, puis pointe de nouveau à son retour) ; une fois le pouvoir envoyé, le personnage lève le pouce. Réglages dans PoolPowerSpawnSettings (*Geste*). Le poing du combat et ces gestes partagent le même code de pliage des doigts (`HandPose`), qui marche maintenant avec le squelette du joueur : il n'a que l'index (qui porte les quatre doigts) et le pouce, et la main ne se fermait pas. Le coude est guidé pendant les gestes (sous l'épaule pour le pouce levé), sinon il suivait l'animation et rentrait dans le buste ; le pouce est orienté vers le haut. Les gestes s'estompent en douceur (un bug les faisait revenir d'un coup), la main passe en arc devant le corps en montant et en descendant (elle traversait le ventre), la vitesse de descente se règle à part, et le bras ne pointe plus quand le regard quitte la surface de jeu.
+  - **Correctifs** : la carte sponsor et le GDD indiquaient « F / B » pour lancer un pouvoir, la touche est Q / B. Le HUD pouvait retirer un élément qui jouait deux animations à la fois (la pastille qui apparaît et tremble).
+  - **Code** : `PoolMatchRules.CheckPowerUse` (raison dans `PowerRefusal`), événements `PowerActivated` / `PowerRefused`, `MatchHud` (carte de l'adversaire, refus), `HudSettings`, `GameFeelEvent`.
+- **Suivi des tâches dans Notion** (branche `chore/rangement-todo`) :
+  - **Skill `notion-todo`** (`.claude/skills/notion-todo/SKILL.md`) : la TODO devient des tickets Notion avec descriptif, sous-tâches par lot, estimation du temps de Claude ; la PR est rattachée au ticket, qui passe à « À tester » ou « Fait » au merge. `TODO.md` reste la référence.
+  - **Temps réellement passé** : deux hooks (`.claude/settings.json`) notent le début et la fin de chaque tour de Claude pour la tâche en cours ; `time-total.sh` en fait la somme à la clôture. Le journal reste local (`.claude/time/`, ignoré par git).
+  - **Base Notion créée et remplie** : « Tâches — UntitledPoolGame », 81 pages (33 fonctionnalités et leurs lots), chacune avec un descriptif, les détails techniques et une liste « Comment tester ». Nouvelle rubrique *Dimensions*. Chaque ligne ouverte de la TODO renvoie à sa page (`<!-- notion:… -->`, invisible sur le site).
+  - **Page Pistes à part** dans Notion, miroir de `pistes.md` : les idées non décidées ne sont plus mélangées aux tâches.
+  - **Nouvelles règles** (skill et CLAUDE.md) : toute ligne ajoutée à la TODO est créée dans Notion, et tout changement de statut y est reporté.
+- **Rangement de la TODO** (branche `chore/rangement-todo`) :
+  - **Nouvelle section en haut**, « À tester en jeu » : tout ce qui est mergé mais pas encore essayé (pouvoirs, règles, combat, outils de test, caméra, menus, game feel), et les anciens chantiers peut-être déjà validés.
+  - **Résumé « Outils : reste à faire »** : ce qui reste à construire dans le Level Maker et les menus, jusqu'ici éparpillé en bas de la TODO.
+  - **Statuts à jour** : les branches mergées renvoient à leur PR, et les mentions « non compilé » des lignes en cours deviennent « compilé, non testé » (tout le projet compile).
+
 ## 2026-10-15
 - **Pas de félicitations pour une bille de l'adversaire** (branche `fix/felicitations-bille-adverse` ; compilé, non testé).
   - **Avant** : rentrer une bille de l'autre groupe, même par ricochet, affichait « Dans le mille ! ».

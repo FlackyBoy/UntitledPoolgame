@@ -20,7 +20,7 @@ Un outil d'éditeur, `PoolTableBuilder` (namespace `UntitledPoolGame.PoolEditor`
 - **Un composant = une responsabilité** : le joueur est un assemblage de composants (`LocalFpsPlayerController` pour bouger, `LocalPlayerHandController` pour tenir, `LocalPoolAimController` pour viser…) qui se désactivent entre eux selon l'état (visée, ragdoll).
 - **Singletons de scène** pour ce qui est unique : `PoolMatchRules.Instance`, `PoolTableSurface.Instance`, `PoolPowerCrateManager.Instance`.
 - **Registres statiques** plutôt que des recherches coûteuses : `PoolBall.Active`, `PoolPocket.Active`.
-- **Événements statiques** pour découpler : `PoolBall.Pocketed`, `PoolBall.CueBallFirstContact`, `PoolMatchRules.Fouled`, `PoolMatchRules.PowerGranted`.
+- **Événements statiques** pour découpler : `PoolBall.Pocketed`, `PoolBall.CueBallFirstContact`, `PoolMatchRules.Fouled`, `PoolMatchRules.PowerGranted`, `PoolMatchRules.PowerActivated` / `PowerRefused`.
   - **Sens d'une bille rentrée** : `PoolMatchRules.MeaningOfPot` (Good, Opponent, EarlyEight) est lu par `MatchHud` et `GameFeel` sur `PoolBall.Pocketed`. Seule une bille du joueur est fêtée. Les règles, elles, jugent le tir entier à sa fin (`IPoolRuleSet.ResolveShot`).
 - **Données dans des ScriptableObjects** : réglages (physique, effets, pouvoirs) et chaque pouvoir est un asset (voir *Configuration → rendu*).
 - **Stratégie pour les règles** : `PoolMatchRules` délègue la résolution d'un tir à une implémentation de `IPoolRuleSet` choisie au lancement de la partie.
@@ -63,7 +63,10 @@ classDiagram
     +OnRegainBalance()
     +NotifyCollision()
   }
-  class LocalPoolPowerController
+  class LocalPoolPowerController {
+    +TryGetPickTarget(out Vector3) bool
+  }
+  class LocalPowerGesture
   class LocalPoolPowerEffectReceiver {
     +PlayShotFeedback()
   }
@@ -80,9 +83,12 @@ classDiagram
   LocalPlayerRagdollController --> LocalFpsPlayerController : désactive
   LocalPlayerRagdollController --> LocalPoolAimController : désactive
   LocalPoolPowerEffectReceiver --> LocalFpsPlayerController : sensibilité, inversion
+  LocalPowerGesture --> LocalPoolPowerController : cible du choix (pointer)
   LocalFpsPlayerController --> CharacterController
   LocalFpsPlayerController --> PlayerInput
 ```
+
+**Gestes des pouvoirs** : `LocalPowerGesture` (ajouté par `LocalPlayerHandController`) pointe la cible pendant le choix d'un trou ou d'un point (`LocalPoolPowerController.TryGetPickTarget`) et lève le pouce après `PoolMatchRules.PowerActivated`. Avant que FBBIK résolve (`OnPreUpdate`), il place l'effecteur d'une main : bras tendu vers la cible, ou main devant la poitrine. Il s'abonne en dernier, à chaque nouveau geste, pour passer après la prise de la queue. Après la résolution (`OnPostUpdate`), il tourne la main et plie les doigts avec `HandPose`, le même outil que le poing de `LocalUnarmedMelee`. Réglages : `PoolPowerSpawnSettings` (*Geste*).
 
 **R&D déplacement** (branche `feature/deplacements-combat`) : `LocalPlayerLocomotion`, présent seulement sur la variante `New_PlayerVariant`, prend le déplacement à `LocalFpsPlayerController`, qui ne garde alors que le regard.
 - **Mouvement** : élan, sprint, saut, escalade des rebords (détection par rayons : mur devant, dessus plat à bonne hauteur, place pour se tenir debout), avec les paramètres d'animation `Jump` et `JumpLeg`.
@@ -255,9 +261,12 @@ classDiagram
     +CanPlayerShoot(int) bool
     +GetEffectivePlayerIndex(int) int
     +GrantPower(int, PoolPower)
+    +CheckPowerUse(int) PowerRefusal
     +TryActivatePower(int) bool
     +event Fouled$
     +event PowerGranted$
+    +event PowerActivated$
+    +event PowerRefused$
   }
   class IPoolRuleSet {
     <<interface>>
@@ -321,6 +330,8 @@ classDiagram
     +string PowerName
     +PowerType Type*
     +bool RequiresOwnTurn
+    +bool AllowDuringOwnTurn
+    +bool AllowWhileBallsMoving
     +Activate(PoolMatchRules, int)*
   }
   class BoostedShotPower
@@ -492,7 +503,7 @@ Deux composants UI Toolkit (`UntitledPoolGame.Core`, `Assets/Scripts/UI/`) suive
   - **Sécurité** : si le rappel d'Unity lève une erreur (bug signalé en 6.5), l'animation du label est coupée et le texte reste lisible.
   - **Text FX Studio** (`Editor/TextFxStudio.cs`) : fenêtre d'éditeur qui prévisualise `TextFx` hors Play Mode (horloge en temps réel, `Time.realtimeSinceStartup`). Elle lit et écrit les textes des assets de réglages par `SerializedObject`, et crée les séquences Feel.
 - **Feel** (`Assets/Scripts/Feel/`, plugin non modifié) :
-  - **`GameFeel`** (créé tout seul avec `PoolMatchRules`) écoute `PoolBall.Pocketed`, `PoolMatchRules.Fouled` / `PowerGranted` / `BallBlasted` / `TurnChanged`, `LocalPoolAimController.ShotTaken` et la fin de partie.
+  - **`GameFeel`** (créé tout seul avec `PoolMatchRules`) écoute `PoolBall.Pocketed`, `PoolMatchRules.Fouled` / `PowerGranted` / `PowerActivated` / `PowerRefused` / `BallBlasted` / `TurnChanged`, `LocalPoolAimController.ShotTaken` et la fin de partie.
   - Il joue les `MMF_Player` que `GameFeelSettings` associe à chaque moment ; chaque prefab est instancié une fois par scène. `GameFeel.EventPlayer` indique à qui appartient le moment.
   - **Feedbacks maison** :
     - `MMF_PoolHudText` passe par `MatchHud.ShowShout` (texte avec balises sur la bonne moitié d'écran) ;
@@ -534,7 +545,7 @@ Deux composants UI Toolkit (`UntitledPoolGame.Core`, `Assets/Scripts/UI/`) suive
     - `PoolMatchRules` : tour, `GetGroup`, `TryGetScore`, pouvoir en stock, bille 8 ;
     - `PoolBall.Active` : billes restantes ;
     - le `LocalPoolAimController` du joueur : `IsAiming`, `ChargeFraction`, `ContactOffset`, `IsOutOfReach`, vues du dessus.
-  - **Événements** : `PoolBall.Pocketed`, `PoolMatchRules.Fouled` / `PowerGranted` / `TurnChanged`, `LocalPoolAimController.ShotTaken`.
+  - **Événements** : `PoolBall.Pocketed`, `PoolMatchRules.Fouled` / `PowerGranted` / `PowerActivated` / `PowerRefused` / `TurnChanged`, `LocalPoolAimController.ShotTaken`.
   - **Fin de partie** : « Revanche » passe par `PoolMatchRules.RequestRestart`.
   - **Affichage provisoire** : `PoolMatchRules.ExternalHud` coupe les `OnGUI` provisoires de `PoolMatchRules` et `LocalPoolAimController`. Les voiles des pouvoirs (`LocalPoolPowerEffectReceiver`) restent en OnGUI.
 

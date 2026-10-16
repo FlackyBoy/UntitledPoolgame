@@ -58,7 +58,7 @@ MonoBehaviour:
   showSponsorCard: 1
   sponsorHeader: CE TOUR VOUS EST OFFERT PAR
   sponsorNameSuffix: "\u2122"
-  sponsorLineFormat: "Pouvoir {0} \xB7 F / B pour le lancer"
+  sponsorLineFormat: "Pouvoir {0} \xB7 Q / B pour le lancer"
   attackLabel: Attaque
   defenseLabel: "D\xE9fense"
   effectLabel: Effet

@@ -81,6 +81,8 @@ Tous dans `Assets/Resources`, créés par **Tools > Pool > Ensure Config Assets 
 | Visuels des caisses | un prefab par catégorie (facultatif) | — |
 | Bille à pouvoir | intervalle de changement min / max, intensité et portée du halo | 20 s, 40 s, 4, 0,3 m |
 | Visuels de la bille | un matériau par catégorie (facultatif) | — |
+| Geste : pointer la cible | pendant le choix d'un trou ou d'un point de la table, le bras se tend vers l'endroit visé et l'index le pointe : oui / non, main droite ou gauche (avec la queue en main, cette main la lâche le temps du geste), bras tendu (part de sa longueur), limites du bras devant le corps (*Point Limits* : vers l'extérieur, à travers le corps, vers le haut, vers le bas ; quand le pointeur n'est plus sur le billard, le bras se baisse), fermeture des autres doigts (sans effet sur le personnage actuel, dont la chaîne de l'index porte les quatre doigts), du pouce, de l'index (négatif = plus tendu) | oui, droite, 0,9, (80° ; 30° ; 50° ; 75°), 85°, 40°, −5° |
+| Geste : pouce levé | une fois le pouvoir envoyé (tous les pouvoirs), le poing devant la poitrine, pouce en l'air : oui / non, durée, position de la main par rapport à l'épaule (devant, hauteur, vers le milieu du corps), fermeture des doigts, du pouce (négatif = plus ouvert) ; position du coude par rapport à l'épaule (*Thumbs Up Elbow Offset* : devant, hauteur, vers le milieu du corps ; sous l'épaule, près du corps) ; pour les deux gestes : force du guide du coude (*Gesture Elbow Out*, 0 = il suit l'animation et peut rentrer dans le corps), ligne de diagnostic dans la console à chaque pouce levé (*Gesture Debug Logs*), durée pour lever le bras (*Gesture Blend Time*) et pour le redescendre (*Gesture Lower Time*) ; la main passe en arc devant le corps | oui, 1,2 s, (0,32 ; 0,02 ; 0,1) m pour un bras de 0,6 m (mis à l'échelle du personnage), 95°, −15°, (0,08 ; −0,3 ; −0,06) m, 0,7, oui, 0,3 s, 0,5 s |
 
 Les pouvoirs n'apparaissent qu'en mode **Party**. Pour retirer un pouvoir du jeu sans le supprimer, enlevez-le de *Available Powers*.
 
@@ -266,7 +268,7 @@ Les masques sont dans `Assets/Animations/Combat/`. Ordre des calques : sonné, c
 ### GameFeelSettings — Feel aux moments de la partie
 
 Associe un **moment de la partie** à une **séquence Feel** (un prefab avec un *MMF Player*) :
-- **moments** : bille rentrée (une des siennes), **bille adverse rentrée** (*Opponent Ball Potted*, 8-ball), blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*) ;
+- **moments** : bille rentrée (une des siennes), **bille adverse rentrée** (*Opponent Ball Potted*, 8-ball), blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*), **pouvoir lancé** (*Power Activated*, sur l'écran du lanceur), **attaque reçue** (*Power Received*, sur l'écran de la cible, au moment où l'attaque est lancée), **pouvoir refusé** (*Power Refused*, touche pressée au mauvais moment) ;
 - **pour chaque ligne** : le moment, la séquence, l'intensité (1 = normale). Plusieurs lignes pour le même moment jouent toutes ;
 - **aussi** : un interrupteur général et le seuil du « tir plein » (0,95).
 
@@ -292,8 +294,10 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
 | Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
 | Bandeau du choix sur la table | *Pick Table Banner Format* (pouvoir Trou) |
-| Interjections | Liste tirée au hasard quand le joueur rentre une de ses billes (*Pot Shouts*), une autre quand il rentre une bille de l'adversaire (*Opponent Ball Pot Shouts* ; liste vide = rien), blanche rentrée, faute, main libre, tir plein, pouvoir lancé, « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
-| Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} », noms des catégories |
+| Interjections | Liste tirée au hasard quand le joueur rentre une de ses billes (*Pot Shouts*), une autre quand il rentre une bille de l'adversaire (*Opponent Ball Pot Shouts* ; liste vide = rien), blanche rentrée, faute, main libre, tir plein, pouvoir lancé (« Envoyé ! » pour une Attaque, « Activé ! » pour un Effet ou une Défense), « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
+| Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} · Q / B pour le lancer », noms des catégories |
+| Pouvoir lancé : carte chez l'adversaire | Quand un joueur lance un pouvoir, une carte arrive sur l'écran de l'autre joueur (par la droite). Afficher ou non, aussi pour les Effets et Défenses ou non, en-têtes (« J{0} T'ENVOIE », « J{0} ACTIVE »), ligne sous le nom (« Tout de suite ! », « Au début de ton tour… », « Pour son prochain coup »), durée (2,6 s) |
+| Pouvoir refusé | Texte sous la pastille du pouvoir quand la touche est pressée au mauvais moment : rien en stock (vide = la pastille tremble sans texte), pendant son tour seulement, pendant le tour adverse seulement, billes qui roulent, placement de la blanche ou annonce de la 8 en cours ; durée (1,4 s) |
 | Fin de partie | « J{0} gagne ! », « Revanche », aide des touches, confettis |
 | Durées et mouvements | Interjections (1,3 s), rayons (1,1 s), carte sponsor (3,1 s), délai faute → main libre (1,3 s), secousse (durée, force), balancement de « À toi ! » (hauteur, période), voile du joueur qui attend |
 
@@ -303,7 +307,14 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 
 ## Pouvoirs (un fichier par pouvoir)
 
-Dans `Assets/Powers`. Champs communs : **Power Name** (nom affiché) et **Requires Own Turn** (ne peut être lancé que pendant son tour).
+Dans `Assets/Powers`. Champs communs, qui décident **quand le pouvoir peut être lancé** (touche Q / B) :
+
+- **Power Name** : nom affiché.
+- **Requires Own Turn** : ne peut être lancé que pendant son propre tour (pouvoirs d'Effet).
+- **Allow During Own Turn** (coché par défaut) : pour un pouvoir utilisable hors de son tour (*Requires Own Turn* décoché). Coché, lancé pendant son propre tour, il attend le début du tour adverse. Décoché, il est refusé pendant son tour et ne part que pendant le tour de l'adversaire.
+- **Allow While Balls Moving** (coché par défaut) : peut être lancé pendant que les billes roulent. Décoché, il est refusé jusqu'à l'arrêt des billes.
+
+En solo (une seule manette ou un seul clavier pour les deux côtés), les deux règles de tour ne s'appliquent pas, sinon un pouvoir refusé pendant son tour ne pourrait jamais partir. Un appui refusé fait trembler la pastille du pouvoir avec la raison (textes dans HudSettings, *Pouvoir refusé*).
 
 | Pouvoir | Fichier | Réglages propres |
 |---|---|---|

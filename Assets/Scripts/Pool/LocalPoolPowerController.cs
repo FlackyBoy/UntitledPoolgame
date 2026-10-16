@@ -4,11 +4,10 @@ using UnityEngine.InputSystem;
 namespace UntitledPoolGame.Pool
 {
     // Lets a player activate their stored power (see PoolMatchRules.
-    // GrantPower/TryActivatePower) with a button press. Only Effect powers
-    // are actually gated to the holder's own turn — see PoolPower.
-    // RequiresOwnTurn — Attack/Defense can be triggered whenever, since
-    // they target/react to the opponent instead of the holder's own next
-    // shot. Reads the "Next" action (Q / gamepad B-Circle in the local
+    // GrantPower/TryActivatePower) with a button press. When it may be
+    // launched (own turn only, opponent's turn only, while the balls roll)
+    // is set per power — see PoolPower and PoolMatchRules.CheckPowerUse.
+    // Reads the "Next" action (Q / gamepad B-Circle in the local
     // input asset; it used to share X-Square with Attack). Added to the
     // player automatically by LocalPlayerHandController when missing.
     //
@@ -43,6 +42,23 @@ namespace UntitledPoolGame.Pool
         public PoolPower ChoosingPower => choosingPower;
         public bool IsChoosingTablePoint => choosingPower is TablePointPower;
         public PoolPocket TargetedPocket => choosingPower is PocketTargetPower ? pointer.Pointed : null;
+
+        // What the pick is on right now — the point of the felt, or the
+        // pocket — for the pointing gesture (LocalPowerGesture). False while
+        // nothing valid is under the pointer.
+        public bool TryGetPickTarget(out Vector3 point)
+        {
+            point = tablePoint;
+            // On the playing surface itself: the felt's collider runs under
+            // the cushions, where the arm kept pointing at the clamped point.
+            if (choosingPower is TablePointPower) return hasTablePoint && pointer.TableHitInPlayArea;
+            PoolPocket pocket = TargetedPocket;
+            if (pocket != null) point = pocket.transform.position;
+            return pocket != null;
+        }
+
+        private Vector3 tablePoint;
+        private bool hasTablePoint;
 
         private void Awake()
         {
@@ -83,14 +99,23 @@ namespace UntitledPoolGame.Pool
 
             if (!usePowerAction.WasPressedThisFrame()) return;
 
+            // When to launch is decided per power (PoolPower) and checked in
+            // one place, PoolMatchRules.CheckPowerUse; a refused press is
+            // reported so the HUD can say why instead of ignoring it.
+            PowerRefusal refusal = rules.CheckPowerUse(effectivePlayer);
             PoolPower power = rules.GetHeldPower(effectivePlayer);
-            if (!CanActivate(rules, power, effectivePlayer)) return;
-
-            if (power is PocketTargetPower || power is TablePointPower)
+            // Ball in hand owns the camera and Interact, the 8-ball call
+            // owns the pointer: a pick waits until they're done.
+            if (refusal == PowerRefusal.None && IsPicker(power) && IsPointerTakenByAim())
+                refusal = PowerRefusal.PointerBusy;
+            if (refusal != PowerRefusal.None)
             {
-                // Ball in hand owns the camera and Interact, the 8-ball call
-                // owns the pointer: the pick waits until they're done.
-                if (IsPointerTakenByAim()) return;
+                PoolMatchRules.NotifyPowerRefused(effectivePlayer, refusal);
+                return;
+            }
+
+            if (IsPicker(power))
+            {
                 choosingPower = power;
                 return;
             }
@@ -98,26 +123,19 @@ namespace UntitledPoolGame.Pool
             rules.TryActivatePower(effectivePlayer);
         }
 
+        private static bool IsPicker(PoolPower power) => power is PocketTargetPower || power is TablePointPower;
+
         private bool IsPointerTakenByAim() =>
             aimController != null && (aimController.IsPlacementViewActive || aimController.IsCallPocketActive);
-
-        // Only Effect powers (change the holder's own next shot) are
-        // actually restricted to their own turn — see PoolPower.
-        // RequiresOwnTurn. Attack/Defense stay activatable regardless of
-        // whose turn it is. In hot-seat solo this check can never trigger
-        // either way: effectivePlayer already collapses to CurrentPlayer,
-        // so there's nothing meaningfully "off-turn" to block with a single
-        // shared device.
-        private static bool CanActivate(PoolMatchRules rules, PoolPower power, int player) =>
-            power != null && !(power.RequiresOwnTurn && rules.CurrentPlayer != player);
 
         private void UpdateChoice(PoolMatchRules rules, int effectivePlayer)
         {
             // The power is no longer the one in hand (turn passed in
-            // hot-seat solo, match restarted), or no longer usable now, or
-            // ball in hand took over the camera: drop the pick, keep the power.
+            // hot-seat solo, match restarted), or no longer usable now (turn
+            // changed, balls started rolling), or ball in hand took over the
+            // camera: drop the pick, keep the power.
             PoolPower held = rules.GetHeldPower(effectivePlayer);
-            if (held != choosingPower || !CanActivate(rules, held, effectivePlayer)
+            if (held != choosingPower || rules.CheckPowerUse(effectivePlayer) != PowerRefusal.None
                 || (aimController != null && aimController.IsPlacementViewActive)
                 || usePowerAction.WasPressedThisFrame())
             {
@@ -129,7 +147,9 @@ namespace UntitledPoolGame.Pool
             if (choosingPower is TablePointPower tablePower)
             {
                 int level = rules.GetHeldPowerLevel(effectivePlayer);
-                if (pointer.PointTable(tablePower.Margin(level), tablePower.PreviewRadius(level), out Vector3 point) && confirm)
+                hasTablePoint = pointer.PointTable(tablePower.Margin(level), tablePower.PreviewRadius(level), out Vector3 point);
+                if (hasTablePoint) tablePoint = point;
+                if (hasTablePoint && confirm)
                 {
                     EndChoice();
                     rules.TryActivatePower(effectivePlayer, point);
@@ -150,6 +170,7 @@ namespace UntitledPoolGame.Pool
             if (choosingPower == null) return;
             pointer.Release();
             choosingPower = null;
+            hasTablePoint = false;
             choiceEndedFrame = Time.frameCount;
         }
 
