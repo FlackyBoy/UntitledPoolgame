@@ -24,6 +24,8 @@
 *.asset              merge=unityyamlmerge
 
 *.cs                 text diff=csharp
+# Shell scripts (Claude's hooks) run in Git Bash: a CRLF checkout breaks them.
+*.sh                 text eol=lf
 *.shader             text
 *.hlsl               text
 *.uss                text

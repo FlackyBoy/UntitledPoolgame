@@ -28,6 +28,7 @@ chronologique inverse (les plus récentes en haut).
   - **Base Notion créée et remplie** : « Tâches — UntitledPoolGame », 81 pages (33 fonctionnalités et leurs lots), chacune avec un descriptif, les détails techniques et une liste « Comment tester ». Nouvelle rubrique *Dimensions*. Chaque ligne ouverte de la TODO renvoie à sa page (`<!-- notion:… -->`, invisible sur le site).
   - **Page Pistes à part** dans Notion, miroir de `pistes.md` : les idées non décidées ne sont plus mélangées aux tâches.
   - **Nouvelles règles** (skill et CLAUDE.md) : toute ligne ajoutée à la TODO est créée dans Notion, et tout changement de statut y est reporté.
+- **Chrono des tâches Notion réparé** (branche `chore/chrono-et-bot-discord`). Le tour où une tâche démarrait était perdu, parce que la tâche était lue au début du tour. Le temps est maintenant attribué à la tâche active à chaque instant (`time-task.sh` date les changements de tâche), et un message envoyé en cours de tour ne remet plus le compteur à zéro. Les temps déjà mesurés ont été recalculés.
 - **Rangement de la TODO** (branche `chore/rangement-todo`) :
   - **Nouvelle section en haut**, « À tester en jeu » : tout ce qui est mergé mais pas encore essayé (pouvoirs, règles, combat, outils de test, caméra, menus, game feel), et les anciens chantiers peut-être déjà validés.
   - **Résumé « Outils : reste à faire »** : ce qui reste à construire dans le Level Maker et les menus, jusqu'ici éparpillé en bas de la TODO.
