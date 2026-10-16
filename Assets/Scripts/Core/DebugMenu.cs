@@ -186,7 +186,10 @@ namespace UntitledPoolGame.Core
         private void DrawPowers(PoolMatchRules rules)
         {
             Section("Pouvoirs");
-            GUILayout.Label($"En main : J1 {HeldName(rules, 0)} · J2 {HeldName(rules, 1)}");
+            // Both slots, the selected one in brackets.
+            GUILayout.Label($"En stock : J1 {rules.DescribeStock(0)}");
+            GUILayout.Label($"En stock : J2 {rules.DescribeStock(1)}");
+            GUILayout.Label("Donner : sur son emplacement s'il est déjà en stock, sinon une place libre, sinon à la place du sélectionné.");
             bool wasEnabled = GUI.enabled;
             GUI.enabled = !rules.GameOver;
             foreach (PoolPower power in powers)
@@ -205,23 +208,15 @@ namespace UntitledPoolGame.Core
             }
             if (powers.Count == 0) GUILayout.Label("Aucun asset de pouvoir trouvé.");
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Vider la main");
+            GUILayout.Label("Vider le stock");
             for (int p = 0; p < 2; p++)
                 if (GUILayout.Button($"J{p + 1}", GUILayout.Width(40f)))
                 {
                     rules.DebugSetHeldPower(p, null);
-                    status = $"Main de J{p + 1} vidée.";
+                    status = $"Stock de J{p + 1} vidé.";
                 }
             GUILayout.EndHorizontal();
             GUI.enabled = wasEnabled;
-        }
-
-        private static string HeldName(PoolMatchRules rules, int player)
-        {
-            PoolPower held = rules.GetHeldPower(player);
-            if (held == null) return "—";
-            int level = rules.GetHeldPowerLevel(player);
-            return level > 1 ? $"{held.PowerName} (niv. {level})" : held.PowerName;
         }
 
         private void DrawMatch(PoolMatchRules rules, int current)

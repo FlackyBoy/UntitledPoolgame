@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.InvertedControlsPower
   powerName: What is happening ?!
   tokenPrefab: {fileID: 6258393271079353900, guid: 7ea320a17ac52944a885898cbae44c4f, type: 3}
+  hudIcon: {fileID: 2800000, guid: 9a801f3e6162e1b4b82907d67a799af2, type: 3}
   requiresOwnTurn: 0
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ClosePocketPower
   powerName: Close that pocket
   tokenPrefab: {fileID: 7567813151609781664, guid: befd10ad63b60e943b86138a670fd075, type: 3}
+  hudIcon: {fileID: 2800000, guid: b611054b332b6ad428e68ba6353f5b1a, type: 3}
   requiresOwnTurn: 0
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.VisionImpairPower
   powerName: 'is it too much ? '
   tokenPrefab: {fileID: 608895434110579280, guid: 070a1446176a59d4db6f73b1f2337a14, type: 3}
+  hudIcon: {fileID: 2800000, guid: 2022f97946199e542af68f281e1c68ff, type: 3}
   requiresOwnTurn: 0
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1

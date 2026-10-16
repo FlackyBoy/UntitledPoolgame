@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.IdenticalGroupsPower
   powerName: Daltonien ?!
   tokenPrefab: {fileID: 5567596307391157377, guid: a90532696bfe8fd43884a3ec30a95b78, type: 3}
+  hudIcon: {fileID: 2800000, guid: 1e2d870e4189e384bb145a888068f808, type: 3}
   requiresOwnTurn: 1
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1

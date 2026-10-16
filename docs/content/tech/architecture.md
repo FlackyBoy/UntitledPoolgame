@@ -261,6 +261,10 @@ classDiagram
     +CanPlayerShoot(int) bool
     +GetEffectivePlayerIndex(int) int
     +GrantPower(int, PoolPower)
+    +GetHeldPower(int) PoolPower
+    +CycleSelectedPower(int, int) bool
+    +GetPowerInSlot(int, int) PoolPower
+    +event PowerPickedUp$
     +CheckPowerUse(int) PowerRefusal
     +TryActivatePower(int) bool
     +event Fouled$
