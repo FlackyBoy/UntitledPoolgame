@@ -81,6 +81,15 @@ namespace UntitledPoolGame.Core
             public VisualElement frame, content, dim, fx;
             public VisualElement who, plateBalls, tag, ring, ringIcon, power, spin, spinDot, banner;
             public Label whoText, tagText, powerName, powerKey, bannerText, refusedHint;
+            // The other power in stock (small, beside the selected one) and
+            // the level badges.
+            public VisualElement secondRing, secondIcon;
+            public Label levelBadge, secondLevelBadge, switchKey;
+            public PowerType secondIconType;
+            // The power's own icon (PoolPower.HudIcon); null = the category's drawing.
+            public Texture2D iconTexture, secondIconTexture;
+            public PoolPower shownSecond;
+            public int shownLevel = 1, shownSecondLevel = 1;
             public readonly VisualElement[] segments = new VisualElement[Segments];
             public string plateKey;
             public PoolPower shownPower;
@@ -141,7 +150,7 @@ namespace UntitledPoolGame.Core
             PoolMatchRules.ExternalHud = true;
             PoolBall.Pocketed += OnPocketed;
             PoolMatchRules.Fouled += OnFouled;
-            PoolMatchRules.PowerGranted += OnPowerGranted;
+            PoolMatchRules.PowerPickedUp += OnPowerPickedUp;
             PoolMatchRules.PowerActivated += OnPowerActivated;
             PoolMatchRules.PowerRefused += OnPowerRefused;
             PoolMatchRules.TurnChanged += OnTurnChanged;
@@ -154,7 +163,7 @@ namespace UntitledPoolGame.Core
             PoolMatchRules.ExternalHud = false;
             PoolBall.Pocketed -= OnPocketed;
             PoolMatchRules.Fouled -= OnFouled;
-            PoolMatchRules.PowerGranted -= OnPowerGranted;
+            PoolMatchRules.PowerPickedUp -= OnPowerPickedUp;
             PoolMatchRules.PowerActivated -= OnPowerActivated;
             PoolMatchRules.PowerRefused -= OnPowerRefused;
             PoolMatchRules.TurnChanged -= OnTurnChanged;
@@ -232,6 +241,10 @@ namespace UntitledPoolGame.Core
             slot.style.right = Length.Percent(3);
             slot.style.top = Length.Percent(4);
             slot.style.alignItems = Align.Center;
+            // The whole block grows from its top-right corner (it stays
+            // anchored there): rings, icons, name, key, second power.
+            slot.style.transformOrigin = new TransformOrigin(Length.Percent(100), Length.Percent(0), 0f);
+            slot.style.scale = new Scale(Vector3.one * Mathf.Max(0.1f, cfg.powerSlotScale));
             h.ring = Box(slot, "ring");
             h.ring.style.width = h.ring.style.height = 84;
             h.ring.style.justifyContent = Justify.Center;
@@ -239,7 +252,7 @@ namespace UntitledPoolGame.Core
             Radius(h.ring, 42);
             h.ringIcon = Box(h.ring, "icon");
             h.ringIcon.style.width = h.ringIcon.style.height = 46;
-            h.ringIcon.generateVisualContent += ctx => DrawPowerIcon(ctx, h.iconType);
+            h.ringIcon.generateVisualContent += ctx => { if (h.iconTexture == null) DrawPowerIcon(ctx, h.iconType); };
             h.powerName = Text(slot, "—", bodyFont, 20, Color.white);
             h.powerName.style.marginTop = 4;
             InkShadow(h.powerName, 3);
@@ -249,6 +262,26 @@ namespace UntitledPoolGame.Core
             h.powerKey.style.marginTop = 3;
             Radius(h.powerKey, 6);
             Border(h.powerKey, 3, Ink);
+            h.switchKey = Text(slot, cfg.powerSwitchKeyText, bodyFont, 14, Color.white);
+            h.switchKey.style.marginTop = 2;
+            InkShadow(h.switchKey, 2);
+
+            // The other power in stock: a smaller ring to the left of the
+            // selected one.
+            h.secondRing = Box(slot, "second-ring");
+            h.secondRing.style.position = Position.Absolute;
+            h.secondRing.style.left = -58;
+            h.secondRing.style.top = 22;
+            h.secondRing.style.width = h.secondRing.style.height = 48;
+            h.secondRing.style.justifyContent = Justify.Center;
+            h.secondRing.style.alignItems = Align.Center;
+            Radius(h.secondRing, 24);
+            h.secondRing.style.opacity = 0.85f;
+            h.secondIcon = Box(h.secondRing, "icon");
+            h.secondIcon.style.width = h.secondIcon.style.height = 26;
+            h.secondIcon.generateVisualContent += ctx => { if (h.secondIconTexture == null) DrawPowerIcon(ctx, h.secondIconType); };
+            h.levelBadge = LevelBadge(h.ring, 22);
+            h.secondLevelBadge = LevelBadge(h.secondRing, 15);
 
             // Power gauge with the strike point (while aiming).
             h.power = Box(h.content, "power");
@@ -597,9 +630,64 @@ namespace UntitledPoolGame.Core
             return lowest;
         }
 
+        // The power's own icon as the element's background, or none (the
+        // category drawing, generateVisualContent, takes over).
+        private static void SetIcon(VisualElement icon, ref Texture2D shown, PoolPower power)
+        {
+            shown = power != null ? power.HudIcon : null;
+            icon.style.backgroundImage = shown != null ? new StyleBackground(shown) : new StyleBackground(StyleKeyword.None);
+            icon.MarkDirtyRepaint();
+        }
+
+        // "N2" in a small white pill at the top right of a ring.
+        private Label LevelBadge(VisualElement ring, float size)
+        {
+            Label badge = Text(ring, "", titleFont, size, Ink);
+            badge.style.position = Position.Absolute;
+            badge.style.right = -size * 0.4f;
+            badge.style.top = -size * 0.35f;
+            badge.style.backgroundColor = Color.white;
+            badge.style.paddingLeft = badge.style.paddingRight = size * 0.25f;
+            Radius(badge, size * 0.4f);
+            Border(badge, 2, Ink);
+            badge.style.display = DisplayStyle.None;
+            return badge;
+        }
+
+        private void ShowLevel(Label badge, int level)
+        {
+            badge.style.display = level > 1 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (level > 1) badge.text = Format(cfg.powerLevelBadgeFormat, level);
+        }
+
+        // Selected power (big ring, name, key) and the other one in stock
+        // (small ring). Rebuilt only when what's in stock changes.
         private void UpdatePowerSlot(Half h, PoolMatchRules rules)
         {
+            int selected = rules.SelectedPowerSlot(h.player);
+            int other = (selected + 1) % PoolMatchRules.PowerSlots;
             PoolPower held = rules.GetHeldPower(h.player);
+            PoolPower second = rules.GetPowerInSlot(h.player, other);
+            int level = rules.GetHeldPowerLevel(h.player), secondLevel = rules.GetPowerLevelInSlot(h.player, other);
+            if (held == h.shownPower && level == h.shownLevel && second == h.shownSecond && secondLevel == h.shownSecondLevel) return;
+            bool levelledUp = held != null && held == h.shownPower && level > h.shownLevel;
+            h.shownLevel = level;
+            h.shownSecond = second;
+            h.shownSecondLevel = secondLevel;
+
+            h.secondRing.style.display = second != null ? DisplayStyle.Flex : DisplayStyle.None;
+            h.switchKey.style.display = second != null && held != null ? DisplayStyle.Flex : DisplayStyle.None;
+            if (second != null)
+            {
+                h.secondIconType = second.Type;
+                SetIcon(h.secondIcon, ref h.secondIconTexture, second);
+                h.secondRing.style.backgroundColor = powerSettings != null ? powerSettings.GetColor(second.Type) : Red;
+                Border(h.secondRing, 3, Ink);
+                h.secondIcon.MarkDirtyRepaint();
+                ShowLevel(h.secondLevelBadge, secondLevel);
+            }
+            ShowLevel(h.levelBadge, held != null ? level : 1);
+            if (levelledUp) Pop(h.ring, 0.6f);
             if (held == h.shownPower) return;
             h.shownPower = held;
 
@@ -613,6 +701,7 @@ namespace UntitledPoolGame.Core
                 return;
             }
             h.iconType = held.Type;
+            SetIcon(h.ringIcon, ref h.iconTexture, held);
             h.ring.style.backgroundColor = powerSettings != null ? powerSettings.GetColor(held.Type) : Red;
             Border(h.ring, 4, Ink);
             h.ring.style.borderBottomWidth = 8;
@@ -720,11 +809,23 @@ namespace UntitledPoolGame.Core
             if (foulPending) { foulPending = false; return; }
         }
 
-        private void OnPowerGranted(int player)
+        // A new power: the sponsor card. The same one again: its level goes
+        // up. Lost (stock full, or already at the top level): a word.
+        private void OnPowerPickedUp(int player, PoolPower power, PoolMatchRules.PowerPickup outcome, int level)
         {
-            PoolMatchRules rules = PoolMatchRules.Instance;
-            PoolPower power = rules != null ? rules.GetHeldPower(player) : null;
-            if (power != null && cfg.showSponsorCard) Sponsor(player, power);
+            if (power == null) return;
+            switch (outcome)
+            {
+                case PoolMatchRules.PowerPickup.Added:
+                    if (cfg.showSponsorCard) Sponsor(player, power);
+                    break;
+                case PoolMatchRules.PowerPickup.LevelUp:
+                    Shout(player, Format(cfg.powerLevelUpShoutFormat, level, power.PowerName), Yellow, true);
+                    break;
+                case PoolMatchRules.PowerPickup.Lost:
+                    Shout(player, cfg.powerLostShout, Red, false);
+                    break;
+            }
         }
 
         // The launcher hears it went, the other player gets a card saying

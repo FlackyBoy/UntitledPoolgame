@@ -30,6 +30,9 @@ namespace UntitledPoolGame.PoolEditor
         private const string PrefabFolder = "Assets/Prefabs/Powers";
         private const string MeshFolder = "Assets/Prefabs/Powers/Meshes";
         private const string MaterialFolder = "Assets/Materials/PowerTokens";
+        // The HUD icons (PoolPower > Hud Icon), same shapes as the tokens.
+        private const string HudIconFolder = "Assets/Textures/PowerHudIcons";
+        private const int HudIconSize = 256;
 
         // The prefab's origin is the felt (PoolPowerCrate puts it there):
         // the category ring lies on it, the object floats above. Every
@@ -69,10 +72,26 @@ namespace UntitledPoolGame.PoolEditor
                 var serialized = new SerializedObject(power);
                 SerializedProperty slot = serialized.FindProperty("tokenPrefab");
                 if (slot == null) continue;
-                bool ours = slot.objectReferenceValue == null || IsGenerated(slot.objectReferenceValue);
-                if (!ours || (onlyMissing && slot.objectReferenceValue != null)) continue;
 
                 string key = power.GetType().Name.Replace("Power", "");
+
+                // Its HUD icon, on the same terms as the token: only when
+                // missing, or all generated ones on a full regeneration.
+                SerializedProperty icon = serialized.FindProperty("hudIcon");
+                if (icon != null)
+                {
+                    bool ourIcon = icon.objectReferenceValue == null
+                                   || AssetDatabase.GetAssetPath(icon.objectReferenceValue).StartsWith(HudIconFolder + "/");
+                    if (ourIcon && (!onlyMissing || icon.objectReferenceValue == null))
+                    {
+                        icon.objectReferenceValue = BakeHudIcon(key);
+                        serialized.ApplyModifiedPropertiesWithoutUndo();
+                        count++;
+                    }
+                }
+
+                bool ours = slot.objectReferenceValue == null || IsGenerated(slot.objectReferenceValue);
+                if (!ours || (onlyMissing && slot.objectReferenceValue != null)) continue;
                 Color color = settings != null ? settings.GetColor(power.Type) : Color.gray;
                 slot.objectReferenceValue = BuildToken("Token_" + key, key, power.Type, color);
                 serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -116,6 +135,203 @@ namespace UntitledPoolGame.PoolEditor
                         removed |= AssetDatabase.DeleteAsset(path);
                 }
             if (removed) Debug.Log("[PowerTokens] Anciens jetons texturés retirés (icônes, matériaux, cube arrondi).");
+        }
+
+        // ---------- HUD icons ----------
+
+        // White with a dark outline on transparent, like the HUD's own
+        // drawings. Shapes checked in a rough render (17/10).
+        private static Texture2D BakeHudIcon(string key)
+        {
+            var g = new Glyph();
+            DrawHudIcon(g, key);
+            if (g.Empty) DrawHudIcon(g, "Unknown");
+
+            var pixels = new Color32[HudIconSize * HudIconSize];
+            const float outline = 0.09f;   // glyph units: the icon spans -1..1
+            float pixel = 2f / HudIconSize;
+            for (int y = 0; y < HudIconSize; y++)
+                for (int x = 0; x < HudIconSize; x++)
+                {
+                    float d = g.Distance((x + 0.5f) * pixel - 1f, (y + 0.5f) * pixel - 1f);
+                    float fill = Mathf.Clamp01(0.5f - d / pixel);
+                    float ink = Mathf.Clamp01(0.5f - (d - outline) / pixel);
+                    pixels[y * HudIconSize + x] = Color.Lerp(new Color(0.08f, 0.06f, 0.1f, ink), Color.white, fill);
+                }
+            var texture = new Texture2D(HudIconSize, HudIconSize, TextureFormat.RGBA32, false);
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            EnsureFolder(HudIconFolder);
+            string path = $"{HudIconFolder}/{key}.png";
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(path);
+            if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+            {
+                importer.alphaIsTransparency = true;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        // One case per power (class name without "Power"), the same objects
+        // as the tokens. Coordinates -1..1, y up, kept within about ±0.8 for
+        // the outline. Cut = drawn as a hole (ink).
+        private static void DrawHudIcon(Glyph g, string key)
+        {
+            switch (key)
+            {
+                case "BoostedShot":   // a rocket
+                    g.Add(Glyph.Segment(0f, -0.25f, 0f, 0.3f, 0.42f));
+                    g.Add(Glyph.Polygon((-0.21f, 0.3f), (0.21f, 0.3f), (0f, 0.72f)));
+                    g.Add(Glyph.Polygon((-0.21f, -0.1f), (-0.48f, -0.42f), (-0.21f, -0.38f)));
+                    g.Add(Glyph.Polygon((0.21f, -0.1f), (0.48f, -0.42f), (0.21f, -0.38f)));
+                    g.Add(Glyph.Polygon((-0.13f, -0.5f), (0.13f, -0.5f), (0f, -0.8f)));
+                    g.Cut(Glyph.Circle(0f, 0.12f, 0.09f));
+                    break;
+                case "VisionImpair":  // an eye above a bank of fog
+                    g.Arc(0f, -0.45f, 0.85f, 37f, 143f, 0.1f);
+                    g.Arc(0f, 0.55f, 0.85f, 217f, 323f, 0.1f);
+                    g.Add(Glyph.Circle(0f, 0.07f, 0.2f));
+                    g.Add(Glyph.Circle(-0.42f, -0.55f, 0.17f));
+                    g.Add(Glyph.Circle(-0.15f, -0.5f, 0.21f));
+                    g.Add(Glyph.Circle(0.15f, -0.52f, 0.19f));
+                    g.Add(Glyph.Circle(0.42f, -0.56f, 0.16f));
+                    g.Add(Glyph.Box(0f, -0.66f, 0.5f, 0.08f, 0.06f));
+                    g.Cut(Glyph.Circle(0f, 0.07f, 0.08f));
+                    break;
+                case "InvertedControls":   // two arrows chasing each other
+                    g.Arc(0f, 0f, 0.55f, 20f, 160f, 0.13f);
+                    g.Add(Glyph.Polygon((-0.78f, 0.12f), (-0.32f, 0.12f), (-0.55f, -0.18f)));
+                    g.Arc(0f, 0f, 0.55f, 200f, 340f, 0.13f);
+                    g.Add(Glyph.Polygon((0.78f, -0.12f), (0.32f, -0.12f), (0.55f, 0.18f)));
+                    break;
+                case "ClosePocket":   // a padlock
+                    g.Add(Glyph.Box(0f, -0.25f, 0.48f, 0.38f, 0.1f));
+                    g.Arc(0f, 0.13f, 0.3f, 0f, 180f, 0.13f);
+                    g.Add(Glyph.Segment(-0.3f, 0.13f, -0.3f, 0f, 0.13f));
+                    g.Add(Glyph.Segment(0.3f, 0.13f, 0.3f, 0f, 0.13f));
+                    g.Cut(Glyph.Circle(0f, -0.2f, 0.09f));
+                    g.Cut(Glyph.Segment(0f, -0.2f, 0f, -0.42f, 0.08f));
+                    break;
+                case "BallBlast":     // a bomb, fuse lit
+                    g.Add(Glyph.Circle(-0.1f, -0.2f, 0.5f));
+                    g.Add(Glyph.Box(-0.1f, 0.33f, 0.13f, 0.07f, 0f));
+                    g.Arc(0.22f, 0.4f, 0.3f, 180f, 105f, 0.09f);
+                    g.Add(Glyph.Star(0.13f, 0.72f, 0.22f, 0.09f, 6, 0f));
+                    g.Cut(Glyph.Circle(-0.3f, -0.02f, 0.09f));
+                    break;
+                case "Magnet":        // a horseshoe magnet
+                    g.Arc(0f, -0.05f, 0.45f, 180f, 360f, 0.2f);
+                    g.Add(Glyph.Segment(-0.45f, -0.05f, -0.45f, 0.45f, 0.2f));
+                    g.Add(Glyph.Segment(0.45f, -0.05f, 0.45f, 0.45f, 0.2f));
+                    g.Cut(Glyph.Box(-0.45f, 0.4f, 0.06f, 0.12f, 0f));
+                    g.Cut(Glyph.Box(0.45f, 0.4f, 0.06f, 0.12f, 0f));
+                    break;
+                case "IdenticalGroups":   // three identical balls
+                    foreach (var (x, y) in new[] { (-0.38f, -0.25f), (0.38f, -0.25f), (0f, 0.4f) })
+                    {
+                        g.Add(Glyph.Circle(x, y, 0.26f));
+                        g.Cut(Glyph.Circle(x, y, 0.1f));
+                    }
+                    break;
+                case "TableHole":     // a meteor and its trail of fire
+                    g.Add(Glyph.Circle(-0.3f, -0.3f, 0.36f));
+                    g.Add(Glyph.Polygon((-0.57f, -0.03f), (0.72f, 0.72f), (-0.03f, -0.57f)));
+                    g.Cut(Glyph.Segment(-0.05f, 0.05f, 0.42f, 0.42f, 0.07f));
+                    g.Cut(Glyph.Segment(0.05f, -0.12f, 0.38f, 0.2f, 0.06f));
+                    g.Cut(Glyph.Circle(-0.42f, -0.2f, 0.08f));
+                    g.Cut(Glyph.Circle(-0.18f, -0.45f, 0.06f));
+                    break;
+                case "Unknown":
+                    g.Arc(0f, 0.3f, 0.32f, -60f, 200f, 0.15f);
+                    g.Add(Glyph.Segment(0.16f, 0.02f, 0f, -0.18f, 0.15f));
+                    g.Add(Glyph.Segment(0f, -0.18f, 0f, -0.3f, 0.15f));
+                    g.Add(Glyph.Circle(0f, -0.6f, 0.11f));
+                    break;
+            }
+        }
+
+        // Signed distance (< 0 inside) of a union of shapes, minus the cut ones.
+        private class Glyph
+        {
+            private readonly List<System.Func<float, float, float>> shapes = new List<System.Func<float, float, float>>();
+            private readonly List<System.Func<float, float, float>> cuts = new List<System.Func<float, float, float>>();
+            public bool Empty => shapes.Count == 0;
+
+            public void Add(System.Func<float, float, float> shape) => shapes.Add(shape);
+            public void Cut(System.Func<float, float, float> shape) => cuts.Add(shape);
+
+            public float Distance(float x, float y)
+            {
+                float d = float.MaxValue;
+                foreach (var s in shapes) d = Mathf.Min(d, s(x, y));
+                float hole = float.MaxValue;
+                foreach (var c in cuts) hole = Mathf.Min(hole, c(x, y));
+                return cuts.Count > 0 ? Mathf.Max(d, -hole) : d;
+            }
+
+            // Degrees, counter-clockwise from +x; from may be past to.
+            public void Arc(float cx, float cy, float r, float from, float to, float width)
+            {
+                const int steps = 24;
+                for (int i = 0; i < steps; i++)
+                {
+                    float a0 = Mathf.Lerp(from, to, i / (float)steps) * Mathf.Deg2Rad;
+                    float a1 = Mathf.Lerp(from, to, (i + 1) / (float)steps) * Mathf.Deg2Rad;
+                    Add(Segment(cx + Mathf.Cos(a0) * r, cy + Mathf.Sin(a0) * r, cx + Mathf.Cos(a1) * r, cy + Mathf.Sin(a1) * r, width));
+                }
+            }
+
+            public static System.Func<float, float, float> Circle(float cx, float cy, float r) =>
+                (x, y) => Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) - r;
+
+            // Half sizes, corner radius.
+            public static System.Func<float, float, float> Box(float cx, float cy, float hw, float hh, float r) => (x, y) =>
+            {
+                float dx = Mathf.Abs(x - cx) - hw + r, dy = Mathf.Abs(y - cy) - hh + r;
+                return new Vector2(Mathf.Max(dx, 0f), Mathf.Max(dy, 0f)).magnitude + Mathf.Min(Mathf.Max(dx, dy), 0f) - r;
+            };
+
+            public static System.Func<float, float, float> Segment(float ax, float ay, float bx, float by, float width) => (x, y) =>
+            {
+                var a = new Vector2(ax, ay);
+                Vector2 ab = new Vector2(bx, by) - a, ap = new Vector2(x, y) - a;
+                float t = Mathf.Clamp01(Vector2.Dot(ap, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude));
+                return (ap - ab * t).magnitude - width / 2f;
+            };
+
+            public static System.Func<float, float, float> Star(float cx, float cy, float outer, float inner, int points, float startDeg)
+            {
+                var poly = new (float, float)[points * 2];
+                for (int i = 0; i < poly.Length; i++)
+                {
+                    float a = (startDeg + i * 180f / points) * Mathf.Deg2Rad;
+                    float r = i % 2 == 0 ? outer : inner;
+                    poly[i] = (cx + Mathf.Cos(a) * r, cy + Mathf.Sin(a) * r);
+                }
+                return Polygon(poly);
+            }
+
+            // Any simple polygon: distance to its edges, negative inside.
+            public static System.Func<float, float, float> Polygon(params (float x, float y)[] points) => (x, y) =>
+            {
+                var p = new Vector2(x, y);
+                float d = float.MaxValue;
+                bool inside = false;
+                for (int i = 0, j = points.Length - 1; i < points.Length; j = i++)
+                {
+                    var a = new Vector2(points[j].x, points[j].y);
+                    var b = new Vector2(points[i].x, points[i].y);
+                    Vector2 ab = b - a, ap = p - a;
+                    float t = Mathf.Clamp01(Vector2.Dot(ap, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude));
+                    d = Mathf.Min(d, (ap - ab * t).magnitude);
+                    if ((b.y > y) != (a.y > y) && x < (a.x - b.x) * (y - b.y) / (a.y - b.y) + b.x) inside = !inside;
+                }
+                return inside ? -d : d;
+            };
         }
 
         // ---------- Token ----------

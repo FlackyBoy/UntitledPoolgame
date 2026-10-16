@@ -44,11 +44,15 @@ namespace UntitledPoolGame.Pool
 
         private IPoolRuleSet ruleSet;
 
-        // One held power per player at a time (Mario Kart-style — picking up
-        // another one while already holding one overwrites it). See
-        // PowerBall/PoolPowerCrate for how a power gets granted, and
-        // LocalPoolPowerController for activation input.
-        private readonly PoolPower[] heldPower = new PoolPower[2];
+        // Two powers in stock per player, one of them selected (the one the
+        // power button launches, switched with the wheel / D-pad). See
+        // GrantPower for what a pickup does, PowerBall/PoolPowerCrate for
+        // how one happens, LocalPoolPowerController for the input.
+        public const int PowerSlots = 2;
+        public const int MaxPowerLevel = 2;
+        private readonly PoolPower[,] heldPowers = new PoolPower[2, PowerSlots];
+        private readonly int[,] heldLevels = { { 1, 1 }, { 1, 1 } };
+        private readonly int[] selectedSlot = new int[2];
         // Consumed by the aim controllers' Shoot() — set by powers like
         // BoostedShotPower, reset back to 1 the moment it's read so it only
         // ever affects the very next shot.
@@ -224,32 +228,95 @@ namespace UntitledPoolGame.Pool
         // independently without needing a hand-wired reference to this
         // instance, and without caring about subscription-order timing
         // against Instance being set.
+        // A power was added to the player's stock or levelled up (not when
+        // a pickup is lost): pickup shake/flash, Feel.
         public static event Action<int> PowerGranted;
 
-        // Mario Kart-style single slot: a pickup while already holding a
-        // power is wasted rather than replacing it — the crate/ball is
-        // still consumed as normal (PoolPowerCrate disables itself and
-        // notifies the manager regardless of this call's outcome), it just
-        // doesn't change what's in hand. Called by PowerBall pickups,
+        // What a pickup did — for the HUD (sponsor card, "Niveau 2 !",
+        // "lost"): player, power, outcome, its level now.
+        public enum PowerPickup { Added, LevelUp, Lost }
+        public static event Action<int, PoolPower, PowerPickup, int> PowerPickedUp;
+
+        // A power already in stock goes up a level (up to MaxPowerLevel;
+        // beyond, the pickup is lost). A new one takes a free slot — and the
+        // selection if the selected slot was empty. With both slots taken by
+        // other powers, it's lost (Mario Kart-style: use them). The crate or
+        // ball is consumed either way. Called by PowerBall pickups and
         // PoolPowerCrate.
         public void GrantPower(int player, PoolPower power)
         {
-            if (heldPower[player] != null) return;
-
-            heldPower[player] = power;
-            heldPowerLevel[player] = 1;
-            PowerGranted?.Invoke(player);
+            if (power == null) return;
+            for (int s = 0; s < PowerSlots; s++)
+            {
+                if (heldPowers[player, s] != power) continue;
+                if (heldLevels[player, s] >= MaxPowerLevel)
+                {
+                    PowerPickedUp?.Invoke(player, power, PowerPickup.Lost, heldLevels[player, s]);
+                    return;
+                }
+                heldLevels[player, s]++;
+                PowerGranted?.Invoke(player);
+                PowerPickedUp?.Invoke(player, power, PowerPickup.LevelUp, heldLevels[player, s]);
+                return;
+            }
+            for (int s = 0; s < PowerSlots; s++)
+            {
+                if (heldPowers[player, s] != null) continue;
+                heldPowers[player, s] = power;
+                heldLevels[player, s] = 1;
+                // Selected when the selection pointed at an empty slot.
+                if (heldPowers[player, selectedSlot[player]] == null) SelectSlot(player, s);
+                PowerGranted?.Invoke(player);
+                PowerPickedUp?.Invoke(player, power, PowerPickup.Added, 1);
+                return;
+            }
+            PowerPickedUp?.Invoke(player, power, PowerPickup.Lost, 1);
         }
 
-        public PoolPower GetHeldPower(int player) => heldPower[player];
+        // The selected power: the one the power button launches. Everything
+        // that deals with "the power in hand" (activation, refusals, the
+        // pick of a pocket or a point, the gestures) goes through this.
+        public PoolPower GetHeldPower(int player) => heldPowers[player, selectedSlot[player]];
 
         // Power levels: 1 normally, 2 for a stronger version (e.g. Trou:
-        // several holes). Nothing raises it in play yet — picking up the
-        // same power twice is meant to (see TODO.md) — the debug menu can.
-        // The power reads it during its Activate (ActivatingPowerLevel).
-        private readonly int[] heldPowerLevel = { 1, 1 };
-        public int GetHeldPowerLevel(int player) => heldPowerLevel[player];
+        // several holes), reached by picking up the same power again. The
+        // power reads it during its Activate (ActivatingPowerLevel).
+        public int GetHeldPowerLevel(int player) => heldLevels[player, selectedSlot[player]];
         public int ActivatingPowerLevel { get; private set; } = 1;
+
+        public int SelectedPowerSlot(int player) => selectedSlot[player];
+
+        // "Trou N2 · [Aimant]" — the selected one in brackets (debug texts).
+        public string DescribeStock(int player)
+        {
+            var parts = new System.Text.StringBuilder();
+            for (int s = 0; s < PowerSlots; s++)
+            {
+                PoolPower power = heldPowers[player, s];
+                string name = power == null ? "—" : power.PowerName + (heldLevels[player, s] > 1 ? $" N{heldLevels[player, s]}" : "");
+                if (s > 0) parts.Append(" · ");
+                parts.Append(s == selectedSlot[player] ? $"[{name}]" : name);
+            }
+            return parts.ToString();
+        }
+        public PoolPower GetPowerInSlot(int player, int slot) => heldPowers[player, slot];
+        public int GetPowerLevelInSlot(int player, int slot) => heldLevels[player, slot];
+
+        // Selects the next slot holding a power (direction ±1; with two
+        // slots, the other one). False when there's nothing else to select.
+        public bool CycleSelectedPower(int player, int direction)
+        {
+            for (int k = 1; k < PowerSlots; k++)
+            {
+                int s = ((selectedSlot[player] + direction * k) % PowerSlots + PowerSlots) % PowerSlots;
+                if (heldPowers[player, s] == null) continue;
+                SelectSlot(player, s);
+                return true;
+            }
+            return false;
+        }
+
+        private void SelectSlot(int player, int slot) => selectedSlot[player] = slot;
 
         // A power just launched: player, power, and whether its effect waits
         // for the opponent's next turn (an Attack sent during one's own turn,
@@ -271,7 +338,7 @@ namespace UntitledPoolGame.Pool
         // a power refused during one's own turn could never be used.
         public PowerRefusal CheckPowerUse(int player)
         {
-            PoolPower power = heldPower[player];
+            PoolPower power = GetHeldPower(player);
             if (power == null) return PowerRefusal.NoPower;
             if (PlayerInput.all.Count > 1)
             {
@@ -293,12 +360,15 @@ namespace UntitledPoolGame.Pool
 
         private bool ActivateHeld(int player, PoolPocket pocket, Vector3? tablePoint)
         {
-            PoolPower power = heldPower[player];
+            int slot = selectedSlot[player];
+            PoolPower power = heldPowers[player, slot];
             if (power == null) return false;
 
-            heldPower[player] = null;
-            ActivatingPowerLevel = heldPowerLevel[player];
-            heldPowerLevel[player] = 1;
+            heldPowers[player, slot] = null;
+            ActivatingPowerLevel = heldLevels[player, slot];
+            heldLevels[player, slot] = 1;
+            // The other power, if any, is up next.
+            CycleSelectedPower(player, 1);
             // Read before Activate: an off-turn activation can't switch the
             // turn, but keep it independent of what the power does.
             bool waitsForOpponentTurn = power.TargetsOpponent && CurrentPlayer == player;
@@ -1064,13 +1134,28 @@ namespace UntitledPoolGame.Pool
         // or a turn change makes sense.
         public bool DebugCanAct => MatchStarted && !GameOver && !shotInProgress && !PoolBall.AnyMoving();
 
-        // Puts power in player's hand, replacing what they held (unlike
-        // GrantPower, which wastes a pickup while one is held). Null empties it.
+        // Gives power at that level: on its own slot if already in stock,
+        // else a free slot, else in place of the selected one (unlike
+        // GrantPower, which loses a pickup when both slots are taken). Null
+        // empties both slots.
         public void DebugSetHeldPower(int player, PoolPower power, int level = 1)
         {
-            heldPower[player] = power;
-            heldPowerLevel[player] = Mathf.Max(1, level);
-            if (power != null) PowerGranted?.Invoke(player);
+            if (power == null)
+            {
+                for (int s = 0; s < PowerSlots; s++) { heldPowers[player, s] = null; heldLevels[player, s] = 1; }
+                SelectSlot(player, 0);
+                return;
+            }
+            int slot = -1;
+            for (int s = 0; s < PowerSlots && slot < 0; s++) if (heldPowers[player, s] == power) slot = s;
+            for (int s = 0; s < PowerSlots && slot < 0; s++) if (heldPowers[player, s] == null) slot = s;
+            if (slot < 0) slot = selectedSlot[player];
+            bool added = heldPowers[player, slot] != power;
+            heldPowers[player, slot] = power;
+            heldLevels[player, slot] = Mathf.Clamp(level, 1, MaxPowerLevel);
+            SelectSlot(player, slot);
+            PowerGranted?.Invoke(player);
+            PowerPickedUp?.Invoke(player, power, added ? PowerPickup.Added : PowerPickup.LevelUp, heldLevels[player, slot]);
         }
 
         public void DebugSwitchTurn()
@@ -1251,9 +1336,11 @@ namespace UntitledPoolGame.Pool
             foreach (PoolBall ball in FindObjectsByType<PoolBall>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 ball.ResetToSpawn();
 
-            heldPower[0] = null;
-            heldPower[1] = null;
-            heldPowerLevel[0] = heldPowerLevel[1] = 1;
+            for (int p = 0; p < 2; p++)
+            {
+                for (int s = 0; s < PowerSlots; s++) { heldPowers[p, s] = null; heldLevels[p, s] = 1; }
+                selectedSlot[p] = 0;
+            }
             ClearTableHoles();
             MatchGeneration++;
             shotPowerMultiplier[0] = 1f;
@@ -1344,8 +1431,8 @@ namespace UntitledPoolGame.Pool
             GUILayout.Label($"Tour : Joueur {CurrentPlayer + 1}");
             GUILayout.Label($"Joueur 1 — {ruleSet.DescribePlayer(0)}");
             GUILayout.Label($"Joueur 2 — {ruleSet.DescribePlayer(1)}");
-            GUILayout.Label($"Pouvoir J1 : {(heldPower[0] != null ? heldPower[0].PowerName : "—")}");
-            GUILayout.Label($"Pouvoir J2 : {(heldPower[1] != null ? heldPower[1].PowerName : "—")}");
+            GUILayout.Label($"Pouvoirs J1 : {DescribeStock(0)}");
+            GUILayout.Label($"Pouvoirs J2 : {DescribeStock(1)}");
             if (BallInHand)
                 GUILayout.Label($"Faute ! Joueur {CurrentPlayer + 1} a la main libre — regarde où placer la bille blanche et valide avec Interact.");
 

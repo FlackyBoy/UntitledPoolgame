@@ -22,6 +22,8 @@ namespace UntitledPoolGame.Core
         [Header("Taille")]
         [Tooltip("Multiplie la taille de tout le HUD (1 = calé pour une moitié d'écran de 1920 × 1080).")]
         [Range(0.5f, 2f)] public float scale = 1f;
+        [Tooltip("Taille du bloc des pouvoirs en haut à droite (anneaux, icônes, nom, touche, second pouvoir), en plus de la taille globale.")]
+        [Range(0.5f, 2.5f)] public float powerSlotScale = 1.35f;
         [Tooltip("Taille du texte des interjections.")]
         public float shoutFontSize = 86f;
         [Tooltip("Taille du texte « À toi ! ».")]
@@ -62,6 +64,10 @@ namespace UntitledPoolGame.Core
         public string powerGaugeText = "Puissance";
         [Tooltip("Touche affichée sous le pouvoir en stock.")]
         public string powerKeyText = "Q / B";
+        [Tooltip("Affiché sous le pouvoir quand le joueur en a deux : comment changer de pouvoir.")]
+        public string powerSwitchKeyText = "Molette · ◀ ▶";
+        [Tooltip("Badge sur un pouvoir de niveau 2 ou plus. {0} = niveau.")]
+        public string powerLevelBadgeFormat = "N{0}";
 
         [Header("Textes : bandeaux d'aide")]
         public string ballInHandBanner = "Main libre ! Place la blanche · E / Y pour valider";
@@ -93,6 +99,10 @@ namespace UntitledPoolGame.Core
         public string fullPowerShout = "OHHH !";
         [Tooltip("Chez le lanceur, quand il envoie une Attaque.")]
         public string powerUsedShout = "Envoyé !";
+        [Tooltip("Pouvoir ramassé alors qu'il était déjà en stock : il monte de niveau. {0} = niveau, {1} = nom du pouvoir.")]
+        public string powerLevelUpShoutFormat = "NIVEAU {0} !";
+        [Tooltip("Pouvoir ramassé et perdu : deux pouvoirs différents déjà en stock, ou déjà au niveau maximum. Vide = rien.")]
+        public string powerLostShout = "Déjà plein !";
         [Tooltip("Chez le lanceur, quand il active un pouvoir d'Effet ou de Défense (pour lui-même).")]
         public string powerActivatedShout = "Activé !";
         public string blastShout = "BOUM !";

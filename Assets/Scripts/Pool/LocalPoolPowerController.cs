@@ -4,7 +4,8 @@ using UnityEngine.InputSystem;
 namespace UntitledPoolGame.Pool
 {
     // Lets a player activate their stored power (see PoolMatchRules.
-    // GrantPower/TryActivatePower) with a button press. When it may be
+    // GrantPower/TryActivatePower) with a button press, and switch between
+    // the two powers in stock (SwitchPower: wheel, D-pad). When it may be
     // launched (own turn only, opponent's turn only, while the balls roll)
     // is set per power — see PoolPower and PoolMatchRules.CheckPowerUse.
     // Reads the "Next" action (Q / gamepad B-Circle in the local
@@ -21,10 +22,16 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private string actionMapName = "Player";
         [SerializeField] private string usePowerActionName = "Next";
         [SerializeField] private string interactActionName = "Interact";
+        [Tooltip("Action qui change de pouvoir sélectionné (molette, D-pad gauche / droite). Absente de l'asset = pas de changement.")]
+        [SerializeField] private string switchPowerActionName = "SwitchPower";
+        [Tooltip("Délai minimal (secondes) entre deux changements : une molette ou un pavé tactile envoie plusieurs crans d'un coup.")]
+        [SerializeField] private float switchCooldown = 0.18f;
 
         private PlayerInput playerInput;
         private InputAction usePowerAction;
         private InputAction interactAction;
+        private InputAction switchPowerAction;
+        private float nextSwitchTime;
         private LocalPoolAimController aimController;
         private LocalPocketPointer pointer;
 
@@ -68,6 +75,7 @@ namespace UntitledPoolGame.Pool
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             usePowerAction = map.FindAction(usePowerActionName, throwIfNotFound: true);
             interactAction = map.FindAction(interactActionName, throwIfNotFound: true);
+            switchPowerAction = map.FindAction(switchPowerActionName, throwIfNotFound: false);
         }
 
         private void OnDisable() => EndChoice();
@@ -90,6 +98,16 @@ namespace UntitledPoolGame.Pool
             // fallback). In hot-seat solo (one PlayerInput playing both
             // sides), it resolves to whichever side is currently up instead.
             int effectivePlayer = rules.GetEffectivePlayerIndex(playerInput.playerIndex);
+
+            // Wheel / D-pad: the other power in stock becomes the selected
+            // one. A pick under way ends by itself (UpdateChoice: the power
+            // in hand is no longer the one being aimed).
+            if (switchPowerAction != null && switchPowerAction.WasPerformedThisFrame() && Time.unscaledTime >= nextSwitchTime)
+            {
+                float value = switchPowerAction.ReadValue<float>();
+                if (Mathf.Abs(value) > 0.01f && rules.CycleSelectedPower(effectivePlayer, value > 0f ? 1 : -1))
+                    nextSwitchTime = Time.unscaledTime + switchCooldown;
+            }
 
             if (choosingPower != null)
             {

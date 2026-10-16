@@ -3,8 +3,8 @@ using UnityEngine;
 namespace UntitledPoolGame.Pool
 {
     // Base for a storable, player-activated power — picked up by pocketing a
-    // PowerBall or rolling the cue ball through a PoolPowerCrate, held (one
-    // at a time, see PoolMatchRules.GrantPower), and triggered later with the
+    // PowerBall or rolling the cue ball through a PoolPowerCrate, held (two
+    // in stock, see PoolMatchRules.GrantPower), and triggered later with the
     // "use power" input. A ScriptableObject asset per power (same pattern as
     // PoolPhysicsSettings/PoolTableAssetSettings) so adding a new power is
     // just a new subclass + a new asset — nothing else needs to change.
@@ -20,6 +20,13 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Jeton posé sur la table pour ce pouvoir (généré par Tools > Pool > Générer les jetons de pouvoir). Vide = le prefab de la catégorie dans PoolPowerSpawnSettings.")]
         [SerializeField] private GameObject tokenPrefab;
         public GameObject TokenPrefab => tokenPrefab;
+
+        // The power's icon in the HUD (its stock rings): white on
+        // transparent, generated with the tokens and drawn after them
+        // (rocket, eye in the fog…). Empty = its category's icon.
+        [Tooltip("Icône du pouvoir dans le HUD (blanche sur fond transparent ; générée par Tools > Pool > Générer les jetons de pouvoir). Vide = l'icône de sa catégorie.")]
+        [SerializeField] private Texture2D hudIcon;
+        public Texture2D HudIcon => hudIcon;
 
         public abstract PowerType Type { get; }
 
