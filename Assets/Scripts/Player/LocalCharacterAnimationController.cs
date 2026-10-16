@@ -204,6 +204,16 @@ namespace UntitledPoolGame.Player
             // out to Grounded Strafe is IsStrafing true).
             if (hasIsStrafingParameter) animator.SetBool(isStrafingParameterName, true);
 
+            // Time stopped (pause menu, Time.timeScale 0): the turn speed
+            // below would be 0 / 0 = NaN, which the smoothing then keeps
+            // forever and feeds to Speed — the locomotion stayed broken after
+            // resuming. Nothing moves while paused, so nothing to update.
+            if (Time.deltaTime <= 0f)
+            {
+                previousYaw = transform.eulerAngles.y;
+                return;
+            }
+
             // Horizontal only — gravity's fall speed shouldn't blend toward
             // a running animation while airborne/falling.
             Vector3 velocity = controller.velocity;
