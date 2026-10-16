@@ -81,18 +81,19 @@ namespace UntitledPoolGame.Core
 
         // Seen from above (X right, Z up): counter-clockwise outlines have
         // their inside on the left of each segment.
-        public bool IsCounterClockwise
+        public bool IsCounterClockwise => IsCounterClockwiseOutline(points);
+
+        // Same for any outline (a trace not yet turned into a room, for the
+        // Level Maker's previews).
+        public static bool IsCounterClockwiseOutline(List<Vector3> outline)
         {
-            get
+            float area = 0f;
+            for (int i = 0; i < outline.Count; i++)
             {
-                float area = 0f;
-                for (int i = 0; i < points.Count; i++)
-                {
-                    Vector3 a = points[i], b = points[(i + 1) % points.Count];
-                    area += a.x * b.z - b.x * a.z;
-                }
-                return area > 0f;
+                Vector3 a = outline[i], b = outline[(i + 1) % outline.Count];
+                area += a.x * b.z - b.x * a.z;
             }
+            return area > 0f;
         }
 
         // What goes in a wall cell: its own choice, else the room's wall.

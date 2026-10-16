@@ -43,6 +43,7 @@ namespace UntitledPoolGame.PoolEditor
             settings = LevelMakerSettings.GetOrCreate();
             settingsSo = new SerializedObject(settings);
             SceneView.duringSceneGui += OnSceneGUI;
+            SceneView.beforeSceneGui += OnBeforeSceneGUI;
             EditorApplication.hierarchyChanged += MarkDirty;
             Undo.undoRedoPerformed += MarkDirty;
             EditorSceneManager.activeSceneChangedInEditMode += OnSceneChanged;
@@ -51,6 +52,7 @@ namespace UntitledPoolGame.PoolEditor
         private void OnDisable()
         {
             SceneView.duringSceneGui -= OnSceneGUI;
+            SceneView.beforeSceneGui -= OnBeforeSceneGUI;
             EditorApplication.hierarchyChanged -= MarkDirty;
             Undo.undoRedoPerformed -= MarkDirty;
             EditorSceneManager.activeSceneChangedInEditMode -= OnSceneChanged;

@@ -46,6 +46,8 @@ namespace UntitledPoolGame.PoolEditor
         public int cueCount = 2;
         [Tooltip("Pas de rotation de la table, en degrés.")]
         public float tableRotationStep = 90f;
+        [Tooltip("Outils Props et Escaliers, Ctrl + molette : degrés de rotation par unité de défilement (un cran de molette vaut environ 3 unités sous Windows ; un pavé tactile en donne moins, en continu). Maj = 4 fois plus fin.")]
+        public float propWheelDegrees = 2f;
 
         public static LevelMakerSettings GetOrCreate()
         {
