@@ -21,6 +21,7 @@ Un outil d'éditeur, `PoolTableBuilder` (namespace `UntitledPoolGame.PoolEditor`
 - **Singletons de scène** pour ce qui est unique : `PoolMatchRules.Instance`, `PoolTableSurface.Instance`, `PoolPowerCrateManager.Instance`.
 - **Registres statiques** plutôt que des recherches coûteuses : `PoolBall.Active`, `PoolPocket.Active`.
 - **Événements statiques** pour découpler : `PoolBall.Pocketed`, `PoolBall.CueBallFirstContact`, `PoolMatchRules.Fouled`, `PoolMatchRules.PowerGranted`.
+  - **Sens d'une bille rentrée** : `PoolMatchRules.MeaningOfPot` (Good, Opponent, EarlyEight) est lu par `MatchHud` et `GameFeel` sur `PoolBall.Pocketed`. Seule une bille du joueur est fêtée. Les règles, elles, jugent le tir entier à sa fin (`IPoolRuleSet.ResolveShot`).
 - **Données dans des ScriptableObjects** : réglages (physique, effets, pouvoirs) et chaque pouvoir est un asset (voir *Configuration → rendu*).
 - **Stratégie pour les règles** : `PoolMatchRules` délègue la résolution d'un tir à une implémentation de `IPoolRuleSet` choisie au lancement de la partie.
 

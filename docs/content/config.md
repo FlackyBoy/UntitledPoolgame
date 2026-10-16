@@ -266,7 +266,7 @@ Les masques sont dans `Assets/Animations/Combat/`. Ordre des calques : sonné, c
 ### GameFeelSettings — Feel aux moments de la partie
 
 Associe un **moment de la partie** à une **séquence Feel** (un prefab avec un *MMF Player*) :
-- **moments** : bille rentrée, blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*) ;
+- **moments** : bille rentrée (une des siennes), **bille adverse rentrée** (*Opponent Ball Potted*, 8-ball), blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*) ;
 - **pour chaque ligne** : le moment, la séquence, l'intensité (1 = normale). Plusieurs lignes pour le même moment jouent toutes ;
 - **aussi** : un interrupteur général et le seuil du « tir plein » (0,95).
 
@@ -292,7 +292,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
 | Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
 | Bandeau du choix sur la table | *Pick Table Banner Format* (pouvoir Trou) |
-| Interjections | Liste tirée au hasard quand une bille rentre, blanche rentrée, faute, main libre, tir plein, pouvoir lancé, « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
+| Interjections | Liste tirée au hasard quand le joueur rentre une de ses billes (*Pot Shouts*), une autre quand il rentre une bille de l'adversaire (*Opponent Ball Pot Shouts* ; liste vide = rien), blanche rentrée, faute, main libre, tir plein, pouvoir lancé, « BOUM ! » ; interrupteur des interjections de bille rentrée ; seuil du tir plein (0,95) |
 | Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} », noms des catégories |
 | Fin de partie | « J{0} gagne ! », « Revanche », aide des touches, confettis |
 | Durées et mouvements | Interjections (1,3 s), rayons (1,1 s), carte sponsor (3,1 s), délai faute → main libre (1,3 s), secousse (durée, force), balancement de « À toi ! » (hauteur, période), voile du joueur qui attend |

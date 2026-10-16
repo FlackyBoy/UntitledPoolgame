@@ -4,6 +4,12 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-15
+- **Pas de félicitations pour une bille de l'adversaire** (branche `fix/felicitations-bille-adverse` ; compilé, non testé).
+  - **Avant** : rentrer une bille de l'autre groupe, même par ricochet, affichait « Dans le mille ! ».
+  - **Maintenant** : elle reçoit une interjection à part (« Cadeau pour l'adversaire ! »…, réglable dans HudSettings) et le moment Feel « bille adverse rentrée ». La 8 rentrée trop tôt n'a plus d'interjection.
+  - **Nouvelle règle de faute** (8-ball et Party, vérifiée par l'utilisateur) : rentrer **uniquement** une bille de l'adversaire est une faute, même après une bonne première bille touchée. Avec une de ses billes en même temps, le coup reste bon et le joueur garde la main.
+  - **Diagnostic** : *Trace Shots* sur `PoolMatchRules`. La console donne, à chaque tir, la 1re bille touchée, les billes rentrées et la raison d'une faute (`[ShotTrace]`).
+  - **Code** : `PoolMatchRules.MeaningOfPot` (Good, Opponent, EarlyEight), utilisé par `MatchHud` et `GameFeel`.
 - **Pouvoir « Trou »** (`TableHolePower`, Attaque ; branche `feature/pouvoir-trou` ; compilé, non testé).
   - **Visée** : le joueur vise un point de la table avec le pointeur blanc, et un cercle montre la zone touchée.
   - **Impact** : une boule de feu s'y écrase et creuse un trou dans le tapis. Les billes proches sont soufflées, l'écran des deux joueurs tremble et leurs manettes vibrent. Nouveau moment Feel « impact de météore ».
