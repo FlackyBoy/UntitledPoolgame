@@ -52,6 +52,8 @@ namespace UntitledPoolGame.Core
             PoolBall.Pocketed += OnPocketed;
             PoolMatchRules.Fouled += OnFoul;
             PoolMatchRules.PowerGranted += OnPower;
+            PoolMatchRules.PowerActivated += OnPowerActivated;
+            PoolMatchRules.PowerRefused += OnPowerRefused;
             PoolMatchRules.BallBlasted += OnBlast;
             PoolMatchRules.TurnChanged += OnTurn;
             LocalPoolAimController.ShotTaken += OnShot;
@@ -66,6 +68,8 @@ namespace UntitledPoolGame.Core
             PoolBall.Pocketed -= OnPocketed;
             PoolMatchRules.Fouled -= OnFoul;
             PoolMatchRules.PowerGranted -= OnPower;
+            PoolMatchRules.PowerActivated -= OnPowerActivated;
+            PoolMatchRules.PowerRefused -= OnPowerRefused;
             PoolMatchRules.BallBlasted -= OnBlast;
             PoolMatchRules.TurnChanged -= OnTurn;
             LocalPoolAimController.ShotTaken -= OnShot;
@@ -109,6 +113,17 @@ namespace UntitledPoolGame.Core
 
         private void OnFoul() => Play(GameFeelEvent.Foul, Shooter, Vector3.zero);
         private void OnPower(int player) => Play(GameFeelEvent.PowerGranted, player, Vector3.zero);
+
+        // The launcher's moment, then the target's for an Attack (sent at
+        // launch even when its effect waits for the target's turn: that's
+        // when the target learns it's coming).
+        private void OnPowerActivated(int player, PoolPower power, bool waitsForOpponentTurn)
+        {
+            Play(GameFeelEvent.PowerActivated, player, Vector3.zero);
+            if (power != null && power.TargetsOpponent) Play(GameFeelEvent.PowerReceived, 1 - player, Vector3.zero);
+        }
+
+        private void OnPowerRefused(int player, PowerRefusal reason) => Play(GameFeelEvent.PowerRefused, player, Vector3.zero);
         private void OnBlast(PoolBall ball, int player) => Play(GameFeelEvent.BallBlasted, player, ball != null ? ball.transform.position : Vector3.zero);
         private void OnTurn(int player) => Play(GameFeelEvent.TurnStart, player, Vector3.zero);
 

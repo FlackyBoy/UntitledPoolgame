@@ -251,6 +251,38 @@ namespace UntitledPoolGame.Pool
         public int GetHeldPowerLevel(int player) => heldPowerLevel[player];
         public int ActivatingPowerLevel { get; private set; } = 1;
 
+        // A power just launched: player, power, and whether its effect waits
+        // for the opponent's next turn (an Attack sent during one's own turn,
+        // see the Queue* methods). Fired after Activate. The HUD announces
+        // it to both players, GameFeel plays its moments.
+        public static event Action<int, PoolPower, bool> PowerActivated;
+
+        // A press of the power button that launched nothing, and why
+        // (LocalPoolPowerController raises it through NotifyPowerRefused).
+        public static event Action<int, PowerRefusal> PowerRefused;
+
+        public static void NotifyPowerRefused(int player, PowerRefusal reason) => PowerRefused?.Invoke(player, reason);
+
+        // Whether the player may launch the power in hand right now — the
+        // per-power rules of PoolPower (own turn only, opponent's turn only,
+        // while the balls roll). In hot-seat solo (one shared input) the
+        // player always stands in for whoever is up, so there's no
+        // "other turn" to send from: both turn rules are skipped there, or
+        // a power refused during one's own turn could never be used.
+        public PowerRefusal CheckPowerUse(int player)
+        {
+            PoolPower power = heldPower[player];
+            if (power == null) return PowerRefusal.NoPower;
+            if (PlayerInput.all.Count > 1)
+            {
+                bool ownTurn = CurrentPlayer == player;
+                if (power.RequiresOwnTurn && !ownTurn) return PowerRefusal.OwnTurnOnly;
+                if (!power.RequiresOwnTurn && !power.AllowDuringOwnTurn && ownTurn) return PowerRefusal.OpponentTurnOnly;
+            }
+            if (!power.AllowWhileBallsMoving && (shotInProgress || PoolBall.AnyMoving())) return PowerRefusal.BallsMoving;
+            return PowerRefusal.None;
+        }
+
         // Returns false if the player wasn't holding anything. target: the
         // pocket picked for a PocketTargetPower (LocalPoolPowerController);
         // without one, such a power falls back to a random open pocket.
@@ -267,6 +299,9 @@ namespace UntitledPoolGame.Pool
             heldPower[player] = null;
             ActivatingPowerLevel = heldPowerLevel[player];
             heldPowerLevel[player] = 1;
+            // Read before Activate: an off-turn activation can't switch the
+            // turn, but keep it independent of what the power does.
+            bool waitsForOpponentTurn = power.TargetsOpponent && CurrentPlayer == player;
             if (pocket != null && power is PocketTargetPower targeted)
                 targeted.Activate(this, player, pocket);
             else if (tablePoint.HasValue && power is TablePointPower pointed)
@@ -274,6 +309,7 @@ namespace UntitledPoolGame.Pool
             else
                 power.Activate(this, player);
             ActivatingPowerLevel = 1;
+            PowerActivated?.Invoke(player, power, waitsForOpponentTurn);
             return true;
         }
 

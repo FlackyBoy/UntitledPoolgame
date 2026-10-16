@@ -66,6 +66,7 @@ namespace UntitledPoolGame.Pool
             showing = true;
             SetPointed(null);
             point = Vector3.zero;
+            TableHitInPlayArea = false;
             PoolTableSurface surface = PoolTableSurface.Instance;
             if (surface == null || surface.Felt == null || viewCamera == null
                 || !surface.Felt.Raycast(new Ray(viewCamera.transform.position, viewCamera.transform.forward), out RaycastHit hit, MaxTableDistance))
@@ -75,10 +76,19 @@ namespace UntitledPoolGame.Pool
             }
 
             point = TablePointPower.ClampToTable(hit.point, margin);
+            Vector3 inside = surface.ClampToPlayArea(hit.point, 0f) - hit.point;
+            inside.y = 0f;
+            TableHitInPlayArea = inside.sqrMagnitude < 1e-6f;
             ShowTableRing(true);
             RingLine.Set(tableRing, point + Vector3.up * RingSettings.targetRingHeight, previewRadius * PoolPocket.RingPulse());
             return true;
         }
+
+        // The last PointTable's view ray met the playing surface itself, not
+        // only the felt's collider, which runs under the cushions (the point
+        // is then clamped back onto the table, so PointTable still says
+        // true). The pointing gesture only points while this is true.
+        public bool TableHitInPlayArea { get; private set; }
 
         // End of a pick (confirmed, cancelled or abandoned).
         public void Release()

@@ -22,6 +22,9 @@ namespace UntitledPoolGame.Core
         GuardBroken,      // a player's guard breaks (R&D combat)
         TableHoleImpact,  // a meteor of the Trou power hits the table (rumble, shake…)
         OpponentBallPotted, // a ball of the opponent's group goes in (8-ball): nothing to cheer
+        PowerActivated,   // a power launched (the launcher's moment)
+        PowerReceived,    // an Attack power sent at a player (the target's moment, at launch)
+        PowerRefused,     // the power button pressed but nothing launched (wrong moment)
         // New moments go at the end: assets store the number.
     }
 

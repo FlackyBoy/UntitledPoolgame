@@ -16,7 +16,7 @@ namespace UntitledPoolGame.Pool
         public abstract PowerType Type { get; }
 
         // Whether this power can only be activated on the holder's own turn
-        // — see LocalPoolPowerController, which is the only place that
+        // — see PoolMatchRules.CheckPowerUse, the only place that
         // actually enforces it (only meaningful with two separate physical
         // inputs, i.e. split-screen; online can't gate on this at all yet,
         // see TODO.md). Set per power asset rather than derived from Type —
@@ -30,6 +30,25 @@ namespace UntitledPoolGame.Pool
         // are meant to target/react to the opponent (see TODO.md for which).
         [SerializeField] private bool requiresOwnTurn = true;
         public bool RequiresOwnTurn => requiresOwnTurn;
+
+        // Only for a power usable off-turn (Requires Own Turn unchecked):
+        // launched during the holder's own turn, it waits for the opponent's
+        // turn (each power queues itself, see PoolMatchRules.Queue*), or is
+        // refused so it can only be sent while the opponent plays — the
+        // author picks per power which surprise they want.
+        [Tooltip("Pouvoir utilisable hors de son tour (Requires Own Turn décoché) : coché = lancé pendant son propre tour, il attend le début du tour adverse ; décoché = refusé pendant son tour, il ne part que pendant le tour de l'adversaire.")]
+        [SerializeField] private bool allowDuringOwnTurn = true;
+        public bool AllowDuringOwnTurn => allowDuringOwnTurn;
+
+        // Closing a pocket right before a ball drops in is part of the chaos;
+        // a power for which that would be unfair unchecks this.
+        [Tooltip("Peut être lancé pendant que les billes roulent (tir en cours). Décoché = refusé jusqu'à l'arrêt des billes.")]
+        [SerializeField] private bool allowWhileBallsMoving = true;
+        public bool AllowWhileBallsMoving => allowWhileBallsMoving;
+
+        // Who feels it: the opponent for an Attack, the holder otherwise.
+        // Drives the HUD announcement (PoolMatchRules.PowerActivated).
+        public bool TargetsOpponent => Type == PowerType.Attack;
 
         // Called the moment the holding player activates it.
         // activatingPlayer is 0 or 1 — PoolMatchRules.CurrentPlayer indexing.
