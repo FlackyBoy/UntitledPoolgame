@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: BallBlastPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.BallBlastPower
   powerName: Boom !
+  tokenPrefab: {fileID: 2755252013077545263, guid: ca1f981076c8fae499bf394c149cbea1, type: 3}
   requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
   explosionPrefab: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50, type: 3}
   explosionScale: 0.15
   explosionLifetime: 4

@@ -78,7 +78,7 @@ Tous dans `Assets/Resources`, créés par **Tools > Pool > Ensure Config Assets 
 | Pouvoirs distribués | *Available Powers* : la liste des assets de pouvoirs qui peuvent sortir | tous les pouvoirs du projet |
 | Couleurs par catégorie | Attaque, Défense, Effet (caisses, halo de la bille, HUD) | rouge, bleu, vert |
 | Caisses | nombre en même temps, délai de réapparition min / max | 3, 15 s, 30 s |
-| Visuels des caisses | un prefab par catégorie (facultatif) | — |
+| Visuels des caisses | un prefab par catégorie, utilisé pour un pouvoir sans jeton à lui (rempli par *Générer les jetons de pouvoir* : un « ? » sur l'anneau de la catégorie) | jetons « ? » |
 | Bille à pouvoir | intervalle de changement min / max, intensité et portée du halo | 20 s, 40 s, 4, 0,3 m |
 | Visuels de la bille | un matériau par catégorie (facultatif) | — |
 | Geste : pointer la cible | pendant le choix d'un trou ou d'un point de la table, le bras se tend vers l'endroit visé et l'index le pointe : oui / non, main droite ou gauche (avec la queue en main, cette main la lâche le temps du geste), bras tendu (part de sa longueur), limites du bras devant le corps (*Point Limits* : vers l'extérieur, à travers le corps, vers le haut, vers le bas ; quand le pointeur n'est plus sur le billard, le bras se baisse), fermeture des autres doigts (sans effet sur le personnage actuel, dont la chaîne de l'index porte les quatre doigts), du pouce, de l'index (négatif = plus tendu) | oui, droite, 0,9, (80° ; 30° ; 50° ; 75°), 85°, 40°, −5° |
@@ -310,6 +310,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 Dans `Assets/Powers`. Champs communs, qui décident **quand le pouvoir peut être lancé** (touche Q / B) :
 
 - **Power Name** : nom affiché.
+- **Token Prefab** : le jeton posé sur la table pour ce pouvoir (une forme 3D qui le représente, sur un anneau à la couleur de sa catégorie), fait par *Tools > Pool > Générer les jetons de pouvoir*. Vide = le prefab de la catégorie. Le jeton tourne et flotte grâce à *PowerTokenFloat*, réglable sur le prefab : vitesse de rotation (70°/s), inclinaison (8° sur les jetons générés), amplitude (1,2 cm) et durée (1,8 s) du flottement.
 - **Requires Own Turn** : ne peut être lancé que pendant son propre tour (pouvoirs d'Effet).
 - **Allow During Own Turn** (coché par défaut) : pour un pouvoir utilisable hors de son tour (*Requires Own Turn* décoché). Coché, lancé pendant son propre tour, il attend le début du tour adverse. Décoché, il est refusé pendant son tour et ne part que pendant le tour de l'adversaire.
 - **Allow While Balls Moving** (coché par défaut) : peut être lancé pendant que les billes roulent. Décoché, il est refusé jusqu'à l'arrêt des billes.

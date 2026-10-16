@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: MagnetPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.MagnetPower
   powerName: Aimant
+  tokenPrefab: {fileID: 2559025821571616051, guid: 73f6817c09910974c97584dc4330a055, type: 3}
   requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
   captureRadius: 0.4
   minCaptureSpeed: 0.05
   pullAcceleration: 1.5

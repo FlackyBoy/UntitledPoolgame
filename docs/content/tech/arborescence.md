@@ -91,6 +91,7 @@ Assets/Scripts/
 │   ├── PoolTableAssetSettings.cs   dimensions de la table
 │   ├── PoolBallTextureGenerator.cs textures numérotées des billes
 │   ├── TableHoleScorchGenerator.cs decal du contour brûlé des trous (texture, matériau, vérification URP)
+│   ├── PowerTokenGenerator.cs      jetons des pouvoirs sur la table (formes 3D faites de formes simples, anneau de catégorie, prefabs)
 │   └── LevelMaker/                 Tools > Pool > Level Maker (outil de niveau)
 │       ├── LevelMakerWindow.cs     fenêtre en 6 étapes + outils de la vue Scène
 │       ├── LevelMakerWindow.Room.cs  étape Salle : tracé des murs, ouvertures, props
@@ -174,6 +175,7 @@ Assets/Scripts/
     ├── BallDisguise.cs             aspect commun des billes (Groupe identique), restauré ensuite
     ├── TablePointPower.cs + TableHolePower.cs, TableHole.cs, TableHoleMeteor.cs   pouvoir Trou (météore, trou, billes tombées)
     ├── PoolPowerCrate.cs, PoolPowerCrateManager.cs, PoolPowerSpawnPoint.cs   caisses
+    ├── PowerTokenFloat.cs          rotation et flottement des jetons de pouvoir (générés par Editor/PowerTokenGenerator.cs)
     ├── PowerBall.cs, PoolPowerBallRotator.cs   bille à pouvoir
     ├── PoolPhysicsSettings.cs, PoolScreenJuiceSettings.cs, PoolPotEffectSettings.cs, PoolPowerSpawnSettings.cs   config
     ├── PoolSettingsLoader.cs       chargement des config avec valeurs par défaut

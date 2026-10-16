@@ -55,6 +55,21 @@ namespace UntitledPoolGame.Pool
             }
 
             if (placeholderRenderer != null) placeholderRenderer.material.color = color;
+            SitOnFelt();
+        }
+
+        // A token prefab's origin is the felt (its ring lies there, the
+        // object floats above): spawn points aren't all at the same height
+        // over the felt (generated table, points painted with the Level
+        // Maker), so the visual goes down or up onto it. The crate itself —
+        // and so the pickup distance — stays at the spawn point.
+        private void SitOnFelt()
+        {
+            if (currentVisual == null || placeholderRenderer != null) return;
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            if (surface == null) return;
+            Vector3 p = transform.position;
+            currentVisual.transform.position = new Vector3(p.x, surface.FeltTopY, p.z);
         }
 
         private GameObject CreatePrefabVisual(GameObject prefab)

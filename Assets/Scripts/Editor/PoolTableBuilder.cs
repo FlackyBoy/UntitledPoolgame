@@ -81,6 +81,8 @@ namespace UntitledPoolGame.PoolEditor
             EnsureMagnetPowerAsset();
             EnsureIdenticalGroupsPowerAsset();
             EnsureTableHolePowerAsset();
+            // The powers' tokens on the table, for those that have none yet.
+            PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
             GameFlowTools.EnsureAssets();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");

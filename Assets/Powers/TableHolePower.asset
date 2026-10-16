@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: TableHolePower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.TableHolePower
   powerName: Trou
+  tokenPrefab: {fileID: 5206651293871135976, guid: c71d2ac39ac324547a635d4959240c19, type: 3}
   requiresOwnTurn: 0
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1

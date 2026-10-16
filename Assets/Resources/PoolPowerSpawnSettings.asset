@@ -17,15 +17,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 974c043049835f3458008baac53b3385, type: 2}
   - {fileID: 11400000, guid: c1502caf75b868c47baee5b6f3b463ce, type: 2}
   - {fileID: 11400000, guid: d62d443b63597664a98f04d2e2255f6c, type: 2}
+  - {fileID: 11400000, guid: 6c5cef1506611b64583efac5c14837e6, type: 2}
+  - {fileID: 11400000, guid: 269747528ad48034793f0f02716520b9, type: 2}
+  - {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
   attackColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   defenseColor: {r: 0.25, g: 0.55, b: 1, a: 1}
   effectColor: {r: 0.3, g: 0.9, b: 0.4, a: 1}
-  activeCrateCount: 3
+  activeCrateCount: 4
   crateRespawnMinDelay: 15
   crateRespawnMaxDelay: 30
-  attackCratePrefab: {fileID: 0}
-  defenseCratePrefab: {fileID: 0}
-  effectCratePrefab: {fileID: 0}
+  attackCratePrefab: {fileID: 3203590037318326321, guid: 8ac4b2589f6139842ae806d551bb3106, type: 3}
+  defenseCratePrefab: {fileID: 5267599828539463012, guid: 9be1f0eed8a69da42aab26dfb40fb030, type: 3}
+  effectCratePrefab: {fileID: 6152640822713277993, guid: 037378423d2568741b76b4e2cb67b276, type: 3}
   ballRotationMinInterval: 20
   ballRotationMaxInterval: 40
   ballGlowIntensity: 4
@@ -49,3 +52,4 @@ MonoBehaviour:
   gestureElbowOut: 0.7
   gestureDebugLogs: 1
   gestureBlendTime: 0.5
+  gestureLowerTime: 0.5

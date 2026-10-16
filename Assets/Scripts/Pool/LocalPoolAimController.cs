@@ -1298,7 +1298,8 @@ namespace UntitledPoolGame.Pool
             }
         }
 
-        private void LeaveAim(bool returnControlToPlayer)
+        // shotTaken: left by shooting (Shoot), not by backing out.
+        private void LeaveAim(bool returnControlToPlayer, bool shotTaken = false)
         {
             if (hasCueLine)
             {
@@ -1317,16 +1318,25 @@ namespace UntitledPoolGame.Pool
             EnableHeadLook(false);
             SetArmBendGoals(aiming: false);
 
-            // Mirrors the ConsumePending* calls in EnterAim() — any debuff
-            // that started when this player entered aim mode ends here when
-            // they leave it, whether that's from taking the shot or backing
-            // out.
+            // Mirrors the ConsumePending* calls in EnterAim(): a debuff that
+            // started when this player entered aim mode ends with the shot,
+            // and only goes on hold when they back out without shooting — it
+            // comes back at their next aim this turn (it used to end there
+            // too: putting the cue down and picking it up again shook it off).
             PoolMatchRules rulesForPower = PoolMatchRules.Instance;
             if (rulesForPower != null)
             {
                 int effectivePlayer = rulesForPower.GetEffectivePlayerIndex(playerInput.playerIndex);
-                rulesForPower.EndVisionImpair(effectivePlayer);
-                rulesForPower.EndInvertedControls(effectivePlayer);
+                if (shotTaken)
+                {
+                    rulesForPower.EndVisionImpair(effectivePlayer);
+                    rulesForPower.EndInvertedControls(effectivePlayer);
+                }
+                else
+                {
+                    rulesForPower.SuspendVisionImpair(effectivePlayer);
+                    rulesForPower.SuspendInvertedControls(effectivePlayer);
+                }
             }
 
             // Keep facing the direction of the shot just taken (or backed out
@@ -1507,7 +1517,7 @@ namespace UntitledPoolGame.Pool
                 cueBallBody.AddTorque(Vector3.Cross(strikeOffset, impulse), ForceMode.Impulse);
 
             chargedPower = 0f;
-            ExitAim();
+            LeaveAim(returnControlToPlayer: true, shotTaken: true);
 
             // Called after ExitAim(), not before: by then the camera is back
             // to its normal FPS local-position control (ExitAim already

@@ -25,6 +25,7 @@
 | **Build Table** | Génère une table complète : tapis, bandes, poches, billes, queues et points d'apparition des pouvoirs |
 | **Attach Physics To Custom Table** | Pour un modèle de table importé : sélectionner le modèle, puis lancer. Ajoute la physique (enfant `PoolPhysics`) sans les visuels générés. **Le relancer régénère tout `PoolPhysics`**, donc les poches réalignées à la main sont perdues |
 | **Select Custom Table Settings** | Sélectionne `PoolTableAssetSettings` (dimensions du tapis, bandes, billes, poches). Pour changer la taille, régler ce fichier et régénérer plutôt que changer l'échelle de `PoolPhysics` |
+| **Générer les jetons de pouvoir** | Fabrique le jeton de chaque pouvoir posé sur la table : une forme 3D qui le représente (fusée, œil, cadenas, bombe…, « ? » sinon), faite de formes simples, avec ses propres couleurs, au-dessus d'un anneau à la couleur de sa catégorie (60 % opaque : l'alpha des matériaux `Token_Ring_<catégorie>` se règle à la main). Elle tourne et flotte. Prefabs dans `Assets/Prefabs/Powers`, matériaux dans `Assets/Materials/PowerTokens`. Il ne crée que les jetons **manquants** : les prefabs générés se retouchent à la main sans risque. **Régénérer tous les jetons de pouvoir (écrase les retouches)** les reconstruit tous, après confirmation. *Ensure Config Assets Exist* crée aussi ceux qui manquent |
 | **Add Power Spawn System To Selected Table** | Ajoute seulement ce qui manque pour les pouvoirs (caisses, bille à pouvoir) à la table sélectionnée, sans rien régénérer. Sans risque, même relancé |
 
 ## R&D

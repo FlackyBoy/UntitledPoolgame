@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: IdenticalGroupsPower
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.IdenticalGroupsPower
   powerName: Daltonien ?!
+  tokenPrefab: {fileID: 5567596307391157377, guid: a90532696bfe8fd43884a3ec30a95b78, type: 3}
   requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
   look: 1
   lookBallNumber: 8
   colorlessMaterial: {fileID: 0}
