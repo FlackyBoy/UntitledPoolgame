@@ -17,6 +17,33 @@ namespace UntitledPoolGame.PoolEditor
         public const string PropsRootName = "Décor (props)";
         private const int MaxTiles = 4000;
 
+        // A piece a build would place: the ghost previews of the Level Maker
+        // (PrefabGhost) draw these instead of instantiating anything.
+        public struct GhostPiece
+        {
+            public GameObject prefab;
+            public Vector3 position;
+            public Quaternion rotation;
+            public Vector3 scale;
+        }
+
+        // Non-null while previewing: Place and PlaceStairs add their piece
+        // here instead of instantiating it, so a preview runs the very same
+        // layout code as the build (cells, wall facing, tiling, stairs
+        // stretch) — what the ghost shows is what gets built.
+        private static List<GhostPiece> recording;
+
+        private static void Record(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale) =>
+            recording.Add(new GhostPiece { prefab = prefab, position = position, rotation = rotation, scale = scale });
+
+        // Runs layout code with Place / PlaceStairs recording into pieces.
+        private static void Preview(List<GhostPiece> pieces, System.Action layout)
+        {
+            recording = pieces;
+            try { layout(); }
+            finally { recording = null; }
+        }
+
         private static readonly Dictionary<GameObject, Bounds> boundsCache = new Dictionary<GameObject, Bounds>();
 
         // ---------- Measuring ----------
@@ -396,9 +423,6 @@ namespace UntitledPoolGame.PoolEditor
             float yaw = flight.uphillYaw - Vector3.SignedAngle(Vector3.forward, uphillLocal, Vector3.up);
             Quaternion turn = Quaternion.Euler(0f, yaw, 0f);
 
-            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.gameObject.scene);
-            Undo.RegisterCreatedObjectUndo(go, "Escalier");
-            go.transform.SetParent(parent, false);
             // Stretch the prefab's local axis that points up (its root may be
             // rotated, e.g. -90° on X for an imported model).
             Vector3 localUp = Quaternion.Inverse(prefab.transform.localRotation) * Vector3.up;
@@ -406,10 +430,16 @@ namespace UntitledPoolGame.PoolEditor
             int upAxis = Mathf.Abs(localUp.x) > Mathf.Abs(localUp.y) ? (Mathf.Abs(localUp.x) > Mathf.Abs(localUp.z) ? 0 : 2)
                 : (Mathf.Abs(localUp.y) > Mathf.Abs(localUp.z) ? 1 : 2);
             scale[upAxis] *= stretch;
-            go.transform.localScale = scale;
             Vector3 position = flight.position - turn * new Vector3(b.center.x, 0f, b.center.z);
             position.y = floorY - b.min.y * stretch;
-            go.transform.SetPositionAndRotation(position, turn * prefab.transform.localRotation);
+            Quaternion rotation = turn * prefab.transform.localRotation;
+            if (recording != null) { Record(prefab, position, rotation, scale); return; }
+
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.gameObject.scene);
+            Undo.RegisterCreatedObjectUndo(go, "Escalier");
+            go.transform.SetParent(parent, false);
+            go.transform.localScale = scale;
+            go.transform.SetPositionAndRotation(position, rotation);
             Finish(go, palette, RoomModuleKind.Stairs, -1, -1, makeStatic: true);
 
             // An invisible ramp over the steps: the character controller
@@ -488,12 +518,19 @@ namespace UntitledPoolGame.PoolEditor
         private static float SegmentYaw(RoomOutline room, int segment, GameObject piece = null)
         {
             SegmentEnds(room, segment, out Vector3 a, out Vector3 b);
-            Vector3 dir = LevelBuilder.Flat(b - a);
-            Vector3 axis = RunsAlongZ(room.palette, piece != null ? piece : room.palette?.Wall(room.wallVariant)) ? Vector3.forward : Vector3.right;
-            float yaw = Vector3.SignedAngle(axis, dir, Vector3.up);
             bool flip = room.closed && !room.IsCounterClockwise;
-            if (room.palette != null && room.palette.flipWalls) flip = !flip;
             if (room.flipWalls) flip = !flip;
+            return SegmentYaw(a, b, room.palette, piece != null ? piece : room.palette?.Wall(room.wallVariant), flip);
+        }
+
+        // flip: the outline's own turn-around (clockwise closed trace, the
+        // room's manual flip); the palette's flip is added here.
+        private static float SegmentYaw(Vector3 a, Vector3 b, PrefabPalette palette, GameObject piece, bool flip)
+        {
+            Vector3 dir = LevelBuilder.Flat(b - a);
+            Vector3 axis = RunsAlongZ(palette, piece) ? Vector3.forward : Vector3.right;
+            float yaw = Vector3.SignedAngle(axis, dir, Vector3.up);
+            if (palette != null && palette.flipWalls) flip = !flip;
             return flip ? yaw + 180f : yaw;
         }
 
@@ -701,38 +738,44 @@ namespace UntitledPoolGame.PoolEditor
         // tile touching the room is laid, so the floor still reaches the
         // walls — the last row runs on under them.
         private static void FillOutline(RoomOutline room, GameObject tile, Transform parent, float y, bool topAtY, RoomModuleKind kind,
-            System.Func<Vector3, Vector2, bool> skip = null)
+            System.Func<Vector3, Vector2, bool> skip = null) =>
+            FillOutline(room.points, room.palette, room.wallVariant, room.hasWalls, room.name, tile, parent, y, topAtY, kind, skip);
+
+        // Same from an outline's data (a trace not yet turned into a room).
+        private static void FillOutline(List<Vector3> points, PrefabPalette palette, int wallVariant, bool hasWalls, string label,
+            GameObject tile, Transform parent, float y, bool topAtY, RoomModuleKind kind, System.Func<Vector3, Vector2, bool> skip = null)
         {
             Vector2 native = TileSize(tile);
             Vector2 size = native;
             Vector3 stretch = Vector3.one;
-            float module = ModuleWidth(room);
+            float module = ModuleWidth(palette, wallVariant);
             // A floor-only zone is traced in whole tiles: always at their own size.
-            bool fits = room.hasWalls && room.palette.fitTilesToModule
-                        && Mathf.Abs(native.x - module) <= module * room.palette.tileFitTolerance
-                        && Mathf.Abs(native.y - module) <= module * room.palette.tileFitTolerance;
+            bool fits = hasWalls && palette.fitTilesToModule
+                        && Mathf.Abs(native.x - module) <= module * palette.tileFitTolerance
+                        && Mathf.Abs(native.y - module) <= module * palette.tileFitTolerance;
             if (fits)
             {
                 size = new Vector2(module, module);
                 stretch = new Vector3(module / native.x, 1f, module / native.y);
             }
-            Vector3 origin = room.points[0];
-            float minX = room.points.Min(p => p.x), maxX = room.points.Max(p => p.x);
-            float minZ = room.points.Min(p => p.z), maxZ = room.points.Max(p => p.z);
+            Vector3 origin = points[0];
+            float minX = points.Min(p => p.x), maxX = points.Max(p => p.x);
+            float minZ = points.Min(p => p.z), maxZ = points.Max(p => p.z);
             int x0 = Mathf.FloorToInt((minX - origin.x) / size.x), x1 = Mathf.CeilToInt((maxX - origin.x) / size.x);
             int z0 = Mathf.FloorToInt((minZ - origin.z) / size.y), z1 = Mathf.CeilToInt((maxZ - origin.z) / size.y);
             if ((long)(x1 - x0) * (z1 - z0) > MaxTiles)
             {
-                Debug.LogWarning($"[Level Maker] {room.name} : plus de {MaxTiles} dalles, sol/plafond ignoré (dalle trop petite ?).", room);
+                // Not repeated for every frame of a preview.
+                if (recording == null) Debug.LogWarning($"[Level Maker] {label} : plus de {MaxTiles} dalles, sol/plafond ignoré (dalle trop petite ?).");
                 return;
             }
             for (int ix = x0; ix < x1; ix++)
                 for (int iz = z0; iz < z1; iz++)
                 {
                     var center = new Vector3(origin.x + (ix + 0.5f) * size.x, y, origin.z + (iz + 0.5f) * size.y);
-                    bool laid = fits ? Inside(center, room.points) : Touches(center, size / 2f, room.points);
+                    bool laid = fits ? Inside(center, points) : Touches(center, size / 2f, points);
                     if (laid && (skip == null || !skip(center, size / 2f)))
-                        Place(tile, parent, center, 0f, y, topAtY, room.palette, kind, -1, -1, stretch);
+                        Place(tile, parent, center, 0f, y, topAtY, palette, kind, -1, -1, stretch);
                 }
         }
 
@@ -780,17 +823,122 @@ namespace UntitledPoolGame.PoolEditor
                 parent = rootGo.transform;
             }
 
-            Quaternion turn = Quaternion.FromToRotation(Vector3.up, normal) * Quaternion.Euler(0f, yaw, 0f);
-            TryMeasure(prefab, out Bounds b);
-            Vector3 baseCenter = new Vector3(b.center.x, b.min.y, b.center.z) * scale;
-
+            PropPose(prefab, point, normal, yaw, scale, out Vector3 position, out Quaternion rotation, out Vector3 localScale);
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.gameObject.scene);
             Undo.RegisterCreatedObjectUndo(go, "Placer un prop");
             go.transform.SetParent(parent, false);
-            go.transform.localScale = prefab.transform.localScale * scale;
-            go.transform.SetPositionAndRotation(point - turn * baseCenter, turn * prefab.transform.localRotation);
+            go.transform.localScale = localScale;
+            go.transform.SetPositionAndRotation(position, rotation);
             Finish(go, palette, RoomModuleKind.Prop, -1, -1, makeStatic: go.GetComponentInChildren<Rigidbody>() == null);
             return go;
+        }
+
+        // ---------- Previews (ghosts of the Level Maker's tools) ----------
+
+        // A trace being drawn: its walls and corner pillars, and its floor
+        // once closed. faceAsClosed: walls facing as in the room the trace
+        // will most likely become (closed), even while still open — a
+        // clockwise closed room turns them around. Walls laid by a room
+        // traced inside another (FitIntoHost) aren't left out here.
+        public static void PreviewTrace(List<Vector3> points, bool closed, bool faceAsClosed, PrefabPalette palette,
+            int wallVariant, int pillarVariant, int floorVariant, bool hasWalls, List<GhostPiece> into)
+        {
+            if (palette == null || points.Count < 2) return;
+            Preview(into, () =>
+            {
+                int segments = closed ? points.Count : points.Count - 1;
+                if (hasWalls)
+                {
+                    bool flip = (closed || faceAsClosed) && points.Count >= 3 && !RoomOutline.IsCounterClockwiseOutline(points);
+                    float module = ModuleWidth(palette, wallVariant);
+                    GameObject wall = palette.Wall(wallVariant);
+                    GameObject pillar = pillarVariant >= 0 ? palette.Pillar(pillarVariant) : null;
+                    for (int s = 0; s < segments; s++)
+                    {
+                        Vector3 a = points[s], b = points[(s + 1) % points.Count];
+                        int cells = Mathf.Max(1, Mathf.RoundToInt(Vector3.Distance(a, b) / module));
+                        if (wall != null)
+                            for (int c = 0; c < cells; c++)
+                                Place(wall, null, Vector3.Lerp(a, b, (c + 0.5f) / cells), SegmentYaw(a, b, palette, wall, flip), a.y, false,
+                                    palette, RoomModuleKind.Wall, s, c);
+                    }
+                    if (pillar != null)
+                        for (int i = 0; i < points.Count; i++)
+                        {
+                            int s = i < segments ? i : segments - 1;
+                            Place(pillar, null, points[i], SegmentYaw(points[s], points[(s + 1) % points.Count], palette, wall, flip),
+                                points[i].y, false, palette, RoomModuleKind.Pillar, -1, -1);
+                        }
+                }
+                GameObject floor = palette.FloorTile(floorVariant);
+                if (closed && floor != null)
+                    FillOutline(points, palette, wallVariant, hasWalls, "Aperçu", floor, null, points[0].y, true, RoomModuleKind.Floor);
+            });
+        }
+
+        // The piece SetCell would lay on that wall cell (kind None: nothing,
+        // the cell is emptied), on the cells it would take.
+        public static void PreviewOpening(RoomOutline room, int segment, int cell, RoomModuleKind kind, int variant, bool insert,
+            List<GhostPiece> into)
+        {
+            if (room == null || room.palette == null || segment < 0 || kind == RoomModuleKind.None || kind == RoomModuleKind.Covered) return;
+            PrefabPalette palette = room.palette;
+            GameObject piece = PieceFor(palette, kind, variant);
+            if (piece == null) return;
+            int cells = CellCount(room, segment, palette);
+            cell = room.OwnerCell(segment, cell);
+            int start, span;
+            if (insert)
+            {
+                start = cell;
+                span = Mathf.Min(room.CellAt(segment, cell).Span, cells - cell);
+            }
+            else
+            {
+                span = SpanOf(palette, piece, ModuleWidth(room));
+                if (span > cells) return;
+                start = Mathf.Clamp(cell - (span - 1) / 2, 0, cells - span);
+            }
+            SegmentEnds(room, segment, out Vector3 a, out Vector3 b);
+            Vector3 center = Vector3.Lerp(a, b, (start + span / 2f) / cells);
+            Preview(into, () => Place(piece, null, center, SegmentYaw(room, segment, piece), a.y, false, palette, kind, segment, start));
+        }
+
+        // The floor (and ceiling, ceilingVariant >= 0) the Floors tool would
+        // give the room. Holes for stairs and rooms above are not cut here.
+        public static void PreviewFloors(RoomOutline room, int floorVariant, int ceilingVariant, List<GhostPiece> into)
+        {
+            if (room == null || room.palette == null || !room.closed) return;
+            PrefabPalette palette = room.palette;
+            Preview(into, () =>
+            {
+                GameObject floor = palette.FloorTile(floorVariant);
+                if (floor != null) FillOutline(room, floor, null, room.points[0].y, true, RoomModuleKind.Floor);
+                GameObject ceiling = ceilingVariant >= 0 ? palette.CeilingTile(ceilingVariant) : null;
+                if (ceiling != null)
+                    FillOutline(room, ceiling, null, room.points[0].y + WallHeight(palette, room.wallVariant), false, RoomModuleKind.Ceiling);
+            });
+        }
+
+        // The flight AddStairs would place (stretched to one level).
+        public static void PreviewStairs(RoomOutline room, RoomStairs flight, List<GhostPiece> into)
+        {
+            if (room == null || room.palette == null) return;
+            Preview(into, () => PlaceStairs(room, flight, null));
+        }
+
+        // Where a prop placed with PlaceProp ends up: base centered on point,
+        // standing along normal, turned by yaw. Shared with the ghost of the
+        // Props tool (PrefabGhost), so the preview is exactly what's placed.
+        public static void PropPose(GameObject prefab, Vector3 point, Vector3 normal, float yaw, float scale,
+            out Vector3 position, out Quaternion rotation, out Vector3 localScale)
+        {
+            Quaternion turn = Quaternion.FromToRotation(Vector3.up, normal) * Quaternion.Euler(0f, yaw, 0f);
+            TryMeasure(prefab, out Bounds b);
+            Vector3 baseCenter = new Vector3(b.center.x, b.min.y, b.center.z) * scale;
+            position = point - turn * baseCenter;
+            rotation = turn * prefab.transform.localRotation;
+            localScale = prefab.transform.localScale * scale;
         }
 
         // ---------- Helpers ----------
@@ -806,12 +954,15 @@ namespace UntitledPoolGame.PoolEditor
             Quaternion turn = Quaternion.Euler(0f, yaw, 0f);
             Vector3 position = center - turn * new Vector3(b.center.x, 0f, b.center.z);
             position.y = y - (topAtY ? b.max.y : b.min.y);
+            Quaternion rotation = turn * prefab.transform.localRotation;
+            Vector3 scale = stretch.HasValue ? StretchedScale(prefab.transform, s) : prefab.transform.localScale;
+            if (recording != null) { Record(prefab, position, rotation, scale); return null; }
 
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.gameObject.scene);
             Undo.RegisterCreatedObjectUndo(go, "Construire la salle");
             go.transform.SetParent(parent, false);
-            if (stretch.HasValue) go.transform.localScale = StretchedScale(prefab.transform, s);
-            go.transform.SetPositionAndRotation(position, turn * prefab.transform.localRotation);
+            if (stretch.HasValue) go.transform.localScale = scale;
+            go.transform.SetPositionAndRotation(position, rotation);
             Finish(go, palette, kind, segment, cell, makeStatic: true);
             return go;
         }
@@ -861,6 +1012,7 @@ namespace UntitledPoolGame.PoolEditor
 
         private static Transform Folder(Transform room, string name)
         {
+            if (recording != null) return null;   // previewing: nothing is created
             Transform folder = room.Find(name);
             if (folder != null) return folder;
             var go = new GameObject(name);

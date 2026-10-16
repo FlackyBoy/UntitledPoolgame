@@ -48,6 +48,18 @@ namespace UntitledPoolGame.PoolEditor
         private bool propRandomYaw = true;
         private float propYaw;
         private float propMinScale = 1f, propMaxScale = 1f;
+        // The next prop's random rotation and scale, rolled before the click
+        // so the ghost shows exactly what will be placed (they used to be
+        // rolled at the click).
+        private float nextRandomYaw, nextScale = 1f;
+        private bool nextRolled;
+
+        // Ghosts of what each tool is about to build (RoomBuilder.Preview*,
+        // drawn by PrefabGhost). Reused lists: rebuilt on every repaint.
+        private readonly List<RoomBuilder.GhostPiece> ghostPieces = new List<RoomBuilder.GhostPiece>();
+        private readonly List<Vector3> ghostTrace = new List<Vector3>();
+        private static readonly Color GhostColor = new Color(0.3f, 1f, 1f, 0.4f);
+        private static readonly Color GhostReplaceColor = new Color(0.4f, 1f, 0.5f, 0.45f);
         private bool propAlignToSurface;
         private bool showGrid = true;
         private bool paletteFoldout;
@@ -133,7 +145,7 @@ namespace UntitledPoolGame.PoolEditor
         private void DrawStairsToolOptions()
         {
             stairsBrush = VariantGrid("Escalier", Palette.stairs, stairsBrush, ref stairsScroll);
-            stairsYaw = EditorGUILayout.Slider("Sens de montée (R : +90°)", stairsYaw, 0f, 360f);
+            stairsYaw = EditorGUILayout.Slider("Sens de montée (Ctrl + molette, + Alt : 45° ; R : +90°)", stairsYaw, 0f, 360f);
             EditorGUILayout.HelpBox("Clic sur le sol d'une salle fermée : pose un escalier qui monte vers l'étage au-dessus " +
                                     "(la flèche montre le sens de montée ; il perce le sol de l'étage et reçoit une rampe invisible). " +
                                     "Maj + clic : retire l'escalier le plus proche. Si la flèche pointe vers le bas des marches, " +
@@ -348,11 +360,13 @@ namespace UntitledPoolGame.PoolEditor
             EditorGUILayout.LabelField(props[propIndex].name, EditorStyles.miniBoldLabel);
 
             propRandomYaw = EditorGUILayout.Toggle("Rotation aléatoire", propRandomYaw);
-            if (!propRandomYaw) propYaw = EditorGUILayout.Slider("Rotation (R : +45°)", propYaw, 0f, 360f);
+            if (!propRandomYaw) propYaw = EditorGUILayout.Slider("Rotation", propYaw, 0f, 360f);
             EditorGUILayout.MinMaxSlider("Échelle", ref propMinScale, ref propMaxScale, 0.5f, 2f);
             EditorGUILayout.LabelField(" ", $"{propMinScale:0.00} – {propMaxScale:0.00}", EditorStyles.miniLabel);
+            if (nextScale < propMinScale || nextScale > propMaxScale) nextScale = Random.Range(propMinScale, propMaxScale);
             propAlignToSurface = EditorGUILayout.Toggle("Suivre la pente / le mur", propAlignToSurface);
-            EditorGUILayout.HelpBox("Clic : poser le prop sur la surface visée. Maj + clic : retirer le prop visé.", MessageType.None);
+            EditorGUILayout.HelpBox("Le fantôme montre le prop tel qu'il sera posé. Clic : le poser. Ctrl + molette : le faire tourner (Maj = plus fin ; Alt = par 45°), R : +45°. " +
+                                    "Tourner coupe la rotation aléatoire. Maj + clic : retirer le prop visé.", MessageType.None);
         }
 
         private void DrawRoomList()
@@ -589,6 +603,12 @@ namespace UntitledPoolGame.PoolEditor
             }
 
             var flight = new RoomStairs { position = center, uphillYaw = stairsYaw, variant = stairsBrush };
+            if (e.type == EventType.Repaint && room != null)
+            {
+                ghostPieces.Clear();
+                RoomBuilder.PreviewStairs(room, flight, ghostPieces);
+                DrawGhost(GhostColor);
+            }
             RoomBuilder.StairsFootprint f = RoomBuilder.Footprint(flight, b, uphillLocal);
             Vector3 across = Vector3.Cross(Vector3.up, f.uphill);
             Vector3 l = f.uphill * f.halfLength, w = across * f.halfWidth;
@@ -636,6 +656,19 @@ namespace UntitledPoolGame.PoolEditor
             List<Vector3> closingCorners = closing ? ClosingCorners() : null;
 
             if (showGrid) DrawGrid(snapped, floorY);
+
+            // Ghost of the walls (and floor, once closing) as they'd be built.
+            if (e.type == EventType.Repaint && trace.Count > 0)
+            {
+                bool closedGhost = closing && closingCorners != null;
+                ghostTrace.Clear();
+                ghostTrace.AddRange(trace);
+                if (closedGhost) ghostTrace.AddRange(closingCorners);
+                else if (!closing && snapped != trace[trace.Count - 1]) ghostTrace.Add(snapped);
+                ghostPieces.Clear();
+                RoomBuilder.PreviewTrace(ghostTrace, closedGhost, true, Palette, wallBrush, pillarBrush, floorBrush, !floorOnlyTrace, ghostPieces);
+                DrawGhost(GhostColor);
+            }
 
             // Trace so far and the segment being drawn, with module ticks.
             float w = TraceStep;
@@ -783,6 +816,13 @@ namespace UntitledPoolGame.PoolEditor
                     ? (OpeningKinds[openingBrush] == RoomModuleKind.None ? "retirer la pièce imbriquée" : $"{OpeningNames[openingBrush]} imbriquée")
                     : OpeningNames[openingBrush] + (span > 1 ? $" ({span} modules)" : "");
                 Handles.Label(b.center + Vector3.up * (b.extents.y + 0.2f), $"→ {what}", EditorStyles.whiteBoldLabel);
+                if (e.type == EventType.Repaint && hoveredRoom != null)
+                {
+                    ghostPieces.Clear();
+                    RoomBuilder.PreviewOpening(hoveredRoom, hoveredModule.segment, hoveredModule.cell, OpeningKinds[openingBrush], OpeningVariant,
+                        insertMode, ghostPieces);
+                    DrawGhost(GhostReplaceColor);
+                }
             }
 
             if (e.type == EventType.MouseDown && e.button == 0 && !e.alt && hoveredModule != null)
@@ -815,6 +855,12 @@ namespace UntitledPoolGame.PoolEditor
                     Handles.DrawLine(room.points[i] + Vector3.up * 0.05f, room.points[(i + 1) % room.points.Count] + Vector3.up * 0.05f, 3f);
                 Handles.Label(room.points[0] + Vector3.up * 0.5f, $"{room.name} → sol {floorBrush + 1}{(brushCeiling ? $", plafond {ceilingBrush + 1}" : ", sans plafond")}",
                     EditorStyles.whiteBoldLabel);
+                if (e.type == EventType.Repaint)
+                {
+                    ghostPieces.Clear();
+                    RoomBuilder.PreviewFloors(room, floorBrush, brushCeiling ? ceilingBrush : -1, ghostPieces);
+                    DrawGhost(GhostReplaceColor);
+                }
             }
 
             if (e.type == EventType.MouseDown && e.button == 0 && !e.alt && room != null)
@@ -834,9 +880,10 @@ namespace UntitledPoolGame.PoolEditor
             if (props.Count == 0) return;
             GameObject prefab = props[Mathf.Clamp(propIndex, 0, props.Count - 1)];
 
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.R && !propRandomYaw)
+            if (!nextRolled) RollNextProp();
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.R)
             {
-                propYaw = Mathf.Repeat(propYaw + 45f, 360f);
+                RotateNextProp(45f);
                 e.Use();
                 Repaint();
             }
@@ -858,15 +905,15 @@ namespace UntitledPoolGame.PoolEditor
             }
             else
             {
-                float radius = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? Mathf.Max(pb.extents.x, pb.extents.z) * propMaxScale : 0.3f;
+                float radius = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? Mathf.Max(pb.extents.x, pb.extents.z) * nextScale : 0.3f;
+                RoomBuilder.PropPose(prefab, hit.point, propAlignToSurface ? hit.normal : Vector3.up, NextYaw, nextScale,
+                    out Vector3 ghostPosition, out Quaternion ghostRotation, out Vector3 ghostScale);
+                PrefabGhost.Draw(prefab, ghostPosition, ghostRotation, ghostScale, GhostColor);
                 Handles.color = new Color(0.3f, 1f, 1f);
                 Handles.DrawWireDisc(hit.point, hit.normal, radius, 2f);
-                if (!propRandomYaw)
-                {
-                    Vector3 facing = Quaternion.Euler(0f, propYaw, 0f) * Vector3.forward;
-                    Handles.DrawLine(hit.point, hit.point + facing * radius, 2f);
-                }
-                Handles.Label(hit.point + hit.normal * 0.3f, prefab.name, EditorStyles.whiteBoldLabel);
+                Vector3 facing = Quaternion.Euler(0f, NextYaw, 0f) * Vector3.forward;
+                Handles.DrawLine(hit.point, hit.point + facing * radius, 2f);
+                Handles.Label(hit.point + hit.normal * 0.3f, $"{prefab.name}  {NextYaw:0}°", EditorStyles.whiteBoldLabel);
             }
             if (e.type == EventType.MouseMove) SceneView.RepaintAll();
 
@@ -878,12 +925,83 @@ namespace UntitledPoolGame.PoolEditor
             }
             else
             {
-                float yaw = propRandomYaw ? Random.Range(0f, 360f) : propYaw;
-                float scale = Random.Range(propMinScale, propMaxScale);
-                RoomBuilder.PlaceProp(prefab, hit, yaw, scale, propAlignToSurface, Palette);
+                RoomBuilder.PlaceProp(prefab, hit, NextYaw, nextScale, propAlignToSurface, Palette);
+                RollNextProp();
             }
             e.Use();
             MarkDirty();
+        }
+
+        private void DrawGhost(Color color)
+        {
+            foreach (RoomBuilder.GhostPiece piece in ghostPieces)
+                PrefabGhost.Draw(piece.prefab, piece.position, piece.rotation, piece.scale, color);
+        }
+
+        private float NextYaw => propRandomYaw ? nextRandomYaw : propYaw;
+
+        private const float NotchScrollUnits = 3f;
+        private float notchScroll;
+
+        // The next multiple of 45° after yaw, in direction dir (±1): from 13°,
+        // up = 45°, down = 0°; from 45°, up = 90°.
+        private static float SnapStep(float yaw, int dir)
+        {
+            const float notch = 45f;
+            float k = yaw / notch;
+            return (dir > 0 ? Mathf.Floor(k + 1e-3f) + 1f : Mathf.Ceil(k - 1e-3f) - 1f) * notch;
+        }
+
+        private void RollNextProp()
+        {
+            nextRandomYaw = Random.Range(0f, 360f);
+            nextScale = Random.Range(propMinScale, propMaxScale);
+            nextRolled = true;
+        }
+
+        // Turning by hand takes over from the random rotation, from where
+        // the ghost was.
+        private void RotateNextProp(float degrees)
+        {
+            if (propRandomYaw)
+            {
+                propYaw = nextRandomYaw;
+                propRandomYaw = false;
+            }
+            propYaw = Mathf.Repeat(propYaw + degrees, 360f);
+        }
+
+        // Ctrl + wheel turns the ghost of the Props and Stairs tools
+        // smoothly, by propWheelDegrees per scroll unit (Shift = finer);
+        // Ctrl + Alt + wheel by 45° notches, onto multiples of 45°. Taken in
+        // beforeSceneGui, before the Scene view uses the wheel to zoom.
+        // Shift + wheel comes as a horizontal scroll on Windows: either axis.
+        private void OnBeforeSceneGUI(SceneView view)
+        {
+            Event e = Event.current;
+            if (e.type != EventType.ScrollWheel || !(e.control || e.command) || EditorApplication.isPlaying) return;
+            if (step != Step.Room || (roomTool != RoomTool.Props && roomTool != RoomTool.Stairs) || Palette == null) return;
+            float delta = Mathf.Abs(e.delta.y) >= Mathf.Abs(e.delta.x) ? e.delta.y : e.delta.x;
+            float current = roomTool == RoomTool.Stairs ? stairsYaw : NextYaw;
+            float degrees;
+            if (e.alt)
+            {
+                // One notch per wheel click: a touchpad's many small scrolls
+                // add up to one first (≈ 3 units = one click on Windows).
+                notchScroll += delta;
+                if (Mathf.Abs(notchScroll) < NotchScrollUnits) { e.Use(); return; }
+                int dir = notchScroll > 0f ? 1 : -1;
+                notchScroll = 0f;
+                degrees = SnapStep(current, dir) - current;
+            }
+            else degrees = delta * settings.propWheelDegrees * (e.shift ? 0.25f : 1f);
+            // Stairs: any angle works, the floor hole above follows the
+            // flight's own direction (StairsFootprint).
+            if (roomTool == RoomTool.Stairs) stairsYaw = Mathf.Repeat(stairsYaw + degrees, 360f);
+            else RotateNextProp(degrees);
+            e.Use();
+            view.Repaint();
+            Repaint();
         }
     }
 }
