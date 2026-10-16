@@ -101,6 +101,7 @@ Assets/Scripts/
 │       ├── RoomBuilder.cs          construction des salles à partir d'un tracé et d'une palette
 │       ├── KitGenerator.cs         palettes greybox (générée) et Forest Bar, remplissage depuis un dossier
 │       ├── LevelValidator.cs       vérifications et corrections
+│       ├── PrefabGhost.cs / .shader  fantôme d'un prefab dans la vue Scène (outil Props), dessiné sans rien instancier
 │       └── LevelMakerSettings.cs   prefabs et options de l'outil
 ├── UI/
 │   ├── GameFlowSettings.cs         scène du menu et niveaux (nom, scène, image, twist), asset dans Resources
