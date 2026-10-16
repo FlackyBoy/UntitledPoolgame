@@ -979,55 +979,8 @@ namespace UntitledPoolGame.Interaction
 
         private void CurlHand(bool right, float amount, CombatSettings cfg)
         {
-            Transform Bone(HumanBodyBones b) => bodyAnimator.GetBoneTransform(b);
-            Transform hand = Bone(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
-            Transform index = Bone(right ? HumanBodyBones.RightIndexProximal : HumanBodyBones.LeftIndexProximal);
-            Transform middle = Bone(right ? HumanBodyBones.RightMiddleProximal : HumanBodyBones.LeftMiddleProximal);
-            Transform little = Bone(right ? HumanBodyBones.RightLittleProximal : HumanBodyBones.LeftLittleProximal);
-            if (hand == null || index == null || middle == null || little == null) return;
-
-            // Palm normal: fingers × (little → index) for the right hand,
-            // mirrored for the left.
-            Vector3 along = (middle.position - hand.position).normalized;
-            Vector3 across = index.position - little.position;
-            Vector3 palm = (right ? Vector3.Cross(along, across) : Vector3.Cross(across, along)).normalized;
-            if (palm.sqrMagnitude < 0.5f) return;
-
-            float angle = cfg.fingerCurl * amount;
-            if (right)
-            {
-                Curl(palm, angle, HumanBodyBones.RightIndexProximal, HumanBodyBones.RightIndexIntermediate, HumanBodyBones.RightIndexDistal);
-                Curl(palm, angle, HumanBodyBones.RightMiddleProximal, HumanBodyBones.RightMiddleIntermediate, HumanBodyBones.RightMiddleDistal);
-                Curl(palm, angle, HumanBodyBones.RightRingProximal, HumanBodyBones.RightRingIntermediate, HumanBodyBones.RightRingDistal);
-                Curl(palm, angle, HumanBodyBones.RightLittleProximal, HumanBodyBones.RightLittleIntermediate, HumanBodyBones.RightLittleDistal);
-                Curl(palm, cfg.thumbCurl * amount, HumanBodyBones.RightThumbProximal, HumanBodyBones.RightThumbIntermediate, HumanBodyBones.RightThumbDistal);
-            }
-            else
-            {
-                Curl(palm, angle, HumanBodyBones.LeftIndexProximal, HumanBodyBones.LeftIndexIntermediate, HumanBodyBones.LeftIndexDistal);
-                Curl(palm, angle, HumanBodyBones.LeftMiddleProximal, HumanBodyBones.LeftMiddleIntermediate, HumanBodyBones.LeftMiddleDistal);
-                Curl(palm, angle, HumanBodyBones.LeftRingProximal, HumanBodyBones.LeftRingIntermediate, HumanBodyBones.LeftRingDistal);
-                Curl(palm, angle, HumanBodyBones.LeftLittleProximal, HumanBodyBones.LeftLittleIntermediate, HumanBodyBones.LeftLittleDistal);
-                Curl(palm, cfg.thumbCurl * amount, HumanBodyBones.LeftThumbProximal, HumanBodyBones.LeftThumbIntermediate, HumanBodyBones.LeftThumbDistal);
-            }
-        }
-
-        // Each joint turns its bone toward the palm: about bone × palm.
-        private void Curl(Vector3 palm, float angle, HumanBodyBones a, HumanBodyBones b, HumanBodyBones c)
-        {
-            Transform[] bones = { bodyAnimator.GetBoneTransform(a), bodyAnimator.GetBoneTransform(b), bodyAnimator.GetBoneTransform(c) };
-            for (int k = 0; k < 3; k++)
-            {
-                Transform bone = bones[k];
-                if (bone == null) continue;
-                Transform next = k < 2 ? bones[k + 1] : bone.childCount > 0 ? bone.GetChild(0) : null;
-                Vector3 dir = next != null ? next.position - bone.position
-                    : k > 0 && bones[k - 1] != null ? bone.position - bones[k - 1].position : Vector3.zero;
-                if (dir.sqrMagnitude < 1e-8f) continue;
-                Vector3 axis = Vector3.Cross(dir.normalized, palm);
-                if (axis.sqrMagnitude < 1e-6f) continue;
-                bone.rotation = Quaternion.AngleAxis(angle, axis.normalized) * bone.rotation;
-            }
+            float f = cfg.fingerCurl * amount;
+            HandPose.Curl(bodyAnimator, right, f, f, f, f, cfg.thumbCurl * amount);
         }
 
         private void ApplyFade()

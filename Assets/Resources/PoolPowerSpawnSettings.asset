@@ -33,3 +33,19 @@ MonoBehaviour:
   attackBallMaterial: {fileID: 0}
   defenseBallMaterial: {fileID: 0}
   effectBallMaterial: {fileID: 0}
+  pointAtTarget: 1
+  gestureWithRightHand: 1
+  pointReach: 1
+  pointLimits: {x: 80, y: 30, z: 50, w: 180}
+  pointFingerCurl: 85
+  pointThumbCurl: 40
+  pointIndexCurl: -5
+  thumbsUp: 1
+  thumbsUpDuration: 1.2
+  thumbsUpOffset: {x: 0.32, y: 0.02, z: 0.1}
+  thumbsUpElbowOffset: {x: 0.08, y: -0.3, z: -0.06}
+  thumbsUpFingerCurl: 95
+  thumbsUpThumbCurl: -15
+  gestureElbowOut: 0.7
+  gestureDebugLogs: 1
+  gestureBlendTime: 0.5
