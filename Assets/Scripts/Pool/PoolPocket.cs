@@ -7,47 +7,29 @@ namespace UntitledPoolGame.Pool
     [RequireComponent(typeof(SphereCollider))]
     public class PoolPocket : MonoBehaviour
     {
-        // Halo light + rising aura tuning lives in PoolPotEffectSettings
-        // (Resources-loaded, shared by all 6 pockets — same pattern as
-        // PoolPhysicsSettings) instead of a private copy of each field per
-        // pocket. Unlike the player prefabs, the 6 PoolPocket instances
-        // aren't prefab instances of one another (each generated
-        // individually by PoolTableBuilder), so a shared asset is the only
-        // way to tune them all at once.
+        // Shared by the six pockets, which aren't prefab instances of one
+        // another.
         private static PoolPotEffectSettings settings;
 
-        // A persistent child light, reused every pot instead of
-        // instantiating/destroying one each time — pockets get triggered
-        // often enough over a match that the churn isn't worth it.
+        // Reused on every pot.
         private Light haloLight;
         private Coroutine haloRoutine;
 
-        // Live registry of every pocket on the table (same pattern as
-        // PoolBall.Active) — lets the 8-ball call-shot prompt list the
-        // available pockets without a hand-wired Inspector reference.
+        // Every pocket on the table.
         private static readonly List<PoolPocket> active = new List<PoolPocket>();
         public static IReadOnlyList<PoolPocket> Active => active;
 
         private void OnEnable() => active.Add(this);
         private void OnDisable() => active.Remove(this);
 
-        public float Radius => GetComponent<SphereCollider>().radius * transform.lossyScale.x;
+        // The pocket's own trigger, fetched once (Awake): Radius is read for
+        // every pocket on each ball-in-hand placement frame.
+        private SphereCollider trigger;
+        public float Radius => (trigger != null ? trigger : trigger = GetComponent<SphereCollider>()).radius * transform.lossyScale.x;
 
-        // Ball-in-hand placement (and the 8-ball pocket selector) only clamp
-        // to the table's outer rectangle (PoolTableSurface.ClampToPlayArea) —
-        // nothing stopped a ball from being placed directly on/inside a
-        // pocket's own trigger radius. Its collider is disabled the whole
-        // time it's being placed (PoolBall.BeginBallInHand), so nothing
-        // fires while sliding it around — but the instant the collider is
-        // re-enabled on confirm, physics discovers the overlap and pockets
-        // it AGAIN, this time via a path that never calls
-        // PoolMatchRules.RegisterFoul(): PoolBall.OnPocketed()'s cue-ball
-        // branch just re-kinematic-izes it directly. The match-level
-        // BallInHand flag never gets set, so nothing ever offers the player
-        // a way to place it again — a permanently frozen cue ball that
-        // ignores every future shot. Pushing placement candidates out of
-        // every pocket's radius (plus clearance, typically the ball's own
-        // radius) up front avoids the scenario entirely.
+        // Pushes a placement spot out of every pocket. A cue ball placed
+        // inside a pocket's trigger got potted again as its collider came
+        // back, without a foul, and stayed frozen.
         public static Vector3 AvoidAllPockets(Vector3 position, float clearance)
         {
             foreach (PoolPocket pocket in active)
@@ -67,13 +49,8 @@ namespace UntitledPoolGame.Pool
             return position;
         }
 
-        // Human-readable location for the call-shot UI ("Coin haut-gauche",
-        // "Milieu droite"...) computed from this pocket's position relative
-        // to PoolTableSurface rather than a stored index — works regardless
-        // of scene load order, and regardless of which table asset/rotation
-        // generated these pockets. Mirrors the "haut/bas" (table's long
-        // axis) vs. "gauche/droite" (short axis) vocabulary already used
-        // elsewhere for this table (see PoolTableBuilder/CHANGELOG).
+        // "Coin haut-droite", "Milieu gauche"..., from the position relative to
+        // the table (haut/bas along its length, gauche/droite across).
         public string DescribeLocation()
         {
             PoolTableSurface surface = PoolTableSurface.Instance;
@@ -91,6 +68,8 @@ namespace UntitledPoolGame.Pool
 
         private void Awake()
         {
+            // Before SetClosed can add the blocker, another SphereCollider.
+            trigger = GetComponent<SphereCollider>();
             if (settings == null)
                 settings = PoolSettingsLoader.LoadOrDefault<PoolPotEffectSettings>("PoolPotEffectSettings");
 
@@ -110,12 +89,8 @@ namespace UntitledPoolGame.Pool
             haloLight.enabled = false;
         }
 
-        // While a player is picking a pocket (LocalPocketPointer: a power
-        // aimed at a pocket, or the 8-ball call), the pocket pointed at
-        // lights up steadily, with SetTargeted's ring — reuses
-        // this same haloLight rather than a second one, but skipped while a
-        // real pot's decay/aura (PlayHalo/HaloRoutine) is already running on
-        // it so the two never fight over the same light's intensity.
+        // Steady light on the pocket being pointed at (power pick, 8 call),
+        // unless a pot's halo is already running on it.
         public void SetSelectionHighlight(bool highlighted)
         {
             if (haloRoutine != null) return;
@@ -123,11 +98,8 @@ namespace UntitledPoolGame.Pool
             haloLight.intensity = highlighted ? settings.selectionHighlightIntensity : 0f;
         }
 
-        // Pocket pick for a PocketTargetPower (see LocalPoolPowerController):
-        // a pulsing ring around whichever pocket a player is pointing at, on
-        // top of the steady halo. Counted rather than a bool — in
-        // split-screen both players can point at the same pocket at once,
-        // and one of them looking away mustn't switch it off for the other.
+        // Pulsing ring while pointed at. A count, since both players can
+        // point at the same pocket.
         private int targetCount;
         private LineRenderer targetRing;
         private float targetRingRadius;
@@ -161,13 +133,9 @@ namespace UntitledPoolGame.Pool
             GetComponent<SphereCollider>().isTrigger = true;
         }
 
-        // ClosePocketPower: a solid (non-trigger) collider co-located with
-        // the trigger sphere above, so a ball rolling toward a closed
-        // pocket bounces off it instead of ever reaching deep enough to
-        // overlap the trigger — plus a plain placeholder cap so the closure
-        // is visible, and an explicit guard in OnTriggerEnter below as a
-        // second line of defense in case a fast shot ever tunnels through
-        // the blocker in one physics step.
+        // Close Pocket: a solid sphere over the trigger so balls bounce off,
+        // a cap to show it, and a check in OnTriggerEnter in case a fast ball
+        // gets through.
         private SphereCollider closedBlocker;
         private GameObject closedVisual;
 
@@ -192,11 +160,7 @@ namespace UntitledPoolGame.Pool
             closedVisual.SetActive(closed);
         }
 
-        // A custom prefab (settings.closedPocketCapPrefab) is used as-is —
-        // not tinted, not rescaled, trusted to already look like a cap —
-        // same convention as PoolPowerSpawnSettings' crate prefabs. Falls
-        // back to a flat red placeholder cylinder sized off this pocket's
-        // own radius when none is assigned.
+        // The cap prefab as is, or a flat red cylinder sized to the pocket.
         private GameObject CreateClosedVisual()
         {
             if (settings.closedPocketCapPrefab != null)
@@ -237,10 +201,7 @@ namespace UntitledPoolGame.Pool
                 GameObject aura = Instantiate(settings.risingAuraPrefab, transform.position, settings.risingAuraPrefab.transform.rotation);
                 aura.transform.localScale = settings.risingAuraPrefab.transform.localScale * settings.risingAuraScale;
 
-                // simulationSpeed is read every frame, not just at Play() —
-                // safe to set right after Instantiate even though the
-                // particle systems (Play On Awake) already started this
-                // same frame.
+                // simulationSpeed can be set after Play On Awake has started.
                 foreach (ParticleSystem system in aura.GetComponentsInChildren<ParticleSystem>())
                 {
                     ParticleSystem.MainModule main = system.main;
@@ -251,9 +212,7 @@ namespace UntitledPoolGame.Pool
             }
         }
 
-        // Stopping emission (rather than an immediate Destroy) lets whatever
-        // particles are already in flight finish their own fade instead of
-        // popping out of existence mid-flight.
+        // Stops emission so the particles in flight fade out.
         private IEnumerator AuraWindDownRoutine(GameObject aura)
         {
             yield return new WaitForSeconds(settings.risingAuraActiveDuration);
@@ -263,17 +222,9 @@ namespace UntitledPoolGame.Pool
             foreach (ParticleSystem system in systems)
                 system.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 
-            // Poll until every system in the hierarchy actually reports no
-            // particles left, rather than guessing a fixed delay before
-            // Destroy() — a fixed guess is exactly what caused the "plays
-            // then cuts off abruptly" bug: whenever the real particle
-            // lifetime ran longer than the guess, Destroy() fired while
-            // particles were still fully visible. IsAlive() only looks at a
-            // system's OWN Transform children, so every system is checked
-            // individually rather than just the root. risingAuraFadeOutBuffer
-            // is now a safety ceiling (in case something never reports dead)
-            // instead of a fixed wait — normally this finishes well before
-            // hitting it.
+            // Waits until no system has particles left (a fixed delay cut
+            // them off). Each system is checked, IsAlive only looks at its own
+            // children. risingAuraFadeOutBuffer is a ceiling.
             float safetyDeadline = Time.time + settings.risingAuraFadeOutBuffer;
             bool anyAlive = true;
             while (anyAlive && aura != null && Time.time < safetyDeadline)
@@ -300,9 +251,7 @@ namespace UntitledPoolGame.Pool
             while (elapsed < settings.haloDuration)
             {
                 elapsed += Time.deltaTime;
-                // Eased (quadratic) rather than linear — holds closer to
-                // full brightness early on, then tapers off softly instead
-                // of dimming at a constant, slightly clinical rate.
+                // Quadratic ease, softer than linear.
                 float t = Mathf.Clamp01(elapsed / settings.haloDuration);
                 haloLight.intensity = settings.haloIntensity * (1f - t * t);
                 yield return null;
@@ -311,10 +260,7 @@ namespace UntitledPoolGame.Pool
             haloRoutine = null;
         }
 
-        // Always-on (not just when selected) so all 6 pockets can be compared
-        // to a custom table's real pocket openings at once — the generated
-        // positions are only an idealized-rectangle approximation and often
-        // need nudging/resizing to line up with a specific model.
+        // Always drawn, to compare all six with a model's real pockets.
         private void OnDrawGizmos()
         {
             SphereCollider collider = GetComponent<SphereCollider>();

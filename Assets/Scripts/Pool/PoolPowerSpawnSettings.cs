@@ -2,20 +2,14 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Everything about HOW powers get randomly handed out — the pool to draw
-    // from, the color code per PowerType (crates and the ball glow both read
-    // this, so they always agree), and the random timing for crate respawns
-    // and ball power rotation. One shared asset, same Resources-loaded
-    // pattern as PoolPhysicsSettings — this is the "config file" the powers'
-    // random distribution is meant to be tunable from.
+    // How powers are handed out: the pool to draw from, the colour of each
+    // category (crates and ball glow), and the timings of crates and ball
+    // rotation.
     [CreateAssetMenu(fileName = "PoolPowerSpawnSettings", menuName = "Pool/Power Spawn Settings")]
     public class PoolPowerSpawnSettings : ScriptableObject
     {
         [Header("Power pool")]
-        // Drawn from at random for both crates and the ball rotation below —
-        // an empty/missing pool just means nothing spawns (checked by both
-        // callers) rather than a hard error, so this can be filled in
-        // gradually as more powers exist.
+        // Drawn from for the crates and the balls. Empty = nothing spawns.
         public PoolPower[] availablePowers;
 
         [Header("Color code")]
@@ -32,9 +26,7 @@ namespace UntitledPoolGame.Pool
         };
 
         [Header("Power crates")]
-        // How many PoolPowerCrate instances are alive/spawned on the table
-        // at once — PoolPowerCrateManager keeps this many active, drawing
-        // spawn locations from PoolPowerSpawnPoint markers in the scene.
+        // Crates on the table at once, on PoolPowerSpawnPoint markers.
         public int activeCrateCount = 3;
         // Random real-world delay range before a picked-up crate respawns
         // (new location, freshly rolled power).
@@ -42,12 +34,7 @@ namespace UntitledPoolGame.Pool
         public float crateRespawnMaxDelay = 30f;
 
         [Header("Crate visuals — optional, one prefab per PowerType")]
-        // Assign your own crate/chest model here to use instead of the
-        // auto-generated placeholder cube — PoolPowerCrate swaps to whichever
-        // one matches the power it's currently carrying (and swaps again on
-        // respawn if the newly rolled power is a different type). Leaving
-        // one unassigned falls back to the tinted placeholder cube for that
-        // type specifically, so this can be filled in gradually.
+        // Optional crate model per category; empty = tinted placeholder cube.
         public GameObject attackCratePrefab;
         public GameObject defenseCratePrefab;
         public GameObject effectCratePrefab;
@@ -61,24 +48,16 @@ namespace UntitledPoolGame.Pool
         };
 
         [Header("Power ball rotation")]
-        // How often the ball currently carrying a power changes — a new
-        // random active (not yet pocketed) ball is chosen, with a freshly
-        // rolled power, on a random interval in this range.
+        // The ball carrying a power changes at a random interval in this range.
         public float ballRotationMinInterval = 20f;
         public float ballRotationMaxInterval = 40f;
-        // Point light intensity on the glowing ball — same caveat as
-        // PoolPotEffectSettings.haloIntensity (depends on URP Physical
-        // Light Units).
+        // Depends on URP Physical Light Units, like the pot halo.
         public float ballGlowIntensity = 4f;
         public float ballGlowRange = 0.3f;
 
         [Header("Power ball visuals — optional, one material per PowerType")]
-        // Assign your own shader/material here to swap the ball's own
-        // renderer to for as long as it carries this power (on top of the
-        // glow light above) — PowerBall restores its normal material via
-        // ClearGlow() once it stops. Leaving one unassigned just skips the
-        // swap for that type, so this can be filled in gradually; the light
-        // alone still marks which ball currently carries a power either way.
+        // Optional material for the ball while it carries a power of that
+        // category (restored by ClearGlow); the light marks it anyway.
         public Material attackBallMaterial;
         public Material defenseBallMaterial;
         public Material effectBallMaterial;
@@ -91,10 +70,8 @@ namespace UntitledPoolGame.Pool
             _ => null,
         };
 
-        // The launcher's gestures (LocalPowerGesture): pointing at the pocket
-        // or the spot of the table being picked, then a thumbs up once the
-        // power is sent. Procedural (FBBIK + finger bones), the same for
-        // every power, so here with the other shared power settings.
+        // The launcher's gestures (LocalPowerGesture): pointing at the pick,
+        // thumbs up once sent. The same for every power.
         [Header("Geste : pointer la cible")]
         [Tooltip("Pendant le choix d'un trou ou d'un point de la table, le personnage tend le bras et pointe l'endroit visé du doigt.")]
         public bool pointAtTarget = true;

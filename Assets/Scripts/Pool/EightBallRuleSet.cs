@@ -3,16 +3,10 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Casual 8-ball, 2 players: no called shots/pockets for the group balls —
-    // any legally pocketed ball from your own group keeps your turn; potting
-    // only balls of the opponent's group is a foul (even after a legal first
-    // contact), potting one along with one of yours is fine. The 8
-    // itself IS called (see IsShootingForEightBall/PoolMatchRules'
-    // call-shot prompt) — real-world call-shot is almost always enforced at
-    // least for the money ball, even in otherwise casual rule sets. Also
-    // used as-is by Party's "Classic" sub-mode (see
-    // PoolMatchRules.CreatePartyRuleSet) — the powers active in that mode
-    // come from PoolPowerCrate/PowerBall on top, not from a different ruleset.
+    // Casual 8-ball for 2 players. Group balls aren't called: potting one of
+    // yours keeps the turn; potting only the opponent's is a foul. The 8 has
+    // to be called. Also used by Party's Classic sub-mode, the powers come
+    // on top.
     public class EightBallRuleSet : IPoolRuleSet
     {
         // Cue means "not assigned yet".
@@ -23,28 +17,19 @@ namespace UntitledPoolGame.Pool
         public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
         {
             int player = match.CurrentPlayer;
-            // Captured before the loop below can reassign it — legality of the
-            // shot's first contact has to be judged against the group as it
-            // stood BEFORE this shot (e.g. on the break, nothing is assigned
-            // yet, so any first contact is legal), not after. Pocketing balls
-            // from both groups in the same shot (very possible on a break)
-            // used to reassign the group mid-loop and then judge the contact
-            // against that NEW group — flagging a perfectly legal break as a
-            // foul depending on which ball happened to be processed first.
+            // Taken before the loop can assign the group: the first contact is
+            // judged against the groups as they were before the shot (potting
+            // both groups on the break flagged a legal break as a foul).
             BallGroup groupAtShotStart = playerGroup[player];
             bool pocketedOwnBall = false;
             bool pocketedEightBall = false;
-            // A ball of the other group (groups already decided). Legal along
-            // with one of one's own; on its own it's a foul (user's rule,
-            // 16/10: "tu n'as pas le droit d'empocher uniquement une bille
-            // adverse", even after a legal first contact).
+            // A ball of the other group: fine along with one of yours, a foul
+            // on its own.
             bool pocketedOpponentBall = false;
             PoolBall eightBall = null;
             BallGroup myGroup = groupAtShotStart;
 
-            // Consumed here regardless of what this shot actually pocketed —
-            // a call made ahead of some other shot (not an 8-ball attempt) is
-            // simply discarded rather than lingering into a later attempt.
+            // Consumed on every shot, so a call never carries over.
             PoolPocket calledPocket = match.ConsumeCalledEightBallPocket();
 
             foreach (PoolBall ball in pocketedThisShot)
@@ -75,9 +60,8 @@ namespace UntitledPoolGame.Pool
             }
 
             bool groupCleared = myGroup != BallGroup.Cue && IsGroupCleared(myGroup);
-            // No call-shot, so the only contact rule left is: hit your own
-            // group first (or anything, before groups are assigned), or the
-            // 8-ball once your group is fully cleared.
+            // Hit your own group first (anything before groups are set), or the
+            // 8 once your group is cleared.
             bool legalContact = firstContact != null && (groupAtShotStart == BallGroup.Cue
                 || firstContact.Group == groupAtShotStart
                 || (groupCleared && firstContact.Group == BallGroup.Eight));
@@ -93,12 +77,7 @@ namespace UntitledPoolGame.Pool
 
             if (pocketedEightBall)
             {
-                // Call-shot, but only for the 8 (the rest of the game stays
-                // uncalled — see TODO.md): the 8 has to go in the pocket the
-                // player actually declared before shooting, or it doesn't
-                // count as a win — same severity as the other 8-ball mistakes
-                // already enforced above (wrong group first, scratch on the
-                // 8). No call at all is treated the same as a wrong one.
+                // The 8 must go in the called pocket; no call counts as a wrong one.
                 bool wonOnPocket = calledPocket != null && match.GetPocketFor(eightBall) == calledPocket;
                 match.Win(groupCleared && !foul && wonOnPocket ? player : 1 - player);
                 return;
@@ -137,23 +116,14 @@ namespace UntitledPoolGame.Pool
             return true;
         }
 
-        // Whether player is currently eligible to shoot at the 8 (group
-        // assigned and fully cleared) — drives PoolMatchRules' call-shot
-        // prompt. False before groups are assigned (playerGroup starts at
-        // BallGroup.Cue, which IsGroupCleared would otherwise check against
-        // the actual cue ball and never return true for anyway, but this
-        // reads clearer than relying on that coincidence).
+        // Group assigned and cleared. False while groups are undecided.
         public bool IsShootingForEightBall(int player)
         {
             BallGroup group = playerGroup[player];
             return group != BallGroup.Cue && IsGroupCleared(group);
         }
 
-        // Test-only: assigns player's group directly rather than waiting for
-        // it to happen naturally off a pocketed ball — see
-        // PoolMatchRules.DebugForceEightBallEndgame (the C+W cheat), which
-        // pairs this with deactivating every Solid/Stripe ball so
-        // IsGroupCleared(group) is immediately true too.
+        // Test (C+W cheat): sets the group directly.
         public void DebugAssignGroup(int player, BallGroup group)
         {
             playerGroup[player] = group;

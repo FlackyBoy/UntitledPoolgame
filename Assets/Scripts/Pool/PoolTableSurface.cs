@@ -2,11 +2,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Marker on the table's felt collider — lets ball-in-hand placement (see
-    // PoolMatchRules.BallInHand and the aim controllers' placement mode) find
-    // exactly where a player's look-ray crosses the table, regardless of
-    // whatever ball/rail/cue happens to be in the way along that ray, and
-    // keeps the placed ball from being dropped through a rail or off the felt.
+    // On the felt collider: where placement rays hit the table, and the play
+    // area balls are clamped to.
     public class PoolTableSurface : MonoBehaviour
     {
         // One table per scene in practice — lets the aim controllers find it
@@ -41,21 +38,9 @@ namespace UntitledPoolGame.Pool
             if (Instance == this) Instance = null;
         }
 
-        // Clamps a world position to the playable felt area (this object's
-        // local X/Z), pulled in by margin (typically the ball's own radius)
-        // so it can't be placed overlapping a rail or off the table.
-        //
-        // Deliberately NOT transform.InverseTransformPoint/TransformPoint:
-        // those divide by this object's own scale, but the Surface is built
-        // with localScale = (Play Length, thickness, Play Width) — a huge,
-        // non-uniform scale — so the "local" coordinates they produce are
-        // normalized to roughly -0.5..0.5, not real meters, while
-        // halfLength/halfWidth ARE real meters. Clamping the tiny normalized
-        // value against the much larger meter bounds meant the clamp almost
-        // never actually triggered, letting the ball be placed anywhere. This
-        // instead only rotates and translates (never scales) to get a
-        // true-meters offset from this object's position, so the bounds
-        // check compares matching units regardless of the Surface's scale.
+        // Clamps a point to the felt, pulled in by margin (usually the ball's
+        // radius). Rotation and offset only: the surface's non-uniform scale
+        // would turn InverseTransformPoint's result into -0.5..0.5 units.
         public Vector3 ClampToPlayArea(Vector3 worldPosition, float margin)
         {
             Vector3 offset = Quaternion.Inverse(transform.rotation) * (worldPosition - transform.position);
@@ -65,13 +50,9 @@ namespace UntitledPoolGame.Pool
             return transform.position + transform.rotation * offset;
         }
 
-        // Opposite of ClampToPlayArea: how far a point walking along direction
-        // (from origin) has to travel before it's outside the table's
-        // rectangle (this object's local X/Z, inflated by margin) — used to
-        // stand a player behind the cue without ending up on top of/inside
-        // the table when the cue ball sits well inside the rails. Returns 0
-        // if origin is already outside. Same rotation-only local frame as
-        // ClampToPlayArea (never divides by Surface's own non-uniform scale).
+        // How far a point going along direction travels before leaving the
+        // table rectangle (inflated by margin); 0 if already out. Used to
+        // stand the player behind the cue.
         public float DistanceToClearPlayArea(Vector3 origin, Vector3 direction, float margin)
         {
             Quaternion inverseRotation = Quaternion.Inverse(transform.rotation);
@@ -84,9 +65,8 @@ namespace UntitledPoolGame.Pool
             return float.IsInfinity(distance) ? 0f : distance;
         }
 
-        // Distance along dir (from pos, on a single axis) until |coordinate|
-        // reaches bound. 0 if already at/past the bound; +infinity if moving
-        // parallel to it or away from it (never reaches it going forward).
+        // Distance along one axis until |pos| reaches bound; 0 if already
+        // there, infinity if moving away or parallel.
         private static float AxisExitDistance(float pos, float dir, float bound)
         {
             if (Mathf.Abs(pos) >= bound) return 0f;

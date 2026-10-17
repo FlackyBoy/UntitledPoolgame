@@ -10,23 +10,16 @@ using UntitledPoolGame.Player;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // Part of Tools > Pool > R&D > Préparer le joueur de R&D (RnDArenaTools):
-    // adds the R&D combat layers to the R&D player's Animator Controller,
-    // all at weight 0
-    // and driven from code (CrossFade + layer weight, no transitions):
-    // - "R&D Sonné (haut)" / "R&D Sonné (jambes)": the Stunned loop, upper
-    //   body and legs separately (LocalHitGauge: the legs only while
-    //   standing still, so walking keeps its legs);
-    // - "R&D Combat" (CombatSettings.Animation Layer): guard, punches, and
-    //   the held guard (Block, Blocked), upper body without the head
-    //   (LocalUnarmedMelee, Animated and Block);
-    // - "R&D Coup reçu": GetHit reactions, light and heavy, from the front,
-    //   back, left and right (LocalHitGauge), upper body with the head.
-    // In that order, so a blow taken overrides a punch being thrown, and a
-    // punch overrides the stunned sway. The controller is shared with the
-    // normal player and the dummies: at weight 0 the layers change nothing.
-    // Run again to rebuild them (removed and recreated). The PROTOFACTOR
-    // clips are only referenced, never modified (third-party pack).
+    // Part of Tools > Pool > R&D > Préparer le joueur de R&D: adds the R&D
+    // combat layers to the R&D player's Animator Controller, all at weight
+    // 0 and driven from code (CrossFade + weight, no transitions):
+    // - "R&D Sonné (haut)" / "R&D Sonné (jambes)": the Stunned loop, legs
+    //   only while standing still;
+    // - "R&D Combat": guard, punches, Block, Blocked (upper body, no head);
+    // - "R&D Coup reçu": GetHit reactions in four directions (with head).
+    // In that order, so a blow taken overrides a punch, and a punch the
+    // stunned sway. Shared controller, but weight 0 changes nothing. Run
+    // again to rebuild. The PROTOFACTOR clips are only referenced.
     public static class RnDCombatAnimationTools
     {
         private const string VariantPath = RnDArenaTools.VariantPath;
@@ -174,12 +167,10 @@ namespace UntitledPoolGame.PoolEditor
                 .FirstOrDefault(c => !c.name.StartsWith("__preview__"));
         }
 
-        // - UpperBody (punches): spine, arms, fingers. Not the head (it keeps
-        //   facing where the player looks), nor the legs and root (the walk
-        //   keeps them).
-        // - UpperBodyAndHead (stunned sway, blows taken): the same plus the
-        //   head — a blow to the face has to move it.
-        // - Legs (stunned sway while standing still): legs and feet IK.
+        // - UpperBody (punches): spine, arms, fingers; not the head (it keeps
+        //   following the look), nor legs and root.
+        // - UpperBodyAndHead (stunned, blows taken): plus the head.
+        // - Legs (stunned while standing still): legs and feet IK.
         private static AvatarMask EnsureMask(Mask kind)
         {
             string path = kind switch

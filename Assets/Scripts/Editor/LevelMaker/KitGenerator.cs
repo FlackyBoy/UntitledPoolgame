@@ -7,10 +7,8 @@ using UntitledPoolGame.Core;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // The palettes the Level Maker can create on its own: a generated
-    // greybox kit (grey blocks at real-kit dimensions, to block out a room
-    // before the art kit is chosen) and a palette pointing at the Forest Bar
-    // asset already in the project. Existing assets are never overwritten.
+    // Palettes the Level Maker can create itself: a greybox kit (grey blocks at
+    // real kit sizes) and one pointing at the Forest Bar. Never overwrites.
     public static class KitGenerator
     {
         public const string KitsFolder = "Assets/LevelKits";
@@ -135,11 +133,9 @@ namespace UntitledPoolGame.PoolEditor
                 }));
         }
 
-        // Points at the Forest Bar prefabs in place (the plugin folder is
-        // left untouched). Despite the folder name, its "HDRP" materials were
-        // converted to URP Lit (166 of 181), so they render as is. Its wall
-        // pieces run along their local Z (found by the
-        // palette's Auto wall axis); Flip Walls if they face the wrong way.
+        // Points at the Forest Bar prefabs in place. Its "HDRP" materials were
+        // converted to URP. Walls run along local Z; Flip Walls if they face
+        // the wrong way.
         public static PrefabPalette CreateForestBar()
         {
             string folder = KitsFolder + "/ForestBar";
@@ -193,14 +189,10 @@ namespace UntitledPoolGame.PoolEditor
         private static readonly string[] StairsWords = { "stair", "escalier" };
         private static readonly string[] RailingWords = { "railing", "rail", "fence", "barrier", "balustrade", "garde" };
 
-        // Sorts every prefab of a folder (subfolders included) into the
-        // palette's lists, by name first (English or French), by measured
-        // shape otherwise. Wall pieces only count as walls, doors or windows
-        // when they have the module width (the most common width among
-        // them): a corner or a double-width piece can't be laid on the
-        // trace, it goes to the props. Adds to what's there, never removes.
-        // Returns a report; prefabs whose materials can't render in this
-        // pipeline (pink) are counted.
+        // Sorts a folder's prefabs into the palette, by name (English or French)
+        // then by shape. Wall pieces only count as walls, doors or windows at
+        // the module width (the most common one); others go to props. Adds,
+        // never removes. Returns a report, pink (unrenderable) prefabs counted.
         public static string FillFromFolder(PrefabPalette palette, string folder)
         {
             RoomBuilder.ClearMeasures();

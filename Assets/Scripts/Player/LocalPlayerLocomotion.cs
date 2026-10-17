@@ -8,30 +8,20 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Player
 {
-    // R&D movement (party brawler, hybrid): replaces
-    // LocalFpsPlayerController's plain constant-speed move while this
-    // component is present and enabled — that controller keeps the look and
-    // skips its own move (see its Update). Only on the R&D player variant for
-    // now; the normal player keeps the old movement.
-    //
-    // - Momentum: speed is reached and lost with acceleration / deceleration
-    //   (less control in the air), sprint while Sprint is held.
-    // - Jump (with coyote time and a short input buffer), driving the
-    //   Animator's airborne states (Jump, JumpLeg — OnGround is already set
-    //   by LocalCharacterAnimationController).
-    // - Ledge climbing: Jump facing a ledge between Ledge Min and Max Height
-    //   hoists the body up and over, hands placed on the edge (FBBIK).
-    // - Floppy body, hands free only: arm and hand muscles get weaker and
-    //   less pinned to the animation (PuppetMaster muscle props), the spine a
-    //   bit too, and the pelvis leans against acceleration (FBBIK body
-    //   offset). Back to the authored stiffness while holding the cue or an
-    //   object, aiming, or striking, so none of those get wobbly.
-    // - The view rolls a little when strafing and bobs while walking.
-    // - Dazed (LocalHitGauge, R&D combat): slower, drifting sideways, the
-    //   view swaying — CombatSettings > Encaissement. Guarding
-    //   (LocalUnarmedMelee.IsBlocking): slower, no sprint.
-    //
-    // Everything is tuned in MovementSettings (Resources).
+    // R&D movement (party brawler). While enabled it replaces
+    // LocalFpsPlayerController's move (that one keeps the look). R&D player
+    // variant only for now.
+    // - Momentum: acceleration and deceleration (less control in the air),
+    //   sprint while held.
+    // - Jump with coyote time and a short buffer, driving the airborne states.
+    // - Ledge climbing between Ledge Min and Max Height, hands on the edge.
+    // - Floppy body with empty hands (weaker arm muscles, pelvis leaning
+    //   against acceleration); normal stiffness while holding, aiming or
+    //   striking.
+    // - View roll when strafing, bob while walking.
+    // - Dazed (LocalHitGauge): slower, drifting, swaying. Guarding: slower,
+    //   no sprint.
+    // Tuned in MovementSettings.
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterController))]
     public class LocalPlayerLocomotion : MonoBehaviour
@@ -138,9 +128,8 @@ namespace UntitledPoolGame.Player
             if (ik != null) ik.solver.OnPreUpdate += BeforeIK;
         }
 
-        // What the component found on the spawned player: always written if
-        // something is missing, otherwise only with Trace Movement (it was
-        // always on during the first R&D steps).
+        // Logs what was found on the player: always if something's missing,
+        // otherwise with Trace Movement.
         private void Start()
         {
             bool missing = fps == null || moveAction == null || sprintAction == null || jumpAction == null;

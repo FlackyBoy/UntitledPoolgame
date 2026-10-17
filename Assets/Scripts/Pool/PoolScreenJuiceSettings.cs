@@ -2,15 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Every tunable number behind the local players' screen-space "juice" —
-    // Vision Impair's overlay/shake, the charging zoom's shake, and the
-    // one-shot shake/flash pulses for shot/pot/foul/power-pickup. One shared
-    // asset instead of a private copy of each field per LocalPoolPowerEffectReceiver
-    // instance and a further copy of chargeZoomDistance on LocalPoolAimController
-    // — both local players read the same asset, and it's a single place to
-    // see/tune the whole "how does this feel" picture instead of digging
-    // through two scripts' Inspectors. Loaded from Resources, same pattern
-    // as PoolPhysicsSettings.
+    // Screen effects of the local players: Vision Impair's overlay and shake,
+    // the charge shake and zoom, the shake and flash pulses (shot, pot, foul,
+    // power pickup).
     [CreateAssetMenu(fileName = "PoolScreenJuiceSettings", menuName = "Pool/Screen Juice Settings")]
     public class PoolScreenJuiceSettings : ScriptableObject
     {
@@ -26,9 +20,7 @@ namespace UntitledPoolGame.Pool
         // How much closer the camera creeps toward the cue tip as the shot
         // charges up — read by LocalPoolAimController.UpdateAim().
         public float chargeZoomDistance = 0.15f;
-        // Grows continuously from 0 to this value as the shot charges up —
-        // read by LocalPoolPowerEffectReceiver every frame, not a
-        // fixed-duration pulse like the ones below.
+        // Grows with the charge, read every frame.
         public float chargeShakeMaxMagnitude = 0.012f;
 
         [Header("Shot fired")]
@@ -36,9 +28,7 @@ namespace UntitledPoolGame.Pool
         public float shotShakeDuration = 0.1f;
 
         [Header("Ball pocketed")]
-        // No flash here — the light side of a pot comes from the world-space
-        // halo at the actual pocket (see PoolPotEffectSettings), not a flat
-        // screen-space tint.
+        // No flash: a pot lights up the pocket (PoolPotEffectSettings).
         public float potShakeMagnitude = 0.02f;
         public float potShakeDuration = 0.15f;
 

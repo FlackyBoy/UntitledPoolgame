@@ -13,12 +13,8 @@ namespace UntitledPoolGame.Core
         [Min(0f)] public float speed = 1f;
     }
 
-    // Letter-by-letter text animation settings (TextFx, inspired by Febucci's
-    // Text Animator): the persistent effects written as tags in any UI text
-    // (<wave>, <shake>…), how letters appear (pop, drop…), the typewriter
-    // and the way texts leave. Assets/Resources/TextFxSettings, created by
-    // Tools > Pool > Ensure Config Assets Exist; read every frame, so changes
-    // show at once in Play mode. Tooltips in French: read by the designer.
+    // TextFx settings: tag effects (<wave>, <shake>...), letter entrances,
+    // typewriter and exits. Read every frame.
     [CreateAssetMenu(fileName = "TextFxSettings", menuName = "Pool/Text Fx Settings")]
     public class TextFxSettings : ScriptableObject
     {

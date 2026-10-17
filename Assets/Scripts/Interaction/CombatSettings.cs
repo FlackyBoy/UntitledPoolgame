@@ -2,18 +2,11 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // The R&D bare-handed combat (LocalUnarmedMelee with Boxing Punches
-    // ticked — the R&D player variant only), in one place:
-    // - the punches: animated (PROTOFACTOR clips) or procedural (IK), one
-    //   button per hand, the guard after punching, their strength and feel;
-    // - what the one hit goes through (LocalHitGauge): hit gauge, stagger,
-    //   daze, knock-out, wake-up, hit zones and reactions;
-    // - the held guard (block meter, guard break, counter) and the
-    //   attacker's stamina.
-    // The kick's reach, charge and Spartan launch stay on the component.
-    // Assets/Resources/CombatSettings, created by Tools > Pool > Ensure
-    // Config Assets Exist; read every frame, so it can be tuned while
-    // playing. Tooltips in French: read by the designer in the Inspector.
+    // R&D bare-handed combat settings (Boxing Punches, R&D player only):
+    // - punches: animated or IK, one button per hand, guard, strength and feel;
+    // - the hit gauge: stagger, daze, knock-out, wake-up, zones and reactions;
+    // - the held guard (block meter, break, counter) and stamina.
+    // The kick's settings stay on the component. Read every frame.
     [CreateAssetMenu(fileName = "CombatSettings", menuName = "Pool/Combat Settings")]
     public class CombatSettings : ScriptableObject
     {

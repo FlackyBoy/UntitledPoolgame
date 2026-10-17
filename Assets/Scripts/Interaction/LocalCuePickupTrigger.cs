@@ -2,19 +2,14 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Routes the cue's pickup/release through FinalIK's InteractionSystem
-    // (the hands reach for InteractionTargets on the cue, then PickUpCue
-    // attaches it) instead of LocalGrabbable's plain snap-to-hand used for
-    // every other object. Also gated behind whose turn it is (CanUseCueNow),
-    // so the player who isn't up can't steal it and hold the other one's
-    // turn hostage.
+    // Cue pickup through FinalIK's InteractionSystem (the hands reach for the
+    // cue's InteractionTargets, then PickUpCue attaches it). Only on one's
+    // turn (CanUseCueNow).
     [RequireComponent(typeof(LocalPlayerHandController))]
     public class LocalCuePickupTrigger : MonoBehaviour
     {
-        // Bookkeeping token only — LocalPlayerHandController.HeldObject is
-        // typed LocalGrabbable, so the cue still needs one, but its own
-        // PickUp()/Drop() are never called for the cue (see MarkExternallyHeld
-        // on LocalGrabbable). The actual attach/release goes through pickUpCue.
+        // Only so HeldObject has something: the cue's PickUp/Drop are never
+        // called, pickUpCue does the work.
         [SerializeField] private LocalGrabbable cueGrabbable;
 
         // Owns the FBBIK reach-and-grab (InteractionSystem) — see
@@ -34,15 +29,9 @@ namespace UntitledPoolGame.Interaction
             handController = GetComponent<LocalPlayerHandController>();
         }
 
-        // Called by LocalPlayerHandController.TryPickUp(). Returns true if
-        // it actually picked up the cue (so the caller knows not to also
-        // fall through to its own generic pickup logic).
-        //
-        // Range/facing/camera gating is declared on the cue's own
-        // InteractionTrigger component (Ranges -> Character Position /
-        // Camera Position) and evaluated by FinalIK itself via
-        // GetClosestTriggerIndex(). TriggerInteraction() then starts exactly
-        // the effectors listed in that trigger's Interactions.
+        // Called by LocalPlayerHandController.TryPickUp; true if the cue was
+        // taken. Range and facing are set on the cue's InteractionTrigger and
+        // checked by FinalIK.
         public bool TryStartPickup()
         {
             if (cueGrabbable == null || pickUpCue == null || pickUpCue.InteractionSystem == null || pickUpCue.IsBusy) return false;
@@ -59,12 +48,9 @@ namespace UntitledPoolGame.Interaction
             return true;
         }
 
-        // Diagnostic (Debug Logs): why E near the cue did nothing. Replays
-        // FinalIK's own character-position test (InteractionTrigger.
-        // CharacterPosition.IsInRange) on this player's cue, and prints what
-        // it depends on: the trigger's forward flattened on the ground (zero
-        // when the cue stands upright — FinalIK then rejects the range as a
-        // singularity), the horizontal distance and the facing angle.
+        // Diagnostic: why E near the cue did nothing. Replays FinalIK's
+        // character-position test and logs what it depends on (the trigger's
+        // flattened forward is zero when the cue stands upright).
         private void LogRefusal(RootMotion.FinalIK.InteractionSystem interactionSystem, string reason)
         {
             if (!debugLogs) return;
@@ -94,9 +80,8 @@ namespace UntitledPoolGame.Interaction
             Debug.Log($"[CuePickup] {name}: pickup refused — {reason}; pickup zones in range: {interactionSystem.triggersInRange.Count}{details}", this);
         }
 
-        // The facing FinalIK accepts from where the character stands — same
-        // maths as InteractionTrigger.CharacterPosition.IsInRange (plugin
-        // left untouched), for the diagnostic only.
+        // Same maths as InteractionTrigger.CharacterPosition.IsInRange, for the
+        // diagnostic only.
         private static bool ExpectedFacing(RootMotion.FinalIK.InteractionTrigger.CharacterPosition cp, Transform character, Transform trigger, out Vector3 facing)
         {
             facing = Vector3.zero;
@@ -125,9 +110,8 @@ namespace UntitledPoolGame.Interaction
             return true;
         }
 
-        // Called by LocalPlayerHandController.Drop() instead of a plain
-        // LocalGrabbable.Drop() whenever the held object is this cue. Also
-        // covers a hand still reaching for it (IsBusy), which is cut short.
+        // Called by Drop when the held object is this cue; also cuts a reach
+        // short.
         public bool TryReleaseIfCue(LocalGrabbable grabbable)
         {
             if (grabbable != cueGrabbable || pickUpCue == null || !pickUpCue.IsBusy) return false;

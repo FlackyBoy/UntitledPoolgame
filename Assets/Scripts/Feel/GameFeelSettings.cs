@@ -39,13 +39,9 @@ namespace UntitledPoolGame.Core
         [Range(0f, 3f)] public float intensity = 1f;
     }
 
-    // Which Feel sequence (MMF_Player prefab) plays at which moment of a
-    // match — the game only says "foul, player 2, here" (GameFeel), the
-    // designer builds what it feels like in Feel's inspector: sound, pad
-    // rumble, freeze frame, particles, plus our own feedbacks for the HUD text
-    // (MMF_PoolHudText) and the camera (MMF_PoolScreenJuice).
-    // Assets/Resources/GameFeelSettings, created by Tools > Pool > Ensure
-    // Config Assets Exist. Tooltips in French: read by the designer.
+    // Which Feel sequence (MMF_Player prefab) plays at which moment. The game
+    // only says "foul, player 2, here" (GameFeel); the sequence is built in
+    // Feel's inspector, with our HUD text and camera feedbacks.
     [CreateAssetMenu(fileName = "GameFeelSettings", menuName = "Pool/Game Feel Settings")]
     public class GameFeelSettings : ScriptableObject
     {

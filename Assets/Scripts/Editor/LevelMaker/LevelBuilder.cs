@@ -26,7 +26,7 @@ namespace UntitledPoolGame.PoolEditor
         // ---------- Queries ----------
 
         public static List<T> FindAll<T>() where T : Object =>
-            Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None).ToList();
+            Object.FindObjectsByType<T>(FindObjectsInactive.Include).ToList();
 
         public static PoolMatchRules Rules => FindAll<PoolMatchRules>().FirstOrDefault();
         public static PoolTableSurface Surface => FindAll<PoolTableSurface>().FirstOrDefault();

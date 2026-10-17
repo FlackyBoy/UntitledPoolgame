@@ -5,20 +5,14 @@ namespace UntitledPoolGame.Interaction
 {
     // R&D guard (CombatSettings > Garde), boxing punches only: hold Block
     // (left Ctrl / LT).
-    // - While held: no punch, no kick, slower, no sprint (LocalPlayerLocomotion
-    //   reads IsBlocking); the IdleBlockHigh clip on the combat layer.
-    // - A punch or kick from the front (within Block Angle of the view) to
-    //   the head or body is blocked: the BlockedHigh clip, the gauge only
-    //   gets Blocked Damage (Blocked Kick Damage: the foot partly goes
-    //   through), the body only Blocked Force. The legs, the sides and the
-    //   back aren't covered.
-    // - Each blocked blow costs the block meter; empty — or a Spartan kick —
-    //   the guard breaks: no guard for Guard Break Time, a heavy hit
-    //   reaction, and the blows that follow go to the hit gauge as usual
-    //   (the hit gauge itself isn't touched by the break).
-    // - Counter: a punch thrown within Counter Window of a blocked blow goes
-    //   out faster and hits harder.
-    // The attacker asks the victim: TryBlock, from LocalUnarmedMelee.TryHit.
+    // - Held: no punch or kick, slower, no sprint; IdleBlockHigh clip.
+    // - Blows from the front to the head or body are blocked: BlockedHigh
+    //   clip, reduced gauge damage and force. Legs, sides and back aren't
+    //   covered.
+    // - Each blocked blow costs block meter; empty, or a Spartan kick, breaks
+    //   the guard for Guard Break Time.
+    // - Counter: a punch within Counter Window of a block is faster and harder.
+    // The attacker calls TryBlock from TryHit.
     public partial class LocalUnarmedMelee
     {
         [Tooltip("Action de la garde (Ctrl gauche / LT, maintenir), avec les poings de boxe.")]
@@ -61,9 +55,7 @@ namespace UntitledPoolGame.Interaction
             return "?";
         }
 
-        // 0.3 s after the guard goes up: is the block pose actually showing?
-        // Logs what's in the way if not (combat layer state and weight, the
-        // hit reaction layer above it).
+        // 0.3 s after raising the guard: logs what hides the block pose, if so.
         private void DiagnoseBlockPose()
         {
             if (!debugLogs) return;
@@ -135,9 +127,8 @@ namespace UntitledPoolGame.Interaction
             Vector3 toAttacker = Vector3.ProjectOnPlane(-forceDirection, Vector3.up);
             if (toAttacker.sqrMagnitude < 1e-4f || Vector3.Angle(FlatForward(), toAttacker) > cfg.blockAngle) return false;
 
-            // A Spartan kick breaks the guard: taken like a blocked blow (no
-            // K.O., no launch) — or, Spartan Breaks Guard Only off, goes
-            // straight through it.
+            // A Spartan kick breaks the guard (taken like a blocked blow), or
+            // goes straight through with Spartan Breaks Guard Only off.
             if (spartan)
             {
                 BreakGuard(cfg, "coup de pied spartiate");

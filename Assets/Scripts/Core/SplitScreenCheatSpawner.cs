@@ -5,20 +5,13 @@ using UnityEngine.SceneManagement;
 
 namespace UntitledPoolGame.Core
 {
-    // Test-only cheats for split-screen with a single keyboard:
-    // - C+P: force-join another local player, without a second physical
-    //   device. It gets a free gamepad if one is connected, otherwise the
-    //   keyboard and mouse, taken from their owner (who stays put until Tab
-    //   gives them back). Never joined without a device: PlayerInput then
-    //   has no InputUser, its actions read every device (it moved with
-    //   player 1's keyboard) and it can't be given one later (Invalid user);
-    // - Tab: hands the keyboard and mouse to the next player (by index), so
-    //   one person can play both sides. The player losing them gets the
-    //   gamepad the other one had, if any.
-    // The debug menu has the same actions as buttons (JoinPlayer,
-    // GiveKeyboardTo). Created automatically in any scene with a
-    // PlayerInputManager (it used to be placed by hand in the R&D arena only,
-    // so C+P did nothing anywhere else).
+    // Test cheats for split screen on one keyboard:
+    // - C+P: joins another player. It takes a free gamepad, otherwise the
+    //   keyboard and mouse from their owner (until Tab). Never without a
+    //   device: such a PlayerInput reads every device and can't get one later.
+    // - Tab: hands keyboard and mouse to the next player, to play both sides.
+    // Same actions in the debug menu. Created in any scene with a
+    // PlayerInputManager.
     public class SplitScreenCheatSpawner : MonoBehaviour
     {
         private const string KeyboardScheme = "Keyboard&Mouse";
@@ -70,8 +63,7 @@ namespace UntitledPoolGame.Core
         {
             if (manager == null) manager = PlayerInputManager.instance;
             if (manager == null) return "Pas de PlayerInputManager dans la scène.";
-            // -1 = no limit (the bar's setting): the old check compared
-            // against it and always refused.
+            // -1 = no limit.
             if (manager.maxPlayerCount >= 0 && manager.playerCount >= manager.maxPlayerCount)
                 return $"Déjà {manager.playerCount} joueurs (Max Player Count du PlayerInputManager).";
 
@@ -97,10 +89,9 @@ namespace UntitledPoolGame.Core
                 : $"J{joined.playerIndex + 1} ajouté, avec le clavier.";
         }
 
-        // Moves the keyboard and mouse to target; its previous owner gets
-        // target's gamepad in exchange, if it had one. activate false: from
-        // the debug menu, which turns every player's input back on itself
-        // when it closes (on now, the menu's clicks would move the player).
+        // Moves keyboard and mouse to target, whose gamepad goes to the previous
+        // owner. activate false: from the debug menu, which turns the inputs
+        // back on itself when it closes.
         public static string GiveKeyboardTo(PlayerInput target, bool activate = true)
         {
             if (target == null) return "Aucun joueur à qui passer le clavier.";

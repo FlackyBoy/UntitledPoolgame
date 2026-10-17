@@ -3,13 +3,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // Assign your custom table model's prefab here, and tune these dimensions
-    // to match it — Tools > Pool > Select Custom Table Settings to open this
-    // asset. Every "Build Table"/"Attach Physics" command in PoolTableBuilder
-    // reads these instead of hardcoded constants, so fitting a new table
-    // model is just a matter of editing numbers in the Inspector, no code
-    // editing needed. Defaults match the original placeholder table
-    // (approximate regulation size, in meters).
+    // The custom table model and its sizes (metres), read by every build
+    // command of PoolTableBuilder. Tools > Pool > Select Custom Table
+    // Settings opens it.
     public class PoolTableAssetSettings : ScriptableObject
     {
         [Header("Custom table model")]

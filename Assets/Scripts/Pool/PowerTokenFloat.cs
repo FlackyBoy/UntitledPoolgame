@@ -2,13 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // The idle animation of a power token on the table (the generated
-    // Token_* prefabs, see PowerTokenGenerator): it spins, tilted on a
-    // corner like an item box, and bobs gently. Only its pivot child moves —
-    // the root stays where PoolPowerCrate put it, and the pickup (a distance
-    // check on the crate) doesn't depend on any of this. Each token starts
-    // at a random point of the cycle so several on the table don't move in
-    // step.
+    // Idle animation of a power token: spins tilted on a corner like an item
+    // box and bobs. Only the pivot child moves, the pickup doesn't depend on
+    // it. Random start so tokens don't move in step.
     public class PowerTokenFloat : MonoBehaviour
     {
         [Tooltip("Ce qui tourne et flotte (vide = le premier enfant).")]

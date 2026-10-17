@@ -3,19 +3,12 @@ using UnityEngine.InputSystem;
 
 namespace UntitledPoolGame.Pool
 {
-    // Lets a player activate their stored power (see PoolMatchRules.
-    // GrantPower/TryActivatePower) with a button press, and switch between
-    // the two powers in stock (SwitchPower: wheel, D-pad). When it may be
-    // launched (own turn only, opponent's turn only, while the balls roll)
-    // is set per power — see PoolPower and PoolMatchRules.CheckPowerUse.
-    // Reads the "Next" action (Q / gamepad B-Circle in the local
-    // input asset; it used to share X-Square with Attack). Added to the
-    // player automatically by LocalPlayerHandController when missing.
-    //
-    // A PocketTargetPower (Aimant, Bloquer une poche) first needs a pocket,
-    // a TablePointPower (Trou) a point of the table: the press starts a pick
-    // instead (LocalPocketPointer: look at the pocket / the felt),
-    // Interact confirms, "Next" again cancels (the power stays in hand).
+    // Launches the power in stock with Next (Q / B) and switches between the
+    // two with SwitchPower (wheel, D-pad). When it may be launched is set per
+    // power (PoolMatchRules.CheckPowerUse). Added by LocalPlayerHandController.
+    // A pocket power (Aimant, Bloquer une poche) or a table power (Trou)
+    // starts a pick instead (LocalPocketPointer): Interact confirms, Next
+    // cancels and keeps the power.
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPoolPowerController : MonoBehaviour
     {
@@ -37,10 +30,8 @@ namespace UntitledPoolGame.Pool
 
         // A PocketTargetPower or a TablePointPower while picking, else null.
         private PoolPower choosingPower;
-        // The pick ended (confirmed or cancelled) this frame: Interact must
-        // still count as taken for the scripts running after this one
-        // (aim entry, cue pickup), or the confirming press would also grab
-        // or drop the cue.
+        // The pick ended this frame: Interact still counts as taken for the
+        // scripts after this one, or the same press would grab or drop the cue.
         private int choiceEndedFrame = -1;
 
         // Read by LocalPoolAimController (stays out of the way, keeps
@@ -50,9 +41,7 @@ namespace UntitledPoolGame.Pool
         public bool IsChoosingTablePoint => choosingPower is TablePointPower;
         public PoolPocket TargetedPocket => choosingPower is PocketTargetPower ? pointer.Pointed : null;
 
-        // What the pick is on right now — the point of the felt, or the
-        // pocket — for the pointing gesture (LocalPowerGesture). False while
-        // nothing valid is under the pointer.
+        // What the pick points at (felt point or pocket), for the gesture.
         public bool TryGetPickTarget(out Vector3 point)
         {
             point = tablePoint;
@@ -89,19 +78,11 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            // GetEffectivePlayerIndex, NOT the raw PlayerInput.playerIndex:
-            // in real split-screen it resolves to the same physical player
-            // every time, so a held power can only ever be triggered by
-            // whoever it actually belongs to (a plain CanPlayerShoot() check
-            // would let a press meant for one player's index activate/
-            // consume the OTHER player's power via its solo-testing
-            // fallback). In hot-seat solo (one PlayerInput playing both
-            // sides), it resolves to whichever side is currently up instead.
+            // Effective index: in split screen a player only ever triggers
+            // their own power; in hot-seat solo it's the side being played.
             int effectivePlayer = rules.GetEffectivePlayerIndex(playerInput.playerIndex);
 
-            // Wheel / D-pad: the other power in stock becomes the selected
-            // one. A pick under way ends by itself (UpdateChoice: the power
-            // in hand is no longer the one being aimed).
+            // A pick under way ends by itself (UpdateChoice).
             if (switchPowerAction != null && switchPowerAction.WasPerformedThisFrame() && Time.unscaledTime >= nextSwitchTime)
             {
                 float value = switchPowerAction.ReadValue<float>();
@@ -117,9 +98,7 @@ namespace UntitledPoolGame.Pool
 
             if (!usePowerAction.WasPressedThisFrame()) return;
 
-            // When to launch is decided per power (PoolPower) and checked in
-            // one place, PoolMatchRules.CheckPowerUse; a refused press is
-            // reported so the HUD can say why instead of ignoring it.
+            // A refused press is reported so the HUD can say why.
             PowerRefusal refusal = rules.CheckPowerUse(effectivePlayer);
             PoolPower power = rules.GetHeldPower(effectivePlayer);
             // Ball in hand owns the camera and Interact, the 8-ball call
@@ -148,10 +127,8 @@ namespace UntitledPoolGame.Pool
 
         private void UpdateChoice(PoolMatchRules rules, int effectivePlayer)
         {
-            // The power is no longer the one in hand (turn passed in
-            // hot-seat solo, match restarted), or no longer usable now (turn
-            // changed, balls started rolling), or ball in hand took over the
-            // camera: drop the pick, keep the power.
+            // Not the power in hand any more, not usable now, or ball in hand
+            // took the camera: drop the pick, keep the power.
             PoolPower held = rules.GetHeldPower(effectivePlayer);
             if (held != choosingPower || rules.CheckPowerUse(effectivePlayer) != PowerRefusal.None
                 || (aimController != null && aimController.IsPlacementViewActive)

@@ -3,14 +3,10 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // "Groupe identique": for the opponent's next turn (or the one under
-    // way), every ball but the cue ball looks the same — solids, stripes and
-    // the 8 alike — so they can no longer tell their own balls from the
-    // others. The rules don't change: hitting a wrong ball first is still a
-    // foul, the 8 still loses the game if potted early. Turn-bound like
-    // Vision Impair: PoolMatchRules.QueueIdenticalGroups / SwitchTurn. The
-    // HUD's plate (balls left in each group) is hidden for as long as it
-    // lasts, or counting the balls left would give them away.
+    // "Groupe identique": for the opponent's next turn every ball but the cue
+    // ball looks the same. The rules don't change. Turn-bound like Vision
+    // Impair. The HUD plate is hidden meanwhile, or counting balls would
+    // give it away.
     [CreateAssetMenu(fileName = "IdenticalGroupsPower", menuName = "Pool/Powers/Identical Groups (Attack)")]
     public class IdenticalGroupsPower : PoolPower
     {
@@ -46,7 +42,7 @@ namespace UntitledPoolGame.Pool
         {
             if (look == Look.LikeBall)
             {
-                foreach (PoolBall ball in FindObjectsByType<PoolBall>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                foreach (PoolBall ball in FindObjectsByType<PoolBall>(FindObjectsInactive.Include))
                     if (!ball.IsCueBall && ball.Number == lookBallNumber) return BallDisguise.LookOf(ball);
                 Debug.LogWarning($"[IdenticalGroups] Bille {lookBallNumber} introuvable : aspect incolore à la place.");
             }

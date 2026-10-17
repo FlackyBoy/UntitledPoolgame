@@ -6,15 +6,9 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Core
 {
-    // Test-only cheat: press G to spawn an inert "dummy" copy of PlayerLocal
-    // a few meters in front of the (first found) local player — lets the
-    // ragdoll-on-impact feature be tested solo (throw the test object at the
-    // dummy) without needing a real second local player joined through
-    // PlayerInputManager/a second physical device. The dummy's PlayerInput
-    // never gets paired to a device (spawned directly via Instantiate, not
-    // PlayerInputManager.JoinPlayer), so it just stands there unresponsive
-    // to input — its LocalPlayerRagdollController still reacts to collisions
-    // normally, since OnCollisionEnter doesn't depend on input at all.
+    // Test cheat: G spawns an inert copy of the player a few metres in front,
+    // to test knockdowns alone. It's never paired to a device, but still
+    // reacts to hits.
     public class RagdollDummySpawner : MonoBehaviour
     {
         [SerializeField] private GameObject dummyPrefab;
@@ -52,18 +46,10 @@ namespace UntitledPoolGame.Core
             Debug.Log("[RagdollDummySpawner] Spawned a dummy.");
         }
 
-        // A dummy is a copy of the player: only its body stays live (it
-        // still falls, reacts to hits and fills its hit gauge). Also used by
-        // the R&D arena tool for the dummies placed in the scene.
-        // - Spawned directly (not through PlayerInputManager.JoinPlayer),
-        //   nothing stops its PlayerInput from auto-pairing to whatever
-        //   device is free (typically the keyboard already driving player
-        //   1): disabled outright.
-        // - The controllers (move, R&D move, aim, hands) are off: it doesn't
-        //   move or aim at all.
-        // - Never joined, its Camera never gets a split-screen viewport rect
-        //   (stays full-screen) — left on, it would draw over the real
-        //   players' views; same for its AudioListener.
+        // Only the body of a dummy stays live (falls, reacts, fills its gauge).
+        // Also used by the R&D arena. Its PlayerInput would grab a free device,
+        // its controllers would move it, and its camera and AudioListener
+        // would draw over the players': all off.
         public static void MakeInert(GameObject dummy)
         {
             foreach (PlayerInput c in dummy.GetComponentsInChildren<PlayerInput>(true)) c.enabled = false;

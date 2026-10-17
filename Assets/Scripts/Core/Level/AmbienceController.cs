@@ -109,7 +109,7 @@ namespace UntitledPoolGame.Core
         // players' own (cameras, held objects).
         private IEnumerable<Light> DecorLights()
         {
-            foreach (Light light in FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (Light light in FindObjectsByType<Light>(FindObjectsInactive.Include))
             {
                 if (light == mainLight || light.type == LightType.Directional) continue;
                 if (light.GetComponentInParent<UnityEngine.InputSystem.PlayerInput>() != null) continue;

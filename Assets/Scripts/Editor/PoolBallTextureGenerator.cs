@@ -5,13 +5,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // Bakes a simple numbered billiard-ball texture (solid fill or a white
-    // stripe band, plus a number badge on two opposite sides) so players can
-    // tell balls apart — needed for 9-ball/14.1 order, not just 8-ball groups,
-    // where the old flat-color-only material made e.g. ball 1 and ball 9
-    // (which share the same base color, like real ball sets) indistinguishable.
-    // Editor-only: written once to a PNG asset by PoolTableBuilder, not
-    // regenerated at runtime.
+    // Bakes a numbered ball texture (solid or striped, number on two sides)
+    // so balls can be told apart (1 and 9 share a colour). Written once to a
+    // PNG by PoolTableBuilder.
     internal static class PoolBallTextureGenerator
     {
         private const int Width = 256;

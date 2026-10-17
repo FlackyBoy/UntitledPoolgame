@@ -2,14 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // "Bille destructrice": the activating player's next shot destroys the
-    // first ball the cue ball touches — an explosion, and the ball leaves the
-    // table as if pocketed by the shooter (PoolMatchRules.ArmBallBlast /
-    // HandleFirstContact). The rule sets then judge the shot as usual: one of
-    // their own balls keeps the turn; a wrong ball is still destroyed, but
-    // the first contact was illegal so it's a foul (ball in hand for the
-    // other player) and the ball is gone in the other player's favour.
-    // Consumed by that next shot, whatever it touches (or misses).
+    // "Bille destructrice": the launcher's next shot destroys the first ball
+    // the cue ball touches, as if the shooter potted it. The rules judge the
+    // shot as usual: a wrong ball is still gone, but it's a foul.
     [CreateAssetMenu(fileName = "BallBlastPower", menuName = "Pool/Powers/Ball Blast")]
     public class BallBlastPower : PoolPower
     {

@@ -9,23 +9,15 @@ using K = UntitledPoolGame.Core.UiKit;
 
 namespace UntitledPoolGame.Core
 {
-    // The main menu of the validated UI direction (prototypes
-    // docs/ui/synthese.html and docs/ui/parcours.html, "Menu A · billes"):
-    // the pool table in the bar at night; on the table pages every choice is
-    // a ball that the cue aims at and shoots, the other choices are "pop"
-    // cards and pills.
+    // Main menu (prototypes docs/ui/synthese.html and parcours.html, "Menu A"):
+    // the table in the bar at night, choices are balls the cue shoots, the
+    // rest pop cards and pills.
     //
-    // Every screen (Title, NewGame, Load, Level, Mode, Multiplayer, Lobby,
-    // Settings) is a MenuScreen drawn by MenuRenderer: elements, positions,
-    // colours, texts, actions, effects and Feel sequences are edited in
-    // Tools > Pool > Menu Studio. This class brings them to life: aiming
-    // and shooting, the action of each element, and the parts it fills itself
-    // (elements found by id: "context", "levels", "rules", "slot1"/"slot2"
-    // and their "-label", "aim-hint").
-    //
-    // Replaces PoolMatchRules' OnGUI mode select (PoolMatchRules.ExternalMenu)
-    // and starts the match through PoolMatchRules.RequestStart or the
-    // LevelLoader. Mouse, keyboard or any gamepad.
+    // Each screen is a MenuScreen drawn by MenuRenderer and edited in
+    // Tools > Pool > Menu Studio. This class does the aiming and shooting,
+    // the actions, and fills the parts found by id ("context", "levels",
+    // "rules", "slot1"/"slot2" and their "-label", "aim-hint").
+    // Starts the match through PoolMatchRules.RequestStart or LevelLoader.
     public class SyntheseMenu : MonoBehaviour
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -38,10 +30,8 @@ namespace UntitledPoolGame.Core
 
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => TryCreate();
 
-        // Shown in the main menu scene (MainMenuScene marker), and in a level
-        // played straight from the editor (a PoolMatchRules, no session from
-        // the menu) — not in a level the menu just launched, nor in a scene
-        // that asks to skip it (SkipMainMenu, which starts the match itself).
+        // In the menu scene, and in a level played straight from the editor;
+        // not in a level the menu launched, nor with SkipMainMenu.
         private static void TryCreate()
         {
             if (FindAnyObjectByType<SyntheseMenu>() != null) return;
@@ -99,9 +89,8 @@ namespace UntitledPoolGame.Core
         private string levelName = "";
         private int levelIndex;
 
-        // J1 is whoever drives the menu (the device of the last confirm);
-        // J2 joins in the lobby by pressing a button on another device.
-        // Handed to the level through GameSession.
+        // J1 drives the menu (device of the last confirm); J2 joins in the
+        // lobby with another device. Passed on through GameSession.
         private InputDevice menuDevice;
         private readonly InputDevice[] slotDevices = new InputDevice[2];
         private bool joinedThisFrame;
@@ -399,10 +388,8 @@ namespace UntitledPoolGame.Core
             current = null;
         }
 
-        // The chosen level with this game type: loaded behind the loading
-        // screen, with J1 (and J2 in local multiplayer). In a level played
-        // straight from the editor, choosing that same level just starts the
-        // match in place.
+        // Loads the chosen level behind the loading screen. Played straight
+        // from the editor, choosing the same level starts the match in place.
         private void Launch(PoolGameMode gameMode)
         {
             List<LevelEntry> levels = GameFlowSettings.Instance.levels;
@@ -498,9 +485,8 @@ namespace UntitledPoolGame.Core
             lastFocused = o;
         }
 
-        // J1 = the device driving the menu; J2 = the first other device that
-        // presses its button (A / Start on a pad, Enter / Space on the
-        // keyboard when J1 plays with a pad).
+        // J2 = the first other device to press its button (A / Start, or
+        // Enter / Space when J1 is on a pad).
         private void UpdateSlots()
         {
             joinedThisFrame = false;

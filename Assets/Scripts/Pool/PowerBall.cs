@@ -2,16 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Marker for a numbered ball that also grants a power when legally
-    // pocketed — same pattern as Cue.cs (a plain marker component; base rules
-    // never need to know about it). PoolMatchRules listens for this via the
-    // existing PoolBall.Pocketed hook, independently of group/order rules —
-    // pocketing a power ball still counts normally for 8-ball/9-ball/14.1.
-    //
-    // Every non-cue ball gets one of these at rack time (see
-    // PoolTableBuilder), starting with Power == null — PoolPowerBallRotator
-    // is what actually assigns/clears Power and the glow as it rotates which
-    // ball currently carries one, rather than a fixed manual assignment.
+    // An object ball that also grants a power when potted (it still counts
+    // normally for the rules). Every object ball has one; PoolPowerBallRotator
+    // decides which one carries a power and sets its glow.
     public class PowerBall : MonoBehaviour
     {
         private PoolPower power;
@@ -19,9 +12,7 @@ namespace UntitledPoolGame.Pool
 
         private Light glowLight;
         private Renderer ballRenderer;
-        // Whatever material the ball normally shows (its number/color
-        // texture) — cached once so ClearGlow() can restore it after a
-        // custom PowerType material was swapped in.
+        // The ball's own material, restored by ClearGlow.
         private Material originalMaterial;
         public Material OriginalMaterial => originalMaterial;
 
@@ -31,13 +22,9 @@ namespace UntitledPoolGame.Pool
             if (ballRenderer != null) originalMaterial = ballRenderer.sharedMaterial;
         }
 
-        // Called by PoolPowerBallRotator. color/intensity/range come from
-        // PoolPowerSpawnSettings so the glow always matches the crates'
-        // color code for the same PowerType. material is optional (see
-        // PoolPowerSpawnSettings.GetBallMaterial) — a custom shader/material
-        // to swap the ball's own renderer to for as long as it carries this
-        // power, on top of the light. Null just skips the swap and leaves
-        // the ball's normal material alone.
+        // Called by PoolPowerBallRotator. Colours match the crates of the same
+        // type. material (optional) replaces the ball's material while it
+        // carries the power.
         public void SetGlow(PoolPower assignedPower, Color color, float intensity, float range, Material material)
         {
             power = assignedPower;
@@ -56,12 +43,8 @@ namespace UntitledPoolGame.Pool
             glowLight.intensity = intensity;
             glowLight.enabled = true;
 
-            // sharedMaterial, not material: this is meant to be the SAME
-            // asset across every ball currently carrying this PowerType, not
-            // a per-ball instance — nothing here ever edits its properties.
-            // Through BallDisguise: while the balls all look alike
-            // (IdenticalGroupsPower), the swap waits for the real looks to
-            // come back instead of singling this ball out.
+            // sharedMaterial: one asset for every ball of that type. Through
+            // BallDisguise, so it waits while all balls look alike.
             if (ballRenderer != null && material != null)
                 BallDisguise.SetBaseMaterial(ballRenderer, material);
         }

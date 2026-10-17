@@ -9,28 +9,21 @@ using UnityEngine.UIElements;
 
 namespace UntitledPoolGame.Core
 {
-    // Letter-by-letter animation of UI Toolkit labels, our own take on
-    // Febucci's Text Animator: effects are written as tags right in the texts
-    // of the settings assets (MenuSettings, HudSettings,
-    // LoadingScreenSettings…), so the designer animates a word without code.
+    // Letter-by-letter animation of UI Toolkit labels, our take on Febucci's
+    // Text Animator: effects are tags in the texts of the settings assets,
+    // so a word can be animated without code.
     //
-    //   persistent, while the text is shown: <wave> <shake> <wiggle> <bounce>
-    //     <pulse> <swing> <rainbow>, closed by </wave>…; a= and s= scale the
-    //     force and the speed: <wave a=2 s=0.5>
+    //   while shown: <wave> <shake> <wiggle> <bounce> <pulse> <swing>
+    //     <rainbow>, closed by </wave>...; a= and s= scale force and speed
     //   entrance of the letters inside: <pop> <drop> <fade> <slide> <grow>
     //   typewriter only: <pause=0.4> waits, <speed=2> types faster
     //
-    // Other tags (<b>, <color=…>, <size=…>) are Unity's rich text and pass
-    // through untouched. Each letter is moved, scaled, turned and tinted on
-    // its four vertices after Unity lays the text out
-    // (TextElement.PostProcessTextVertices, Unity 6), so a label stays a
-    // single element whatever the length. Strengths and timings:
-    // TextFxSettings (Resources).
+    // Unity's rich text tags pass through. Letters are moved on their
+    // vertices after layout (PostProcessTextVertices), so a label stays one
+    // element. Strengths and timings: TextFxSettings.
     //
-    // Set: the text, with its effects, shown at once (cheap when the text has
-    // no tag; calling it every frame with the same text does nothing).
-    // Reveal: letters pop in one after the other. Type: typewriter. Hide:
-    // letters leave.
+    // Set: shown at once (same text again does nothing). Reveal: letters pop
+    // in one by one. Type: typewriter. Hide: letters leave.
     public static class TextFx
     {
         private enum Kind { Wave, Shake, Wiggle, Bounce, Pulse, Swing, Rainbow }

@@ -3,16 +3,11 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Attaches the cue to the character once the InteractionSystem's hands
-    // reach it, and brings it into its held pose. Started from
-    // LocalCuePickupTrigger (InteractionSystem.TriggerInteraction), released
-    // through ReleaseCue.
-    //
-    // Adapted from FinalIK's demo PickUp2Handed (Plugins/RootMotion/FinalIK/
-    // _DEMOS/FBBIK/Scripts) rather than subclassing it, so a FinalIK update
-    // can't silently undo the changes this needs: a configurable primary
-    // effector (the demo hardcodes the left hand), a fixed body-relative held
-    // rotation, and a hold pose that stops chasing holdPoint once reached.
+    // Attaches the cue once the InteractionSystem's hands reach it and brings
+    // it to its held pose. Started by LocalCuePickupTrigger, released by
+    // ReleaseCue. Adapted from FinalIK's PickUp2Handed demo rather than
+    // inherited, so a FinalIK update can't undo our changes (primary
+    // effector, fixed held rotation, hold pose that stops once reached).
     public class PickUpCue : MonoBehaviour
     {
         [SerializeField] private InteractionSystem interactionSystem;
@@ -26,25 +21,19 @@ namespace UntitledPoolGame.Interaction
         // Smoothing time of the move into the held pose — higher feels heavier.
         [SerializeField] private float pickUpTime = 0.3f;
 
-        // Whose Start/Pause events drive the cue's own state (parenting,
-        // kinematic, held pose). Must be one of the effectors the cue's
-        // InteractionTrigger actually starts, or the cue never attaches.
+        // Its events drive the cue's state. Must be an effector the cue's
+        // InteractionTrigger starts, or the cue never attaches.
         [SerializeField] private FullBodyBipedEffector primaryEffector = FullBodyBipedEffector.LeftHand;
 
-        // On: the held rotation is Hold Rotation Offset relative to the
-        // character, identical however the cue was lying. Off: it copies
-        // Pivot's rotation at the moment the pickup starts, which follows how
-        // the cue was lying.
+        // On: held rotation = Hold Rotation Offset, however the cue was lying.
+        // Off: copies Pivot's rotation when the pickup starts.
         [SerializeField] private bool useFixedHeldRotation = true;
         // Tune with the "Log held cue rotation offset" context menu below.
         [SerializeField] private Vector3 holdRotationOffset = new Vector3(0f, 0f, 90f);
 
-        // The arm bend goals (FBBIK Left/Right Arm chains) only make sense
-        // with the cue in hand: without it they kept pulling the elbows
-        // toward the cue-holding pose. Weight 0 when not holding, blended up
-        // to this value once the hands are on the cue, and back down on
-        // release. Only written while blending, so the fists' own elbow
-        // goals (LocalUnarmedMelee, hands empty) aren't overwritten.
+        // Arm bend goals only matter with the cue in hand (they pulled the
+        // elbows otherwise): 0 without it, blended to this value once held.
+        // Written only while blending, so the punches' goals aren't overwritten.
         [Header("Arm bend goals")]
         [Tooltip("Poids des bend goals des bras (chaînes Left/Right Arm du FBBIK) quand la queue est tenue. Sans la queue, il est à 0.")]
         [SerializeField] private float heldArmBendWeight = 1f;
@@ -59,27 +48,20 @@ namespace UntitledPoolGame.Interaction
 
         public InteractionSystem InteractionSystem => interactionSystem;
 
-        // True from the moment a hand starts reaching for the cue until it has
-        // fully let go of it — not just while actually holding it. Treating the
-        // reach as "not held" let a second Interact press during it fall back to
-        // a plain LocalGrabbable.Drop() while the reach carried on, leaving the
-        // cue attached to the hand with nothing tracking it.
+        // From the start of the reach until fully let go: a second Interact
+        // during the reach left the cue stuck to the hand.
         public bool IsBusy =>
             interactionSystem != null && obj != null &&
             interactionSystem.GetInteractionObject(primaryEffector) == obj &&
             (interactionSystem.IsPaused(primaryEffector) || interactionSystem.IsInInteraction(primaryEffector));
 
-        // Held AND done moving into the held pose — from then on LateUpdate
-        // no longer writes the cue's transform, so another script
-        // (LocalCueMelee's swing) can move it without being overwritten.
+        // Held and in pose: LateUpdate stops writing the cue, so the swing can
+        // move it.
         public bool IsSettled => interactionSystem != null && obj != null && Holding && holdWeight >= 0.999f;
 
         private Quaternion HeldRotation => interactionSystem.transform.rotation * Quaternion.Euler(holdRotationOffset);
 
-        // Read by LocalCueHolder (the procedural pickup), which reuses this
-        // component's carry pose rather than duplicating its settings: where
-        // the cue ends up once held, its fixed rotation there, and the
-        // transform it's parented to.
+        // Carry pose, reused by LocalCueHolder.
         public Transform HoldPoint => holdPoint;
         public Quaternion CarryRotation => HeldRotation;
         public Transform CarryParent => interactionSystem != null ? interactionSystem.transform : null;
@@ -133,9 +115,8 @@ namespace UntitledPoolGame.Interaction
             interactionSystem.OnInteractionResume -= OnDrop;
         }
 
-        // Once held: mid-reach, the hands haven't attached the cue yet, so the
-        // interaction is cut short (Stop doesn't fire the pause that would
-        // attach it) and it stays where it was lying.
+        // Mid-reach the cue isn't attached yet: the interaction is cut short and
+        // the cue stays where it was.
         public void ReleaseCue()
         {
             if (interactionSystem == null) return;
@@ -178,11 +159,8 @@ namespace UntitledPoolGame.Interaction
             if (obj.TryGetComponent(out Rigidbody rb)) rb.isKinematic = false;
         }
 
-        // Only while moving into the held pose: holdPoint sits on the spine and
-        // sways with the body, so chasing it for the whole hold made the cue
-        // drift further off the longer it was carried. Once there, the cue just
-        // rides along as a child of the character (see OnPause), and
-        // LocalPoolAimController is free to move it while aiming.
+        // Only while moving into the held pose: holdPoint sways with the body
+        // and chasing it made the cue drift. Then it rides along as a child.
         private void LateUpdate()
         {
             if (interactionSystem == null || obj == null) return;
@@ -196,11 +174,9 @@ namespace UntitledPoolGame.Interaction
                 Quaternion.Lerp(pickUpRotation, holdPoint.rotation, holdWeight));
         }
 
-        // Logs the cue's current rotation relative to the character, in Hold
-        // Rotation Offset's own terms. Use: turn Use Fixed Held Rotation off,
-        // pick the cue up so it looks right and the body stands straight,
-        // right-click this component's header -> this entry, copy the logged
-        // value into Hold Rotation Offset, turn Use Fixed Held Rotation back on.
+        // Logs the cue's rotation in Hold Rotation Offset terms. Turn Use Fixed
+        // Held Rotation off, pick the cue up so it looks right, run this from
+        // the component's menu, copy the value, turn the option back on.
         [ContextMenu("Log held cue rotation offset")]
         private void LogHeldRotationOffset()
         {

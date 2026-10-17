@@ -3,12 +3,9 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Core
 {
-    // Put on any GameObject of a scene played straight from the editor (a
-    // test scene, the R&D arena): the main menu (SyntheseMenu), which
-    // otherwise shows up in any scene with a pool match, isn't created, and
-    // the match starts on its own in the mode chosen here — without it no
-    // match would ever start (no turns, no powers). Does nothing in a level
-    // launched from the menu (GameSession), whose start stays the menu's.
+    // In a scene played straight from the editor (test scene, R&D arena):
+    // no main menu, the match starts on its own in this mode. No effect in a
+    // level launched from the menu.
     [AddComponentMenu("Pool/Lancer sans le menu")]
     public class SkipMainMenu : MonoBehaviour
     {

@@ -26,10 +26,13 @@ Deux joueurs en écran partagé, 16 billes, une salle. Cible raisonnable : 60 im
 
 | Point | Où | Coût | Correction proposée |
 |---|---|---|---|
-| Recherche de la bille blanche **à chaque image, deux fois** par joueur hors visée | `LocalPoolAimController.FindNearbyCueBall` (appelé par `Update` et par `WantsInteractThisFrame`) | `Physics.OverlapSphere` crée un nouveau tableau à chaque appel → déchets mémoire (GC) en continu | `PoolBall.FindCueBall()` + test de distance (aucune requête physique, aucune allocation), une seule fois par image |
-| `PoolPocket.Radius` | `GetComponent<SphereCollider>()` à chaque lecture | Faible | Mettre le rayon en cache dans `Awake` |
+| Recherche de la bille blanche **à chaque image, deux fois** par joueur hors visée | `LocalPoolAimController.FindNearbyCueBall` (appelé par `Update` et par `WantsInteractThisFrame`) | `Physics.OverlapSphere` crée un nouveau tableau à chaque appel → déchets mémoire (GC) en continu | `PoolBall.FindCueBall()` + test de distance (aucune requête physique, aucune allocation), une seule fois par image — ✅ fait le 17/10 |
+| `PoolPocket.Radius` | `GetComponent<SphereCollider>()` à chaque lecture | Faible | ✅ Collider en cache dans `Awake` (17/10) |
 | Détection des caisses | `PoolPowerCrate.FixedUpdate` : `PoolBall.FindCueBall()` par caisse et par pas | Parcours de 16 billes × 3 caisses : négligeable | — |
 | Fin de tir | `PoolBall.AnyMoving()` chaque image | Parcours de 16 billes : négligeable | — |
+| HUD (`MatchHud`) | Plaque, étiquette de tour, bandeau d'aide | Chaînes, `HashSet` et styles recréés à chaque image | ✅ Clés de valeurs comparées, reconstruits seulement au changement (17/10) |
+| Indicateurs `OnGUI` provisoires | Combat, prise de la queue | `new GUIStyle` à chaque appel | ✅ Styles en cache (17/10) |
+| Test « est-ce une queue ? » | Mains, visée, combat, animation : `TryGetComponent<Cue>` plusieurs fois par image | Faible | ✅ `LocalGrabbable.IsCue`, lu une fois dans `Awake` (17/10) |
 | Interface `OnGUI` | HUD de `PoolMatchRules`, visée, effets | `OnGUI` est appelé plusieurs fois par image et alloue des chaînes | Passer à une UI Canvas ou UI Toolkit (prévu avec la page Propositions UI) |
 | Ralenti | `Time.timeScale` global | Aucun, mais ralentit **tout** (y compris l'autre joueur) | À garder en tête en écran partagé |
 

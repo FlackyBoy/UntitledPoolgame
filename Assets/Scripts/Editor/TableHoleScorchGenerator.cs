@@ -7,13 +7,10 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // The scorch decal around a table hole (TableHolePower > Scorch Decal):
-    // bakes a texture (burnt felt under the hole's torn shape, an uneven
-    // charred patch with blast streaks fading out — no black disc nor ember
-    // ring: the hole's own random shape draws both), wraps it in a URP decal
-    // material, and hands it to the Trou power asset if it has none. Called
-    // by Tools > Pool > Ensure Config Assets Exist. Also warns when no URP
-    // renderer has the Decal feature, without which decals don't show.
+    // Scorch decal around a table hole: bakes a texture (burnt felt, charred
+    // patch, blast streaks), makes a URP decal material and gives it to the
+    // Trou power if it has none. Run by Ensure Config Assets Exist; warns when
+    // no URP renderer has the Decal feature.
     internal static class TableHoleScorchGenerator
     {
         private const string TexturePath = "Assets/Textures/Decals/TableHoleScorch.png";
@@ -23,9 +20,8 @@ namespace UntitledPoolGame.PoolEditor
         // 1 / Scorch Scale with the default 2.2.
         private const float HoleEdge = 0.45f;
 
-        // Written in the texture's import settings: an older generated
-        // texture (round black centre) is baked again; one of the user's own,
-        // put in place of it, never is.
+        // Stored in the import settings: an older generated texture is baked
+        // again, one of the user's own never is.
         private const string Version = "TableHoleScorch v3";
 
         public static void Ensure(string powerAssetPath)
@@ -96,11 +92,8 @@ namespace UntitledPoolGame.PoolEditor
                     float rays = Mathf.Pow(Mathf.PerlinNoise(cos * 9f + 41f, sin * 9f + 17f), 3f);
                     float grain = Mathf.PerlinNoise(u * 9f + 20f, v * 9f + 20f);
 
-                    // No black disc in the middle: the hole's own torn shape
-                    // (TableHole) draws the black; under it and around its
-                    // lobes, burnt felt.
-                    // (No ember ring here: a round one gave the torn hole a
-                    // circle around it; the hole's own edge glows instead.)
+                    // No black centre nor ember ring: the hole's own shape draws
+                    // them. Burnt felt under and around it.
                     float t = Mathf.InverseLerp(HoleEdge * 0.6f, 1f, r);
                     Color c = Color.Lerp(burnt, charred, Mathf.Clamp01(t * 1.3f));
                     float reach = t - rays * 0.55f + (around - 0.5f) * 0.6f + (grain - 0.5f) * 0.2f;

@@ -13,14 +13,10 @@ namespace UntitledPoolGame.Pool
         Turns,        // for a number of turn changes (Turns)
     }
 
-    // "Trou": the player points at the table, a fireball comes down there
-    // and smashes a hole in the felt (TableHoleMeteor → TableHole) with a
-    // shake and a gamepad rumble for both players. A ball rolling over a
-    // hole falls in and comes back, once every ball has stopped, to where
-    // it was before the shot (PoolMatchRules.HandleBallFellInTableHole);
-    // the cue ball falling in is a foul, like a scratch. Level 1: one hole;
-    // level 2 (PoolMatchRules.ActivatingPowerLevel): a group of holes
-    // around the pointed spot.
+    // "Trou": the player points at the table, a fireball smashes a hole in
+    // the felt, with a shake and a rumble for both players. A ball falling in
+    // comes back where it was before the shot; the cue ball is a foul.
+    // Level 1: one hole; level 2: a group around the spot.
     [CreateAssetMenu(fileName = "TableHolePower", menuName = "Pool/Powers/Table Hole (Attack)")]
     public class TableHolePower : TablePointPower
     {
@@ -191,10 +187,8 @@ namespace UntitledPoolGame.Pool
         public override float PreviewRadius(int level) =>
             HoleCount(level) > 1 ? level2Spread * (1f + level2SpreadJitter) + holeRadius : holeRadius;
 
-        // Used during the activating player's own turn, it's for the
-        // opponent's turn: the spots are locked now, the meteors fall when
-        // that turn starts (PoolMatchRules.QueueTableHoles). Used during the
-        // opponent's turn (split screen), they fall at once.
+        // Used during one's own turn, the spots are locked and the meteors fall
+        // when the opponent's turn starts; during the opponent's turn, at once.
         public override void Activate(PoolMatchRules match, int activatingPlayer, Vector3 point)
         {
             match.QueueTableHoles(this, HoleCenters(point, HoleCount(match.ActivatingPowerLevel)), activatingPlayer);
@@ -206,11 +200,9 @@ namespace UntitledPoolGame.Pool
                 TableHoleMeteor.Launch(this, centers[i], owner, i * level2Stagger, generation);
         }
 
-        // A single hole: the pointed spot. A group: scattered at random —
-        // mostly around the circle of Level 2 Spread (distance varied by
-        // Spread Jitter), sometimes inside it (Inside Chance), optionally
-        // one on the spot itself — never overlapping (Min Gap), each kept on
-        // the felt and out of the pockets.
+        // One hole on the spot, or a group scattered mostly around the Level 2
+        // Spread circle, some inside, never overlapping (Min Gap), on the felt
+        // and away from pockets.
         private List<Vector3> HoleCenters(Vector3 point, int count)
         {
             var centers = new List<Vector3>();
@@ -246,9 +238,8 @@ namespace UntitledPoolGame.Pool
             return centers;
         }
 
-        // At the impact, as the hole opens: balls sitting on it are set just
-        // outside its edge (they'd fall in outside of any shot otherwise),
-        // then everything near gets pushed away.
+        // On impact: balls sitting on the hole are moved to its edge, then
+        // everything near is pushed away.
         public void BlastBalls(TableHole hole)
         {
             Vector3 center = hole.transform.position;

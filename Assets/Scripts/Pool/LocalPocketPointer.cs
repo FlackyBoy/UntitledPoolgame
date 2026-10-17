@@ -3,17 +3,11 @@ using UnityEngine.InputSystem;
 
 namespace UntitledPoolGame.Pool
 {
-    // Picking a pocket by looking at it, shared by everything that asks the
-    // player for one: a PocketTargetPower (LocalPoolPowerController) and the
-    // 8-ball call (LocalPoolAimController). Also picks a point of the felt
-    // for a TablePointPower (PointTable). While a pick is on, a white
-    // pointer sits at the centre of this player's view and the open pocket
-    // closest to it gets PoolPocket's ring and halo. Only the looking part
-    // lives here; each user reads its own confirm/cancel input. (Later the
-    // pick is meant to be a pointing finger + thumbs-up gesture: only this
-    // class and the confirm input change.)
-    //
-    // Added on demand by its users (For), one per player.
+    // Picking a pocket by looking at it, for pocket powers and the 8-ball call;
+    // also a point of the felt for table powers (PointTable). While picking,
+    // a white pointer sits at the centre of the view and the nearest open
+    // pocket gets its ring and halo. Confirm and cancel are read by the users.
+    // Added on demand (For), one per player.
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPocketPointer : MonoBehaviour
     {
@@ -58,9 +52,8 @@ namespace UntitledPoolGame.Pool
             return pointed;
         }
 
-        // Same, for a point of the table (TablePointPower): where the view
-        // meets the felt, kept margin from the cushions and pockets, with a
-        // ring of previewRadius around it. False when not looking at the felt.
+        // A point of the table: where the view meets the felt, kept margin from
+        // cushions and pockets, with a preview ring. False off the felt.
         public bool PointTable(float margin, float previewRadius, out Vector3 point)
         {
             showing = true;
@@ -84,10 +77,9 @@ namespace UntitledPoolGame.Pool
             return true;
         }
 
-        // The last PointTable's view ray met the playing surface itself, not
-        // only the felt's collider, which runs under the cushions (the point
-        // is then clamped back onto the table, so PointTable still says
-        // true). The pointing gesture only points while this is true.
+        // The view hit the playing surface itself, not the felt collider under
+        // the cushions (the point is clamped either way). The gesture only
+        // points when true.
         public bool TableHitInPlayArea { get; private set; }
 
         // End of a pick (confirmed, cancelled or abandoned).
