@@ -240,6 +240,9 @@ namespace UntitledPoolGame.PoolEditor
             }
 
             List<RoomOutline> rooms = AllRooms();
+            // Rooms traced inside this one with their own floor or ceiling:
+            // this room's tiles leave them the space, or two floors overlap.
+            List<RoomOutline> guests = rooms.Where(r => r != room && r.level == room.level && IsInside(r, room)).ToList();
 
             // Floor: holed where stairs from the level below come up.
             GameObject floorTile = palette.FloorTile(room.floorVariant);
@@ -247,8 +250,10 @@ namespace UntitledPoolGame.PoolEditor
             {
                 List<StairsFootprint> arriving = rooms.Where(r => r.level == room.level - 1 && r.palette != null)
                     .SelectMany(Footprints).ToList();
+                List<RoomOutline> ownFloors = guests.Where(g => g.hasFloor).ToList();
                 FillOutline(room, floorTile, Folder(room.transform, "Sol"), room.points[0].y, true, RoomModuleKind.Floor,
-                    (center, half) => (room.HasVoid && Inside(center, room.floorVoid)) || arriving.Any(f => f.Overlaps(center, half)));
+                    (center, half) => (room.HasVoid && Inside(center, room.floorVoid)) || arriving.Any(f => f.Overlaps(center, half))
+                                      || ownFloors.Any(g => Inside(center, g.points)));
             }
             if (room.HasVoid) BuildVoidRailings(room, Folder(room.transform, "Garde-corps"));
 
@@ -257,9 +262,10 @@ namespace UntitledPoolGame.PoolEditor
             if (room.closed && room.hasCeiling && ceilingTile != null)
             {
                 List<RoomOutline> above = rooms.Where(r => r.level == room.level + 1 && r.closed && r.hasFloor).ToList();
+                List<RoomOutline> ownCeilings = guests.Where(g => g.hasCeiling).ToList();
                 FillOutline(room, ceilingTile, Folder(room.transform, "Plafond"),
                     room.points[0].y + WallHeight(palette, room.wallVariant), false, RoomModuleKind.Ceiling,
-                    (center, half) => above.Any(r => Inside(center, r.points)));
+                    (center, half) => above.Any(r => Inside(center, r.points)) || ownCeilings.Any(g => Inside(center, g.points)));
             }
 
             if (room.stairs.Count > 0)
@@ -269,14 +275,25 @@ namespace UntitledPoolGame.PoolEditor
             }
         }
 
-        // Rebuilds a room and the rooms of the levels just above and below,
-        // whose floor holes and ceilings depend on it.
+        // Rebuilds a room and the rooms whose build depends on it.
         public static void BuildWithNeighbours(RoomOutline room)
         {
             Build(room);
-            foreach (RoomOutline other in AllRooms())
-                if (other != room && Mathf.Abs(other.level - room.level) == 1) Build(other);
+            foreach (RoomOutline other in Related(room)) Build(other);
         }
+
+        // The levels just above and below (floor holes, ceilings), and on the
+        // same level the room around it or inside it (floors and ceilings
+        // leave each other the space).
+        public static List<RoomOutline> Related(RoomOutline room) =>
+            AllRooms().Where(o => o != room && (Mathf.Abs(o.level - room.level) == 1
+                || (o.level == room.level && (IsInside(o, room) || IsInside(room, o))))).ToList();
+
+        // inner's outline lies within outer's (corners on its outline allowed).
+        public static bool IsInside(RoomOutline inner, RoomOutline outer) =>
+            inner.closed && outer.closed && inner.points.Count > 2 && outer.points.Count > 2
+            && inner.points.All(p => Inside(p, outer.points) || OnOutline(p, outer.points))
+            && inner.points.Any(p => Inside(p, outer.points));
 
         // Railings along the floor void, one per module, except along the
         // room's own walls and where stairs leave a cell open.
@@ -405,22 +422,14 @@ namespace UntitledPoolGame.PoolEditor
             if (prefab == null || !TryStairsShape(palette, prefab, out Bounds b, out Vector3 uphillLocal)) return;
 
             float floorY = room.points[0].y;
-            float storey = StoreyHeight(palette, room.wallVariant);
-            // Stretched to exactly one level, so the top step meets the floor above.
-            float stretch = b.size.y > 0.05f ? Mathf.Clamp(storey / b.size.y, 0.3f, 3f) : 1f;
+            // Kept at the prefab's own scale: its height is the climb.
+            float height = b.size.y;
 
             float yaw = flight.uphillYaw - Vector3.SignedAngle(Vector3.forward, uphillLocal, Vector3.up);
             Quaternion turn = Quaternion.Euler(0f, yaw, 0f);
-
-            // Stretch the prefab's local axis that points up (its root may be
-            // rotated, e.g. -90° on X for an imported model).
-            Vector3 localUp = Quaternion.Inverse(prefab.transform.localRotation) * Vector3.up;
             Vector3 scale = prefab.transform.localScale;
-            int upAxis = Mathf.Abs(localUp.x) > Mathf.Abs(localUp.y) ? (Mathf.Abs(localUp.x) > Mathf.Abs(localUp.z) ? 0 : 2)
-                : (Mathf.Abs(localUp.y) > Mathf.Abs(localUp.z) ? 1 : 2);
-            scale[upAxis] *= stretch;
             Vector3 position = flight.position - turn * new Vector3(b.center.x, 0f, b.center.z);
-            position.y = floorY - b.min.y * stretch;
+            position.y = floorY - b.min.y;
             Quaternion rotation = turn * prefab.transform.localRotation;
             if (recording != null) { Record(prefab, position, rotation, scale); return; }
 
@@ -438,17 +447,21 @@ namespace UntitledPoolGame.PoolEditor
             var ramp = new GameObject("Rampe (collision)");
             Undo.RegisterCreatedObjectUndo(ramp, "Escalier");
             ramp.transform.SetParent(parent, false);
-            Vector3 slope = (f.uphill * run + Vector3.up * storey).normalized;
-            ramp.transform.SetPositionAndRotation(new Vector3(f.center.x, floorY + storey / 2f, f.center.z),
+            Vector3 slope = (f.uphill * run + Vector3.up * height).normalized;
+            ramp.transform.SetPositionAndRotation(new Vector3(f.center.x, floorY + height / 2f, f.center.z),
                 Quaternion.LookRotation(slope, Vector3.up));
             var box = ramp.AddComponent<BoxCollider>();
-            box.size = new Vector3(f.halfWidth * 2f, 0.1f, Mathf.Sqrt(run * run + storey * storey));
+            box.size = new Vector3(f.halfWidth * 2f, 0.1f, Mathf.Sqrt(run * run + height * height));
             box.center = new Vector3(0f, -0.05f, 0f);
             RoomModule marker = ramp.AddComponent<RoomModule>();
             marker.kind = RoomModuleKind.Stairs;
-            float angle = Mathf.Atan2(storey, run) * Mathf.Rad2Deg;
+            float angle = Mathf.Atan2(height, run) * Mathf.Rad2Deg;
             if (angle > 45f)
                 Debug.LogWarning($"[Level Maker] {room.name} : escalier de {angle:0}° — au-delà de 45°, le joueur risque de ne pas pouvoir monter (pente max du CharacterController).", room);
+            float storey = StoreyHeight(palette, room.wallVariant);
+            if (Mathf.Abs(height - storey) > 0.1f)
+                Debug.LogWarning($"[Level Maker] {room.name} : l'escalier « {prefab.name} » monte de {height:0.##} m, l'étage fait {storey:0.##} m : " +
+                                 "sa dernière marche n'arrive pas au sol du dessus. Choisis un escalier à la hauteur des murs.", room);
         }
 
         public static void AddStairs(RoomOutline room, RoomStairs flight)
@@ -477,13 +490,27 @@ namespace UntitledPoolGame.PoolEditor
             return true;
         }
 
-        // The closed room whose floor (within 0.5 m) holds this point.
+        // The closed room under point at its height (within 0.5 m); the innermost one when
+        // a room is traced inside another.
         public static RoomOutline RoomAt(Vector3 point)
         {
+            RoomOutline best = null;
+            float bestArea = float.MaxValue;
             foreach (RoomOutline room in AllRooms())
                 if (room.closed && room.points.Count > 2 && Mathf.Abs(room.points[0].y - point.y) < 0.5f && Inside(point, room.points))
-                    return room;
-            return null;
+                {
+                    float area = Area(room.points);
+                    if (area < bestArea) { best = room; bestArea = area; }
+                }
+            return best;
+        }
+
+        private static float Area(List<Vector3> polygon)
+        {
+            float sum = 0f;
+            for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+                sum += polygon[j].x * polygon[i].z - polygon[i].x * polygon[j].z;
+            return Mathf.Abs(sum) / 2f;
         }
 
         public static int CellCount(RoomOutline room, int segment, PrefabPalette palette)
@@ -889,7 +916,7 @@ namespace UntitledPoolGame.PoolEditor
             });
         }
 
-        // The flight AddStairs would place (stretched to one level).
+        // The flight AddStairs would place.
         public static void PreviewStairs(RoomOutline room, RoomStairs flight, List<GhostPiece> into)
         {
             if (room == null || room.palette == null) return;

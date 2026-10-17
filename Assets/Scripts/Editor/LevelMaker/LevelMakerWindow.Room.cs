@@ -31,6 +31,7 @@ namespace UntitledPoolGame.PoolEditor
         private Vector2 wallScroll, pillarScroll, openingScroll, floorScroll, ceilingScroll, stairsScroll;
         // Level being traced on (0 = ground floor) and the stairs' climbing direction.
         private int activeLevel;
+        private RoomOutline hoveredRoom;   // Sol / plafond tool
         private float stairsYaw;
         private bool insertMode;   // Openings: nest the piece in the clicked module instead of replacing it
         private bool floorOnlyTrace;   // Walls tool: trace a floor zone with no walls
@@ -110,11 +111,9 @@ namespace UntitledPoolGame.PoolEditor
             int newGrid = EditorGUILayout.Popup("Pas", gridIndex, GridStepNames);
             if (newGrid != gridIndex) settingsSo.FindProperty("gridStep").floatValue = GridSteps[newGrid];
             EditorGUILayout.PropertyField(settingsSo.FindProperty("floorHeight"), new GUIContent("Hauteur du sol"));
-            int level = EditorGUILayout.IntSlider(new GUIContent("Étage actif", "Étage sur lequel on trace (0 = rez-de-chaussée). " +
-                "Un étage = la hauteur des murs du kit."), activeLevel, 0, 5);
-            if (level != activeLevel) { activeLevel = level; trace.Clear(); SceneView.RepaintAll(); }
-            EditorGUILayout.LabelField(" ", $"Tracé à {TraceY:0.##} m (étage de {RoomBuilder.StoreyHeight(Palette, wallBrush):0.##} m)", EditorStyles.miniLabel);
             showGrid = EditorGUILayout.Toggle("Afficher la grille", showGrid);
+
+            DrawLevelOptions();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Outil (vue Scène)", EditorStyles.boldLabel);
@@ -123,6 +122,7 @@ namespace UntitledPoolGame.PoolEditor
             {
                 trace.Clear();
                 hoveredModule = null;
+                hoveredRoom = null;
                 roomTool = tool;
                 SceneView.RepaintAll();
             }
@@ -194,7 +194,7 @@ namespace UntitledPoolGame.PoolEditor
                 {
                     Undo.RecordObject(room, "Variantes de la salle");
                     apply(room);
-                    RoomBuilder.Build(room);
+                    RoomBuilder.BuildWithNeighbours(room);
                     MarkDirty();
                 }
         }
@@ -236,6 +236,59 @@ namespace UntitledPoolGame.PoolEditor
             settingsSo.FindProperty("palette").objectReferenceValue = palette;
             settingsSo.ApplyModifiedProperties();
             EditorGUIUtility.PingObject(palette);
+        }
+
+        private const int MaxLevel = 5;
+
+        private void DrawLevelOptions()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Étages", EditorStyles.boldLabel);
+            int level = EditorGUILayout.IntSlider(new GUIContent("Étage actif", "Étage sur lequel on trace (0 = rez-de-chaussée). " +
+                "Un étage = la hauteur des murs du kit."), activeLevel, 0, MaxLevel);
+            if (level != activeLevel) SetActiveLevel(level);
+            List<RoomOutline> rooms = RoomBuilder.AllRooms();
+            int here = rooms.Count(r => r.level == activeLevel), below = rooms.Count(r => r.level == activeLevel - 1);
+            EditorGUILayout.LabelField(" ", $"Tracé à {TraceY:0.##} m (étage de {RoomBuilder.StoreyHeight(Palette, wallBrush):0.##} m) — " +
+                $"{here} salle(s) à cet étage{(activeLevel > 0 ? $", {below} en dessous" : "")}", EditorStyles.miniLabel);
+
+            RoomOutline selected = SelectedRoom;
+            bool canStack = selected != null && selected.closed && selected.hasWalls && selected.level < MaxLevel;
+            using (new EditorGUI.DisabledScope(!canStack))
+                if (GUILayout.Button(canStack ? $"Créer l'étage au-dessus de « {selected.name} »"
+                        : "Sélectionne une salle fermée pour créer l'étage au-dessus"))
+                    CreateRoomAbove(selected);
+            EditorGUILayout.HelpBox("Pour faire un étage :\n" +
+                                    "1. Sélectionne la salle du bas, puis « Créer l'étage au-dessus » : même contour, mêmes murs, un étage plus haut " +
+                                    "(son sol remplace le plafond du dessous). Ou passe l'étage actif à 1 et trace la salle avec l'outil Murs : " +
+                                    "le contour de l'étage du dessous est dessiné en pointillé pour servir de repère.\n" +
+                                    "2. Outil Escaliers : clic sur le sol de la salle du bas ; l'escalier garde sa taille (choisis-en un à la hauteur des murs) et perce le sol du dessus.",
+                MessageType.None);
+        }
+
+        private void SetActiveLevel(int level)
+        {
+            activeLevel = Mathf.Clamp(level, 0, MaxLevel);
+            trace.Clear();
+            SceneView.RepaintAll();
+            Repaint();
+        }
+
+        // Same outline, walls and tiles one level up; the room below loses its
+        // ceiling under it (BuildWithNeighbours).
+        private void CreateRoomAbove(RoomOutline below)
+        {
+            float storey = RoomBuilder.StoreyHeight(below.palette, below.wallVariant);
+            List<Vector3> points = below.points.Select(p => p + Vector3.up * storey).ToList();
+            RoomOutline room = RoomBuilder.CreateRoom(points, true, below.palette, below.wallVariant, below.pillarVariant,
+                below.floorVariant, below.ceilingVariant, below.level + 1, build: false);
+            room.flipWalls = below.flipWalls;
+            room.hasCeiling = below.hasCeiling;
+            RoomBuilder.FitIntoHost(room);   // a room already there on that level
+            RoomBuilder.BuildWithNeighbours(room);
+            Selection.activeGameObject = room.gameObject;
+            SetActiveLevel(room.level);
+            MarkDirty();
         }
 
         private void DrawWallToolOptions()
@@ -386,7 +439,12 @@ namespace UntitledPoolGame.PoolEditor
                         }
                         if (GUILayout.Button("Supprimer", GUILayout.Width(75)))
                         {
+                            // The room around it gets its floor back, the levels
+                            // around their ceiling and floor.
+                            List<RoomOutline> related = RoomBuilder.Related(room);
                             Undo.DestroyObjectImmediate(room.gameObject);
+                            foreach (RoomOutline other in related) RoomBuilder.Build(other);
+                            MarkDirty();
                             GUIUtility.ExitGUI();
                         }
                     }
@@ -437,7 +495,7 @@ namespace UntitledPoolGame.PoolEditor
                         room.hasFloor = floor;
                         room.hasCeiling = ceiling;
                         room.flipWalls = flip;
-                        RoomBuilder.Build(room);
+                        RoomBuilder.BuildWithNeighbours(room);
                         MarkDirty();
                     }
                     if (GUILayout.Button("Reconstruire (après modification des prefabs du kit)"))
@@ -520,9 +578,8 @@ namespace UntitledPoolGame.PoolEditor
                           "murs déjà présents non reconstruits.", room);
             RoomBuilder.Build(room);
             Selection.activeGameObject = room.gameObject;
-            // Ceilings below / floor holes above depend on this room.
-            foreach (RoomOutline other in RoomBuilder.AllRooms())
-                if (other != room && Mathf.Abs(other.level - room.level) == 1) RoomBuilder.Build(other);
+            // Ceilings below, floor holes above and the room around depend on it.
+            foreach (RoomOutline other in RoomBuilder.Related(room)) RoomBuilder.Build(other);
             trace.Clear();
             MarkDirty();
             Repaint();
@@ -628,15 +685,29 @@ namespace UntitledPoolGame.PoolEditor
             }
         }
 
+        // The active level's rooms stand out, the others are faint. While
+        // tracing above the ground, the level below is repeated dotted at the
+        // trace height, to trace on top of it.
         private void DrawRoomOutlines()
         {
-            Handles.color = new Color(1f, 0.6f, 0.1f, 0.6f);
+            bool guide = roomTool == RoomTool.Walls && activeLevel > 0 && Palette != null;
+            float traceY = guide ? TraceY : 0f;
             foreach (RoomOutline room in LevelBuilder.FindAll<RoomOutline>())
+            {
+                bool active = room.level == activeLevel;
+                Handles.color = active ? new Color(1f, 0.6f, 0.1f, 0.9f) : new Color(1f, 0.6f, 0.1f, 0.25f);
                 for (int i = 0; i < room.SegmentCount; i++)
                 {
                     RoomBuilder.SegmentEnds(room, i, out Vector3 a, out Vector3 b);
-                    Handles.DrawLine(a + Vector3.up * 0.02f, b + Vector3.up * 0.02f, 1.5f);
+                    Handles.DrawLine(a + Vector3.up * 0.02f, b + Vector3.up * 0.02f, active ? 2.5f : 1f);
+                    if (guide && room.level == activeLevel - 1)
+                    {
+                        Handles.color = new Color(0.4f, 0.8f, 1f, 0.9f);
+                        Handles.DrawDottedLine(new Vector3(a.x, traceY + 0.02f, a.z), new Vector3(b.x, traceY + 0.02f, b.z), 4f);
+                        Handles.color = active ? new Color(1f, 0.6f, 0.1f, 0.9f) : new Color(1f, 0.6f, 0.1f, 0.25f);
+                    }
                 }
+            }
         }
 
         private void WallToolGUI(Event e)
@@ -837,14 +908,11 @@ namespace UntitledPoolGame.PoolEditor
         {
             if (e.type == EventType.MouseMove || e.type == EventType.MouseDown)
             {
-                GameObject picked = HandleUtility.PickGameObject(e.mousePosition, false);
-                RoomModule module = picked != null ? picked.GetComponentInParent<RoomModule>() : null;
-                RoomOutline owner = module != null ? module.GetComponentInParent<RoomOutline>() : null;
-                if (owner == null || !owner.closed) module = null;
-                if (module != hoveredModule) { hoveredModule = module; SceneView.RepaintAll(); }
+                RoomOutline found = PickRoom(e.mousePosition);
+                if (found != hoveredRoom) { hoveredRoom = found; SceneView.RepaintAll(); }
             }
 
-            RoomOutline room = hoveredModule != null ? hoveredModule.GetComponentInParent<RoomOutline>() : null;
+            RoomOutline room = hoveredRoom;
             if (room != null)
             {
                 Handles.color = new Color(0.3f, 1f, 0.6f);
@@ -864,11 +932,28 @@ namespace UntitledPoolGame.PoolEditor
             {
                 Undo.RecordObject(room, "Sol et plafond");
                 ApplyFloorBrush(room);
-                RoomBuilder.Build(room);
-                hoveredModule = null;
+                RoomBuilder.BuildWithNeighbours(room);
+                hoveredRoom = null;
                 e.Use();
                 MarkDirty();
             }
+        }
+
+        // The closed room under the mouse: the innermost one at the point hit
+        // (a room inside another has no floor of its own at first, so the
+        // host's floor is what gets hit), else the owner of the clicked piece.
+        private static RoomOutline PickRoom(Vector2 mousePosition)
+        {
+            Ray ray = HandleUtility.GUIPointToWorldRay(mousePosition);
+            Physics.SyncTransforms();
+            if (Physics.Raycast(ray, out RaycastHit hit, 200f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+            {
+                RoomOutline atPoint = RoomBuilder.RoomAt(hit.point);
+                if (atPoint != null) return atPoint;
+            }
+            GameObject picked = HandleUtility.PickGameObject(mousePosition, false);
+            RoomOutline owner = picked != null ? picked.GetComponentInParent<RoomOutline>() : null;
+            return owner != null && owner.closed ? owner : null;
         }
 
         private void PropToolGUI(Event e)
