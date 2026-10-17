@@ -77,7 +77,7 @@ Tout ce qu'affiche le HUD (`MatchHud`) et comment :
 - **couleurs** : joueurs, encre, cartes, mise en avant, danger, « BOUM ! », voile du joueur qui attend, jauge ;
 - **textes** : tour, plaque, bandeaux d'aide, interjections (liste tirée au hasard pour une bille rentrée), carte sponsor, fin de partie. `{0}` est remplacé par le numéro du joueur, la poche ou la catégorie du pouvoir ; un texte vidé désactive l'interjection ou le bandeau correspondant ;
 - **interrupteurs** : interjections de bille rentrée, carte sponsor, confettis, voile ; seuil du tir plein ;
-- **durées** : interjections, rayons, carte sponsor, délai « FAUTE ! » → « Main libre ! », secousse, balancement de « À toi ! ».
+- **durées** : interjections, rayons, carte sponsor, temps minimal avant qu'un message soit remplacé par le suivant, délai « FAUTE ! » → « Main libre ! », secousse, balancement de « À toi ! ».
 
 Lu par `MatchHud` : les textes, couleurs et tailles à la construction du HUD, donc à la scène suivante ; les durées à chaque image.
 

@@ -6,18 +6,13 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
-    // The launcher's gestures, so the other player sees in the room what's
-    // being done to them:
-    // - while picking a pocket or a point of the table for a power
-    //   (LocalPoolPowerController), the arm stretches toward it and the index
-    //   points at it, the other fingers folded;
-    // - once a power is sent (PoolMatchRules.PowerActivated, any power), a
-    //   thumbs up in front of the chest for a moment.
-    // Procedural: the hand effector of FBBIK before it solves (the arm), then
-    // the hand and finger bones after (HandPose). One hand (settings); a cue
-    // in hand stays in its carry pose, the other hand still on it.
-    // Settings in PoolPowerSpawnSettings (Geste). Added to the player
-    // automatically by LocalPlayerHandController.
+    // The launcher's gestures, so the other player sees them in the room:
+    // - while picking a pocket or a point of the table, the arm stretches
+    //   toward it and the index points;
+    // - once a power is sent, a thumbs up in front of the chest.
+    // FBBIK's hand effector before it solves (arm), then HandPose on the
+    // fingers after. A cue in hand stays in its carry pose. Settings in
+    // PoolPowerSpawnSettings (Geste); added by LocalPlayerHandController.
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPowerGesture : MonoBehaviour
     {
@@ -43,14 +38,10 @@ namespace UntitledPoolGame.Interaction
         // LocalObjectHands).
         private const float ReferenceArmLength = 0.6f;
 
-        // Elbow guide: without one the elbow follows the animation (arm
-        // hanging) and goes into the chest as the hand comes in front — the
-        // same fix as LocalObjectHands for heavy objects. The chain's own
-        // bend goal is saved on Hook and put back on Unhook.
-        // What the gesture wrote on the effector last frame: if it's still
-        // there, nobody else drives that hand, and it must not be read back
-        // as "the cue grip" — it was, and the weight fed on itself, stuck
-        // near 1 during the whole fade-out, then dropped to 0 in one go.
+        // Elbow guide (otherwise the elbow goes into the chest), its bend
+        // goal saved on Hook and restored on Unhook.
+        // What the gesture wrote on the effector last frame, so it isn't
+        // read back as the cue grip (the weight then fed on itself).
         private float writtenWeight = -1f;
         private Vector3 writtenPosition;
 
@@ -94,9 +85,8 @@ namespace UntitledPoolGame.Interaction
             Pose wanted = Pose.None;
             if (cfg.pointAtTarget && powers != null && powers.ChoosingPower != null)
             {
-                // Only while the pointer is on a valid spot: off the table,
-                // the arm comes down (fading toward the last spot), and
-                // points again once the pointer is back on it.
+                // Only while the pointer is on a valid spot; off it, the arm
+                // comes down and points again when it's back.
                 if (powers.TryGetPickTarget(out Vector3 target))
                 {
                     pointTarget = target;
@@ -167,10 +157,8 @@ namespace UntitledPoolGame.Interaction
         private IKEffector Effector => Right ? fullBodyIK.solver.rightHandEffector : fullBodyIK.solver.leftHandEffector;
         private FBIKChain Chain => Right ? fullBodyIK.solver.rightArmChain : fullBodyIK.solver.leftArmChain;
 
-        // The chest's own frame, from the shoulders: where the character
-        // really faces, whatever the root or the model transform do (their
-        // forward axes don't match the body's on every rig — the thumbs up,
-        // placed with the root's axes, ended up inside the chest).
+        // The chest's frame, from the shoulders: the root's axes don't match
+        // the body on every rig (the thumbs up ended up inside the chest).
         private Vector3 BodyRight
         {
             get
@@ -185,10 +173,8 @@ namespace UntitledPoolGame.Interaction
 
         private Vector3 BodyForward => Vector3.Cross(BodyRight, Vector3.up);
 
-        // From a point of the arm toward the target, kept in a
-        // cone in front of the body: wider on the hand's own side than
-        // across the chest, so the arm never goes through the body when the
-        // target is behind or beside the player.
+        // Toward the target, kept in a cone in front of the body (wider on
+        // the hand's side) so the arm never goes through the body.
         private Vector3 PointDirection(Vector3 from)
         {
             Vector3 dir = hasPointTarget ? pointTarget - from : BodyForward;
@@ -230,16 +216,13 @@ namespace UntitledPoolGame.Interaction
             GuideElbow(chain, shoulder, goal, scale);
 
             IKEffector effector = Effector;
-            // Starting point: what drives the hand already (the cue grip),
-            // or the animated hand when nothing does (what's left on the
-            // effector is then only the gesture's own last frame).
+            // Start from what already drives the hand (the cue grip), or the
+            // animated hand.
             bool ownLeftover = Mathf.Approximately(effector.positionWeight, writtenWeight) && effector.position == writtenPosition;
             bool driven = !ownLeftover && effector.positionWeight > 0.01f;
             Vector3 from = driven ? effector.position : chain.nodes[2].transform.position;
-            // The hand travels between the two along an arc in front of the
-            // body, the effector held at full weight: blending the weight
-            // instead moved it in a straight line, from the thigh to a target
-            // in front or across, through the belly.
+            // Along an arc in front of the body at full weight: blending the
+            // weight moved the hand straight through the belly.
             float t = Mathf.SmoothStep(0f, 1f, weight);
             effector.position = ArcPoint(shoulder, from, goal, t, armLength);
             effector.positionWeight = driven ? Mathf.Lerp(effector.positionWeight, 1f, Mathf.Clamp01(weight * 4f)) : 1f;
@@ -249,10 +232,8 @@ namespace UntitledPoolGame.Interaction
             effector.rotationWeight *= 1f - weight;
         }
 
-        // From one hand position to another around the shoulder: the
-        // direction turns through a point in front of the body (forward,
-        // a little out to the hand's side and down), the distance from the
-        // shoulder changes evenly. t 0 = from, 1 = to.
+        // Between two hand positions around the shoulder, passing in front of
+        // the body. t 0 = from, 1 = to.
         private Vector3 ArcPoint(Vector3 shoulder, Vector3 from, Vector3 to, float t, float armLength)
         {
             Vector3 a = from - shoulder, b = to - shoulder;
@@ -268,12 +249,9 @@ namespace UntitledPoolGame.Interaction
             return shoulder + dir * distance;
         }
 
-        // Thumbs up: the elbow under the shoulder, close to the body, so the
-        // forearm comes up to the fist (pushed out to the side, as for the
-        // heavy objects of LocalObjectHands, it stuck out like a wing:
-        // [PowerGesture] gave it 42 cm out, at chest height). Pointing: the
-        // arm is nearly straight, the elbow just faces down. By the
-        // gesture's weight.
+        // Thumbs up: elbow under the shoulder, close to the body (out to the
+        // side it stuck out like a wing). Pointing: arm nearly straight,
+        // elbow facing down. Scaled by the gesture's weight.
         private void GuideElbow(FBIKChain chain, Vector3 shoulder, Vector3 hand, float scale)
         {
             if (cfg.gestureElbowOut <= 0f) return;
@@ -318,9 +296,8 @@ namespace UntitledPoolGame.Interaction
             }
         }
 
-        // Where the hand and the elbow ended up, in the chest's frame
-        // (forward of the chest bone, toward the body's middle, height):
-        // a negative "devant" = inside or behind the chest.
+        // Hand and elbow in the chest's frame; a negative "devant" = inside or
+        // behind the chest.
         private float ThumbFromUp()
         {
             Transform root = animator.GetBoneTransform(Right ? HumanBodyBones.RightThumbProximal : HumanBodyBones.LeftThumbProximal);

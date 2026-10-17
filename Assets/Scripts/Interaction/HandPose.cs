@@ -2,21 +2,15 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Procedural hand shapes on a humanoid, applied after FBBIK has solved
-    // (its OnPostUpdate): the boxing fist (LocalUnarmedMelee), the pointing
-    // finger and the thumbs up (LocalPowerGesture). Works from the bones'
-    // positions only, so any humanoid rig gives the same result whatever its
-    // bones' local axes.
+    // Procedural hand shapes applied after FBBIK (OnPostUpdate): fist,
+    // pointing finger, thumbs up. From bone positions only, so any humanoid
+    // rig works whatever its axes.
     public static class HandPose
     {
-        // along: wrist → middle finger root (where the fingers point).
-        // palm: out of the palm, the side the fingers curl toward —
-        // fingers × (little → index) for the right hand, mirrored for the
-        // left. False when the hand or its index is missing.
-        // Rigs with fewer fingers (the current player: index and thumb only,
-        // the index chain carrying the whole mitten): the index stands in
-        // for the middle finger, and the thumb side for "little → index"
-        // (wrist → thumb root, without its part along the fingers).
+        // along: wrist to middle finger root. palm: out of the palm, toward
+        // where the fingers curl. False if the hand or index is missing.
+        // On rigs with only index and thumb (the player), the index stands in
+        // for the middle finger and the thumb side for the palm's width.
         public static bool Measure(Animator animator, bool right, out Vector3 along, out Vector3 palm)
         {
             along = palm = Vector3.zero;
@@ -83,10 +77,8 @@ namespace UntitledPoolGame.Interaction
             }
         }
 
-        // Turns the thumb from its root so it points along wanted (the
-        // thumbs up: straight up), by weight — an absolute aim, whatever
-        // the thumb's rest pose on the rig (a curl angle alone left it
-        // pointing along the fingers on the player's).
+        // Aims the thumb along wanted (thumbs up: straight up) by weight,
+        // whatever its rest pose.
         public static void AimThumb(Animator animator, bool right, Vector3 wanted, float weight)
         {
             if (weight <= 0f) return;

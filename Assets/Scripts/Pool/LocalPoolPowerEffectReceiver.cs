@@ -4,27 +4,11 @@ using UntitledPoolGame.Player;
 
 namespace UntitledPoolGame.Pool
 {
-    // Two things live here, sharing the same camera-state-aware plumbing
-    // (cameraRestLocalPosition, the IsAiming/IsPlacementViewActive guards)
-    // rather than as separate components, to avoid a second independent
-    // writer fighting over the same camera transform every frame — exactly
-    // the class of bug already hit twice this project (vision-impair shake
-    // vs. the aim orbit, then vs. the ball-in-hand placement view):
-    //
-    // 1) The turn-bound VisionImpairPower debuff against THIS player — a
-    //    blinking white overlay, a constant shake, reduced look sensitivity.
-    // 2) Short one-shot "impact" juice (shake + flash pulse, both decaying
-    //    over a fixed duration) for shots fired, balls pocketed, fouls, and
-    //    power pickups — see RequestShake/RequestFlash/PlayShotFeedback.
-    //
-    // All the tunable numbers behind both live in PoolScreenJuiceSettings
-    // (Resources-loaded, shared by both local players — same pattern as
-    // PoolPhysicsSettings) instead of private fields here.
-    //
-    // Offline only for now: this needs to know "am I player 0 or player 1"
-    // to look up the right slot, which PlayerInput.playerIndex gives locally
-    // but has no online equivalent yet (see TODO.md — same limitation as
-    // ball-in-hand placement and power activation).
+    // Everything this player's camera feels: the Vision Impair debuff
+    // (blinking overlay, shake, lower sensitivity) and short impact pulses
+    // (shot, pot, foul, power pickup). One component so the camera has a
+    // single writer. Numbers in PoolScreenJuiceSettings. Offline only (needs
+    // PlayerInput.playerIndex).
     [RequireComponent(typeof(LocalFpsPlayerController))]
     [RequireComponent(typeof(PlayerInput))]
     public class LocalPoolPowerEffectReceiver : MonoBehaviour
@@ -36,18 +20,10 @@ namespace UntitledPoolGame.Pool
         private LocalPlayerRagdollController ragdollController;
         private PlayerInput playerInput;
         private Camera playerCamera;
-        // The camera's local position at rest, relative to its parent
-        // (cameraPivot) — captured once, before any shaking, so the
-        // not-aiming shake branch below always has a stable zero to jitter
-        // around instead of drifting further from center every frame.
+        // Camera local position at rest, the zero the shake jitters around.
         private Vector3 cameraRestLocalPosition;
 
-        // One-shot decaying shake pulse — a new request overwrites whatever
-        // was still running rather than stacking. Two impact events landing
-        // the very same frame (e.g. a power-ball being pocketed, which fires
-        // both the pot juice and the pickup juice) means only the later one
-        // is felt; acceptable for now, not worth a queue for how rarely it
-        // actually coincides.
+        // A new pulse replaces the running one rather than stacking.
         private float impactShakeMagnitude;
         private float impactShakeDuration;
         private float impactShakeRemaining;
@@ -75,10 +51,8 @@ namespace UntitledPoolGame.Pool
         private static readonly System.Collections.Generic.List<LocalPoolPowerEffectReceiver> all =
             new System.Collections.Generic.List<LocalPoolPowerEffectReceiver>();
 
-        // From outside (a Feel sequence, MMF_PoolScreenJuice): a shake and/or
-        // a flash on that player's camera (-1 = every player), through this
-        // component so the camera keeps a single writer. Zero magnitude or
-        // alpha = that part is skipped.
+        // From a Feel sequence (MMF_PoolScreenJuice): shake and/or flash on
+        // that player's camera (-1 = everyone). Zero = that part skipped.
         public static void PlayImpact(int player, float shakeMagnitude, float shakeDuration, Color flashColor, float flashAlpha, float flashDuration)
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
@@ -107,11 +81,7 @@ namespace UntitledPoolGame.Pool
             PoolMatchRules.PowerGranted -= HandlePowerGranted;
         }
 
-        // Shared by every ball pocketed on the table — no per-player
-        // filtering, both screens feel the same satisfying pot. Just the
-        // shake here: the flash side of this moved into a world-space light
-        // halo at the actual pocket (see PoolPocket.cs) instead of a flat
-        // screen-space tint, so no RequestFlash call anymore.
+        // Every pot shakes both screens (the flash is the halo at the pocket).
         private void HandleBallPocketed(PoolBall ball, PoolPocket pocket)
         {
             RequestShake(settings.potShakeMagnitude, settings.potShakeDuration);
@@ -125,9 +95,7 @@ namespace UntitledPoolGame.Pool
             RequestFlash(settings.foulFlashColor, settings.foulFlashMaxAlpha, settings.foulFlashDuration);
         }
 
-        // Unlike pocketed/foul, only the player who actually picked up the
-        // power should feel this — GetEffectivePlayerIndex so hot-seat solo
-        // resolves to whichever side is currently up.
+        // Only the player who picked the power up.
         private void HandlePowerGranted(int player)
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
@@ -136,10 +104,7 @@ namespace UntitledPoolGame.Pool
             RequestFlash(settings.pickupFlashColor, settings.pickupFlashMaxAlpha, settings.pickupFlashDuration);
         }
 
-        // Called directly by LocalPoolAimController.Shoot() on this same
-        // player's GameObject right after the shot fires — not event-driven
-        // like the others above, since a shot's recoil kick only ever
-        // belongs to the player who took it.
+        // Called by Shoot on this player.
         public void PlayShotFeedback() => RequestShake(settings.shotShakeMagnitude, settings.shotShakeDuration);
 
         private void RequestShake(float magnitude, float duration)
@@ -161,51 +126,29 @@ namespace UntitledPoolGame.Pool
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
             int effectivePlayer = rules != null ? rules.GetEffectivePlayerIndex(playerInput.playerIndex) : 0;
-            // Multiplicative, not one overwriting the other — Vision Impair
-            // reduces sensitivity, Inverted Controls boosts it; if a player
-            // somehow had both active at once, both should still apply.
+            // Multiplied, so both effects apply if they ever overlap.
             fpsController.SensitivityMultiplier = rules != null
                 ? rules.GetVisionImpairmentSensitivityMultiplier(effectivePlayer) * rules.GetInvertedControlsSensitivityMultiplier(effectivePlayer)
                 : 1f;
             fpsController.InvertLook = rules != null && rules.IsControlsInverted(effectivePlayer);
 
-            // Ticked down here, once a frame — never inside OnGUI, which can
-            // run its method body more than once per frame (Layout then
-            // Repaint passes) and would double-decay these otherwise. Same
-            // lesson as the mode-select screen's earlier GUILayout bug.
+            // Here, not in OnGUI, which runs several times per frame.
             if (impactShakeRemaining > 0f) impactShakeRemaining = Mathf.Max(0f, impactShakeRemaining - Time.unscaledDeltaTime);
             if (impactFlashRemaining > 0f) impactFlashRemaining = Mathf.Max(0f, impactFlashRemaining - Time.unscaledDeltaTime);
         }
 
-        // LateUpdate, not Update: guarantees this runs AFTER whichever system
-        // positioned the camera this frame — LocalFpsPlayerController (only
-        // ever rotates cameraPivot, never touches the camera's own position)
-        // or LocalPoolAimController while aiming (sets cameraTransform's
-        // WORLD position/rotation directly, fresh, every frame — see
-        // IsAiming). Two different shake strategies below because of that:
-        // while aiming, the orbit recomputes the camera's world position
-        // from scratch every frame regardless of what we do to it here, so
-        // an ADDITIVE world-space nudge on top is safe and never
-        // accumulates. Outside of aiming, nothing else ever resets the
-        // camera's own local position, so we always rebuild it fresh from
-        // the known rest value instead — an additive nudge there WOULD
-        // drift further off-center every single frame.
+        // LateUpdate, after whatever placed the camera. While aiming the orbit
+        // sets the world pose fresh every frame, so the shake is added on top.
+        // Otherwise the local position is rebuilt from the rest value, or it
+        // would drift.
         private void LateUpdate()
         {
             if (playerCamera == null) return;
 
-            // A third camera state besides aiming/normal FPS — the ball-in-hand
-            // top-down view (after a foul) ALSO drives cameraTransform's world
-            // position/rotation directly, every frame, same as the aim orbit.
-            // Leaving it alone entirely here avoids fighting it the same way
-            // aiming's branch below avoids fighting the orbit — touching either
-            // localPosition or world position from this script while it's
-            // active would fight/override that positioning.
+            // The top-down view sets the camera itself: left alone.
             if (aimController != null && aimController.IsPlacementViewActive) return;
 
-            // A fourth camera state: the ragdoll's own 3rd-person follow
-            // cam, driven fresh every frame by LocalPlayerRagdollController
-            // — same no-op-entirely treatment as the placement view above.
+            // Same for the ragdoll camera.
             if (ragdollController != null && ragdollController.IsRagdollCameraActive) return;
 
             PoolMatchRules rules = PoolMatchRules.Instance;
@@ -213,18 +156,12 @@ namespace UntitledPoolGame.Pool
                 ? rules.VisionImpairmentStrength(rules.GetEffectivePlayerIndex(playerInput.playerIndex))
                 : 0f;
 
-            // Linear decay from full magnitude to zero over the pulse's
-            // duration — same additive combination as the Vision Impair
-            // shake below, so a shot/pot/foul/pickup landing while the
-            // player also happens to be vision-impaired just adds on top
-            // instead of one silently overriding the other.
+            // Added to the Vision Impair shake rather than replacing it.
             float impactT = impactShakeDuration > 0f ? impactShakeRemaining / impactShakeDuration : 0f;
 
             bool isAiming = aimController != null && aimController.IsAiming;
 
-            // Not a decaying pulse like the others — tracks the charge level
-            // directly every frame, growing as the player holds Attack
-            // longer and resetting the instant they stop charging.
+            // Follows the charge directly, no decay.
             float chargeMagnitude = isAiming ? settings.chargeShakeMaxMagnitude * aimController.ChargeFraction : 0f;
 
             float totalMagnitude = settings.visionImpairShakeMagnitude * strength + impactShakeMagnitude * impactT + chargeMagnitude;
@@ -247,16 +184,10 @@ namespace UntitledPoolGame.Pool
             PoolMatchRules rules = PoolMatchRules.Instance;
             if (rules == null || playerCamera == null) return;
 
-            // GetEffectivePlayerIndex: in hot-seat solo (one PlayerInput
-            // playing both sides), this one screen represents whichever side
-            // is currently up, not permanently slot 0 — without this, a
-            // debuff queued for "player 1" would never find a receiver to
-            // show it on when there's no second PlayerInput at all.
+            // Effective index, so hot-seat solo shows the side being played.
             float strength = rules.VisionImpairmentStrength(rules.GetEffectivePlayerIndex(playerInput.playerIndex));
 
-            // A true on/off blink (not a smooth pulse) — unscaledTime so the
-            // blink rate doesn't slow down along with any hit-stop/pause
-            // effects added later.
+            // A hard blink, on unscaled time.
             bool visionOverlayVisible = strength > 0f &&
                 Mathf.Sin(Time.unscaledTime * settings.visionImpairFlickerFrequency * Mathf.PI * 2f) > 0f;
 
@@ -266,13 +197,8 @@ namespace UntitledPoolGame.Pool
 
             if (!visionOverlayVisible && impactAlpha <= 0f) return;
 
-            // OnGUI draws across the ENTIRE window by default, not just this
-            // player's split-screen half — a full Screen.width/height rect
-            // covered both players regardless of who the effect targeted.
-            // Camera.rect is the normalized viewport this player's camera
-            // actually renders to; converting it to a screen-space Rect
-            // (and flipping Y — viewport space is bottom-up, GUI space is
-            // top-down) confines the overlay to just their half.
+            // OnGUI covers the whole window: limit it to this player's
+            // viewport (Y flipped, GUI space is top-down).
             Rect viewport = playerCamera.rect;
             Rect screenRect = new Rect(
                 viewport.x * Screen.width,
@@ -287,9 +213,7 @@ namespace UntitledPoolGame.Pool
                 GUI.DrawTexture(screenRect, Texture2D.whiteTexture);
             }
 
-            // A fade, not a blink — drawn as its own layer on top so it
-            // still reads clearly even while the Vision Impair overlay is
-            // also up (e.g. a foul landing mid-impaired-turn).
+            // A fade on its own layer, readable over the Vision Impair overlay.
             if (impactAlpha > 0f)
             {
                 GUI.color = new Color(impactFlashColor.r, impactFlashColor.g, impactFlashColor.b, impactAlpha);

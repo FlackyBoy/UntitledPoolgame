@@ -4,12 +4,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Periodically moves "which ball currently carries a power" to a
-    // different random ball still on the table — PowerBall itself only
-    // holds the assigned power and renders the glow; this decides WHEN it
-    // rotates (random interval), WHICH ball gets it next, and WHAT power
-    // (random draw from PoolPowerSpawnSettings.availablePowers), same split
-    // of responsibilities as PoolPowerCrateManager/PoolPowerCrate.
+    // Moves the power to another random ball still on the table at random
+    // intervals, with a new random power. PowerBall only holds it and glows.
     public class PoolPowerBallRotator : MonoBehaviour
     {
         private PoolPowerSpawnSettings settings;
@@ -30,20 +26,11 @@ namespace UntitledPoolGame.Pool
 
         private IEnumerator RotationLoop()
         {
-            // Assigns a power right away once the match starts, rather than
-            // leaving every ball powerless for the first
-            // ballRotationMinInterval..MaxInterval seconds (up to 40s by
-            // default) — that gap was indistinguishable from "picking up a
-            // power ball doesn't work" if tested early in a match.
+            // First power as soon as the match starts (waiting the interval
+            // looked like power balls didn't work).
             yield return new WaitUntil(IsMatchLive);
 
-            // Powers only exist in Party mode (retour utilisateur : les
-            // billes glowaient/donnaient encore un pouvoir en 8-ball/9-ball/
-            // 14.1) — Mode is only actually locked in once MatchStarted is
-            // true (StartMatch sets both together), which is exactly what
-            // IsMatchLive() just waited for. Stops the whole loop rather
-            // than looping forever re-checking — the mode never changes
-            // mid-match.
+            // Party mode only. The mode is known once the match has started.
             if (PoolMatchRules.Instance.Mode != PoolGameMode.Party) yield break;
 
             Rotate();

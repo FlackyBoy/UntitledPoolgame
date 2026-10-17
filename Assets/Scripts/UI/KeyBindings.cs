@@ -53,7 +53,7 @@ namespace UntitledPoolGame.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Create()
         {
-            if (FindFirstObjectByType<KeyBindingsApplier>() != null) return;
+            if (FindAnyObjectByType<KeyBindingsApplier>() != null) return;
             var go = new GameObject("Key bindings") { hideFlags = HideFlags.HideInHierarchy };
             DontDestroyOnLoad(go);
             go.AddComponent<KeyBindingsApplier>();

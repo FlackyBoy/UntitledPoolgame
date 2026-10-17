@@ -4,41 +4,24 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Procedural cue pickup, replacing LocalCuePickupTrigger + PickUpCue's
-    // FinalIK InteractionSystem route while this component is present and
-    // enabled (disable it to fall back to the old route, untouched).
+    // Procedural cue pickup. Replaces the LocalCuePickupTrigger + PickUpCue
+    // InteractionSystem route while enabled (disable it to go back).
     //
-    // Why: the InteractionSystem sends the hands to grip points fixed on the
-    // cue, reachable only from one position in front of it. Standing up, the
-    // grips end up at floor level and the body collapses to reach them;
-    // widening the trigger's angle lets the player pick it up from positions
-    // those grips weren't made for. Here the grips are chosen each time:
-    //
-    // 1. Finding: on Interact, the closest free cue within reach that the
-    //    player is looking at, whatever its orientation or the side the
-    //    player comes from (no per-scene player <-> cue wiring).
-    // 2. Grips: around the point of the cue nearest a comfortable spot in
-    //    front of the chest, one per hand, the right hand on the player's
-    //    right. Hand rotations come from the cue's own carry grips (its two
-    //    InteractionTargets, the poses already tuned for holding it): same
-    //    wrap around the cue, turned so the palm faces the hand's shoulder.
-    // 3. Posture: a low cue is reached by bending the knees (feet pinned,
-    //    body effector lowered) and leaning, not by the arms dragging the
-    //    body down.
-    // 4. Lift: the cue goes to its carry pose (PickUpCue's hold point and
-    //    rotation) while the hands slide along it to the carry grips. If the
-    //    cue lies reversed (hand order along it opposite to the carry), the
-    //    left hand lets go and regrips instead of crossing the other.
-    // 5. Held: the hands follow the carry grips every frame (aiming, the cue
-    //    swing and the charge slide move the cue; the hands follow).
-    // 6. Release: the cue is dropped to physics and the hands ease off.
-    //
-    // Everything is applied just before FBBIK solves (solver.OnPreUpdate).
+    // The InteractionSystem uses grip points fixed on the cue, reachable from
+    // one position only: standing, they were at floor level and the body
+    // collapsed. Here the grips are chosen each time:
+    // 1. Interact picks the closest free cue in reach the player looks at.
+    // 2. Grips around the point of the cue nearest the chest, right hand on
+    //    the right; hand rotations from the cue's carry grips.
+    // 3. A low cue is reached by bending the knees and leaning.
+    // 4. Lift: the cue goes to its carry pose while the hands slide to the
+    //    carry grips; a reversed cue makes the left hand regrip.
+    // 5. Held: the hands follow the carry grips every frame.
+    // 6. Release: the cue goes back to physics, the hands ease off.
+    // All of it just before FBBIK solves.
     [RequireComponent(typeof(LocalPlayerHandController))]
     public class LocalCueHolder : MonoBehaviour
     {
-        // Tooltips are in French: they are read by the designer in the
-        // Inspector.
         [Header("References (auto)")]
         [Tooltip("Caméra du joueur (vide = la première caméra sous ce joueur) : sert à savoir quelle queue il regarde.")]
         [SerializeField] private Transform viewTransform;
@@ -55,10 +38,8 @@ namespace UntitledPoolGame.Interaction
         [Tooltip("Affiche « E : ramasser » quand une queue peut être ramassée.")]
         [SerializeField] private bool showPrompt = true;
 
-        // Body-relative distances are written for a human-sized arm and
-        // scaled to this character's (measured on the skeleton), as for the
-        // punches: the cartoon rig is much smaller, and a fixed 0.55 m crouch
-        // sank it into the floor.
+        // Distances are for a human-sized arm, scaled to this rig (a fixed
+        // crouch sank it into the floor).
         [Header("Grips (metres, for a 0.6 m arm, scaled to the character)")]
         [Tooltip("Longueur de bras (épaule → poignet) pour laquelle Comfort Forward / Down et Lean Forward sont écrits ; ils sont mis à l'échelle du bras réel.")]
         [SerializeField] private float referenceArmLength = 0.6f;
@@ -168,11 +149,8 @@ namespace UntitledPoolGame.Interaction
         // Busy from the reach until the hands have let go.
         public bool IsBusy => phase != Phase.Idle;
 
-        // 0 = both hands on the cue, 1 = the front hand (the one nearer the
-        // tip, the bridge hand) let go. Set by LocalPoolAimController while
-        // the ball is out of reach: the body straightens up holding the cue
-        // in one hand instead of staying twisted over the table, and the
-        // hand takes the cue again as soon as the shot is reachable.
+        // 0 = both hands, 1 = the front (bridge) hand let go. Set by the aim
+        // while the ball is out of reach, so the body straightens up.
         public float FrontHandRelease { get; set; }
         // Held and done moving into the carry pose: others may move the cue.
         public bool IsSettled => phase == Phase.Held;
@@ -218,9 +196,8 @@ namespace UntitledPoolGame.Interaction
                 Log("pickup refused — missing reference (Full Body IK, camera, or the PickUpCue giving the carry pose)");
                 return false;
             }
-            // No turn check: a cue can be picked up any time (to fight with
-            // it, or to be ready); only the shot is turn-bound
-            // (LocalPoolAimController.CanShootNow).
+            // No turn check: the cue can be picked up any time, only the shot
+            // is turn-bound.
             Cue target = FindCue(out string why);
             if (target == null) { Log("pickup refused — " + why); return false; }
             SetUpHands(target);
@@ -452,10 +429,8 @@ namespace UntitledPoolGame.Interaction
             maxCrouch = Mathf.Max(0f, hipHeight) * maxCrouchFraction;
             crouch = Mathf.Clamp((comfort.y - gripHeight) * crouchAmount, 0f, maxCrouch);
 
-            // What the knees don't cover, the hips do: bending the torso
-            // forward by θ lowers the shoulders by torso × (1 − cos θ).
-            // Without it the grips of a cue on the floor were out of reach
-            // and FBBIK dragged the whole body down through the floor.
+            // The hips cover what the knees don't: bending the torso by theta
+            // lowers the shoulders by torso x (1 - cos theta).
             float torso = r.pelvis != null ? Mathf.Max(0.1f, shoulders.y - r.pelvis.position.y) : 0.5f * bodyScale;
             float remaining = Mathf.Max(0f, comfort.y - gripHeight - crouch);
             hipBend = Mathf.Min(maxHipBend, Mathf.Acos(Mathf.Clamp(1f - remaining / torso, -1f, 1f)) * Mathf.Rad2Deg);
@@ -467,10 +442,8 @@ namespace UntitledPoolGame.Interaction
                           $"{(left.regrip ? ", cue reversed: left hand regrips during the lift" : "")}", this);
         }
 
-        // Hand pose on the cue at `point`: the carry grip's wrap around the
-        // cue (measured on its InteractionTarget), turned so the palm faces
-        // this hand's shoulder, with the cue's direction chosen to stay
-        // closest to the hand's current rotation.
+        // Hand pose on the cue at point: the carry grip's wrap, turned so the
+        // palm faces this hand's shoulder, cue direction closest to the hand.
         private void SetPickupGrip(ref Hand hand, Vector3 point, Vector3 axis, Transform shoulder)
         {
             Transform carry = hand.carryTarget;
@@ -515,10 +488,8 @@ namespace UntitledPoolGame.Interaction
             }
         }
 
-        // FBBIK's arm chains pull the body toward the hands (pull 1 by
-        // default, part of it vertical): with the hands on a cue lying far
-        // ahead on the floor, that dragged the whole body down into it on
-        // top of the crouch. Lowered for the reach and the lift only.
+        // FBBIK's arms pull the body toward the hands, which dragged it down
+        // onto a cue on the floor. Lowered for the reach and lift only.
         private void SetArmPull(bool picking)
         {
             if (fullBodyIK == null) return;
@@ -566,10 +537,8 @@ namespace UntitledPoolGame.Interaction
             if (cue.TryGetComponent(out Rigidbody rb)) rb.isKinematic = true;
             grabLocalPosition = cue.localPosition;
             grabLocalRotation = cue.localRotation;
-            // The carry pose is read on the next pre-solve pass (ReadHoldPose):
-            // the hold point sits on the spine, and here in Update the bones
-            // still hold last frame's IK result — the crouched, bent pickup
-            // pose — which put the carried cue (and the hands) below the floor.
+            // Read on the next pre-solve pass: here the bones still hold last
+            // frame's crouched pose, which put the cue under the floor.
             holdPending = true;
             SetPhase(Phase.Lifting);
         }
@@ -636,9 +605,7 @@ namespace UntitledPoolGame.Interaction
             if (hand.poser == null) return;
             if (on)
             {
-                // Same calls as FinalIK's InteractionEffector: the carry
-                // target holds a copy of the hand's finger hierarchy posed
-                // around the cue.
+            // Same calls as FinalIK's InteractionEffector (finger pose).
                 InteractionTarget t = hand.carryTarget != null ? hand.carryTarget.GetComponent<InteractionTarget>() : null;
                 hand.poser.SetPoseRoot(hand.carryTarget, t != null && t.bones != null ? t.bones : new Transform[0], 4f);
                 hand.poser.AutoMapping();
@@ -666,9 +633,7 @@ namespace UntitledPoolGame.Interaction
         // ---- IK (just before FBBIK solves) ----
 
         // ---- Trace (diagnostic) ----
-        // Pelvis height before the solve (as the Animator left it) and after
-        // (as FBBIK left it), to tell whether the body goes down because of
-        // the animation/root or because of the IK.
+        // Pelvis height before and after the solve: animation or IK?
         private float tracePelvisBefore;
         private float traceNext;
         private float traceUntil;
@@ -755,9 +720,8 @@ namespace UntitledPoolGame.Interaction
         private Vector3 PickupPosition(Hand hand) => cue.TransformPoint(hand.pickupLocalPosition);
         private Quaternion PickupRotation(Hand hand) => cue.rotation * hand.pickupLocalRotation;
 
-        // Slides from the pickup grip to the carry grip, both in cue space
-        // (so the hand rides the cue as it moves). A regripping hand lets go
-        // over the first 40 % and takes its carry grip over the last 40 %.
+        // Slides from the pickup grip to the carry grip in cue space. A
+        // regripping hand lets go over the first 40 %, grips over the last.
         private void LiftHand(ref Hand hand, float e)
         {
             Vector3 carryLocal = cue.InverseTransformPoint(hand.carryTarget.position);
@@ -776,9 +740,7 @@ namespace UntitledPoolGame.Interaction
                 second ? hand.carryTarget.rotation : PickupRotation(hand), w, clampToReach: true);
         }
 
-        // clampToReach: the target is kept within the arm's length of the
-        // shoulder (as Posture has placed it this frame, crouch included),
-        // so a hand never asks FBBIK to drag the body toward it.
+        // clampToReach: target kept within arm's length of the shoulder.
         private void DriveHand(ref Hand hand, Vector3 position, Quaternion rotation, float weight, bool clampToReach = false)
         {
             if (clampToReach && hand.shoulder != null)
@@ -794,10 +756,8 @@ namespace UntitledPoolGame.Interaction
             hand.effector.rotationWeight = weight;
         }
 
-        // Knees bend (feet pinned where they stood, body lowered), the torso
-        // bends forward at the hips and leans in, by `w` of this pickup's
-        // posture. The spine is turned before the hands are placed, so the
-        // reach clamp sees where the shoulders really are.
+        // Knees bend, torso bends and leans in, by w. The spine turns before
+        // the hands are placed so the reach clamp sees the real shoulders.
         private void Posture(float w)
         {
             crouchNow = crouch * w;
@@ -826,9 +786,8 @@ namespace UntitledPoolGame.Interaction
             if (right.poser != null) right.poser.weight = w;
         }
 
-        // Arm bend goals: 0 without the cue, blended to Held Arm Bend Weight
-        // once held; written only while changing (the punches' own elbow
-        // goals must not be overwritten when the hands are empty).
+        // Arm bend goals: 0 without the cue, Held Arm Bend Weight once held;
+        // written only while changing (the punches use them too).
         private void UpdateArmBend()
         {
             float target = phase == Phase.Held ? 1f : 0f;
@@ -847,13 +806,16 @@ namespace UntitledPoolGame.Interaction
             promptCue = FindCue(out _);
         }
 
+        // Made once: a new GUIStyle every OnGUI call was garbage every frame.
+        private static GUIStyle promptStyle;
+
         private void OnGUI()
         {
             if (promptCue == null || viewCamera == null) return;
             Rect view = viewCamera.pixelRect;
             float x = view.x + view.width / 2f, y = Screen.height - view.yMin - view.height * 0.3f;
-            GUI.Label(new Rect(x - 80f, y, 160f, 24f), "E : ramasser",
-                new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter });
+            promptStyle ??= new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+            GUI.Label(new Rect(x - 80f, y, 160f, 24f), "E : ramasser", promptStyle);
         }
 
         private void Log(string message)

@@ -550,6 +550,9 @@ Deux composants UI Toolkit (`UntitledPoolGame.Core`, `Assets/Scripts/UI/`) suive
     - `PoolBall.Active` : billes restantes ;
     - le `LocalPoolAimController` du joueur : `IsAiming`, `ChargeFraction`, `ContactOffset`, `IsOutOfReach`, vues du dessus.
   - **Événements** : `PoolBall.Pocketed`, `PoolMatchRules.Fouled` / `PowerGranted` / `PowerActivated` / `PowerRefused` / `TurnChanged`, `LocalPoolAimController.ShotTaken`.
+  - **Ce qui est reconstruit** : la plaque, l'étiquette de tour et le bandeau d'aide gardent une clé de ce qu'ils montrent (valeurs, pas chaînes) et ne sont refaits que quand elle change : pas d'allocation par image.
+  - **Un message à la fois** (`Lane`) : une file par moitié pour les interjections, une pour les cartes sponsor, une pour les cartes « pouvoir reçu ». Le suivant attend que l'affiché soit resté `minShoutTime` / `minCardTime`, puis le fait sortir (saut à `Fx.exitAt`, début de son animation de sortie) et prend sa place ; au plus deux en attente. Les événements arrivent souvent groupés (bille rentrée puis blanche, faute, deux jetons d'un même tir) et tous ces éléments ont une place fixe.
+  - **Coin haut droit empilé** (`StackUnderSlot`, chaque image) : le bloc des pouvoirs (hauteur réelle × *Power Slot Scale*), le message de refus dessous, la carte « pouvoir reçu » dessous ; l'interjection (40 % de la hauteur) descend sous cette carte quand elle est là.
   - **Fin de partie** : « Revanche » passe par `PoolMatchRules.RequestRestart`.
   - **Affichage provisoire** : `PoolMatchRules.ExternalHud` coupe les `OnGUI` provisoires de `PoolMatchRules` et `LocalPoolAimController`. Les voiles des pouvoirs (`LocalPoolPowerEffectReceiver`) restent en OnGUI.
 

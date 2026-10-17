@@ -3,11 +3,8 @@ using UnityEngine.InputSystem;
 
 namespace UntitledPoolGame.Core
 {
-    // PlayerInputManager doesn't have a built-in spawn point concept — it
-    // just instantiates the Player Prefab at whatever position is baked
-    // into the prefab itself. This repositions each joining player to a
-    // scene-specific spawn point Transform instead, indexed by join order
-    // (player 0 -> spawnPoints[0], player 1 -> spawnPoints[1], etc.).
+    // Moves each joining player to the scene's spawn point for its index
+    // (PlayerInputManager has no spawn points of its own).
     [RequireComponent(typeof(PlayerInputManager))]
     public class ScenePlayerSpawner : MonoBehaviour
     {

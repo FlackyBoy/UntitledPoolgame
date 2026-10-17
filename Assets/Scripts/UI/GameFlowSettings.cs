@@ -23,12 +23,8 @@ namespace UntitledPoolGame.Core
         public bool comingSoon;
     }
 
-    // How the game goes from the main menu to a level: the menu's own scene,
-    // the levels on offer (with their pictures and texts), and the player
-    // actions the key bindings screen edits when nobody has joined yet (in
-    // the menu scene). Assets/Resources/GameFlowSettings, created by Tools >
-    // Pool > Ensure Config Assets Exist. Tooltips in French: read by the
-    // designer in the Inspector.
+    // From the menu to a level: the menu scene, the levels on offer, and the
+    // actions the key bindings screen edits when nobody has joined yet.
     [CreateAssetMenu(fileName = "GameFlowSettings", menuName = "Pool/Game Flow Settings")]
     public class GameFlowSettings : ScriptableObject
     {

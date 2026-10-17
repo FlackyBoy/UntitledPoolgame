@@ -11,39 +11,24 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Bare-handed fighting, Gang Beasts spirit: Punch (left click / LB,
-    // hands empty) and Kick (F / RT, any time). R&D option (Boxing
-    // Punches, on the R&D player variant): one button per hand (Punch =
-    // left, PunchRight = right click / RB), a straighter and snappier punch
-    // that the view follows — see CombatSettings; with Use Animations, the
-    // guard and punches are animation clips instead (LocalUnarmedMelee.Animated.cs).
-    // Otherwise: a punch goes out
-    // on the click, no charge (the charged punch was dropped after testing);
-    // punches can be spammed: a click during a punch chains the next one
-    // with the other hand straight away, the previous arm easing back on its
-    // own. A quick click on Kick is a simple kick; holding past the tap time
-    // charges it, released to strike, and a charged kick is a Spartan kick
-    // ("This is Sparta!", 300 / AC Odyssey): the target is knocked down and
-    // launched far backwards, with a zoom on the attacker's view.
+    // Bare-handed fighting, Gang Beasts style. Punch (left click / LB, hands
+    // empty) and Kick (F / RT). A click punches at once, and clicking again
+    // during a punch chains one with the other hand. A tap kicks; held, the
+    // kick charges and becomes a Spartan kick that launches the target
+    // backwards, with a zoom on the attacker's view.
+    // R&D option Boxing Punches: one button per hand, a guard, a straighter
+    // punch (CombatSettings); with Use Animations, clips instead
+    // (LocalUnarmedMelee.Animated.cs).
     //
-    // Procedural, like LocalCueMelee: just before FBBIK solves
-    // (solver.OnPreUpdate, after the Animator), the hand or foot effector is
-    // pulled toward a guard / raised-knee pose while charging, then driven
-    // along the strike path — a hook for the fists (out to the side, then
-    // back to the centre, elbow out through a bend goal), straight out for
-    // the foot (sole toward the target, knee forward, small lunge) — with
-    // the torso twisting and the body leaning. Targets are rebuilt every
-    // frame from the animated shoulder or hip and the camera, so the blow
-    // follows the look and the walk.
-    //
-    // Hits go through PuppetMaster's own API (MuscleCollisionBroadcaster.Hit),
-    // as for the cue: see MeleeHit.
+    // Procedural like LocalCueMelee: before FBBIK solves, the hand or foot
+    // effector goes to a guard / raised knee, then along the strike path
+    // (a hook for the fists, straight out for the foot), torso twisting.
+    // Targets come from the animated shoulder or hip and the camera every
+    // frame, so the blow follows the look. Hits go through MeleeHit.
     [RequireComponent(typeof(LocalPlayerHandController))]
     [RequireComponent(typeof(PlayerInput))]
     public partial class LocalUnarmedMelee : MonoBehaviour
     {
-        // Tooltips are in French: they are read by the designer in the
-        // Inspector.
         [Tooltip("Nom de l'action map du joueur dans l'asset d'input.")]
         [SerializeField] private string actionMapName = "Player";
         [Tooltip("Action du coup de poing (clic gauche / RB), mains vides uniquement.")]
@@ -51,10 +36,8 @@ namespace UntitledPoolGame.Interaction
         [Tooltip("Action du coup de pied (F / RT).")]
         [SerializeField] private string kickActionName = "Kick";
 
-        // R&D (feature/deplacements-combat), ticked on the R&D player
-        // variant only: boxing punches — one button per hand, a guard, a
-        // snappier, straighter punch (CombatSettings). No charge: tried, then
-        // dropped on 11/10.
+        // R&D, on the R&D player variant only: boxing punches (one button per
+        // hand, guard, straighter punch).
         [Header("R&D Boxe")]
         [Tooltip("R&D : un bouton par main (Punch = poing gauche, Punch Right = poing droit). Le poing part à l'appui, presque droit, sec, le corps derrière, et la vue l'accompagne. Durées, forme, force et ressenti : CombatSettings. Décoché = poings en crochet qui alternent sur un seul bouton.")]
         [SerializeField] private bool boxingPunches;
@@ -68,11 +51,9 @@ namespace UntitledPoolGame.Interaction
         [Tooltip("Caméra Cinemachine FPS du joueur, pour le zoom du coup de pied spartiate. Vide = la première dont le nom contient « FPS ».")]
         [SerializeField] private CinemachineCamera fpsCamera;
 
-        // The punch and kick distances below are written for a human-sized
-        // limb and scaled to this character's real arm/leg length (measured
-        // on the skeleton): the cartoon rig's short arms made every target
-        // out of reach, so FBBIK locked the arm straight. Targets are also
-        // kept within Max Limb Extension of the limb length.
+        // Distances below are for a human-sized limb, scaled to this rig's
+        // measured arm and leg (its short arms couldn't reach otherwise), and
+        // kept within Max Limb Extension.
         [Header("Limb size")]
         [Tooltip("Longueur de bras (épaule → poignet, mètres) pour laquelle les distances du poing sont écrites. Elles sont mises à l'échelle du bras réel du personnage : bras 2× plus court = distances 2× plus courtes.")]
         [SerializeField] private float referenceArmLength = 0.6f;
@@ -89,10 +70,8 @@ namespace UntitledPoolGame.Interaction
         [Tooltip("Temps pour amener le poing en garde / le genou levé après l'appui. Le poing part dès que la garde est atteinte.")]
         [SerializeField] private float windupTime = 0.08f;
 
-        // Three points, from the punching shoulder, in the body's horizontal
-        // frame: start (guard), mid-course, end. Renamed on 29/09 (were
-        // guardForward/…/hookOut…) on purpose, so the new defaults replace
-        // the values already saved on the component.
+        // Start (guard), mid-course and end, from the punching shoulder, in
+        // the body's horizontal frame.
         [Header("Punch — hook (metres, from the shoulder)")]
         [Tooltip("1. Départ (garde) : distance du poing devant l'épaule.")]
         [SerializeField] private float startForward = 0.12f;
@@ -202,9 +181,8 @@ namespace UntitledPoolGame.Interaction
         [SerializeField] private float launchSpeed = 9f;
         [Tooltip("Vitesse (m/s) vers le haut ajoutée à la projection.")]
         [SerializeField] private float launchLift = 2.5f;
-        // No slow motion any more (removed on 30/09 at the user's request):
-        // only the zoom on the attacker's view remains. The field keeps its
-        // old name so the value set in the Inspector survives.
+        // Only the zoom remains (the slow motion was removed); the field keeps
+        // its old name so the saved value survives.
         [Tooltip("Zoom (degrés de champ de vision en moins) de la caméra de l'attaquant au contact du coup de pied spartiate. 0 = pas de zoom.")]
         [SerializeField] private float slowMoZoom = 12f;
         [Tooltip("Durée (secondes) du zoom du coup de pied spartiate, retour compris.")]
@@ -256,10 +234,8 @@ namespace UntitledPoolGame.Interaction
         // Read by LocalPlayerLocomotion: the arms stay stiff in guard.
         public bool IsGuarding => guardWeight > 0.01f;
 
-        // A blow landed on another player: attacker and victim player
-        // indices (-1 = not a joined player, e.g. a dummy), contact point,
-        // strength 0..1 (jab ~0.3, full charge 1). GameFeel plays its Feel
-        // sequence for it.
+        // A blow landed: attacker, victim (-1 = not a player, e.g. a dummy),
+        // contact point, strength 0..1. Played by GameFeel.
         public static event System.Action<int, int, Vector3, float> PlayerHit;
 
         private Phase phase = Phase.Idle;
@@ -440,11 +416,8 @@ namespace UntitledPoolGame.Interaction
                 return;
             }
 
-            // Spamming the punch: a click once the fist is on its way chains
-            // the next punch with the other hand without waiting for this
-            // arm to come back.
-            // Boxing punches: it's the OTHER hand's button that chains (the
-            // same hand can't punch again before its arm is back).
+            // A click once the fist is on its way chains the next punch with
+            // the other hand. Boxing: the other hand's button chains.
             InputAction chainAction = Boxing ? (rightHand ? punchAction : punchRightAction) : punchAction;
             if (move == Move.Punch && phase != Phase.Windup && chainAction.WasPressedThisFrame())
             {
@@ -542,18 +515,13 @@ namespace UntitledPoolGame.Interaction
             phaseTime = 0f;
         }
 
-        // The hand's fingers (continuing the forearm) and back (facing out
-        // from the body: an arm hanging at rest has the palm toward the
-        // thigh), in the hand bone's own space — whatever the rig's bone
-        // axes are — so the punch can turn the knuckles toward the target
-        // with the back of the hand up. Without it the hand keeps the
-        // animation's rotation, which turned the fist outward once the arm
-        // was raised.
+        // Fingers and back of the hand in the hand bone's space (whatever the
+        // rig's axes), so the punch can turn the knuckles toward the target,
+        // back of the hand up.
         private void MeasureHand(BipedReferences r) => MeasureHandFor(r, rightHand, out fingersInHand, out backInHand);
 
-        // The foot's sole (down, while standing) and toes, in the foot
-        // bone's own space — whatever the rig's bone axes are — so the kick
-        // can turn the sole toward the target with the toes up.
+        // Sole and toes in the foot bone's space, so the kick turns the sole
+        // toward the target.
         private void MeasureFoot()
         {
             Transform foot = fullBodyIK.references.rightFoot;
@@ -707,9 +675,8 @@ namespace UntitledPoolGame.Interaction
             bufferedPunch = false;
         }
 
-        // R&D: the punching arm is handed over to the guard from where its
-        // fist is, so it eases back up instead of dropping. The active limb
-        // is cleared without releasing it: the guard drives it from now on.
+        // R&D: the arm goes to the guard from where the fist is, instead of
+        // dropping. The guard drives it from now on.
         private void HandToGuard()
         {
             if (activeEffector == null || guardWeight <= 0f) return;
@@ -965,9 +932,8 @@ namespace UntitledPoolGame.Interaction
             back = hand.InverseTransformDirection(transform.right * (right ? 1f : -1f));
         }
 
-        // After FBBIK: the fingers of each closed hand fold toward the palm
-        // (worked out from the bones' positions, whatever the rig's axes).
-        // The Animator writes the fingers every frame, so nothing builds up.
+        // After FBBIK: fingers of closed hands fold toward the palm. The
+        // Animator rewrites them every frame, so nothing accumulates.
         private void CurlFingers()
         {
             // Animated punches: the clips already close the hands.
@@ -993,17 +959,11 @@ namespace UntitledPoolGame.Interaction
             fadeEffector.rotationWeight = fadeEffector.positionWeight * fistAlign;
         }
 
-        // Hook: from a boxing guard (fist raised beside the jaw, cocked
-        // further back while charging), out a little to the side at
-        // mid-course, then forward to finish in front of its own shoulder
-        // (quadratic Bézier: start, control, end). The windup brings the
-        // fist up from the hanging arm to the guard.
-        // Laid out in the body's horizontal frame (flat view forward, world
-        // up), not the camera's: with the camera frame, looking slightly
-        // down at a close opponent tilted the whole hook down to the belly.
-        // The look only nudges the height (Punch Pitch Follow). Where the
-        // fists end sideways is Fist Spread (in shoulder widths) — ending
-        // near the chest's midline made the arms cross the body diagonally.
+        // Hook: from the guard by the jaw, out to the side at mid-course, then
+        // forward in front of its shoulder (quadratic Bezier). Laid out in
+        // the body's horizontal frame: the camera's tilted the hook down to
+        // the belly when looking at a close opponent. The look only nudges
+        // the height (Punch Pitch Follow); Fist Spread sets the end width.
         private Vector3 PunchTarget(BipedReferences r, Vector3 flatForward, out Vector3 elbow)
         {
             Transform shoulderBone = rightHand ? r.rightUpperArm : r.leftUpperArm;
@@ -1015,10 +975,8 @@ namespace UntitledPoolGame.Interaction
             float k0 = armLength / Mathf.Max(0.01f, referenceArmLength);
             Vector3 f = flatForward * k0, u = Vector3.up * k0, rt = Vector3.Cross(Vector3.up, flatForward) * k0;
 
-            // Reach: the punching shoulder goes forward with the blow (FBBIK
-            // shoulder effector, see ApplyBody). Every point is measured from
-            // the pushed shoulder, so the fist goes further by the same amount
-            // instead of the arm just bending more.
+            // The shoulder goes forward with the blow, and the points are
+            // measured from it, so the fist reaches further.
             float drive = Boxing ? CombatSettings.Instance.shoulderDrive : shoulderReach;
             shoulderPush = f * (drive * reach * weight);
             shoulder += shoulderPush;
@@ -1027,9 +985,7 @@ namespace UntitledPoolGame.Interaction
             Vector3 guard = shoulder + f * startForward + u * startHeight + rt * (side * startOutward);
             Vector3 control = shoulder + f * (punchReach * midForward) + rt * (side * midOutward) + u * (midHeight + pitchLift * midForward);
 
-            // End: the two fists Fist Spread × shoulder width apart, measured
-            // on the rig (not scaled: it's already this character's size),
-            // around the middle of the shoulders.
+            // End: fists Fist Spread x shoulder width apart, around the middle.
             Vector3 rtUnit = Vector3.Cross(Vector3.up, flatForward);
             Vector3 center = shoulder;
             float shoulderWidth = 0.3f;
@@ -1058,9 +1014,8 @@ namespace UntitledPoolGame.Interaction
             gizmoEnd = end;
             LogLimbOnce("arm", armLength, k0);
 
-            // Elbow out to the side at about shoulder height: a hook's arm
-            // stays bent and horizontal, the torso turn does the work. A
-            // straight punch keeps the elbow down and slightly out.
+            // Hook: elbow out at shoulder height, the torso does the work.
+            // Straight punch: elbow down, slightly out.
             float s = reach, k = 1f - s;
             Vector3 hookElbow = shoulder + rt * (side * 0.4f) - u * 0.05f - f * 0.05f;
             Vector3 straightElbow = shoulder + rt * (side * 0.2f) - u * 0.3f;
@@ -1068,9 +1023,8 @@ namespace UntitledPoolGame.Interaction
             return WithinReach(shoulder, k * k * guard + 2f * k * s * control + s * s * end, maxDistance);
         }
 
-        // Scene view, player selected, while a punch is under way: the hook
-        // path (yellow), its three points (start, mid-course, end) and the
-        // fist target (red) — to tune the Punch settings by eye.
+        // Scene view, player selected: hook path, its points and the fist
+        // target, to tune the punch by eye.
         private void OnDrawGizmosSelected()
         {
             if (!Application.isPlaying || phase == Phase.Idle || move != Move.Punch) return;
@@ -1196,12 +1150,9 @@ namespace UntitledPoolGame.Interaction
                 if (broadcaster.muscleIndex >= 0 && broadcaster.muscleIndex < target.muscles.Length)
                     zone = LocalHitGauge.ZoneOf(target.muscles[broadcaster.muscleIndex].props.group);
 
-                // The victim's guard (R&D): a blocked blow fills the gauge
-                // and pushes the body far less. The blow that empties the
-                // block meter is still blocked; it only breaks the guard, and
-                // from then on blows go to the hit gauge as usual — the first
-                // version also dazed (gauge pushed to 70 %), so the next blow
-                // knocked out: removed on 12/10 at the user's request.
+                // R&D guard: a blocked blow fills the gauge and pushes far
+                // less. The blow that empties the block meter is still blocked,
+                // it just breaks the guard.
                 LocalUnarmedMelee victim = gauge.GetComponent<LocalUnarmedMelee>();
                 if (victim != null && victim != this) blocked = victim.TryBlock(forceDirection, zone, move == Move.Kick, spartan, out brokeGuard);
                 // A Spartan kick taken on the guard only breaks it: no K.O.,
@@ -1266,10 +1217,8 @@ namespace UntitledPoolGame.Interaction
             return victim != null && victim.enabled ? victim.playerIndex : -1;
         }
 
-        // Throws the whole ragdoll along velocity. Waits one physics step so
-        // BehaviourPuppet has actually released the muscles (SetState clamps
-        // their velocity as it unpins, and the pins would pull a launched
-        // body back toward the animation otherwise).
+        // Throws the ragdoll. Waits one physics step so BehaviourPuppet has
+        // released the muscles, or the pins pull the body back.
         private IEnumerator Launch(PuppetMaster target, Vector3 velocity)
         {
             yield return new WaitForFixedUpdate();
@@ -1315,15 +1264,18 @@ namespace UntitledPoolGame.Interaction
         private void OnGUI()
         {
             if (!showChargeIndicator || viewCamera == null) return;
-            DrawTargetGauge();
-            DrawBlockMeter();
+            // Bottom-up, so each bar can be pushed above the previous one.
+            barStackTop = float.MaxValue;
+            if (phase == Phase.Windup && charged)
+            {
+                bool top = move == Move.Kick && charge >= spartanMinCharge;
+                DrawBar(0.22f, 140f, 10f, charge,
+                    top ? new Color(1f, .78f, .15f) : Color.Lerp(new Color(.19f, .71f, .4f), new Color(1f, .3f, .24f), charge),
+                    top ? "SPARTE !" : "PIED", 16);
+            }
             DrawStamina();
-            if (phase != Phase.Windup || !charged) return;
-
-            bool top = move == Move.Kick && charge >= spartanMinCharge;
-            DrawBar(0.22f, 140f, 10f, charge,
-                top ? new Color(1f, .78f, .15f) : Color.Lerp(new Color(.19f, .71f, .4f), new Color(1f, .3f, .24f), charge),
-                top ? "SPARTE !" : "PIED", 16);
+            DrawBlockMeter();
+            DrawTargetGauge();
         }
 
         // R&D: the hit gauge of the last target, for 2.5 s after a blow,
@@ -1338,16 +1290,20 @@ namespace UntitledPoolGame.Interaction
                 $"{lastGauge.name}  {state}", 13);
         }
 
-        // One provisional bar (until the new UI), centred in this player's
-        // half of the screen at heightFraction from the bottom, with an
-        // optional label above it. Styles are made once per font size: a new
-        // GUIStyle every OnGUI call was garbage every frame.
+        // Provisional bar, centred in this player's view at heightFraction
+        // from the bottom, label above. One style per font size.
         private static readonly Dictionary<int, GUIStyle> barStyles = new Dictionary<int, GUIStyle>();
+
+        // Top of the last bar drawn (GUI y, downward). Bars are stacked so
+        // they don't overlap in a short window.
+        private float barStackTop;
 
         private void DrawBar(float heightFraction, float width, float height, float fill, Color color, string label = null, int fontSize = 12)
         {
             Rect view = viewCamera.pixelRect;
             float x = view.x + view.width / 2f, y = Screen.height - view.yMin - view.height * heightFraction;
+            y = Mathf.Min(y, barStackTop - 4f - height);
+            barStackTop = string.IsNullOrEmpty(label) ? y : y - fontSize - 12f;
             if (!string.IsNullOrEmpty(label))
             {
                 if (!barStyles.TryGetValue(fontSize, out GUIStyle style))

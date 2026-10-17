@@ -7,11 +7,10 @@ using UntitledPoolGame.Core;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // ② Salle: trace walls on a grid, turn wall modules into doors and
-    // windows, fill floors and ceilings, paint props. Each tool shows the
-    // palette's variants for what it places, as thumbnails: the selected one
-    // is the one used. Rooms are rebuilt from their RoomOutline (which keeps
-    // the chosen variants), so changing kit keeps the layout.
+    // ② Salle: trace walls on a grid, turn modules into doors and windows,
+    // fill floors and ceilings, paint props. Each tool shows its palette
+    // variants as thumbnails. Rooms are rebuilt from their RoomOutline, so
+    // changing kit keeps the layout.
     public partial class LevelMakerWindow
     {
         private enum RoomTool { None, Walls, Openings, Floors, Stairs, Props }
@@ -48,9 +47,7 @@ namespace UntitledPoolGame.PoolEditor
         private bool propRandomYaw = true;
         private float propYaw;
         private float propMinScale = 1f, propMaxScale = 1f;
-        // The next prop's random rotation and scale, rolled before the click
-        // so the ghost shows exactly what will be placed (they used to be
-        // rolled at the click).
+        // Rolled before the click so the ghost shows what will be placed.
         private float nextRandomYaw, nextScale = 1f;
         private bool nextRolled;
 
@@ -971,11 +968,9 @@ namespace UntitledPoolGame.PoolEditor
             propYaw = Mathf.Repeat(propYaw + degrees, 360f);
         }
 
-        // Ctrl + wheel turns the ghost of the Props and Stairs tools
-        // smoothly, by propWheelDegrees per scroll unit (Shift = finer);
-        // Ctrl + Alt + wheel by 45° notches, onto multiples of 45°. Taken in
-        // beforeSceneGui, before the Scene view uses the wheel to zoom.
-        // Shift + wheel comes as a horizontal scroll on Windows: either axis.
+        // Ctrl + wheel turns the Props and Stairs ghost (Shift = finer),
+        // Ctrl + Alt + wheel by 45° notches. Caught before the Scene view
+        // zooms. Shift + wheel arrives as a horizontal scroll on Windows.
         private void OnBeforeSceneGUI(SceneView view)
         {
             Event e = Event.current;

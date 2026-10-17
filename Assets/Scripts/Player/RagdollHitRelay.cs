@@ -3,21 +3,11 @@ using UntitledPoolGame.Interaction;
 
 namespace UntitledPoolGame.Player
 {
-    // One per ragdoll bone (alongside Muscle Collision Broadcaster). On a
-    // qualifying hit, does two things: tells LocalPlayerRagdollController
-    // to re-arm BehaviourPuppet's hasCollidedSinceGetUp gate (see
-    // LocalPlayerRagdollController.NotifyCollision for why this is needed
-    // on top of PuppetMaster's own native collision detection), and applies
-    // its own extra impulse directly to this specific bone, at the exact
-    // contact point, scaled by the thrown object's own momentum (mass ×
-    // velocity). The raw Unity collision already transfers some momentum
-    // on its own, but PuppetMaster's pin force resists it quite hard, so a
-    // "realistic" 1:1 transfer barely reads once the muscle is still
-    // fighting to stay pinned — this is what actually makes the reaction
-    // scale visibly with how hard something was thrown, and land
-    // differently depending on which bone/point was hit (torque falls out
-    // of AddForceAtPosition automatically from the contact point's offset
-    // from that bone's own center of mass).
+    // One per ragdoll bone, next to its Muscle Collision Broadcaster. On a
+    // strong enough hit it re-arms BehaviourPuppet's collision gate
+    // (LocalPlayerRagdollController.NotifyCollision) and pushes this bone at
+    // the contact point by the thrown object's momentum: the pins resist the
+    // plain collision, this makes the reaction scale with the throw.
     public class RagdollHitRelay : MonoBehaviour
     {
         [SerializeField] private float minImpactSpeed = 3f;

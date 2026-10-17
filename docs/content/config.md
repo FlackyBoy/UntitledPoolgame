@@ -300,11 +300,12 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Pouvoir lancé : carte chez l'adversaire | Quand un joueur lance un pouvoir, une carte arrive sur l'écran de l'autre joueur (par la droite). Afficher ou non, aussi pour les Effets et Défenses ou non, en-têtes (« J{0} T'ENVOIE », « J{0} ACTIVE »), ligne sous le nom (« Tout de suite ! », « Au début de ton tour… », « Pour son prochain coup »), durée (2,6 s) |
 | Pouvoir refusé | Texte sous la pastille du pouvoir quand la touche est pressée au mauvais moment : rien en stock (vide = la pastille tremble sans texte), pendant son tour seulement, pendant le tour adverse seulement, billes qui roulent, placement de la blanche ou annonce de la 8 en cours ; durée (1,4 s) |
 | Fin de partie | « J{0} gagne ! », « Revanche », aide des touches, confettis |
-| Durées et mouvements | Interjections (1,3 s), rayons (1,1 s), carte sponsor (3,1 s), délai faute → main libre (1,3 s), secousse (durée, force), balancement de « À toi ! » (hauteur, période), voile du joueur qui attend |
+| Durées et mouvements | Interjections (1,3 s), rayons (1,1 s), carte sponsor (3,1 s), temps minimal à l'écran avant qu'une interjection ou une carte soit remplacée par la suivante (*Min Shout Time* 0,6 s, *Min Card Time* 1,2 s), délai faute → main libre (1,3 s), secousse (durée, force), balancement de « À toi ! » (hauteur, période), voile du joueur qui attend |
 
 - `{0}` est remplacé par le numéro du joueur, la poche ou la catégorie du pouvoir.
 - **Vider un texte** désactive l'interjection ou le bandeau correspondant.
 - Un format mal écrit (accolade en trop) s'affiche tel quel au lieu de casser le HUD.
+- **Un message à la fois** : sur un même écran, une interjection, une carte sponsor ou une carte « pouvoir reçu » qui arrive pendant qu'une autre du même genre est affichée attend son tour (au plus deux en attente, les plus anciennes sont abandonnées). En haut à droite, le bloc des pouvoirs, le message de refus et la carte « pouvoir reçu » s'empilent.
 
 ## Pouvoirs (un fichier par pouvoir)
 

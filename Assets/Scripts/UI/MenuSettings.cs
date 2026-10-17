@@ -54,15 +54,11 @@ namespace UntitledPoolGame.Core
         public string sub;
     }
 
-    // Shared look and texts of the menus: the palette, the fonts, the
-    // messages and formats the game writes itself (toasts, "{0} - prêt",
-    // pause by J{0}, key binding rows…) and a few timings. The screens
-    // themselves (elements, positions, texts, balls, background) are
-    // MenuScreens edited in Menu Studio; the screen fields here only seed
-    // their default layout (MenuDefaults). Assets/Resources/MenuSettings,
-    // created by Tools > Pool > Ensure Config Assets Exist; read when a menu
-    // is built, so changes show on the next Play. Tooltips in French: read by
-    // the designer in the Inspector.
+    // Shared look and texts of the menus: palette, fonts, the messages the
+    // game writes itself (toasts, "{0} - prêt"...) and a few timings. The
+    // screens themselves are MenuScreens edited in Menu Studio; the screen
+    // fields here only seed their default layout (MenuDefaults). Read when a
+    // menu is built.
     [CreateAssetMenu(fileName = "MenuSettings", menuName = "Pool/Menu Settings")]
     public class MenuSettings : ScriptableObject
     {

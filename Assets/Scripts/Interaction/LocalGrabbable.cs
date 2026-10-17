@@ -15,29 +15,22 @@ namespace UntitledPoolGame.Interaction
         public Quaternion HoldLocalRotation => Quaternion.Euler(holdLocalEulerAngles);
         public bool IsHeld { get; private set; }
 
-        // Cue-only: PickUpCue/InteractionSystem owns the cue's actual
-        // attachment (parenting, kinematic, collider, reach animation) —
-        // calling PickUp()/Drop() here as well would fight that (snap to
-        // holdLocalPosition, then get overridden by the reach animation
-        // next frame). This only keeps IsHeld in sync so it still reads
-        // correctly everywhere else (this method's own guard included).
+        // Carries a Cue: read every frame by the hands, the aim, the melee
+        // and the animation, so looked up once (Awake).
+        public bool IsCue { get; private set; }
+
+        // For the cue, whose attachment is done by PickUpCue: only keeps
+        // IsHeld in sync (PickUp/Drop would fight the reach).
         public void MarkExternallyHeld(bool held)
         {
             IsHeld = held;
 
-            // With the collider off (below) and gravity still on, the cue
-            // would fall through the floor during the hands' approach —
-            // PickUpCue only makes it kinematic later, once they arrive —
-            // and its grip points, which the hands chase, would drag the
-            // body down through the floor with it. Undone on release: a
-            // normal release already did it (PickUpCue.OnDrop), but a reach
-            // cut short never got that far.
+            // Kinematic, or the cue falls through the floor during the reach
+            // and drags the body with it.
             if (rb != null) rb.isKinematic = held;
 
-            // PickUp()/Drop() turn the collider off/on; this path skips them,
-            // so without this the cue's solid collider stays live while it's
-            // in the hands and shoves the balls (and climbs onto them) when
-            // it moves. Triggers (e.g. the pickup zone) are left alone.
+            // Solid colliders off while held, or the cue shoves the balls.
+            // Triggers stay.
             foreach (Collider solid in GetComponents<Collider>())
             {
                 if (!solid.isTrigger) solid.enabled = !held;
@@ -51,6 +44,7 @@ namespace UntitledPoolGame.Interaction
         {
             rb = GetComponent<Rigidbody>();
             col = GetComponent<Collider>();
+            IsCue = TryGetComponent(out Cue _);
         }
 
         public void PickUp(Transform holder)
@@ -70,9 +64,7 @@ namespace UntitledPoolGame.Interaction
             if (!IsHeld) return;
 
             transform.SetParent(null, worldPositionStays: true);
-            // The collider was off while held, so wherever it currently sits may
-            // be embedded in something solid — nudge it up before physics
-            // resumes so depenetration has room to push it out cleanly.
+            // Nudged up so depenetration can push it out of whatever it's in.
             transform.position += Vector3.up * 0.1f;
 
             rb.isKinematic = false;
@@ -83,9 +75,8 @@ namespace UntitledPoolGame.Interaction
             IsHeld = false;
         }
 
-        // Lets go of an object held in the hand by LocalObjectHands (which
-        // held it through MarkExternallyHeld): back to physics where it is,
-        // with an optional impulse (a throw).
+        // Lets go of an object held by LocalObjectHands, with an optional
+        // impulse (a throw).
         public void ReleaseFromHand(Vector3 impulse)
         {
             transform.SetParent(null, worldPositionStays: true);
@@ -97,9 +88,7 @@ namespace UntitledPoolGame.Interaction
 
         public Rigidbody Body => rb;
 
-        // Drop, then give it a shove — impulse is already a full world-space
-        // force vector (direction * power), computed by the thrower (who
-        // knows their own look direction), not this object.
+        // Drop, then the thrower's impulse (world space).
         public void Throw(Vector3 impulse)
         {
             if (!IsHeld) return;

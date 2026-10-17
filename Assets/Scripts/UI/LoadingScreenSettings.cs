@@ -2,11 +2,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Core
 {
-    // Everything the loading screen (LevelLoader, variant B « Le retour des
-    // billes ») shows: texts, tips, the silly status lines, timings.
-    // Assets/Resources/LoadingScreenSettings, created by Tools > Pool >
-    // Ensure Config Assets Exist. The level picture and twist come from
-    // GameFlowSettings. Tooltips in French: read by the designer.
+    // What the loading screen shows: texts, tips, status lines, timings. The
+    // level picture and twist are in GameFlowSettings.
     [CreateAssetMenu(fileName = "LoadingScreenSettings", menuName = "Pool/Loading Screen Settings")]
     public class LoadingScreenSettings : ScriptableObject
     {

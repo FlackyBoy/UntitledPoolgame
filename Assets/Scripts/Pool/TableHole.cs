@@ -5,15 +5,10 @@ using UnityEngine.Rendering.Universal;
 
 namespace UntitledPoolGame.Pool
 {
-    // A hole smashed in the felt by TableHolePower's meteor. The felt itself
-    // stays solid: the hole is a dark, torn shape drawn just above it — a
-    // new random outline for each impact (lumpy edge, a few longer cracks)
-    // — with a scorched rim (a decal projected on the felt, turned and
-    // stretched at random, or a plain outline without one) and smoke. A ball
-    // whose centre gets inside the outline is handed to PoolMatchRules
-    // (HandleBallFellInTableHole), which sinks it and brings it back at the
-    // end of the shot. Opened and closed by PoolMatchRules (AddTableHole,
-    // and the hole's Duration).
+    // A hole smashed in the felt by the Trou meteor. The felt stays solid:
+    // the hole is a torn shape drawn just above it (a new outline each time),
+    // with a scorched rim (decal) and smoke. A ball whose centre gets inside
+    // goes to PoolMatchRules.HandleBallFellInTableHole.
     public class TableHole : MonoBehaviour
     {
         private static readonly List<TableHole> active = new List<TableHole>();
@@ -74,10 +69,8 @@ namespace UntitledPoolGame.Pool
 
             if (p.ScorchDecal != null)
             {
-                // Projected straight down onto the felt, through a thin slab
-                // centred on it: the balls rolling by stay unmarked (and the
-                // angle fade spares their sides). Turned and stretched at
-                // random so no two scorches look alike.
+                // Projected down through a thin slab on the felt so passing
+                // balls stay unmarked. Random turn and stretch.
                 var scorchObject = new GameObject("HoleScorch");
                 scorchObject.transform.SetParent(transform, false);
                 scorchObject.transform.localPosition = Vector3.up * (p.ScorchDepth * 0.5f);
@@ -138,15 +131,11 @@ namespace UntitledPoolGame.Pool
             }
         }
 
-        // The outline as a flat mesh just above the felt, no collider (a ball
-        // sinking below the felt looks like it drops into it), with a soft
-        // edge in its vertex colours, so it melts into the scorch around
-        // instead of sitting on it like a cut-out:
-        //   centre → inner ring: solid hole colour;
-        //   inner ring → outline: still opaque, embers glowing at the outline
-        //     (hotter or cooler at random along it, Ember Amount);
-        //   outline → outer ring: fading out to nothing (Edge Softness).
-        // The falls follow the outline itself.
+        // The outline as a flat mesh just above the felt (no collider), with a
+        // soft edge in vertex colours so it melts into the scorch:
+        //   centre to inner ring: solid;
+        //   inner ring to outline: opaque, embers along the outline;
+        //   outline to outer ring: fading out (Edge Softness).
         private Transform CreateShape(TableHolePower p)
         {
             float softness = p.EdgeSoftness;
@@ -200,10 +189,8 @@ namespace UntitledPoolGame.Pool
             shape.transform.localPosition = Vector3.up * 0.0015f;
             shape.AddComponent<MeshFilter>().sharedMesh = mesh;
             var r = shape.AddComponent<MeshRenderer>();
-            // Drawn with the opaque geometry (render queue 2450, "AlphaTest"),
-            // not as the transparent it would be by default: transparents are
-            // sorted by distance, and the hole then came out on top of the
-            // smoke rising from it. Now every effect is drawn after it.
+            // Opaque queue (2450): as a transparent it was drawn over its own
+            // smoke.
             if (shapeMaterial == null) shapeMaterial = new Material(Shader.Find("Sprites/Default")) { renderQueue = 2450 };
             r.sharedMaterial = shapeMaterial;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

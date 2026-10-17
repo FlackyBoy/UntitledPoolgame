@@ -5,26 +5,19 @@ using UntitledPoolGame.Player;
 
 namespace UntitledPoolGame.Interaction
 {
-    // R&D hit gauge (CombatSettings > Encaissement): the blows of the boxing
-    // punches (and kicks) fill it instead of knocking down on physics alone.
-    // - Not full: the blow only staggers — for Stagger Time the puppet
-    //   tolerates a much larger drift before losing its balance (see
-    //   Stagger), so the hit shakes the body without knocking it down.
-    // - Past Dazed From: dazed — LocalPlayerLocomotion reads Dazed to slow
-    //   the player, make them drift and sway the view.
-    // - Full (or a Spartan kick): knocked out — the puppet is unpinned and
-    //   stays down for Knock Out Time (BehaviourPuppet.getUpDelay), then
-    //   gets up through the usual LocalPlayerRagdollController path.
-    // - Back up: empty gauge, and Wake Protection seconds where blows don't
-    //   fill it, so nobody gets knocked out again as they stand.
-    // It drains on its own after Drain Delay without being hit.
+    // R&D hit gauge (CombatSettings > Encaissement): punches and kicks fill
+    // it instead of knocking down on physics alone.
+    // - Not full: the blow staggers (the puppet tolerates a larger drift
+    //   for Stagger Time), it shakes without falling.
+    // - Past Dazed From: dazed (LocalPlayerLocomotion slows and sways).
+    // - Full, or a Spartan kick: knocked out for Knock Out Time, then the
+    //   usual get-up.
+    // - Back up: empty, and Wake Protection seconds where blows don't count.
+    // It drains after Drain Delay without a hit.
     //
-    // Lives on the victim's root (next to LocalPlayerRagdollController).
-    // The R&D variant has it; anyone else hit by a boxing punch (dummies,
-    // the normal player) gets it added on the first blow — For().
-    // BehaviourPuppet's own values are put back whenever this lets go.
-    // Zones, animations of the blows taken and of the daze, and the
-    // knock-out fall: LocalHitGauge.Reactions.cs.
+    // On the victim's root; added on the first blow to anyone without it
+    // (For). BehaviourPuppet's values are restored when it lets go. Zones,
+    // reactions and the K.O. fall: LocalHitGauge.Reactions.cs.
     public partial class LocalHitGauge : MonoBehaviour
     {
         [Tooltip("Écrit dans la console les changements d'état (titube, sonné, K.O., réveil).")]
@@ -90,11 +83,9 @@ namespace UntitledPoolGame.Interaction
             IsKnockedOut = false;
         }
 
-        // A blow landed: amount before the zone multiplier, the zone hit and
-        // the direction of its force. Call before applying the force, so the
-        // stagger's balance already holds. Returns true if it knocks out.
-        // blocked: the victim's guard took it (LocalUnarmedMelee.TryBlock) —
-        // its own block clip plays instead of a hit reaction.
+        // A blow: amount before the zone multiplier, zone, force direction.
+        // Call before applying the force. True if it knocks out. blocked: the
+        // guard took it, the block clip plays instead.
         public bool TakeHit(float amount, bool forceKnockOut, HitZone zone, Vector3 direction, bool blocked = false)
         {
             CombatSettings cfg = CombatSettings.Instance;
@@ -123,29 +114,18 @@ namespace UntitledPoolGame.Interaction
             return false;
         }
 
-        // How BehaviourPuppet decides (read in BehaviourPuppetDamage.UnPinMuscle
-        // and BehaviourPuppet.OnFixedUpdate):
-        // - a hit takes unpin / (props.collisionResistance × Collision
-        //   Resistance) off the hit muscle's pin;
-        // - it knocks out when a muscle whose pin is at or below Pin Weight
-        //   Threshold drifts from its target by more than
-        //   props.knockOutDistance × √(global Knock Out Distance), squared.
-        // The player prefab's muscle props (Defaults, no group overrides)
-        // have both collisionResistance and knockOutDistance at 0: any hit
-        // fully unpins the muscle, and any drift then knocks out. Scaling
-        // them (first two versions) kept them at 0. While staggering, the
-        // props of every group get at least Stagger Resistance and Stagger
-        // Drift (metres, squared like the offset).
+        // BehaviourPuppet (UnPinMuscle, OnFixedUpdate): a hit removes
+        // unpin / (collisionResistance x Collision Resistance) from the
+        // muscle's pin, and a muscle at or under Pin Weight Threshold knocks
+        // out once it drifts past knockOutDistance x sqrt(Knock Out Distance).
+        // The player's props have both at 0, so any hit knocks out. While
+        // staggering every group gets at least Stagger Resistance and Stagger
+        // Drift.
         //
-        // Arms and hands don't count at all while staggering: a player's
-        // floppy arms (LocalPlayerLocomotion keeps their pin below Pin Weight
-        // Threshold) swing with the body after a hit, and a hand flailing
-        // 0.61 m from its pose knocked a player down on the first punch
-        // (diagnostic log of 12/10) — it says nothing about balance. An
-        // override for those groups goes first (GetProps takes the first
-        // match), with an out-of-reach Knock Out Distance. The puppet's own
-        // override array is swapped for a new one, never edited, and simply
-        // put back afterwards.
+        // Arms and hands are ignored while staggering: they're loose and swing
+        // after a hit, which says nothing about balance. Their override goes
+        // first (GetProps takes the first match). The puppet's override array
+        // is swapped, not edited, and put back afterwards.
         private void Stagger(CombatSettings cfg)
         {
             if (puppet == null || cfg.staggerTime <= 0f) return;
@@ -181,9 +161,8 @@ namespace UntitledPoolGame.Interaction
             return p;
         }
 
-        // Back to the prefab's values only once the hit muscles have their
-        // pin back: with its thresholds at 0, a muscle still unpinned would
-        // knock out the instant they return.
+        // Restored only once the hit muscles are pinned again, or they'd
+        // knock out at once with the prefab's zero thresholds.
         private bool PinsRecovered()
         {
             PuppetMaster pm = puppet != null ? puppet.puppetMaster : null;
@@ -200,13 +179,9 @@ namespace UntitledPoolGame.Interaction
             if (puppet == null) return;
             puppet.defaults = baseDefaults;
             puppet.groupOverrides = baseGroups;
-            // The blow is absorbed: BehaviourPuppet only knocks out within
-            // 3 s of a collision (hasCollidedSinceGetUp), and the hit opened
-            // that window. A player's floppy arms (LocalPlayerLocomotion
-            // lowers their pin weight below Pin Weight Threshold) always
-            // drift a little, so with the prefab's 0 Knock Out Distance back
-            // the player fell about a second after any punch. Closing the
-            // window means only a new blow can knock them down.
+            // BehaviourPuppet knocks out within 3 s of a collision, and the
+            // loose arms always drift a bit: closing that window means only
+            // a new blow can knock the player down.
             if (!IsKnockedOut) puppet.SetHasCollided(false);
         }
 
@@ -255,9 +230,8 @@ namespace UntitledPoolGame.Interaction
         }
 
         // ---- Diagnostic: a fall the gauge didn't decide ----
-        // Every physics step, the muscle closest to BehaviourPuppet's
-        // knock-out condition (same math as BehaviourPuppet.OnFixedUpdate);
-        // logged if the puppet then loses its balance without a K.O.
+        // The muscle closest to the knock-out condition each step, logged
+        // if the puppet falls without a K.O.
         private Muscle worstMuscle;
         private float worstOffset, worstThreshold, worstPin, worstRatio;
         private bool wasStanding = true;

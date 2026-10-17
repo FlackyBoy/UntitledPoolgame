@@ -4,12 +4,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Owns the crates' whole spawn/respawn lifecycle — PoolPowerCrate itself
-    // only detects pickup and shows a color; this decides WHERE crates sit
-    // (random PoolPowerSpawnPoint), WHAT power/color they carry (random draw
-    // from PoolPowerSpawnSettings.availablePowers), and WHEN a collected one
-    // comes back (random delay, new spot, freshly rolled power). One
-    // instance per table, same singleton pattern as PoolMatchRules.
+    // Spawns the crates: where (random spawn point), what (random power) and
+    // when a collected one comes back (random delay, new spot). One per table.
     public class PoolPowerCrateManager : MonoBehaviour
     {
         public static PoolPowerCrateManager Instance { get; private set; }
@@ -29,7 +25,7 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            spawnPoints.AddRange(FindObjectsByType<PoolPowerSpawnPoint>(FindObjectsSortMode.None));
+            spawnPoints.AddRange(FindObjectsByType<PoolPowerSpawnPoint>());
         }
 
         private void OnDestroy()
@@ -43,12 +39,7 @@ namespace UntitledPoolGame.Pool
             StartCoroutine(WaitForPartyModeThenSpawnInitialCrates());
         }
 
-        // Crates only exist in Party mode (retour utilisateur : elles se
-        // ramassaient encore en 8-ball/9-ball/14.1) — the mode itself isn't
-        // known/locked-in until PoolMatchRules.StartMatch() actually runs
-        // (selectedMode keeps changing while someone's still browsing the
-        // pre-match menu), so this waits for MatchStarted before checking
-        // Mode rather than checking eagerly at scene load.
+        // Party mode only, known once the match has started.
         private IEnumerator WaitForPartyModeThenSpawnInitialCrates()
         {
             yield return new WaitUntil(() => PoolMatchRules.Instance != null && PoolMatchRules.Instance.MatchStarted);
@@ -82,10 +73,7 @@ namespace UntitledPoolGame.Pool
             float delay = Random.Range(settings.crateRespawnMinDelay, settings.crateRespawnMaxDelay);
             yield return new WaitForSeconds(delay);
 
-            // Prefer a point nobody else is currently sitting on, but a
-            // reused crate has to go SOMEWHERE even if every other point is
-            // occupied — falling back to the one it just left is better than
-            // not respawning at all.
+            // A free point if possible, else the one it just left.
             List<PoolPowerSpawnPoint> free = new List<PoolPowerSpawnPoint>();
             foreach (PoolPowerSpawnPoint point in spawnPoints)
             {

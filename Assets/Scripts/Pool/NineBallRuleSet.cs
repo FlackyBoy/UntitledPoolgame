@@ -3,16 +3,10 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Casual 9-ball, 2 players: only balls 1-9 + the cue ball are in play
-    // (10-15 are hidden at Setup). The cue ball must hit the lowest-numbered
-    // ball still on the table first (real 9-ball's core rule — everything
-    // else, call-shot included, stays out of scope). Pocketing that same
-    // ball keeps your turn; pocketing anything else (legally), or nothing,
-    // passes it. Sinking the 9-ball wins immediately — unless it happens on
-    // the same shot as a scratch, which is a loss instead, or on the same
-    // shot as a bad first contact, which just doesn't count (the 9 is simply
-    // gone from the table without your legit having to sink it, a known
-    // simplification — see TODO.md).
+    // Casual 9-ball for 2 players: balls 1-9 only. The cue ball must hit the
+    // lowest ball first. Potting it keeps the turn, anything else passes it.
+    // The 9 wins, except with a scratch (loss) or a bad first contact
+    // (doesn't count, a known simplification).
     public class NineBallRuleSet : IPoolRuleSet
     {
         private int nextBall = 1;

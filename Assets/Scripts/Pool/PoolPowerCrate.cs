@@ -2,23 +2,10 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // A Mario Kart-style item box sitting on the felt — whoever's shooting
-    // gets the power the moment the cue ball rolls close enough to it. Power
-    // + visual are assigned by PoolPowerCrateManager (random draw from
-    // PoolPowerSpawnSettings.availablePowers, prefab from GetCratePrefab),
-    // not fixed in the Inspector — this component only handles
-    // detection/visuals, the manager owns the spawn/respawn lifecycle
-    // (which location, when, with what).
-    //
-    // Checked explicitly every FixedUpdate via a distance test rather than
-    // Collider/OnTriggerEnter: Unity's built-in trigger events are still a
-    // discrete per-physics-step overlap check under the hood (continuous
-    // collision detection only protects SOLID collisions from tunneling, not
-    // triggers), so a ball moving fast enough could in principle cross a thin
-    // trigger zone between two steps and never fire Enter at all. A manual
-    // distance check has the same one-check-per-step limitation in theory,
-    // but removes any doubt about Rigidbody/trigger-pairing requirements and
-    // makes the pickup radius trivial to see (gizmo) and reason about.
+    // An item box on the felt: the shooter gets its power when the cue ball
+    // rolls close enough. Power and visual are set by PoolPowerCrateManager.
+    // A distance check every FixedUpdate rather than a trigger, which a fast
+    // ball can cross between two steps; also simpler to see (gizmo).
     public class PoolPowerCrate : MonoBehaviour
     {
         [SerializeField] private float pickupRadius = 0.15f;
@@ -26,22 +13,13 @@ namespace UntitledPoolGame.Pool
         private PoolPower power;
         private bool collected;
 
-        // Tracks what's currently instantiated so Initialize() only swaps
-        // the visual when the assigned prefab actually changes (e.g. a
-        // respawn rolled a different PowerType) instead of destroying and
-        // recreating it every single time.
+        // The visual is only swapped when the prefab changes.
         private GameObject currentVisual;
         private GameObject currentVisualPrefab;
-        // Only set when currentVisual is the auto-generated placeholder —
-        // a user-supplied prefab is trusted to already look distinct for
-        // its type, so it's never recolored (a flat material tint could
-        // easily fight a real model's own materials/textures).
+        // Only for the placeholder; a real prefab is never tinted.
         private Renderer placeholderRenderer;
 
-        // Called by PoolPowerCrateManager whenever this crate (re)spawns.
-        // prefab may be null — falls back to a tinted placeholder cube for
-        // whichever PowerType doesn't have one assigned in
-        // PoolPowerSpawnSettings yet.
+        // Called on each (re)spawn. prefab null = tinted placeholder cube.
         public void Initialize(PoolPower assignedPower, GameObject prefab, Color color)
         {
             power = assignedPower;
@@ -58,11 +36,8 @@ namespace UntitledPoolGame.Pool
             SitOnFelt();
         }
 
-        // A token prefab's origin is the felt (its ring lies there, the
-        // object floats above): spawn points aren't all at the same height
-        // over the felt (generated table, points painted with the Level
-        // Maker), so the visual goes down or up onto it. The crate itself —
-        // and so the pickup distance — stays at the spawn point.
+        // A token's origin is the felt: the visual is moved onto it, spawn
+        // points aren't all at felt height. The pickup point doesn't move.
         private void SitOnFelt()
         {
             if (currentVisual == null || placeholderRenderer != null) return;
@@ -99,11 +74,7 @@ namespace UntitledPoolGame.Pool
 
             PoolMatchRules rules = PoolMatchRules.Instance;
             if (rules == null || !rules.MatchStarted) return;
-            // While the cue ball is being dragged around during ball-in-hand
-            // placement (top-down view after a foul), it isn't "rolling
-            // through" anything — it's just being repositioned. Without this,
-            // simply carrying it near a crate while choosing where to place it
-            // would pick the power up too.
+            // Not while the cue ball is being placed.
             if (rules.BallInHand) return;
 
             PoolBall cueBall = PoolBall.FindCueBall();

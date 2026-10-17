@@ -9,127 +9,72 @@ namespace UntitledPoolGame.Player
     [RequireComponent(typeof(CharacterController))]
     public class LocalCharacterAnimationController : MonoBehaviour
     {
-        // Assigned by hand rather than found via GetComponentInChildren, so
-        // it can't silently grab the wrong Animator if the rig ever has more
-        // than one (e.g. a held prop with its own).
+        // Assigned by hand so a prop with its own Animator can't be picked.
         [SerializeField] private Animator animator;
 
         // The character's Animator, for other components that drive their
         // own parameters (LocalPlayerLocomotion: Jump, JumpLeg, Crouch).
         public Animator Animator => animator;
 
-        // Optional — see the Awake existence checks below. Our own simple
-        // Idle/Locomotion controller (PlayerOffline.controller) uses this;
-        // richer imported controllers (e.g. RootMotion's demo "Humanoid
-        // Third Person Puppet" family) don't have any single generic speed
-        // parameter at all — their Idle pose is just the origin of the
-        // Forward/Right blend space below, reached naturally at zero input,
-        // no separate gating needed.
+        // Optional (our simple Idle/Locomotion controller). RootMotion's
+        // demo controllers have no speed parameter.
         [SerializeField] private string speedParameterName = "Speed";
 
         // Optional — harmless if the assigned Animator Controller has no
         // such bool parameter.
         [SerializeField] private string isAimingParameterName = "IsAiming";
 
-        // Optional — true whenever the held object is the pool cue,
-        // regardless of whether aim mode is currently entered (IsAiming
-        // above covers that narrower case). Drives an idle-with-cue pose
-        // for "holding it but not aiming yet".
+        // Optional: the held object is the cue, aiming or not.
         [SerializeField] private string isHoldingCueParameterName = "IsHoldingCue";
 
-        // Optional — true whenever ANY object is held, cue included. On its
-        // own this doesn't distinguish cue from non-cue; combined with
-        // IsHoldingCue in a transition's AND condition
-        // (IsHoldingObject == true, IsHoldingCue == false), it picks out
-        // "holding some other object" as its own pose, separate from both
-        // empty-handed idle and holding-the-cue idle.
+        // Optional: any object held. With IsHoldingCue false, it means
+        // "holding something else".
         [SerializeField] private string isHoldingObjectParameterName = "IsHoldingObject";
 
-        // Any IK component that should only run while the cue is held —
-        // IK solving toward cue-mounted targets would otherwise yank the
-        // arms toward wherever those targets sit while empty-handed.
-        // Disabled outright (enabled = false) whenever isHoldingCue is
-        // false. Typed Behaviour so non-IK helpers can be listed too.
+        // Behaviours that only run while the cue is held: IK aiming at the
+        // cue's targets would pull empty hands around.
         [SerializeField] private Behaviour[] cueOnlyIkComponents;
 
-        // Optional — mirrors LocalPoolAimController.ChargeFraction (0 at
-        // rest, up to 1 at Max Power) every frame while aiming, so a Blend
-        // Tree can pull the cue back progressively as the shot charges,
-        // instead of a single fixed "about to shoot" pose.
+        // Optional: the shot's charge (0..1), so a Blend Tree can draw the cue
+        // back as it charges.
         [SerializeField] private string shootChargeParameterName = "ShootCharge";
 
-        // Signed local-space velocity, for a 2D locomotion Blend Tree (strafe
-        // left/right + walk forward as separate clips instead of one generic
-        // "Speed" magnitude). Same optional-parameter pattern as IsAiming —
-        // harmless if the assigned controller doesn't have a strafe blend yet.
+        // Optional: local velocity for a 2D locomotion Blend Tree.
         [SerializeField] private string moveXParameterName = "MoveX";
         [SerializeField] private string moveYParameterName = "MoveY";
 
-        // Same axes as MoveX/MoveY above, under the parameter names used by
-        // RootMotion's "Humanoid Third Person Puppet" demo controller family
-        // (Right = strafe, Forward = forward/back) — kept as its own
-        // optional pair rather than folded into MoveX/MoveY so a single
-        // Animator Controller can only ever match one naming scheme at a
-        // time, with no risk of half-matching a mixed one.
+        // The same axes under the names of RootMotion's demo controllers
+        // (Right, Forward). Kept apart from MoveX/MoveY so a controller only
+        // ever matches one naming scheme.
         [SerializeField] private string rightParameterName = "Right";
         [SerializeField] private string forwardParameterName = "Forward";
 
-        // Right/Forward's Blend Tree (RootMotion's demo controller) is
-        // normalized to a -1..1 direction+magnitude, unlike MoveX/MoveY's
-        // Blend Tree above (authored on the same ±5 scale as actual local
-        // velocity, see Walk Blend Axis Scale) — local velocity is divided
-        // by this before being written to Right/Forward, so 1 should
-        // roughly be this character's fastest move speed
-        // (LocalFpsPlayerController's Move Speed).
+        // Right/Forward expect -1..1: velocity is divided by this (about the
+        // fastest move speed).
         [SerializeField] private float rightForwardMaxSpeed = 5f;
 
-        // That controller family also has a Turn+Forward "face your
-        // movement" locomotion mode as an alternative to real strafing,
-        // selected by this bool — forced permanently true (in Awake and
-        // every frame, never false), since this FPS-style camera-relative
-        // character always strafes rather than turning to face its own
-        // movement direction (transform yaw is driven directly by
-        // look input — see LocalFpsPlayerController — with no code path
-        // that ever turns the body to face movement instead, so Grounded
-        // Directional's "turn to face movement" premise doesn't hold here).
-        // The cue/no-cue leg pose difference the player wants instead lives
-        // inside Grounded Strafe itself — see Base Layer's own
-        // IsHoldingCue-gated split, not this parameter.
+        // Those controllers can also turn the body to face movement instead
+        // of strafing. This character always strafes (its yaw follows the
+        // look), so it's kept true.
         [SerializeField] private string isStrafingParameterName = "IsStrafing";
 
-        // Same controller family also gates its jump/fall states on this —
-        // no jump/fall mechanic exists yet, but driving it for real from
-        // CharacterController.isGrounded costs nothing and avoids relying
-        // on its default value staying accurate forever.
+        // Same controllers gate jump and fall on it; fed from isGrounded.
         [SerializeField] private string groundedParameterName = "OnGround";
 
-        // Matches the Blend Tree's forward/strafe motion field positions
-        // (also 5 by default) — used to scale the turn-lean value below onto
-        // the same axis range the Blend Tree expects.
+        // Range of the Blend Tree's axes, for the turn lean below.
         [SerializeField] private float walkBlendAxisScale = 5f;
 
-        // Below this, the Idle state is playing (or about to) — must match
-        // the "Speed Less/Greater 0.1" transition conditions in the Animator
-        // Controller. Keeps Animator.speed at 1 in Idle instead of freezing
-        // it at ~0 while nearly stopped.
+        // Must match the Animator's Speed 0.1 transitions. Keeps the
+        // Animator at normal speed in Idle.
         [SerializeField] private float idleSpeedThreshold = 0.1f;
 
-        // Body yaw follows the camera directly (see LocalFpsPlayerController)
-        // — with no clip for "turn in place", looking around while standing
-        // still used to just snap-rotate the whole body with zero animation
-        // reaction. Instead of authoring a dedicated turn clip, a fast turn
-        // while otherwise idle leans into the existing strafe pose (lerped
-        // in/out, so it reads as a weight shift rather than a snap).
+        // There's no turn-in-place clip: turning fast while standing leans
+        // into the strafe pose instead of a bare snap.
         [SerializeField] private float turnLeanMaxAngularSpeed = 180f;
         [SerializeField] private float turnLeanSmoothing = 6f;
 
-        // Eases every float parameter below toward its target instead of
-        // snapping instantly — smooths the Blend Tree's own transitions
-        // (e.g. a sudden stop or direction reversal) into the animation
-        // instead of a hard jump between poses. Too high a value reads as
-        // laggy/unresponsive input, so keep this small; 0 restores the old
-        // instant behaviour exactly (Animator.SetFloat's dampTime=0 is a
-        // plain assignment, same as the 2-argument overload).
+        // Damping of the float parameters, smooths sudden stops and reversals.
+        // Keep small, 0 = instant.
         [SerializeField] private float parameterDampTime = 0.1f;
 
         private CharacterController controller;
@@ -196,18 +141,13 @@ namespace UntitledPoolGame.Player
         {
             if (animator == null) return;
 
-            // Re-asserted every frame, not only in Awake: Unity puts the
-            // Animator's parameters back to their defaults (IsStrafing false
-            // in the controller) when it's rebound — disabled and re-enabled,
-            // its object reactivated — and the Base Layer then falls back to
-            // its default state, Grounded Directional, for good (its only way
-            // out to Grounded Strafe is IsStrafing true).
+            // Every frame: Unity resets the parameters when the Animator is
+            // rebound (disabled, reactivated), and IsStrafing false would
+            // leave it stuck in Grounded Directional.
             if (hasIsStrafingParameter) animator.SetBool(isStrafingParameterName, true);
 
-            // Time stopped (pause menu, Time.timeScale 0): the turn speed
-            // below would be 0 / 0 = NaN, which the smoothing then keeps
-            // forever and feeds to Speed — the locomotion stayed broken after
-            // resuming. Nothing moves while paused, so nothing to update.
+            // Paused (timeScale 0): the turn speed would be NaN and stay in
+            // the smoothing for good.
             if (Time.deltaTime <= 0f)
             {
                 previousYaw = transform.eulerAngles.y;
@@ -225,10 +165,8 @@ namespace UntitledPoolGame.Player
             float angularSpeed = Mathf.DeltaAngle(previousYaw, currentYaw) / Time.deltaTime;
             previousYaw = currentYaw;
 
-            // Unsmoothed — reacts the instant the player stops turning, so
-            // the Idle<->Locomotion transition (gated on Speed) reacts
-            // immediately too instead of lingering. Only the visual pose fed
-            // into the Blend Tree below (turnLeanSmoothed) eases in/out.
+            // Unsmoothed, so Idle/Locomotion reacts at once; only the pose
+            // value (turnLeanSmoothed) eases.
             float rawTurnLean = isStandingStill
                 ? Mathf.Clamp(angularSpeed / turnLeanMaxAngularSpeed, -1f, 1f) * walkBlendAxisScale
                 : 0f;
@@ -239,23 +177,9 @@ namespace UntitledPoolGame.Player
 
             if (hasMoveXYParameters || hasRightForwardParameters)
             {
-                // Local space: x = strafe (right positive), z = forward. The
-                // player's own transform yaw already IS the movement basis
-                // (see LocalFpsPlayerController.HandleMove), so this reduces
-                // to exactly the raw Move input scaled by moveSpeed, plus the
-                // turn lean on the strafe axis. Summed rather than
-                // hard-switched on isStandingStill: since
-                // rawTurnLean (and so turnLeanSmoothed) is already forced to
-                // 0 the instant isStandingStill goes false, and
-                // localVelocity.x is already near 0 whenever isStandingStill
-                // is true, a straight sum behaves the same at both extremes
-                // as the old either/or branch did — but with no
-                // discontinuity at the threshold. The old hard switch
-                // visibly flickered Right/MoveX whenever horizontalSpeed sat
-                // right at idleSpeedThreshold (e.g. from CharacterController
-                // grounding noise while genuinely stationary), jumping
-                // between turnLeanSmoothed and ~0 every time isStandingStill
-                // flipped.
+                // Local velocity (x strafe, z forward) plus the turn lean. A sum
+                // rather than a switch on isStandingStill: the switch flickered
+                // when the speed sat at the threshold.
                 Vector3 localVelocity = transform.InverseTransformDirection(velocity);
                 float strafeValue = localVelocity.x + turnLeanSmoothed;
                 float forwardValue = localVelocity.z;
@@ -268,11 +192,7 @@ namespace UntitledPoolGame.Player
 
                 if (hasRightForwardParameters)
                 {
-                    // Re-normalized to -1..1 (see Right Forward Max Speed's
-                    // field comment) instead of reusing strafeValue/
-                    // forwardValue's ±walkBlendAxisScale range above. Same
-                    // continuous strafeValue/forwardValue as MoveX/MoveY —
-                    // no separate isStandingStill branch here either.
+                    // Normalized to -1..1 for Right/Forward.
                     float normalizedStrafe = Mathf.Clamp(strafeValue / rightForwardMaxSpeed, -1f, 1f);
                     float normalizedForward = Mathf.Clamp(forwardValue / rightForwardMaxSpeed, -1f, 1f);
                     animator.SetFloat(rightParameterName, normalizedStrafe, parameterDampTime, Time.deltaTime);
@@ -285,7 +205,7 @@ namespace UntitledPoolGame.Player
 
             {
                 bool isHoldingAnyObject = handController != null && handController.HeldObject != null;
-                bool isHoldingCue = isHoldingAnyObject && handController.HeldObject.TryGetComponent(out Cue _);
+                bool isHoldingCue = isHoldingAnyObject && handController.HeldObject.IsCue;
 
                 if (hasIsHoldingCueParameter)
                     animator.SetBool(isHoldingCueParameterName, isHoldingCue);

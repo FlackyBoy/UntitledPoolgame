@@ -4,50 +4,31 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Slides the cue's visual mesh back along its own axis as the shot
-    // charges, so the cue itself appears to move through a hand that stays
-    // put (the grip point — an InteractionTarget, sibling of CueMesh, not a
-    // child of it — never moves, since it's what FBBIK's hand effector
-    // tracks). Deliberately not using the Animator's own "ShootCharge"
-    // blend tree parameter (see LocalCharacterAnimationController) — that
-    // one assumes the cue is a child of an animated hand bone, which
-    // conflicts with the InteractionSystem-based two-hand hold this project
-    // settled on (2026-09-23).
+    // Slides the cue's mesh along its axis (back while charging, forward for
+    // extra reach) so the cue moves through hands that stay put: the grip
+    // points aren't children of the mesh, and FBBIK follows them.
     public class CueChargeSlide : MonoBehaviour
     {
-        // The separated visual-only child (CueMesh) — must NOT be the same
-        // object as the one carrying LocalGrabbable/InteractionObject/the
-        // grip points, or sliding it would drag the grip point (and so the
-        // hand) along with it instead of leaving it fixed.
+        // The visual-only child. It must not carry the grip points, or the
+        // hands would slide with it.
         [SerializeField] private Transform cueMesh;
 
-        // The aim controller is the one of whoever holds the cue, found from
-        // its parent (see HolderAimController). It used to be a fixed
-        // per-scene reference, which broke as soon as another player held the
-        // cue (R&D: one cue wired to "New", played by "New (1)" → no recoil).
+        // The holder's aim controller, found from the cue's parent (a fixed
+        // reference broke when another player held the cue).
         private Transform lastParent;
         private LocalPoolAimController holderAimController;
 
-        // Direction the mesh slides back while charging, in the cue's local
-        // space — only used when Auto Detect Tip Axis is off or fails (then
-        // it's -TipAxis).
+        // Slide direction when the tip axis isn't detected (else -TipAxis).
         [SerializeField] private Vector3 slideAxis = Vector3.forward;
 
         [SerializeField] private float slideDistance = 0.15f;
 
-        // Which local axis points along the cue toward its tip, i.e. toward
-        // the ball (same axis as LocalPoolAimController.Aim Hold Axis) — the
-        // mesh extends this way by AimReachExtra when the body had to stand
-        // further back to clear the table, and pulls back the opposite way
-        // (Slide Axis, above) while charging. Only the mesh moves, never the
-        // held cue itself: moving that drags the hands, and the body with them.
+        // Local axis toward the tip, used when the tip axis isn't detected.
+        // Only the mesh moves, never the held cue (that drags the hands).
         [SerializeField] private Vector3 reachAxis = Vector3.forward;
 
-        // Works out the tip axis from the mesh itself (longest bounding-box
-        // axis; the tip is the thinner end) instead of trusting Reach Axis /
-        // Slide Axis / Aim Hold Axis — the cue's own Z turned out not to be
-        // its length axis (the model has its own orientation). Uncheck to
-        // fall back to those three fields.
+        // Finds the tip axis from the mesh (longest side, tip = thinner end)
+        // instead of the three axis fields: the model's Z isn't its length.
         [SerializeField] private bool autoDetectTipAxis = true;
 
         private Vector3 meshRestLocalPosition;
@@ -73,9 +54,7 @@ namespace UntitledPoolGame.Interaction
             Mesh mesh = filter != null ? filter.sharedMesh : null;
             if (mesh == null) return false;
 
-            // mesh.bounds is available even when the mesh isn't Read/Write
-            // enabled (its vertices aren't) — so the axis and the tip
-            // distance come from the bounds alone.
+            // Bounds work without Read/Write, so they're enough here.
             Vector3 size = mesh.bounds.size;
             int axis = size.x >= size.y && size.x >= size.z ? 0 : (size.y >= size.z ? 1 : 2);
             Vector3 center = mesh.bounds.center;
@@ -128,9 +107,8 @@ namespace UntitledPoolGame.Interaction
 
             axisInCueSpace = transform.InverseTransformDirection(filter.transform.TransformDirection(meshLocal)).normalized;
 
-            // How far the tip end sits from this object's origin, along that
-            // axis — so the body can be placed with the TIP (not the pivot,
-            // which is mid-cue) at the ball.
+            // Tip distance from the origin (mid-cue), so the tip is placed at
+            // the ball, not the pivot.
             Vector3 tipInMesh = center;
             tipInMesh[axis] = sign > 0f ? mesh.bounds.max[axis] : mesh.bounds.min[axis];
             Vector3 tipInCue = transform.InverseTransformPoint(filter.transform.TransformPoint(tipInMesh));
@@ -143,9 +121,8 @@ namespace UntitledPoolGame.Interaction
             Vector3 buttInCue = transform.InverseTransformPoint(filter.transform.TransformPoint(buttInMesh));
             ButtDistance = Vector3.Dot(buttInCue, axisInCueSpace);
 
-            // How far the mesh may slide forward through the hands before
-            // its butt passes the rear hand (grip nearest the butt), keeping
-            // Butt Margin of cue behind it.
+            // How far the mesh can slide before its butt passes the rear hand
+            // (with Butt Margin to spare).
             if (grips.Length > 0)
             {
                 float rearGrip = float.MaxValue;
@@ -159,22 +136,17 @@ namespace UntitledPoolGame.Interaction
         [Tooltip("Longueur de queue (mètres) qui doit toujours dépasser derrière la main arrière quand la queue glisse dans les mains pour atteindre une bille lointaine.")]
         [SerializeField] private float buttMargin = 0.1f;
 
-        // How far the mesh can slide forward through the hands (reach) while
-        // its butt stays behind the rear hand; float.MaxValue if unknown.
-        // LocalPoolAimController caps the playable reach with it.
+        // Mesh slide allowed before the butt passes the rear hand; caps the
+        // playable reach. MaxValue if unknown.
         public float MaxMeshReach { get; private set; } = float.MaxValue;
 
         // Signed distance from the cue root's origin to its butt along
         // TipAxis (usually negative), or 0 if the mesh couldn't be analysed.
         public float ButtDistance { get; private set; }
 
-        // The held cue is parented under its holder's character (PickUpCue),
-        // so the holder's aim controller is up the hierarchy; looked up again
-        // only when the parent changes. Lying free (no aim controller above
-        // it): nobody is aiming with it, so no slide.
-        // Diagnostic (LocalPoolAimController's aim trace): which aim
-        // controller this cue follows, and how far its mesh is currently
-        // slid from rest along the tip axis (negative = pulled back).
+        // The held cue is a child of its holder, so the aim controller is up
+        // the hierarchy (looked up again when the parent changes). None = no
+        // slide. Also read by the aim trace.
         public LocalPoolAimController FollowedAimController => HolderAimController();
         public float CurrentMeshOffset => cueMesh != null ? Vector3.Dot(cueMesh.localPosition - meshRestLocalPosition, TipAxis) : 0f;
 
@@ -199,9 +171,8 @@ namespace UntitledPoolGame.Interaction
             LocalPoolAimController aim = HolderAimController();
             bool aiming = aim != null && aim.IsAiming;
             float fraction = aiming ? aim.ChargeFraction : 0f;
-            // The hands already moved forward by AimHandShift (the held cue
-            // itself moves, see LocalPoolAimController.ApplyHandShift), so the
-            // mesh only slides through them for what's left.
+            // The hands already moved forward by AimHandShift: the mesh slides
+            // for the rest.
             float reach = aiming ? aim.AimMeshReach : 0f;
 
             Vector3 slideDirection = detectedOk ? -TipAxis : slideAxis.normalized;

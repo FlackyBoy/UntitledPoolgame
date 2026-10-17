@@ -3,17 +3,10 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Gives every ball but the cue ball one shared look (IdenticalGroupsPower)
-    // and puts the real ones back afterwards. Works on whatever renderers a
-    // ball has (a generated sphere or a custom model), by swapping their
-    // sharedMaterials and remembering the originals — not a property block,
-    // which only works when every ball material uses the same shader
-    // properties.
-    //
-    // PowerBall swaps a ball's material too (category material while it
-    // carries a power): it goes through SetBaseMaterial so a change made
-    // while disguised lands in the remembered originals instead of revealing
-    // the ball.
+    // Gives every ball but the cue ball one shared look (Identical Groups) and
+    // restores the real ones after, by swapping sharedMaterials (works for any
+    // model; a property block needs matching shaders). PowerBall changes
+    // materials through SetBaseMaterial, so it doesn't reveal a ball.
     public static class BallDisguise
     {
         private static readonly Dictionary<Renderer, Material[]> originals = new Dictionary<Renderer, Material[]>();
@@ -21,17 +14,15 @@ namespace UntitledPoolGame.Pool
 
         public static bool Active { get; private set; }
 
-        // look: the materials of the ball to copy, one array per renderer of
-        // that ball (a renderer of a disguised ball takes the look of the
-        // renderer at the same index, or the first one). Every ball,
-        // pocketed (inactive) ones included, so a ball coming back on the
-        // table can't give itself away either.
+        // look: materials to copy, one array per renderer (a renderer takes the
+        // look at its index, or the first). Potted balls too, so one coming
+        // back doesn't give itself away.
         public static void Apply(IReadOnlyList<Material[]> look)
         {
             if (Active) Restore();
             if (look == null || look.Count == 0) return;
 
-            foreach (PoolBall ball in Object.FindObjectsByType<PoolBall>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (PoolBall ball in Object.FindObjectsByType<PoolBall>(FindObjectsInactive.Include))
             {
                 if (ball.IsCueBall) continue;
                 CollectRenderers(ball, scratch);
@@ -54,9 +45,8 @@ namespace UntitledPoolGame.Pool
             Active = false;
         }
 
-        // The look of one ball as it really is (its remembered originals if
-        // it's currently disguised; a power ball's own number material
-        // rather than its category material).
+        // A ball's real look (its originals if disguised, its number material
+        // rather than a power material).
         public static List<Material[]> LookOf(PoolBall ball)
         {
             var look = new List<Material[]>();

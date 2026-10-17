@@ -13,10 +13,9 @@ using UntitledPoolGame.Core;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // Level Maker, ambiences (lot 5): Adaptive Probe Volumes with one baked
-    // lighting scenario per ambience, so a room's mood can change while
-    // playing. Lights stay real-time for their direct light; only indirect
-    // light is baked, into the probes.
+    // Level Maker ambiences (lot 5): Adaptive Probe Volumes with one baked
+    // scenario per ambience, so the mood can change in play. Direct light
+    // stays real-time, only indirect light is baked into the probes.
     public static class AmbienceTools
     {
         public const string AmbienceFolder = KitGenerator.KitsFolder + "/Ambiances";
@@ -123,12 +122,10 @@ namespace UntitledPoolGame.PoolEditor
             return null;
         }
 
-        // Everything the scene needs for ambiences: the controller (with the
-        // main light and global volume), a global probe volume, lighting
-        // settings that bake indirect light only, a baking set holding this
-        // scene and one scenario per ambience, and the static renderers
-        // taking their indirect light from the probes. Returns false (with a
-        // message) when something must be done by hand.
+        // Sets the scene up for ambiences: controller, global probe volume,
+        // lighting settings (indirect only), baking set with one scenario per
+        // ambience, static renderers on probes. False (with a message) when
+        // something must be done by hand.
         public static bool SetUpScene(LevelMakerSettings settings)
         {
             Scene scene = SceneManager.GetActiveScene();
@@ -207,9 +204,8 @@ namespace UntitledPoolGame.PoolEditor
             Lightmapping.lightingSettings = lighting;
         }
 
-        // Pieces placed by the Level Maker are static and contribute to GI;
-        // with nothing baked into lightmaps they must take their indirect
-        // light from the probes, or they get none.
+        // Nothing goes in lightmaps, so static pieces must take their indirect
+        // light from the probes.
         public static void UseProbesForStaticRenderers()
         {
             foreach (MeshRenderer renderer in LevelBuilder.FindAll<MeshRenderer>())
@@ -249,9 +245,8 @@ namespace UntitledPoolGame.PoolEditor
 
         // ---------- Applying ----------
 
-        // The ambience in the editor, undoable for the scene objects it
-        // touches; lights that feed the bake switched to Mixed (real-time
-        // direct light, baked indirect light).
+        // Applies an ambience in the editor (undoable); lights feeding the bake
+        // switch to Mixed.
         public static void ApplyInEditor(AmbienceController controller, AmbiencePreset preset)
         {
             if (controller == null || preset == null) return;

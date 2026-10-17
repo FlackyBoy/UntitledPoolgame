@@ -10,38 +10,22 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Hitting the other player with the held cue: hold Attack (cue in hand,
-    // not aiming) to charge, release to strike. The direction comes from
-    // how the player turns while charging, measured from the view at the
-    // press — turn right = the cue winds up on the right (the blow sweeps
-    // back to the left), turn left = the opposite, look up = the cue goes
-    // up (overhead blow), no clear turn = thrust with the tip, pool-shot
-    // stance. What the player sees while charging is the blow that will
-    // come. On release the view swings back toward where it was at the
-    // press — or toward an opponent in a cone around it (light aim
-    // assist) — so the blow lands where the player was looking, arcade
-    // style. The arc is laid out in the camera's frame.
+    // Hitting the other player with the cue: hold Attack (cue in hand, not
+    // aiming) to charge, release to strike. Turning while charging picks the
+    // blow: turn right and the cue winds up on the right (sweeps left), and
+    // the other way round; look up for an overhead; no clear turn = thrust
+    // with the tip. On release the view swings back to where it was at the
+    // press, or to an opponent in a cone around it (light aim assist).
     //
-    // The swing is procedural. The held cue — and with it the grips, so the
-    // hands through FBBIK — orbits around the shoulders: the hands travel a
-    // wide arc at a constant distance from the shoulders (always within
-    // reach, so FBBIK doesn't drag the body toward them). On top of that,
-    // just before FBBIK solves (solver.OnPreUpdate), the spine is turned by
-    // a share of the swing angle and the body effector is leaned back while
-    // charging and forward on the strike, so the torso takes part in the
-    // blow instead of only the arms.
-    //
-    // A muscle of another player's ragdoll caught by the cue is hit through
-    // PuppetMaster's own API (MuscleCollisionBroadcaster.Hit): unpin and
-    // force grow with the charge, and a full charge knocks the target down
-    // outright. BehaviourPuppet handles the stumble/fall; a fall goes
-    // through LocalPlayerRagdollController as usual.
+    // Procedural: the cue (so the hands) orbits the shoulders at a constant
+    // distance, always within reach. Before FBBIK solves, the spine turns
+    // with the swing and the body leans back while charging, forward on
+    // the strike. Hits go through PuppetMaster (MuscleCollisionBroadcaster.Hit),
+    // stronger with the charge; a full charge knocks down.
     [RequireComponent(typeof(LocalPlayerHandController))]
     [RequireComponent(typeof(PlayerInput))]
     public class LocalCueMelee : MonoBehaviour
     {
-        // Tooltips are in French: they are read by the designer in the
-        // Inspector.
         [Tooltip("Nom de l'action map du joueur dans l'asset d'input.")]
         [SerializeField] private string actionMapName = "Player";
         [Tooltip("Action qui charge (maintenir) et déclenche (relâcher) le coup.")]
@@ -282,9 +266,8 @@ namespace UntitledPoolGame.Interaction
         private float TurnedYaw => Mathf.DeltaAngle(startYaw, CurrentYaw);
         private float TurnedUp => startPitch - CurrentPitch;
 
-        // Turning right winds the cue up on the right, so the blow sweeps to
-        // the left (and the other way round); looking up raises it for an
-        // overhead. Looking down decides nothing.
+        // Turning right winds up on the right (blow to the left) and the
+        // other way round; looking up = overhead. Looking down decides nothing.
         private bool TryReadTurn(out Direction turned)
         {
             float yaw = TurnedYaw, up = TurnedUp;
@@ -298,7 +281,7 @@ namespace UntitledPoolGame.Interaction
         private bool CanSwing()
         {
             LocalGrabbable held = handController.HeldObject;
-            if (held == null || !held.TryGetComponent(out Cue _)) return false;
+            if (held == null || !held.IsCue) return false;
             if (aimController != null && (aimController.IsAiming || aimController.IsPlacementViewActive)) return false;
             if (unarmedMelee != null && unarmedMelee.IsAttacking) return false;
             // Only once the pickup has finished moving the cue into the
@@ -396,9 +379,8 @@ namespace UntitledPoolGame.Interaction
             if (debugLogs) Debug.Log($"[CueMelee] {name}: strike {direction}, charge {charge:F2}, view back {returnYaw:F0}° / {returnPitch:F0}° toward {target}", this);
         }
 
-        // Where the view goes during the strike: back to the view at the
-        // press, or to the nearest opponent's chest within the assist cone
-        // around it.
+        // Where the view goes on the strike: back to the view at the press, or
+        // to the nearest opponent's chest in the assist cone.
         private void PlanViewReturn(out string target)
         {
             Vector3 origin = viewTransform.position;
@@ -485,9 +467,8 @@ namespace UntitledPoolGame.Interaction
         }
 
         // ---- Pose ----
-        // One parameter per direction: an angle (degrees) for sweeps and
-        // overheads, a distance along the view (metres) for the thrust.
-        // 0 = the held pose.
+        // One parameter per direction: degrees for sweeps and overheads,
+        // metres along the view for the thrust. 0 = held pose.
 
         private float WindupParam()
         {
@@ -512,20 +493,15 @@ namespace UntitledPoolGame.Interaction
             }
         }
 
-        // Axis of the arc in world space, from the camera's frame so the
-        // swing tilts with the look (positive angle around the view's up =
-        // to the right; around the view's right = down).
+        // Arc axis in the camera's frame, so the swing tilts with the look.
         private Vector3 ArcAxisWorld() => direction == Direction.Overhead ? viewTransform.right : viewTransform.up;
 
         private Quaternion SwingLocal(float param) =>
             Quaternion.AngleAxis(param, swingCue.parent.InverseTransformDirection(ArcAxisWorld()));
 
-        // Thrust pose in world space: the carry pose blended toward a
-        // pool-shot stance — cue turned so its tip points along the view
-        // (smallest rotation, so it keeps its roll and the hands stay on
-        // their grips), the point between the grips placed in front of the
-        // chest — then moved along the view by param (pulled back while
-        // charging, driven forward on the strike: the tip leads).
+        // Thrust: the carry pose blended toward a pool-shot stance (tip along
+        // the view, grips in front of the chest), then moved along the view by
+        // param (back while charging, forward on the strike).
         private void ThrustPose(float param, float blend, out Vector3 position, out Quaternion rotation)
         {
             Transform parent = swingCue.parent;
@@ -571,9 +547,7 @@ namespace UntitledPoolGame.Interaction
             swingCue.SetLocalPositionAndRotation(localPosition, localRotation);
         }
 
-        // Starts a short cross-fade from the cue's current pose, for when
-        // the pose target jumps (the cue was settling into the thrust
-        // stance and a turn now asks for a sweep).
+        // Short cross-fade when the target pose jumps (thrust to sweep).
         private void StartPoseFade()
         {
             fadeFromPosition = swingCue.localPosition;
@@ -597,9 +571,7 @@ namespace UntitledPoolGame.Interaction
             tipWorld = parent.TransformPoint(pivotLocal + swing * (tipLocal - pivotLocal));
         }
 
-        // Tip of the cue in world space: from CueChargeSlide's mesh analysis
-        // when available (same source as the aim code), otherwise along the
-        // cue's forward.
+        // Tip in world space (CueChargeSlide's mesh analysis, else forward).
         private Vector3 TipWorld()
         {
             if (swingCue.TryGetComponent(out CueChargeSlide slide) && slide.TipDistance > 0f)
@@ -608,10 +580,8 @@ namespace UntitledPoolGame.Interaction
         }
 
         // ---- Body ----
-        // Called by FBBIK right before it solves, after the Animator wrote
-        // this frame's pose: rotations added here are on top of the
-        // animation (nothing accumulates), and positionOffset is reset by
-        // FBBIK itself after each solve.
+        // Called by FBBIK before it solves, after the Animator: rotations add
+        // to the animation and FBBIK resets positionOffset after each solve.
         private void ApplyBody()
         {
             if (phase == Phase.Idle || viewTransform == null) return;
@@ -634,9 +604,8 @@ namespace UntitledPoolGame.Interaction
 
         // ---- Hits ----
 
-        // Capsule from the grips to the tip, tested at a few points between
-        // last frame's pose and this frame's so a fast swing can't pass
-        // through an arm between two frames.
+        // Capsule from the grips to the tip, tested at a few steps between
+        // frames so a fast swing can't skip an arm.
         private void DetectHits(float fromP, float toP)
         {
             int steps = Mathf.Max(1, subSteps);
@@ -689,7 +658,9 @@ namespace UntitledPoolGame.Interaction
         }
 
         // ---- Indicator (provisional, until the new UI) ----
-        // Drawn inside this player's own viewport so it works in split-screen.
+        // In this player's viewport (split screen). Style made once.
+        private static GUIStyle arrowStyle;
+
         private void OnGUI()
         {
             if (!showChargeIndicator || phase != Phase.Charging || viewCamera == null) return;
@@ -699,7 +670,8 @@ namespace UntitledPoolGame.Interaction
 
             // The arrow shows where the blow will go (not where the cue is).
             string arrow = direction == Direction.SweepLeft ? "◀" : direction == Direction.SweepRight ? "▶" : direction == Direction.Overhead ? "▼" : "●";
-            GUI.Label(new Rect(x - 20f, y - 34f, 40f, 30f), arrow, new GUIStyle(GUI.skin.label) { fontSize = 22, alignment = TextAnchor.MiddleCenter });
+            arrowStyle ??= new GUIStyle(GUI.skin.label) { fontSize = 22, alignment = TextAnchor.MiddleCenter };
+            GUI.Label(new Rect(x - 20f, y - 34f, 40f, 30f), arrow, arrowStyle);
 
             const float w = 140f, h = 10f;
             GUI.color = new Color(0f, 0f, 0f, .6f);

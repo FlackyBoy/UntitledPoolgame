@@ -9,17 +9,13 @@ using K = UntitledPoolGame.Core.UiKit;
 
 namespace UntitledPoolGame.Core
 {
-    // From the main menu to a level (prototype docs/ui/chargement.html,
-    // variant B « Le retour des billes »): the level's scene loads in the
-    // background (LoadSceneAsync) behind a loading screen — the level's
-    // postcard with its twist, balls dropping into the return gutter as it
-    // loads, silly status lines and a tip. Once the scene is up, its players
-    // are joined with the devices chosen in the menu (GameSession), each one
-    // presses A / Enter to say they're ready, and the match starts with the
-    // game type chosen in the menu (PoolMatchRules.RequestStart).
-    // Texts, tips and timings: LoadingScreenSettings; level name, picture
-    // and twist: GameFlowSettings. Kept across the scene change
-    // (DontDestroyOnLoad), gone once the match has started.
+    // Menu to level (prototype docs/ui/chargement.html, "Le retour des
+    // billes"): the scene loads in the background behind a loading screen
+    // (postcard, balls dropping in the gutter, status lines, a tip). Then
+    // the players are joined with the menu's devices, each presses A / Enter
+    // when ready, and the match starts. Texts in LoadingScreenSettings,
+    // levels in GameFlowSettings. Survives the scene change, gone once the
+    // match starts.
     public class LevelLoader : MonoBehaviour
     {
         private static LevelLoader instance;
@@ -77,10 +73,8 @@ namespace UntitledPoolGame.Core
 
         // ---------- Building ----------
 
-        // The "Loading" screen of Menu Studio gives the place, size and look of
-        // each part (elements found by id: context, postcard, tip, status,
-        // ready, gutter, go) and any decoration the designer added; this
-        // fills the parts.
+        // Menu Studio's "Loading" screen lays out the parts (found by id); this
+        // fills them.
         private void Build(VisualElement r)
         {
             root = r;
@@ -261,10 +255,9 @@ namespace UntitledPoolGame.Core
             }
             op.allowSceneActivation = false;
 
-            // Shown progress: follows the real one but fills at a steady
-            // pace — at most one full gutter per Minimum Duration, and with a
-            // capped frame time, so a load that freezes the editor for a
-            // second doesn't drop all the balls at once afterwards.
+            // Follows the real progress at a steady pace (at most one gutter
+            // per Minimum Duration, frame time capped), so a freeze doesn't
+            // drop all the balls at once.
             float shown = 0f, fillRate = 1f / Mathf.Max(0.3f, cfg.minimumDuration);
             while (true)
             {
@@ -316,9 +309,8 @@ namespace UntitledPoolGame.Core
             Destroy(gameObject);
         }
 
-        // The level's players, with the devices chosen in the menu. Joining
-        // by pressing a button is switched off: the players are already
-        // decided, a stray press must not add a third one.
+        // Joins the players with the menu's devices. Join by button is off so
+        // a stray press can't add a third.
         private void JoinPlayers()
         {
             PlayerInputManager manager = PlayerInputManager.instance;
@@ -329,12 +321,8 @@ namespace UntitledPoolGame.Core
                 else if (Gamepad.current != null) devices.Add(Gamepad.current);
             }
 
-            // Players already in the level (a player prefab placed in the
-            // scene, which grabs a device on its own when the scene starts)
-            // are reused and switched to the menu's device; only the missing
-            // ones are joined, under a free index. Joining everyone under a
-            // fixed index clashed with that placed player: the character on
-            // screen ended up with the wrong device, or none.
+            // A player already placed in the scene is reused and given the
+            // menu's device; only missing ones are joined, under a free index.
             var existing = new List<PlayerInput>(PlayerInput.all);
             existing.Sort((a, b) => a.playerIndex.CompareTo(b.playerIndex));
             if (manager != null) manager.DisableJoining();

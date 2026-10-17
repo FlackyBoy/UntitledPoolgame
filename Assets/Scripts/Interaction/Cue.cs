@@ -4,23 +4,16 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // A pool cue. Marks the LocalGrabbable as a cue (LocalPoolAimController
-    // only aims with one, LocalPlayerHandController routes its pickup
-    // separately), and gathers what the players need from it, found on the
-    // cue itself, so nothing is wired between players and cues in a scene:
-    // cues placed in the level and cues spawned at runtime register
-    // themselves while enabled (All), and any player can pick up any free
-    // cue (LocalCueHolder).
+    // A pool cue: marks the LocalGrabbable as a cue and gathers what the
+    // players need from it, so nothing is wired between players and cues.
+    // Every cue registers itself (All) and any player can pick up a free one.
     public class Cue : MonoBehaviour
     {
         private static readonly List<Cue> all = new List<Cue>();
 
-        // Every cue in the scene, placed or spawned. Registered from Awake
-        // and removed in OnDestroy — not OnEnable/OnDisable: the component
-        // is unchecked on the cue prefabs (it used to be a plain marker, so
-        // its checkbox never mattered), which kept every cue out of the list.
-        // Whether the cue is actually in play is its GameObject being active
-        // (IsFree checks it).
+        // Every cue, placed or spawned. Registered in Awake / OnDestroy rather
+        // than OnEnable / OnDisable, since the component is unchecked on the
+        // prefabs. In play = its GameObject is active (IsFree).
         public static IReadOnlyList<Cue> All => all;
 
         public LocalGrabbable Grabbable { get; private set; }

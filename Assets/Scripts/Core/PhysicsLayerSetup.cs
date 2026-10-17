@@ -2,12 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Core
 {
-    // Keeps the players' bodies and the cue out of the balls' physics.
-    // Set in code because the Layer Collision Matrix checkboxes wouldn't
-    // toggle in the editor (2026-09-25); Physics.IgnoreLayerCollision holds
-    // for the whole session, whatever scene is loaded, and doesn't need
-    // anything added to a scene. Shots aren't affected: LocalPoolAimController
-    // applies the strike as a force, not through the cue's collider.
+    // Keeps the players' bodies and the cue out of the balls' physics. In
+    // code because the Layer Collision Matrix wouldn't toggle in the editor.
+    // Shots aren't affected, they're applied as a force.
     public static class PhysicsLayerSetup
     {
         private const string BallLayer = "Poolball";

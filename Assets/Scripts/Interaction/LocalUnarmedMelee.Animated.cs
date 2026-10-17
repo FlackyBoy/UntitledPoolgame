@@ -3,16 +3,12 @@ using UnityEngine.InputSystem;
 
 namespace UntitledPoolGame.Interaction
 {
-    // R&D animated punches (CombatSettings.Use Animations, with Boxing
-    // Punches ticked): the guard and both punches are animation clips
-    // (PROTOFACTOR Combat Bare Fists: IdleCombat, Jab1, RightHand1) played
-    // on an upper-body layer of the character's Animator Controller — set up
-    // by Tools > Pool > R&D > Préparer le joueur de R&D, weight 0
-    // unless driven here, so the normal player never sees it. A mocap punch
-    // carries the weight shift, hips and shoulder that the IK version
-    // couldn't fake. Hits are swept along the real hand bone during a window
-    // of the clip; the rest (one button per hand, chaining, view kick,
-    // force on the target, Feel "coup reçu") is shared with the IK punches.
+    // R&D animated punches (CombatSettings Use Animations, with Boxing
+    // Punches): guard and punches are PROTOFACTOR clips on an upper-body
+    // layer (set up by Tools > Pool > R&D > Préparer le joueur de R&D,
+    // weight 0 unless driven here). Mocap gives the weight shift the IK
+    // version couldn't. Hits are swept along the real hand bone during a
+    // window of the clip; the rest is shared with the IK punches.
     public partial class LocalUnarmedMelee
     {
         private const string EmptyState = "Empty", GuardState = "Guard", PunchLeftState = "PunchL", PunchRightState = "PunchR";
@@ -32,10 +28,9 @@ namespace UntitledPoolGame.Interaction
         private bool LayerBusy => layerState != EmptyState;
         private bool warnedNoLayer;
 
-        // Aim: the clips keep their bladed stance's orientation, so a punch
-        // can leave at an angle to the view (the jab did). Measured on each
-        // punch (the hand's horizontal travel during the hit window, against
-        // the view) and corrected by turning the spine (Punch Aim Left/Right).
+        // The clips keep their bladed stance, so a punch can leave at an angle
+        // to the view. Measured on each punch and corrected by turning the
+        // spine (Punch Aim Left/Right).
         private bool aimMeasuring;
         private Vector3 aimFrom, aimFarthest;
         private float aimFarthestDistance;
@@ -114,9 +109,8 @@ namespace UntitledPoolGame.Interaction
 
             if (!animPunching)
             {
-                // Blocking: the block clip (the blocked reaction just after a
-                // blow); guard up after punching: the guard clip at the
-                // guard's weight; otherwise nothing.
+                // Blocking: block clip (or the blocked reaction right after a
+                // blow); guard up after punching: guard clip; else nothing.
                 string wanted = IsBlocking ? (Time.time < blockedReactUntil ? BlockedState : BlockState)
                     : guardWeight > 0f ? GuardState : EmptyState;
                 if (wanted != layerState)
@@ -237,18 +231,13 @@ namespace UntitledPoolGame.Interaction
             if (d > aimFarthestDistance) { aimFarthestDistance = d; aimFarthest = hand; }
         }
 
-        // During an animated punch, eased in and out so it doesn't pop:
+        // During a punch, eased in and out:
         //   - the spine turns by Punch Aim (the clip's bladed stance);
-        //   - "hit where you look": the clips always strike at the height
-        //     they were recorded at, so the fist is tilted toward the view's
-        //     pitch (Punch Pitch Follow) — partly by bending the spine
-        //     (Punch Pitch Spine Share), the rest at the punching shoulder.
-        //     The hits are swept along the real hand bone, so they follow:
-        //     looking at the head aims at the head, looking down at the legs.
-        // The body already turns with the view (its yaw is the look yaw), so
-        // left / right needs nothing more.
-        // Runs before the head's Look At IK solves (see AimBeforeLook), or
-        // just before FBBIK when there's no Look At IK running; once a frame.
+        //   - the clips strike at a fixed height, so the fist is tilted toward
+        //     the view's pitch (Punch Pitch Follow), partly through the spine
+        //     (Punch Pitch Spine Share), the rest at the shoulder.
+        // Left/right needs nothing, the body already turns with the view.
+        // Runs before Look At IK (AimBeforeLook), or before FBBIK without it.
         private void ApplyPunchAim(RootMotion.BipedReferences r)
         {
             punchAimFrame = Time.frameCount;
@@ -277,20 +266,12 @@ namespace UntitledPoolGame.Interaction
                 upperArm.rotation = Quaternion.AngleAxis(pitch - spinePitch, right) * upperArm.rotation;
         }
 
-        // The head keeps the orientation the player's Look At IK gives it
-        // (it follows the view: its target is the look target under
-        // CM_FPS) during the guard and the punches too. Two things got in
-        // the way:
-        //   - the clips turn the torso side-on (up to 90° for the jab), the
-        //     head with it, and Look At IK's Clamp Weight Head (0.5 on the
-        //     prefab) fades its effect out as the target gets that far from
-        //     where the animation points the head: it all but gave up. While
-        //     the combat layer is in use the clamp is eased to Combat Head
-        //     Clamp, and back to the prefab's value afterwards;
-        //   - the punch's spine turn (ApplyPunchAim) ran just before FBBIK,
-        //     i.e. after Look At IK (execution order 9997 < 9999), and
-        //     carried the already-aimed head away. It now runs in Look At
-        //     IK's own OnPreUpdate, before the head is aimed.
+        // The head keeps following the view during the guard and punches:
+        //   - the clips turn the torso side-on, and Look At IK's Clamp Weight
+        //     Head then all but cancels it; it's eased to Combat Head Clamp
+        //     while the combat layer is in use;
+        //   - the punch's spine turn runs in Look At IK's OnPreUpdate, before
+        //     the head is aimed, so it doesn't carry the head away.
         private RootMotion.FinalIK.LookAtIK lookAtIK;
         private float lookAtClampRest = -1f;
         private float lookAtCombatWeight;
@@ -316,9 +297,8 @@ namespace UntitledPoolGame.Interaction
             if (fullBodyIK != null && AnimatedPunches) ApplyPunchAim(fullBodyIK.references);
         }
 
-        // Every frame (from ApplyBody): the head clamp eased toward Combat
-        // Head Clamp while the combat layer is in use, back to the prefab's
-        // value otherwise.
+        // Head clamp eased toward Combat Head Clamp while the combat layer is
+        // in use, back to the prefab's value otherwise.
         private void UpdateLookAtClamp()
         {
             if (lookAtIK == null) return;

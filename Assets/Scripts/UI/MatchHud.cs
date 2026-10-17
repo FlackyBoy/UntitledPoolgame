@@ -8,19 +8,12 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Core
 {
-    // The in-game UI of the validated direction (prototype
-    // docs/ui/synthese.html, "En jeu" and "Fin"), in UI Toolkit, built in
-    // code like SyntheseMenu. One HUD per player, laid over that player's
-    // own camera viewport (split screen): a plate with their colour and what
-    // they're playing for, an "À toi !" tag that bobs on the player whose
-    // turn it is (the other half is dimmed), the power in stock, and the
-    // power gauge with the strike point while aiming. Interjections
-    // ("FAUTE !", "Dans le mille !"…), the "sponsor" card when a power is
-    // picked up, and the winner card with "Revanche" at the end. Driven by
-    // PoolMatchRules / PoolBall / LocalPoolAimController events and state;
-    // replaces their provisional OnGUI (PoolMatchRules.ExternalHud).
-    // Created automatically in any scene that has a PoolMatchRules. Texts,
-    // colours, sizes and timings come from HudSettings (Resources).
+    // In-game UI (prototype docs/ui/synthese.html), UI Toolkit, built in code.
+    // One HUD per player over their camera viewport: plate with colour and
+    // goal, "À toi !" tag (the waiting half is dimmed), powers in stock,
+    // power gauge and strike point while aiming, interjections, sponsor card,
+    // winner card with "Revanche". Created in any scene with a PoolMatchRules;
+    // texts, colours and timings in HudSettings.
     public class MatchHud : MonoBehaviour
     {
         // Pool balls keep their standard colours (not a HUD choice).
@@ -47,7 +40,7 @@ namespace UntitledPoolGame.Core
 
         private static void TryCreate()
         {
-            if (FindFirstObjectByType<PoolMatchRules>() == null || FindFirstObjectByType<MatchHud>() != null) return;
+            if (FindAnyObjectByType<PoolMatchRules>() == null || FindAnyObjectByType<MatchHud>() != null) return;
             var go = new GameObject("HUD (Synthèse)");
             go.SetActive(false);
             go.AddComponent<UIDocument>().panelSettings = CreatePanel();
@@ -77,6 +70,7 @@ namespace UntitledPoolGame.Core
             public PlayerInput input;
             public LocalPoolAimController aim;
             public LocalPoolPowerController powerCtl;
+            public Camera cam;
             public int player = -1;          // PoolMatchRules index shown on this half
             public VisualElement frame, content, dim, fx;
             public VisualElement who, plateBalls, tag, ring, ringIcon, power, spin, spinDot, banner;
@@ -91,10 +85,16 @@ namespace UntitledPoolGame.Core
             public PoolPower shownSecond;
             public int shownLevel = 1, shownSecondLevel = 1;
             public readonly VisualElement[] segments = new VisualElement[Segments];
-            public string plateKey;
+            public VisualElement slot;
+            // What the plate, the tag and the banner show, so they're only
+            // rebuilt (and their strings only made) when it changes.
+            public (int kind, int a, int b) plateKey;
+            public int shownWho = -1, shownTag = int.MinValue;
+            public (Hint hint, PoolPower power, PoolPocket pocket) bannerKey = (Hint.Unset, null, null);
             public PoolPower shownPower;
             public float shake, tagBump;
             public PowerType iconType;
+            public readonly Lane shouts = new Lane(false), sponsors = new Lane(true), incoming = new Lane(true);
         }
 
         private class Fx
@@ -102,11 +102,32 @@ namespace UntitledPoolGame.Core
             public VisualElement element;
             public float time, life;
             public Action<Fx, float> animate;   // (fx, 0..1)
-            // Kept on screen at the end (scale/rotate reset) instead of
-            // removed. Per effect, not per element: an element can run
-            // several effects at once (the power ring pops and wiggles).
+            // Left on screen at the end (scale and rotation reset) instead of
+            // removed. Per effect: an element can run several (pop and wiggle).
             public bool keep;
+            // Where its exit starts (seconds): a Lane cuts it short by
+            // jumping there. Defaults to the end (no exit phase).
+            public float exitAt;
+            public bool done;
         }
+
+        // Interjections, sponsor cards, incoming cards: one of each at a time
+        // per half, since each kind always sits at the same spot. The next
+        // waits until the current one has been readable a moment
+        // (minShoutTime / minCardTime), then cuts it short.
+        private class Lane
+        {
+            public readonly bool card;
+            public Fx current;
+            public readonly Queue<Func<Fx>> waiting = new Queue<Func<Fx>>();
+            public Lane(bool card) => this.card = card;
+        }
+
+        // Beyond this, the oldest waiting one is dropped: a backlog would
+        // only show stale news.
+        private const int MaxWaiting = 2;
+
+        private enum Hint { Unset = -1, None, BallInHand, PickTable, PickPocket, PickPocketNone, CallPocket, CallPocketNone, OutOfReach, EightCalled, EightToCall, BlastArmed, MagnetArmed }
 
         private UIDocument document;
         private VisualElement root, halvesLayer, endLayer, endRays, endCard, endButton;
@@ -119,7 +140,6 @@ namespace UntitledPoolGame.Core
         private Font bodyFont, titleFont;
         private PoolPowerSpawnSettings powerSettings;
         private float endShownAt = -1f;
-        private bool foulPending;
 
         private void OnEnable()
         {
@@ -236,7 +256,7 @@ namespace UntitledPoolGame.Core
             h.tagText = Text(h.tag, cfg.yourTurnText, titleFont, cfg.turnTagFontSize, Ink);
 
             // Power in stock: a ring with the type's colour and icon.
-            VisualElement slot = Box(h.content, "power-slot");
+            VisualElement slot = h.slot = Box(h.content, "power-slot");
             slot.style.position = Position.Absolute;
             slot.style.right = Length.Percent(3);
             slot.style.top = Length.Percent(4);
@@ -333,6 +353,7 @@ namespace UntitledPoolGame.Core
             h.banner.style.translate = new Translate(Length.Percent(-50), 0);
             h.banner.style.paddingLeft = h.banner.style.paddingRight = 20;
             h.banner.style.paddingTop = h.banner.style.paddingBottom = 8;
+            h.banner.style.display = DisplayStyle.None;
             h.bannerText = Text(h.banner, "", bodyFont, cfg.bannerFontSize, Ink);
 
             // Interjections and cards go on top.
@@ -431,13 +452,14 @@ namespace UntitledPoolGame.Core
                     run();
                 }
 
+            UpdateEffects(dt);
+            foreach (Half h in halves) PumpLanes(h);
             if (playing)
             {
                 Layout(rules);
                 foreach (Half h in halves)
                     if (h.input != null) UpdateHalf(h, rules, dt);
             }
-            UpdateEffects(dt);
             UpdateEnd(rules, dt);
         }
 
@@ -461,13 +483,17 @@ namespace UntitledPoolGame.Core
                     h.input = inputs[i];
                     h.aim = h.input.GetComponent<LocalPoolAimController>();
                     h.powerCtl = h.input.GetComponent<LocalPoolPowerController>();
-                    h.plateKey = null;
+                    h.cam = null;
+                    h.plateKey = default;
+                    h.shownWho = -1;
+                    h.shownTag = int.MinValue;
+                    h.bannerKey = (Hint.Unset, null, null);
                 }
                 h.player = Mathf.Clamp(rules.GetEffectivePlayerIndex(h.input.playerIndex), 0, 1);
                 h.frame.style.display = DisplayStyle.Flex;
 
-                Camera cam = h.input.camera != null ? h.input.camera : h.input.GetComponentInChildren<Camera>();
-                Rect r = cam != null ? cam.rect : new Rect(0f, 0f, 1f, 1f);
+                if (h.cam == null) h.cam = h.input.camera != null ? h.input.camera : h.input.GetComponentInChildren<Camera>();
+                Rect r = h.cam != null ? h.cam.rect : new Rect(0f, 0f, 1f, 1f);
                 float x = Mathf.Clamp01(r.x), w = Mathf.Clamp01(r.xMax) - x;
                 float y = Mathf.Clamp01(r.y), hgt = Mathf.Clamp01(r.yMax) - y;
                 float left = x * size.x, top = (1f - y - hgt) * size.y, width = w * size.x, height = hgt * size.y;
@@ -494,31 +520,42 @@ namespace UntitledPoolGame.Core
             h.dim.style.display = cfg.dimWaitingPlayer && !myTurn && !rules.GameOver ? DisplayStyle.Flex : DisplayStyle.None;
 
             // Plate.
-            Color pc = p == 0 ? P1 : P2;
-            h.who.style.backgroundColor = pc;
-            TextFx.Set(h.whoText, Format(cfg.playerTagFormat, p + 1));
+            if (h.shownWho != p)
+            {
+                h.shownWho = p;
+                h.who.style.backgroundColor = p == 0 ? P1 : P2;
+                TextFx.Set(h.whoText, Format(cfg.playerTagFormat, p + 1));
+            }
             UpdatePlate(h, rules);
 
             // Turn tag: bobs on the player who plays, muted on the other.
+            int tagState = myTurn ? -1 : rules.CurrentPlayer;
+            if (h.shownTag != tagState)
+            {
+                h.shownTag = tagState;
+                if (myTurn)
+                {
+                    TextFx.Set(h.tagText, cfg.yourTurnText);
+                    h.tagText.style.fontSize = cfg.turnTagFontSize;
+                    h.tagText.style.color = Ink;
+                    h.tag.style.backgroundColor = Yellow;
+                    Border(h.tag, 3, Ink);
+                    h.tag.style.borderBottomWidth = 7;
+                }
+                else
+                {
+                    TextFx.Set(h.tagText, Format(cfg.otherTurnFormat, rules.CurrentPlayer + 1));
+                    h.tagText.style.fontSize = cfg.turnTagFontSize * 0.7f;
+                    h.tagText.style.color = Color.white;
+                    h.tag.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
+                    Border(h.tag, 0, Color.clear);
+                    h.tag.style.translate = new Translate(0, 0);
+                }
+            }
             if (myTurn)
             {
-                TextFx.Set(h.tagText, cfg.yourTurnText);
-                h.tagText.style.fontSize = cfg.turnTagFontSize;
-                h.tagText.style.color = Ink;
-                h.tag.style.backgroundColor = Yellow;
-                Border(h.tag, 3, Ink);
-                h.tag.style.borderBottomWidth = 7;
                 float period = Mathf.Max(0.05f, cfg.turnTagBobPeriod);
                 h.tag.style.translate = new Translate(0, -cfg.turnTagBob * (0.5f + 0.5f * Mathf.Sin(t * Mathf.PI * 2f / period)));
-            }
-            else
-            {
-                TextFx.Set(h.tagText, Format(cfg.otherTurnFormat, rules.CurrentPlayer + 1));
-                h.tagText.style.fontSize = cfg.turnTagFontSize * 0.7f;
-                h.tagText.style.color = Color.white;
-                h.tag.style.backgroundColor = new Color(1f, 1f, 1f, 0.15f);
-                Border(h.tag, 0, Color.clear);
-                h.tag.style.translate = new Translate(0, 0);
             }
             h.tagBump = Mathf.MoveTowards(h.tagBump, 0f, dt * 3f);
             float tagScale = 1f + 0.3f * h.tagBump;
@@ -548,6 +585,7 @@ namespace UntitledPoolGame.Core
             }
 
             UpdateBanner(h, rules, myTurn);
+            StackUnderSlot(h);
 
             // Shake (fouls, full-power shots).
             if (h.shake > 0f)
@@ -563,25 +601,21 @@ namespace UntitledPoolGame.Core
         private void UpdatePlate(Half h, PoolMatchRules rules)
         {
             int p = h.player;
-            string key;
             BallGroup group = rules.GetGroup(p);
             bool hasScore = rules.TryGetScore(p, out int score, out int target);
             int nextNine = rules.Mode == PoolGameMode.NineBall ? LowestBallOnTable(9) : 0;
-            var onTable = new HashSet<int>();
+            // Bit n set = ball n still on the table.
+            int onTable = 0;
             foreach (PoolBall ball in PoolBall.Active)
-                if (!ball.IsCueBall) onTable.Add(ball.Number);
+                if (!ball.IsCueBall && ball.Number > 0 && ball.Number < 32) onTable |= 1 << ball.Number;
 
             // Groupe identique: the balls left would tell the groups apart.
-            if (rules.AreGroupsDisguised) key = "disguised";
-            else if (hasScore) key = $"score {score}/{target}";
-            else if (rules.Mode == PoolGameMode.NineBall) key = $"nine {nextNine}";
-            else if (group == BallGroup.Solid || group == BallGroup.Stripe)
-            {
-                key = "group " + group;
-                int first = group == BallGroup.Solid ? 1 : 9;
-                for (int n = first; n < first + 7; n++) key += onTable.Contains(n) ? "1" : "0";
-            }
-            else key = "undecided";
+            (int kind, int a, int b) key =
+                rules.AreGroupsDisguised ? (1, 0, 0)
+                : hasScore ? (2, score, target)
+                : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
+                : group == BallGroup.Solid || group == BallGroup.Stripe ? (4, (int)group, onTable)
+                : (5, 0, 0);
             if (key == h.plateKey) return;
             h.plateKey = key;
 
@@ -606,7 +640,7 @@ namespace UntitledPoolGame.Core
                 {
                     VisualElement b = MiniBall(h.plateBalls, 28, n);
                     b.style.marginRight = 3;
-                    if (!onTable.Contains(n))
+                    if ((onTable & (1 << n)) == 0)
                     {
                         b.style.opacity = 0.25f;
                         b.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
@@ -716,33 +750,51 @@ namespace UntitledPoolGame.Core
         {
             LocalPoolAimController aim = h.aim;
             LocalPoolPowerController powerCtl = h.powerCtl;
-            string text = null;
-            if (aim != null && aim.IsBallPlacementActive)
-                text = cfg.ballInHandBanner;
+            PoolPower power = powerCtl != null ? powerCtl.ChoosingPower : null;
+            PoolPocket magnet = myTurn ? rules.GetArmedMagnetPocket(h.player) : null;
+            // None at the end of the match.
+            (Hint hint, PoolPower power, PoolPocket pocket) key = default;
+            if (rules.GameOver) { }
+            else if (aim != null && aim.IsBallPlacementActive)
+                key = (Hint.BallInHand, null, null);
             else if (powerCtl != null && powerCtl.IsChoosingTablePoint)
-                text = Format(cfg.pickTableBannerFormat, powerCtl.ChoosingPower.PowerName);
-            else if (powerCtl != null && powerCtl.ChoosingPower != null)
-                text = powerCtl.TargetedPocket != null
-                    ? Format(cfg.pickPocketBannerFormat, powerCtl.ChoosingPower.PowerName, powerCtl.TargetedPocket.DescribeLocation())
-                    : Format(cfg.pickPocketNoneFormat, powerCtl.ChoosingPower.PowerName);
+                key = (Hint.PickTable, power, null);
+            else if (power != null)
+                key = powerCtl.TargetedPocket != null ? (Hint.PickPocket, power, powerCtl.TargetedPocket) : (Hint.PickPocketNone, power, null);
             else if (aim != null && aim.IsCallPocketActive)
-                text = aim.HighlightedPocket != null
-                    ? Format(cfg.callPocketBannerFormat, aim.HighlightedPocket.DescribeLocation())
-                    : cfg.callPocketNoneBanner;
+                key = aim.HighlightedPocket != null ? (Hint.CallPocket, null, aim.HighlightedPocket) : (Hint.CallPocketNone, null, null);
             else if (aim != null && aim.IsOutOfReach)
-                text = cfg.outOfReachBanner;
+                key = (Hint.OutOfReach, null, null);
             else if (myTurn && rules.IsShootingForEightBall(h.player))
-                text = rules.CalledEightBallPocket != null
-                    ? Format(cfg.eightCalledBannerFormat, rules.CalledEightBallPocket.DescribeLocation())
-                    : cfg.eightToCallBanner;
+                key = rules.CalledEightBallPocket != null ? (Hint.EightCalled, null, rules.CalledEightBallPocket) : (Hint.EightToCall, null, null);
             else if (myTurn && rules.IsBallBlastArmed(h.player))
-                text = cfg.blastArmedBanner;
-            else if (myTurn && rules.GetArmedMagnetPocket(h.player) != null)
-                text = Format(cfg.magnetArmedBannerFormat, rules.GetArmedMagnetPocket(h.player).DescribeLocation());
+                key = (Hint.BlastArmed, null, null);
+            else if (magnet != null)
+                key = (Hint.MagnetArmed, null, magnet);
+            if (key == h.bannerKey) return;
+            h.bannerKey = key;
+
+            string where = key.pocket != null ? key.pocket.DescribeLocation() : null;
+            string name = key.power != null ? key.power.PowerName : null;
+            string text = key.hint switch
+            {
+                Hint.BallInHand => cfg.ballInHandBanner,
+                Hint.PickTable => Format(cfg.pickTableBannerFormat, name),
+                Hint.PickPocket => Format(cfg.pickPocketBannerFormat, name, where),
+                Hint.PickPocketNone => Format(cfg.pickPocketNoneFormat, name),
+                Hint.CallPocket => Format(cfg.callPocketBannerFormat, where),
+                Hint.CallPocketNone => cfg.callPocketNoneBanner,
+                Hint.OutOfReach => cfg.outOfReachBanner,
+                Hint.EightCalled => Format(cfg.eightCalledBannerFormat, where),
+                Hint.EightToCall => cfg.eightToCallBanner,
+                Hint.BlastArmed => cfg.blastArmedBanner,
+                Hint.MagnetArmed => Format(cfg.magnetArmedBannerFormat, where),
+                _ => null,
+            };
             // An emptied text in the settings hides that banner.
-            if (string.IsNullOrEmpty(text)) text = null;
-            h.banner.style.display = text != null && !rules.GameOver ? DisplayStyle.Flex : DisplayStyle.None;
-            if (text != null) TextFx.Set(h.bannerText, text);
+            bool show = !string.IsNullOrEmpty(text);
+            h.banner.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (show) TextFx.Set(h.bannerText, text);
         }
 
         // ---------- Events ----------
@@ -793,7 +845,6 @@ namespace UntitledPoolGame.Core
             Half h = HalfOf(rules.CurrentPlayer);
             if (h != null) h.shake = cfg.shakeDuration;
             Shout(rules.CurrentPlayer, cfg.foulShout, Red, false);
-            foulPending = true;
             delayed.Add((Time.unscaledTime + cfg.foulToBallInHandDelay, () =>
             {
                 PoolMatchRules r = PoolMatchRules.Instance;
@@ -805,8 +856,6 @@ namespace UntitledPoolGame.Core
         {
             Half h = HalfOf(player);
             if (h != null) h.tagBump = 1f;
-            // After a foul, "Main libre !" already says it's their turn.
-            if (foulPending) { foulPending = false; return; }
         }
 
         // A new power: the sponsor card. The same one again: its level goes
@@ -862,12 +911,12 @@ namespace UntitledPoolGame.Core
             h.refusedHint = hint;
             hint.style.position = Position.Absolute;
             hint.style.right = Length.Percent(3);
-            hint.style.top = 170;
             hint.style.backgroundColor = Color.white;
             hint.style.paddingLeft = hint.style.paddingRight = 10;
             hint.style.paddingTop = hint.style.paddingBottom = 4;
             Radius(hint, 8);
             Border(hint, 3, Red);
+            StackUnderSlot(h);
             AddFx(hint, Mathf.Max(0.3f, cfg.refusedDuration), (fx, u) =>
             {
                 float k = Mathf.Clamp01(u / 0.12f);
@@ -903,9 +952,8 @@ namespace UntitledPoolGame.Core
 
         // ---------- Effects ----------
 
-        // From outside (a Feel sequence, MMF_PoolHudText): a big word on that
-        // player's half (-1 = both halves), with its TextFx tags. color null =
-        // the HUD's yellow.
+        // From a Feel sequence (MMF_PoolHudText): a big word on that player's
+        // half (-1 = both). color null = yellow.
         public static void ShowShout(int player, string markup, Color? color = null, bool burst = false)
         {
             MatchHud hud = FindAnyObjectByType<MatchHud>();
@@ -924,13 +972,20 @@ namespace UntitledPoolGame.Core
             Half h = HalfOf(player);
             // An emptied text in the settings turns that interjection off.
             if (h == null || string.IsNullOrEmpty(text)) return;
+            Enqueue(h, h.shouts, () => ShowShoutNow(h, text, color, burst));
+        }
+
+        private Fx ShowShoutNow(Half h, string text, Color color, bool burst)
+        {
+            // Big outlined word that pops in tilted, then floats away.
+            VisualElement holder = Box(h.fx, "shout");
             if (burst)
             {
                 VisualElement rays = Box(h.fx, "burst");
+                rays.PlaceBehind(holder);
                 rays.style.position = Position.Absolute;
                 rays.style.width = rays.style.height = 460;
                 rays.style.left = Length.Percent(50);
-                rays.style.top = Length.Percent(40);
                 rays.style.translate = new Translate(Length.Percent(-50), Length.Percent(-50));
                 rays.generateVisualContent += ctx => DrawRays(ctx, new Color(1f, 0.82f, 0.25f, 0.55f));
                 AddFx(rays, Mathf.Max(0.05f, cfg.burstDuration), (fx, u) =>
@@ -939,32 +994,98 @@ namespace UntitledPoolGame.Core
                     fx.element.style.scale = new Scale(new Vector3(s, s, 1f));
                     fx.element.style.rotate = new Rotate(new Angle(60f * u, AngleUnit.Degree));
                     fx.element.style.opacity = 1f - u;
+                    fx.element.style.top = ShoutCenter(h, holder);
                 });
             }
 
-            // Big outlined word that pops in tilted, then floats away.
-            VisualElement holder = Box(h.fx, "shout");
             holder.style.position = Position.Absolute;
             holder.style.left = Length.Percent(50);
-            holder.style.top = Length.Percent(40);
             holder.style.translate = new Translate(Length.Percent(-50), Length.Percent(-50));
             Label label = Text(holder, text, titleFont, cfg.shoutFontSize, color);
             TextFx.Reveal(label, text);   // letters pop in one after the other
             label.style.unityTextOutlineWidth = 3f;
             label.style.unityTextOutlineColor = Ink;
             InkShadow(label, 7);
-            AddFx(holder, Mathf.Max(0.05f, cfg.shoutDuration), (fx, u) =>
+            float life = Mathf.Max(0.05f, cfg.shoutDuration);
+            Fx shout = AddFx(holder, life, (fx, u) =>
             {
                 float s, rot = -6f, op = 1f, rise = 0f;
                 if (u < 0.22f) { float k = u / 0.22f; s = Mathf.Lerp(0.2f, 1.12f, k); rot = Mathf.Lerp(-18f, -6f, k); op = k; }
                 else if (u < 0.35f) s = Mathf.Lerp(1.12f, 1f, (u - 0.22f) / 0.13f);
                 else s = 1f;
-                if (u > 0.8f) { float k = (u - 0.8f) / 0.2f; op = 1f - k; rise = 7f * k; }
+                if (u > 0.8f) { float k = (u - 0.8f) / 0.2f; op = 1f - k; rise = 0.07f * k; }
                 fx.element.style.scale = new Scale(new Vector3(s, s, 1f));
                 fx.element.style.rotate = new Rotate(new Angle(rot, AngleUnit.Degree));
                 fx.element.style.opacity = op;
-                fx.element.style.top = Length.Percent(40f - rise);
+                fx.element.style.top = ShoutCenter(h, holder) - rise * ContentHeight(h);
             });
+            shout.exitAt = 0.8f * life;
+            return shout;
+        }
+
+        // 40 % down the half, or just under the incoming card when there is
+        // one (stacked under the power slot, it reaches that low).
+        private float ShoutCenter(Half h, VisualElement shout)
+        {
+            float center = 0.4f * ContentHeight(h);
+            VisualElement card = h.incoming.current?.element;
+            if (card == null || card.panel == null) return center;
+            float cardBottom = card.layout.yMax, half = shout.layout.height * 0.5f;
+            if (float.IsNaN(cardBottom) || float.IsNaN(half)) return center;
+            return Mathf.Max(center, cardBottom + 8f + half);
+        }
+
+        private static float ContentHeight(Half h)
+        {
+            float height = h.content.layout.height;
+            return float.IsNaN(height) || height < 1f ? 1080f : height;
+        }
+
+        // Top right, one under the other: power slot, refusal hint, incoming
+        // card (the slot's size varies, so no fixed offsets).
+        private void StackUnderSlot(Half h)
+        {
+            Rect slot = h.slot.layout;
+            if (float.IsNaN(slot.height)) return;
+            float y = slot.y + slot.height * Mathf.Max(0.1f, cfg.powerSlotScale) + 6f;
+            if (h.refusedHint != null && h.refusedHint.panel != null)
+            {
+                h.refusedHint.style.top = y;
+                float hintHeight = h.refusedHint.layout.height;
+                if (!float.IsNaN(hintHeight)) y += hintHeight + 6f;
+            }
+            VisualElement card = h.incoming.current?.element;
+            if (card != null && card.panel != null) card.style.top = Mathf.Max(y + 4f, 0.24f * ContentHeight(h));
+        }
+
+        private void Enqueue(Half h, Lane lane, Func<Fx> show)
+        {
+            while (lane.waiting.Count >= MaxWaiting) lane.waiting.Dequeue();
+            lane.waiting.Enqueue(show);
+            PumpLanes(h);
+        }
+
+        private void PumpLanes(Half h)
+        {
+            Pump(h.shouts);
+            Pump(h.sponsors);
+            Pump(h.incoming);
+            if (h.input != null) StackUnderSlot(h);
+        }
+
+        private void Pump(Lane lane)
+        {
+            if (lane.current != null && lane.current.done) lane.current = null;
+            if (lane.waiting.Count == 0) return;
+            if (lane.current == null)
+            {
+                lane.current = lane.waiting.Dequeue()();
+                return;
+            }
+            // Readable long enough: its exit starts now, the next one follows.
+            Fx fx = lane.current;
+            float minShown = lane.card ? cfg.minCardTime : cfg.minShoutTime;
+            if (fx.time >= minShown && fx.time < fx.exitAt) fx.time = fx.exitAt;
         }
 
         // "CE TOUR VOUS EST OFFERT PAR …": the power picked up, as a sponsor.
@@ -972,92 +1093,79 @@ namespace UntitledPoolGame.Core
         {
             Half h = HalfOf(player);
             if (h == null) return;
-            Color color = powerSettings != null ? powerSettings.GetColor(power.Type) : Red;
-
-            VisualElement card = PopCard(h.fx, "sponsor");
-            card.style.position = Position.Absolute;
-            card.style.left = Length.Percent(4);
-            card.style.bottom = Length.Percent(20);
-            card.style.width = Length.Percent(60);
-            card.style.overflow = Overflow.Hidden;
-            card.style.paddingLeft = card.style.paddingRight = card.style.paddingTop = 0;
-            card.style.paddingBottom = 10;
-            VisualElement head = Box(card, "head");
-            head.style.backgroundColor = color;
-            head.style.paddingLeft = head.style.paddingRight = 16;
-            head.style.paddingTop = head.style.paddingBottom = 5;
-            head.style.borderBottomWidth = 3;
-            head.style.borderBottomColor = Ink;
-            Label headText = Text(head, cfg.sponsorHeader, bodyFont, 16, Color.white);
-            headText.style.unityTextAlign = TextAnchor.MiddleLeft;
-            Label name = Text(card, power.PowerName + cfg.sponsorNameSuffix, titleFont, 40, Ink);
-            name.style.unityTextAlign = TextAnchor.MiddleLeft;
-            name.style.marginLeft = 16;
-            name.style.marginTop = 6;
-            string kind = power.Type switch { PowerType.Attack => cfg.attackLabel, PowerType.Defense => cfg.defenseLabel, _ => cfg.effectLabel };
-            Label small = Text(card, Format(cfg.sponsorLineFormat, kind), bodyFont, 20, new Color(Ink.r, Ink.g, Ink.b, 0.75f));
-            small.style.unityTextAlign = TextAnchor.MiddleLeft;
-            small.style.marginLeft = 16;
-
-            float life = Mathf.Max(1f, cfg.sponsorDuration);
-            AddFx(card, life, (fx, u) =>
+            Enqueue(h, h.sponsors, () =>
             {
-                float t = u * life, x;
-                if (t < 0.45f) { float k = t / 0.45f; x = -120f * (1f - BackOut(k)); }
-                else if (t > life - 0.3f) x = -130f * ((t - (life - 0.3f)) / 0.3f);
-                else x = 0f;
-                fx.element.style.translate = new Translate(Length.Percent(x), 0);
-                fx.element.style.rotate = new Rotate(new Angle(t < 0.45f ? -6f * (1f - t / 0.45f) : 0f, AngleUnit.Degree));
+                string kind = power.Type switch { PowerType.Attack => cfg.attackLabel, PowerType.Defense => cfg.defenseLabel, _ => cfg.effectLabel };
+                VisualElement card = PowerCard(h, "sponsor", power, cfg.sponsorHeader, power.PowerName + cfg.sponsorNameSuffix, 40, false, Format(cfg.sponsorLineFormat, kind));
+                card.style.left = Length.Percent(4);
+                // Clear of the hint banner (bottom 15 %) when its text is long.
+                card.style.bottom = Length.Percent(23);
+                card.style.width = Length.Percent(60);
+                return SlideCard(card, Mathf.Max(1f, cfg.sponsorDuration), -1f, 0.45f);
             });
         }
 
-        // "J1 T'ENVOIE Vision brouillée — Au début de ton tour…": the card
-        // the target gets when a power is launched, sliding in from the
-        // right (the sponsor card comes from the left, so both can show).
+        // "J1 T'ENVOIE ...": the target's card when a power is launched, from
+        // the right (the sponsor card comes from the left), under the slot.
         private void Incoming(int player, PoolPower power, string header, string line)
         {
             Half h = HalfOf(player);
             if (h == null) return;
-            Color color = powerSettings != null ? powerSettings.GetColor(power.Type) : Red;
+            Enqueue(h, h.incoming, () =>
+            {
+                VisualElement card = PowerCard(h, "incoming", power, header, power.PowerName, 36, true, line);
+                card.style.right = Length.Percent(4);
+                card.style.top = Length.Percent(24);
+                card.style.width = Length.Percent(52);
+                return SlideCard(card, Mathf.Max(1f, cfg.incomingDuration), 1f, 0.4f);
+            });
+        }
 
-            VisualElement card = PopCard(h.fx, "incoming");
+        // A power card: a strip in the power's colour with the header, the
+        // big name, a smaller line under it.
+        private VisualElement PowerCard(Half h, string name, PoolPower power, string header, string title, float titleSize, bool revealTitle, string line)
+        {
+            VisualElement card = PopCard(h.fx, name);
             card.style.position = Position.Absolute;
-            card.style.right = Length.Percent(4);
-            card.style.top = Length.Percent(24);
-            card.style.width = Length.Percent(52);
             card.style.overflow = Overflow.Hidden;
             card.style.paddingLeft = card.style.paddingRight = card.style.paddingTop = 0;
             card.style.paddingBottom = 10;
             VisualElement head = Box(card, "head");
-            head.style.backgroundColor = color;
+            head.style.backgroundColor = powerSettings != null ? powerSettings.GetColor(power.Type) : Red;
             head.style.paddingLeft = head.style.paddingRight = 16;
             head.style.paddingTop = head.style.paddingBottom = 5;
             head.style.borderBottomWidth = 3;
             head.style.borderBottomColor = Ink;
-            Label headText = Text(head, header, bodyFont, 16, Color.white);
-            headText.style.unityTextAlign = TextAnchor.MiddleLeft;
-            Label name = Text(card, power.PowerName, titleFont, 36, Ink);
-            name.style.unityTextAlign = TextAnchor.MiddleLeft;
-            name.style.marginLeft = 16;
-            name.style.marginTop = 6;
-            TextFx.Reveal(name, power.PowerName);
+            Text(head, header, bodyFont, 16, Color.white).style.unityTextAlign = TextAnchor.MiddleLeft;
+            Label titleLabel = Text(card, title, titleFont, titleSize, Ink);
+            titleLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
+            titleLabel.style.marginLeft = 16;
+            titleLabel.style.marginTop = 6;
+            if (revealTitle) TextFx.Reveal(titleLabel, title);
             if (!string.IsNullOrEmpty(line))
             {
                 Label small = Text(card, line, bodyFont, 20, new Color(Ink.r, Ink.g, Ink.b, 0.75f));
                 small.style.unityTextAlign = TextAnchor.MiddleLeft;
                 small.style.marginLeft = 16;
             }
+            return card;
+        }
 
-            float life = Mathf.Max(1f, cfg.incomingDuration);
-            AddFx(card, life, (fx, u) =>
+        // Slides in tilted from its side (-1 left, 1 right), stays, slides
+        // back out over the last 0.3 s (where a Lane cuts it short).
+        private Fx SlideCard(VisualElement card, float life, float side, float inTime)
+        {
+            Fx fx = AddFx(card, life, (f, u) =>
             {
                 float t = u * life, x;
-                if (t < 0.4f) { float k = t / 0.4f; x = 120f * (1f - BackOut(k)); }
-                else if (t > life - 0.3f) x = 130f * ((t - (life - 0.3f)) / 0.3f);
+                if (t < inTime) x = 120f * side * (1f - BackOut(t / inTime));
+                else if (t > life - 0.3f) x = 130f * side * ((t - (life - 0.3f)) / 0.3f);
                 else x = 0f;
-                fx.element.style.translate = new Translate(Length.Percent(x), 0);
-                fx.element.style.rotate = new Rotate(new Angle(t < 0.4f ? 6f * (1f - t / 0.4f) : 0f, AngleUnit.Degree));
+                f.element.style.translate = new Translate(Length.Percent(x), 0);
+                f.element.style.rotate = new Rotate(new Angle(t < inTime ? 6f * side * (1f - t / inTime) : 0f, AngleUnit.Degree));
             });
+            fx.exitAt = life - 0.3f;
+            return fx;
         }
 
         // A quick "no" shake, sideways: leaves scale/rotate to Pop.
@@ -1080,11 +1188,12 @@ namespace UntitledPoolGame.Core
             }, removeAtEnd: false);
         }
 
-        private void AddFx(VisualElement e, float life, Action<Fx, float> animate, bool removeAtEnd = true)
+        private Fx AddFx(VisualElement e, float life, Action<Fx, float> animate, bool removeAtEnd = true)
         {
-            var fx = new Fx { element = e, life = life, animate = animate, keep = !removeAtEnd };
+            var fx = new Fx { element = e, life = life, exitAt = life, animate = animate, keep = !removeAtEnd };
             effects.Add(fx);
             animate(fx, 0f);
+            return fx;
         }
 
         private void UpdateEffects(float dt)
@@ -1097,6 +1206,7 @@ namespace UntitledPoolGame.Core
                 fx.animate(fx, u);
                 if (u < 1f) continue;
                 effects.RemoveAt(i);
+                fx.done = true;
                 if (fx.keep)
                 {
                     fx.element.style.scale = new Scale(Vector3.one);
@@ -1134,7 +1244,7 @@ namespace UntitledPoolGame.Core
                 TextFx.Set(endWho, Format(cfg.playerTagFormat, w + 1));
                 TextFx.Reveal(endTitle, Format(cfg.winnerFormat, w + 1));
                 TextFx.Set(endSubtitle, ModeName(rules.Mode));
-                foreach (Half h in halves) h.plateKey = null;
+                foreach (Half h in halves) h.plateKey = default;
             }
             float t = now - endShownAt;
 

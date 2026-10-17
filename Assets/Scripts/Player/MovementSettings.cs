@@ -2,13 +2,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Player
 {
-    // Movement feel of LocalPlayerLocomotion (R&D party-brawler
-    // movement, kept hybrid: animation-driven body, physics-flavoured
-    // motion): momentum, sprint, jump, ledge climbing, and how floppy
-    // the arms and the body look while the hands are free. Shared by every
-    // player. Assets/Resources/MovementSettings, created by Tools > Pool >
-    // Ensure Config Assets Exist; read every frame, so it can be tuned while
-    // playing. Tooltips in French: read by the designer in the Inspector.
+    // Movement feel of LocalPlayerLocomotion: momentum, sprint, jump, ledge
+    // climbing, floppy arms. Read every frame, tunable while playing.
     [CreateAssetMenu(fileName = "MovementSettings", menuName = "Pool/Movement Settings")]
     public class MovementSettings : ScriptableObject
     {

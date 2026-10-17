@@ -2,13 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // "Aimant": the activating player picks a pocket; on their next shot,
-    // the first of their own balls (PoolMatchRules.IsOwnBall) to roll
-    // toward that pocket within Capture Radius gets caught and pulled in —
-    // the nearest one if several qualify the same step. Armed like Ball
-    // Blast (PoolMatchRules.ArmMagnet) and consumed by that next shot,
-    // whatever happens. Only ever one ball per shot: catching a ball still
-    // takes a decent shot, the magnet just finishes it.
+    // "Aimant": the player picks a pocket; on their next shot, the first of
+    // their balls rolling toward it within Capture Radius is pulled in. One
+    // ball per shot: the shot still has to be decent.
     [CreateAssetMenu(fileName = "MagnetPower", menuName = "Pool/Powers/Magnet")]
     public class MagnetPower : PocketTargetPower
     {

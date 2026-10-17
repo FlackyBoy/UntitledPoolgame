@@ -8,23 +8,17 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // The tokens that stand for the powers on the table (PoolPower > Token
-    // Prefab): a small 3D object showing what the power does — a rocket for
-    // Tir boosté, a bomb for Bille destructrice… — in its own colours, over
-    // a see-through ring of the power's category colour. They spin and bob
-    // (PowerTokenFloat). Everything is built here from simple shapes
-    // (Unity's sphere / cylinder / cube / capsule, plus generated cones,
-    // torus arcs and a bumpy rock), nothing is modelled: a new power gets
-    // its own shape by adding a case to BuildShape; one without gets a "?".
-    // One "?" token per category also fills the category slots of
-    // PoolPowerSpawnSettings when they're empty.
+    // The power tokens on the table: a small 3D object showing what the power
+    // does (a rocket for Tir boosté, a bomb for Bille destructrice...) over a
+    // see-through ring in the category's colour, spinning and bobbing
+    // (PowerTokenFloat). Built from simple shapes, nothing modelled: a new
+    // power gets its shape with a case in BuildShape, otherwise a "?". A "?"
+    // token per category fills the empty category slots too.
     //
-    // Tools > Pool > Générer les jetons de pouvoir (and Ensure Config Assets
-    // Exist) only creates the missing ones: the generated prefabs are
-    // placeholders the user retouches. "Régénérer tous les jetons" rebuilds
-    // them all after a confirmation (overwritten in place: references
-    // stay). A token prefab of the user's own, put on a power instead, is
-    // never touched.
+    // Tools > Pool > Générer les jetons de pouvoir only creates missing ones
+    // (they're placeholders to retouch). "Régénérer tous les jetons"
+    // rebuilds them in place after a confirmation. A token of the user's own
+    // is never touched.
     internal static class PowerTokenGenerator
     {
         private const string PrefabFolder = "Assets/Prefabs/Powers";
@@ -34,10 +28,8 @@ namespace UntitledPoolGame.PoolEditor
         private const string HudIconFolder = "Assets/Textures/PowerHudIcons";
         private const int HudIconSize = 256;
 
-        // The prefab's origin is the felt (PoolPowerCrate puts it there):
-        // the category ring lies on it, the object floats above. Every
-        // object is scaled to the same size (ShapeSize at its largest) —
-        // they used to come out at whatever size their parts added up to.
+        // Origin on the felt, ring lying there, object floating above. Every
+        // object is scaled to ShapeSize at its largest.
         private const float ShapeSize = 0.075f;
         private const float Hover = 0.025f;          // felt -> bottom of the object, bob included
         private const float RingOpacity = 0.6f;      // lets the felt show through
@@ -120,8 +112,7 @@ namespace UntitledPoolGame.PoolEditor
         private static bool IsGenerated(Object asset) =>
             AssetDatabase.GetAssetPath(asset).StartsWith(PrefabFolder + "/Token_");
 
-        // The first version (16/10) was a textured box: its icons, materials
-        // and box mesh are no longer used.
+        // Removes what the first, box-shaped version of the tokens generated.
         private static void RemoveFirstVersion()
         {
             bool removed = AssetDatabase.DeleteAsset("Assets/Textures/PowerIcons");
@@ -176,9 +167,8 @@ namespace UntitledPoolGame.PoolEditor
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        // One case per power (class name without "Power"), the same objects
-        // as the tokens. Coordinates -1..1, y up, kept within about ±0.8 for
-        // the outline. Cut = drawn as a hole (ink).
+        // One case per power (class name without "Power"), same objects as the
+        // tokens. Coordinates -1..1, y up, within about 0.8. Cut = a hole.
         private static void DrawHudIcon(Glyph g, string key)
         {
             switch (key)
@@ -366,10 +356,9 @@ namespace UntitledPoolGame.PoolEditor
             return prefab;
         }
 
-        // One case per power (its class name without "Power"). The object
-        // fits in about 15 cm, centred on the pivot. Arcs and arrows that
-        // stand up are drawn in the XY plane (facing +Z): Vertical turns a
-        // torus arc (laid in XZ) up into it.
+        // One case per power. Objects fit in about 15 cm around the pivot.
+        // Upright arcs and arrows are in the XY plane: Vertical turns a torus
+        // arc (laid in XZ) up into it.
         private static readonly Vector3 Vertical = new Vector3(-90f, 0f, 0f);
 
         private static bool BuildShape(Transform p, string key)
@@ -428,8 +417,7 @@ namespace UntitledPoolGame.PoolEditor
                 }
                 case "BallBlast":     // a cartoon bomb, fuse lit
                 {
-                    // Checked with a rough render (17/10): the fuse used to be
-                    // too thin and hidden behind an orange ball at its tip.
+                    // A thick fuse, clear of the spark at its tip.
                     Vector3 fuseBase = new Vector3(-0.035f, 0.035f, 0f);
                     Part(p, "Bomb", Builtin("Sphere"), Lit("Bomb", new Color(0.14f, 0.15f, 0.19f), smoothness: 0.65f), new Vector3(0f, -0.01f, 0f), Vector3.zero, Vector3.one * 0.07f);
                     Part(p, "Shine", Builtin("Sphere"), Glow("Shine", Color.white), new Vector3(-0.014f, 0.01f, 0.026f), Vector3.zero, new Vector3(0.012f, 0.008f, 0.006f), shadows: false);
@@ -454,9 +442,8 @@ namespace UntitledPoolGame.PoolEditor
                 }
                 case "IdenticalGroups":   // three identical billiard balls, racked
                 {
-                    // Laid flat, 7.5 cm apart (3 cm gaps): standing up and close,
-                    // they overlapped as soon as the token turned (17/10). Their
-                    // white spot faces up, toward a player looking down at the table.
+                    // Laid flat, 7.5 cm apart: upright and close they overlapped
+                    // as the token turned. White spot facing up.
                     Material ball = Lit("BallYellow", new Color(1f, 0.8f, 0.15f), smoothness: 0.9f, emission: 0.1f);
                     Material spot = Lit("BallSpot", new Color(0.97f, 0.97f, 0.95f), smoothness: 0.9f);
                     foreach (Vector3 at in new[] { new Vector3(-0.0375f, 0f, -0.0217f), new Vector3(0.0375f, 0f, -0.0217f), new Vector3(0f, 0f, 0.0433f) })
@@ -468,8 +455,8 @@ namespace UntitledPoolGame.PoolEditor
                 }
                 case "TableHole":     // a meteor: a rock trailing balls of fire
                 {
-                    // Checked with a rough render (17/10): one long flame used to
-                    // swallow the rock. Now a trail of shrinking balls, behind it.
+                    // A trail of shrinking fireballs behind the rock (one long
+                    // flame swallowed it).
                     Part(p, "Rock", BumpyRock(), Lit("Rock", new Color(0.47f, 0.38f, 0.33f), smoothness: 0.25f), Vector3.zero, Vector3.zero, Vector3.one);
                     Vector3 back = new Vector3(0.7f, 1f, 0f).normalized;   // up and back, as if falling
                     var trail = new (float distance, float radius, bool yellow, float z)[]
@@ -524,9 +511,8 @@ namespace UntitledPoolGame.PoolEditor
             return bounds.extents.y * scale;
         }
 
-        // rotateInPlane: turns a torus arc (laid in XZ, from +X toward +Z)
-        // around its own axis first, so that once turned up into the XY
-        // plane it starts at that angle (counter-clockwise from +X).
+        // rotateInPlane: turns a torus arc around its axis first, so once
+        // stood up it starts at that angle.
         private static void Part(Transform parent, string name, Mesh mesh, Material material, Vector3 position, Vector3 euler, Vector3 scale,
             bool shadows = true, float rotateInPlane = 0f)
         {

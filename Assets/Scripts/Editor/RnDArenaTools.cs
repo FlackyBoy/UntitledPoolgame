@@ -11,18 +11,13 @@ using UntitledPoolGame.Player;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // The movement and combat R&D (feature/deplacements-combat), two tools:
-    // - Tools > Pool > R&D > Préparer le joueur de R&D: everything the R&D
-    //   player variant needs, in one go — LocalPlayerLocomotion, the boxing
-    //   punches, the hit gauge (components), and the combat animation layers
-    //   (RnDCombatAnimationTools). Safe to run again: it only adds what's
-    //   missing, and rebuilds the layers.
-    // - Tools > Pool > R&D > Créer l'arène de test: a sandbox scene — floor,
-    //   ledges of growing height, a ramp, steps, loose crates, two dummies to
-    //   hit, and a PlayerInputManager spawning the R&D variant (prepared
-    //   first). No pool table, no match: players move as soon as they join.
-    // These replace the three tools of the first R&D steps ("Activer la
-    // R&D…", "Brancher les animations de coups"). Shared scenes are left alone.
+    // Movement and combat R&D tools:
+    // - Tools > Pool > R&D > Préparer le joueur de R&D: adds what the R&D
+    //   player variant needs (locomotion, boxing, hit gauge, animation
+    //   layers). Safe to run again.
+    // - Tools > Pool > R&D > Créer l'arène de test: a sandbox scene (ledges,
+    //   ramp, steps, crates, two dummies, a PlayerInputManager). No table, no
+    //   match. Shared scenes are left alone.
     public static class RnDArenaTools
     {
         private const string Folder = "Assets/Scenes/Sandbox/RnD";

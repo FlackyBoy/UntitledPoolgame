@@ -7,34 +7,20 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Interaction
 {
-    // Picking up, carrying and throwing ordinary objects (LocalGrabbable,
-    // not the cue) with the hands, procedurally, just before FBBIK solves:
-    //
-    // - Pickup: the right hand reaches for the object (knees and hips bend
-    //   for a low one), grabs it, and brings it up to the chest.
-    // - Light object (below Heavy Mass and Heavy Size): held in the right
-    //   hand — parented to the hand bone, so it follows every move of the
-    //   hand. Throw: while charging, the arm cocks back behind the head and
-    //   the torso turns away; on release the arm whips forward along a
-    //   curve and the object leaves the hand partway through the swing.
-    // - Heavy object: held in both hands in front of the chest (the object
-    //   is placed, the hands follow grips on its sides). Throw: while
-    //   charging it goes up behind the head; on release it's thrown forward
-    //   from overhead, like a football throw-in.
-    //
-    // The throw's impulse (direction and power) comes from
-    // LocalPlayerHandController, unchanged; this only decides when and from
-    // where the object leaves the hands. Right after release the object
-    // ignores the thrower's own colliders for a moment so it can't hit him
-    // on the way out.
-    //
-    // Added to every player by LocalPlayerHandController; disabled, the old
-    // "stuck in front of the player" carry is used instead.
+    // Picking up, carrying and throwing ordinary objects (not the cue) with
+    // the hands, procedurally, just before FBBIK solves:
+    // - pickup: the right hand reaches (knees and hips bend for a low one),
+    //   grabs and brings it to the chest;
+    // - light object: in the right hand. Throw: the arm cocks back behind the
+    //   head, then whips forward and lets go partway;
+    // - heavy object: in both hands in front of the chest. Throw: up behind
+    //   the head, then forward from overhead like a throw-in.
+    // The impulse comes from LocalPlayerHandController; this only decides
+    // when and where the object leaves the hands. After release it ignores
+    // the thrower's colliders for a moment. Disabled, the old carry is used.
     [RequireComponent(typeof(LocalPlayerHandController))]
     public class LocalObjectHands : MonoBehaviour
     {
-        // Tooltips are in French: they are read by the designer in the
-        // Inspector.
         [Header("References (auto)")]
         [Tooltip("Caméra du joueur (vide = la première caméra sous ce joueur) : donne la direction du bras au lancer.")]
         [SerializeField] private Transform viewTransform;
@@ -50,9 +36,7 @@ namespace UntitledPoolGame.Interaction
         [Header("Poses (metres from the right shoulder, for a 0.6 m arm, scaled)")]
         [Tooltip("Longueur de bras pour laquelle les distances de cette section sont écrites ; mises à l'échelle du bras réel.")]
         [SerializeField] private float referenceArmLength = 0.6f;
-        // Renamed from lightCarry/heavyCarry on 30/09 so the new defaults
-        // (visible bottom-right; heavy object kept off the view, measured
-        // from its near face) replace the ones saved on the component.
+        // Renamed so the new defaults replace the saved ones.
         [Tooltip("Objet léger porté : main droite (droite, haut, avant) par rapport à l'épaule. Par défaut en bas à droite de l'écran.")]
         [SerializeField] private Vector3 lightCarryHand = new Vector3(0.12f, -0.3f, 0.35f);
         [Tooltip("Lancer léger, armé : main derrière la tête (droite, haut, arrière négatif) ; à pleine charge, recul et hauteur en plus ci-dessous.")]
@@ -128,9 +112,8 @@ namespace UntitledPoolGame.Interaction
         private Vector3 objectCenterLocal;  // object's centre in its own space
         private float objectHalfDepth, objectHalfHeight;   // along the player's forward / up at pickup
 
-        // Hand orientation: the hands' own fingers/back directions (in each
-        // hand bone's space, whatever the rig's axes), measured on the
-        // animated pose, so a palm can be turned toward a direction.
+        // Fingers and back of each hand in the hand bone's space, measured on
+        // the animated pose.
         private Vector3 fingersInRight, backInRight, fingersInLeft, backInLeft;
         private bool handsMeasured;
         private Vector3 grabPalmLocal;      // light: palm direction at the grab, in the root's space
@@ -205,11 +188,8 @@ namespace UntitledPoolGame.Interaction
             if (phase == Phase.Throwing) return true;   // mid-throw: the throw finishes it
             if (debugLogs) Debug.Log($"[ObjectHands] {name}: drops {held.name}", this);
 
-            // Set down in front, not let go where it is: held overhead (or
-            // just above the body) it fell straight onto the player and
-            // knocked him down. Moved out in front at chest height, it
-            // ignores the player's body for a moment and gets a light nudge
-            // forward.
+            // Set down in front at chest height, not dropped where it is: from
+            // overhead it fell on the player and knocked him down.
             Vector3 f = FlatForward();
             if (fullBodyIK != null)
             {
@@ -276,9 +256,8 @@ namespace UntitledPoolGame.Interaction
             return b;
         }
 
-        // Nearest point of the object's solid colliders to `from` (convex
-        // shapes exactly; a non-convex mesh collider only supports its
-        // bounds). Called before the colliders are switched off for the hold.
+        // Nearest point of the object's solid colliders (bounds only for a
+        // non-convex mesh). Before they're switched off.
         private static Vector3 SurfacePoint(LocalGrabbable g, Vector3 from)
         {
             Vector3 best = g.transform.position;
@@ -306,9 +285,8 @@ namespace UntitledPoolGame.Interaction
             objectHalfHeight = b.extents.y;
             if (heavy)
             {
-                // Each side of the object's real surface (not its world-axis
-                // box, larger than a turned object — hands ended up in the
-                // air), a little below the centre to hold it up.
+                // Sides of the real surface (the world box of a turned object
+                // left the hands in the air), a little below the centre.
                 float far = b.extents.magnitude + 1f;
                 Vector3 side = b.center - Vector3.up * (objectHalfHeight * heavyGripBelowCenter);
                 rightGripLocal = held.transform.InverseTransformPoint(SurfacePoint(held, side + right * far));
@@ -453,10 +431,8 @@ namespace UntitledPoolGame.Interaction
             RestoreElbows();
         }
 
-        // The thrower's own colliders (body, ragdoll) ignore the object for
-        // a moment: released from the hand, it would otherwise hit the arm
-        // or chest on its way out (and RagdollHitRelay could knock the
-        // thrower down).
+        // The thrower ignores the object for a moment, or it hits his arm on
+        // the way out (and could knock him down).
         private void IgnoreThrower(LocalGrabbable thrown)
         {
             var objectColliders = thrown.GetComponentsInChildren<Collider>(true);
@@ -653,10 +629,8 @@ namespace UntitledPoolGame.Interaction
 
         private Vector3 ChestCenter(BipedReferences r) => (r.leftUpperArm.position + r.rightUpperArm.position) * 0.5f;
 
-        // Where the heavy object's pivot goes: its centre a set gap in front
-        // of the chest from its near face (so a big object isn't pushed into
-        // the body), and low enough — half its height lower still — not to
-        // cover the view.
+        // Heavy object: a set gap in front of the chest from its near face,
+        // and low enough not to cover the view.
         private Vector3 HeavyCarryPoint(BipedReferences r, Vector3 f, Vector3 u, Vector3 rt)
         {
             Vector3 center = ChestCenter(r)
@@ -671,9 +645,7 @@ namespace UntitledPoolGame.Interaction
         private Vector3 PivotForCenter(Vector3 center) =>
             center - (transform.rotation * heavyRotationLocal) * Vector3.Scale(held != null ? held.transform.lossyScale : Vector3.one, objectCenterLocal);
 
-        // Overhead, with its bottom at least Head Clearance above the top of
-        // the head (head bone + about 0.25 m, scaled), so it isn't laid on
-        // the head.
+        // Overhead, its bottom at least Head Clearance above the head.
         private Vector3 HeavyWindupPoint(BipedReferences r, Vector3 f, Vector3 u, Vector3 rt)
         {
             Vector3 center = ChestCenter(r) + (rt * heavyWindupCenter.x + u * heavyWindupCenter.y + f * (heavyWindupCenter.z - heavyWindupCharged * charge)) * bodyScale;
@@ -701,10 +673,8 @@ namespace UntitledPoolGame.Interaction
             GuideElbow(s.leftArmChain, ref leftElbowGoal, "ObjectElbowGoal_L", r.leftUpperArm, s.leftHandEffector.position, rt, -1f);
         }
 
-        // Elbows out to the side (and a little down) while holding a heavy
-        // object in both hands — without a guide they followed the
-        // animation and went into the body. The chain's own bend goal (the
-        // aiming one) is put back by RestoreElbows.
+        // Elbows out while carrying heavy (they went into the body). The
+        // aiming bend goal is put back by RestoreElbows.
         private Transform rightElbowGoal, leftElbowGoal;
         private readonly Dictionary<FBIKChain, (Transform goal, float weight)> savedBend = new Dictionary<FBIKChain, (Transform, float)>();
 
@@ -732,9 +702,7 @@ namespace UntitledPoolGame.Interaction
             savedBend.Clear();
         }
 
-        // The hands' fingers (continuing the forearm) and back (facing out
-        // from the body: hanging arms have the palms toward the thighs), in
-        // each hand bone's own space, read on the animated pose.
+        // Fingers and back of each hand in the hand bone's space.
         private void MeasureHands(BipedReferences r)
         {
             handsMeasured = true;

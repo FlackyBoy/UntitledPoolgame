@@ -2,14 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Core
 {
-    // Everything the in-game HUD (MatchHud) shows and how: texts, colours,
-    // sizes, timings, which interjections play. Loaded from
-    // Assets/Resources/HudSettings (Tools > Pool > Ensure Config Assets
-    // Exist), same pattern as the gameplay settings — so the HUD can be tuned
-    // and reworded without touching code. Read when the HUD is built (texts
-    // and colours) and every frame (timings): changes made while playing show
-    // up at once for timings, at the next scene load for the rest.
-    // Tooltips are in French: they are read by the designer in the Inspector.
+    // What the in-game HUD shows and how: texts, colours, sizes, timings,
+    // interjections. Texts and colours are read when the HUD is built (next
+    // scene), timings every frame.
     [CreateAssetMenu(fileName = "HudSettings", menuName = "Pool/HUD Settings")]
     public class HudSettings : ScriptableObject
     {
@@ -163,6 +158,10 @@ namespace UntitledPoolGame.Core
         public float shoutDuration = 1.3f;
         public float burstDuration = 1.1f;
         public float sponsorDuration = 3.1f;
+        [Tooltip("Une interjection qui en suit une autre attend que la première soit restée au moins ce temps à l'écran, puis la remplace (au lieu de s'afficher par-dessus).")]
+        public float minShoutTime = 0.6f;
+        [Tooltip("Pareil pour les cartes (sponsor, pouvoir reçu) : temps minimal avant qu'une nouvelle carte remplace la précédente.")]
+        public float minCardTime = 1.2f;
         [Tooltip("Délai entre « FAUTE ! » et « Main libre ! ».")]
         public float foulToBallInHandDelay = 1.3f;
         public float shakeDuration = 0.35f;

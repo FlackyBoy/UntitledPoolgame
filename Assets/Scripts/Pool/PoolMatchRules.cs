@@ -6,19 +6,13 @@ using UnityEngine.InputSystem;
 
 namespace UntitledPoolGame.Pool
 {
-    // Hosts the shared shot-detection loop (wait for every ball to stop, then
-    // resolve the shot) and the pre-match mode-select screen. The actual
-    // rules for whichever PoolGameMode gets picked live in a separate
-    // IPoolRuleSet (EightBallRuleSet/NineBallRuleSet/FourteenOneRuleSet) —
-    // see that file for why. Deliberately a plain MonoBehaviour, not a
-    // NetworkBehaviour and no "Local" variant needed: pool ball physics isn't
-    // networked yet either (see TODO.md), so this only ever runs as a local
-    // simulation regardless of online/offline mode.
+    // Runs the match: waits for the balls to stop after each shot, then
+    // hands the shot to the IPoolRuleSet of the chosen mode. Also holds the
+    // powers in stock and their turn-bound effects. Local only for now (ball
+    // physics isn't networked).
     public class PoolMatchRules : MonoBehaviour
     {
-        // One active match per scene — lets the aim controllers (which need to
-        // check whose turn it is, and whether ball-in-hand placement is in
-        // progress) find it without a hand-wired Inspector reference.
+        // One match per scene.
         public static PoolMatchRules Instance { get; private set; }
 
         [Tooltip("Diagnostic : à la fin de chaque tir, la console donne la 1re bille touchée, les billes rentrées et pourquoi c'est une faute ou non ([ShotTrace]).")]
@@ -29,69 +23,44 @@ namespace UntitledPoolGame.Pool
         public bool GameOver { get; private set; }
         public int Winner { get; private set; } = -1;
         public bool MatchStarted { get; private set; }
-        // The mode actually locked in when the match started (set by
-        // StartMatch) — NOT the same as the pre-match UI's selectedMode
-        // field below, which keeps changing while someone browses the
-        // mode-select screen. PoolPowerCrateManager/PoolPowerBallRotator
-        // read this to gate powers to Party only.
+        // Mode locked in at StartMatch (selectedMode changes while browsing
+        // the menu).
         public PoolGameMode Mode { get; private set; }
 
-        // True from the moment a foul is registered until the fouled-against
-        // player confirms where they've placed the cue ball — see
-        // RegisterFoul()/ConfirmBallPlaced() and the aim controllers'
-        // placement-mode handling.
+        // From a foul until the cue ball is placed again.
         public bool BallInHand { get; private set; }
 
         private IPoolRuleSet ruleSet;
 
-        // Two powers in stock per player, one of them selected (the one the
-        // power button launches, switched with the wheel / D-pad). See
-        // GrantPower for what a pickup does, PowerBall/PoolPowerCrate for
-        // how one happens, LocalPoolPowerController for the input.
+        // Two powers in stock per player; the selected one is what the power
+        // button launches (switched with the wheel / D-pad).
         public const int PowerSlots = 2;
         public const int MaxPowerLevel = 2;
         private readonly PoolPower[,] heldPowers = new PoolPower[2, PowerSlots];
         private readonly int[,] heldLevels = { { 1, 1 }, { 1, 1 } };
         private readonly int[] selectedSlot = new int[2];
-        // Consumed by the aim controllers' Shoot() — set by powers like
-        // BoostedShotPower, reset back to 1 the moment it's read so it only
-        // ever affects the very next shot.
+        // Set by Boosted Shot, read once by the next shot.
         private readonly float[] shotPowerMultiplier = { 1f, 1f };
 
         private readonly List<PoolBall> pocketedThisShot = new List<PoolBall>();
-        // Which pocket each ball in pocketedThisShot actually fell into —
-        // needed by EightBallRuleSet to check a called shot against the
-        // real pocket. Keyed by ball rather than kept as a parallel list so
-        // GetPocketFor() stays a simple lookup regardless of iteration order.
+        // Pocket each ball of this shot fell into (8-ball call check).
         private readonly Dictionary<PoolBall, PoolPocket> pocketByBallThisShot = new Dictionary<PoolBall, PoolPocket>();
         private bool cueBallPocketedThisShot;
         private PoolBall firstContactThisShot;
         private bool wasMoving;
-        // True only between an actual player-fired shot (NotifyShotFired) and
-        // its resolution — without this, the balls settling under gravity
-        // right after the table loads (a tiny bit of jostling as they drop
-        // into their resting rack position) was itself read as "a shot
-        // happened", and resolved as an instant foul (no contact) before
-        // anyone had even taken their first shot.
+        // Set by an actual shot only: the balls settling after the table
+        // loads would otherwise count as a shot (and a foul).
         private bool shotInProgress;
 
         private PoolGameMode selectedMode = PoolGameMode.EightBall;
         private PoolPartyMode selectedPartyMode = PoolPartyMode.Classic;
-        // Which mode-select screen is showing — the top-level list, or the
-        // Party sub-mode list (see DrawPartySubmenuGUI). A UI navigation
-        // flag, not match state, but it still needs the same deferred-pending
-        // treatment below for the same GUILayout reason.
+        // Mode-select screen showing: top-level list or the Party sub-modes.
         private bool showingPartySubmenu;
         private string targetScoreInput = "150";
 
-        // GUILayout draws OnGUI several times per frame (Layout pass, the
-        // actual click event, then Repaint). Mutating selectedMode/MatchStarted
-        // directly from a Button click changes which controls get drawn on a
-        // LATER pass of that same frame than the earlier Layout pass already
-        // computed — GUILayout's internal state gets out of sync and the
-        // screen can get stuck instead of swapping cleanly. Deferring the
-        // mutation to Update() keeps the control structure identical across
-        // every OnGUI pass within a frame; it only changes starting next frame.
+        // OnGUI runs several passes per frame; changing what gets drawn from a
+        // button click between passes breaks GUILayout. Clicks are stored here
+        // and applied in Update.
         private PoolGameMode? pendingModeChange;
         private PoolPartyMode? pendingPartyModeChange;
         private bool? pendingShowPartySubmenuChange;
@@ -114,9 +83,7 @@ namespace UntitledPoolGame.Pool
             if (GameOver) pendingRestart = true;
         }
 
-        // Structured per-player state for the HUD (DescribePlayer is one
-        // line of text): 8-ball group (Cue = not decided yet, or not an
-        // 8-ball game), 14.1 score.
+        // For the HUD: 8-ball group (Cue = undecided or not 8-ball), 14.1 score.
         public BallGroup GetGroup(int player) => ruleSet is EightBallRuleSet eightBall ? eightBall.GroupOf(player) : BallGroup.Cue;
         public bool TryGetScore(int player, out int score, out int target)
         {
@@ -142,9 +109,7 @@ namespace UntitledPoolGame.Pool
             pendingStart = true;
         }
 
-        // Resources-loaded, shared with PoolPocket (same "what happens on a
-        // pot" domain — see PoolPotEffectSettings) instead of private fields
-        // here.
+        // Shared with PoolPocket.
         private static PoolPotEffectSettings potEffectSettings;
 
         private void Awake()
@@ -183,11 +148,8 @@ namespace UntitledPoolGame.Pool
         {
             if (!MatchStarted) return;
 
-            // Owned here (not per-pocket, not per-player) because
-            // Time.timeScale is a single global value — two independent
-            // MonoBehaviours each starting/stopping their own coroutine for
-            // it would race and could snap it back to 1 while another pot's
-            // dip was still supposed to be running.
+            // Here rather than per pocket: Time.timeScale is global and two
+            // coroutines would fight over it.
             TriggerPotSlowMotion();
 
             if (ball.IsCueBall)
@@ -198,17 +160,13 @@ namespace UntitledPoolGame.Pool
             pocketedThisShot.Add(ball);
             pocketByBallThisShot[ball] = pocket;
 
-            // Independent of group/order rules — a power ball still counts
-            // normally for whichever IPoolRuleSet is active, it just also
-            // grants the shooter a power on top.
+            // A power ball still counts normally for the rules.
             if (ball.TryGetComponent(out PowerBall powerBall) && powerBall.Power != null)
                 GrantPower(CurrentPlayer, powerBall.Power);
         }
 
-        // Restarts the dip from full if another ball pockets while one is
-        // already running (e.g. two balls potted on the same shot) rather
-        // than stacking — a longer single dip reads better than the
-        // timescale snapping back to 1 partway through and re-dropping.
+        // A second pot during the dip restarts it from full instead of
+        // stacking.
         private void TriggerPotSlowMotion()
         {
             if (slowMotionRoutine != null) StopCoroutine(slowMotionRoutine);
@@ -223,13 +181,8 @@ namespace UntitledPoolGame.Pool
             slowMotionRoutine = null;
         }
 
-        // Static, same convention as PoolBall.Pocketed/CueBallFirstContact —
-        // lets each local player's own juice/feedback component subscribe
-        // independently without needing a hand-wired reference to this
-        // instance, and without caring about subscription-order timing
-        // against Instance being set.
-        // A power was added to the player's stock or levelled up (not when
-        // a pickup is lost): pickup shake/flash, Feel.
+        // A power was added to a player's stock or went up a level (not when
+        // the pickup is lost): shake, flash, Feel.
         public static event Action<int> PowerGranted;
 
         // What a pickup did — for the HUD (sponsor card, "Niveau 2 !",
@@ -237,12 +190,10 @@ namespace UntitledPoolGame.Pool
         public enum PowerPickup { Added, LevelUp, Lost }
         public static event Action<int, PoolPower, PowerPickup, int> PowerPickedUp;
 
-        // A power already in stock goes up a level (up to MaxPowerLevel;
-        // beyond, the pickup is lost). A new one takes a free slot — and the
-        // selection if the selected slot was empty. With both slots taken by
-        // other powers, it's lost (Mario Kart-style: use them). The crate or
-        // ball is consumed either way. Called by PowerBall pickups and
-        // PoolPowerCrate.
+        // Same power again: one level up (lost beyond MaxPowerLevel). A new one
+        // takes a free slot, and the selection if the selected slot was empty.
+        // Both slots taken by other powers: lost. The crate or ball is used
+        // up either way.
         public void GrantPower(int player, PoolPower power)
         {
             if (power == null) return;
@@ -273,14 +224,11 @@ namespace UntitledPoolGame.Pool
             PowerPickedUp?.Invoke(player, power, PowerPickup.Lost, 1);
         }
 
-        // The selected power: the one the power button launches. Everything
-        // that deals with "the power in hand" (activation, refusals, the
-        // pick of a pocket or a point, the gestures) goes through this.
+        // The selected power, the one the button launches.
         public PoolPower GetHeldPower(int player) => heldPowers[player, selectedSlot[player]];
 
-        // Power levels: 1 normally, 2 for a stronger version (e.g. Trou:
-        // several holes), reached by picking up the same power again. The
-        // power reads it during its Activate (ActivatingPowerLevel).
+        // 1 normally, 2 after picking up the same power again (stronger
+        // version, read by the power in Activate).
         public int GetHeldPowerLevel(int player) => heldLevels[player, selectedSlot[player]];
         public int ActivatingPowerLevel { get; private set; } = 1;
 
@@ -318,10 +266,8 @@ namespace UntitledPoolGame.Pool
 
         private void SelectSlot(int player, int slot) => selectedSlot[player] = slot;
 
-        // A power just launched: player, power, and whether its effect waits
-        // for the opponent's next turn (an Attack sent during one's own turn,
-        // see the Queue* methods). Fired after Activate. The HUD announces
-        // it to both players, GameFeel plays its moments.
+        // A power was launched: player, power, and whether its effect waits
+        // for the opponent's next turn. For the HUD and GameFeel.
         public static event Action<int, PoolPower, bool> PowerActivated;
 
         // A press of the power button that launched nothing, and why
@@ -330,12 +276,9 @@ namespace UntitledPoolGame.Pool
 
         public static void NotifyPowerRefused(int player, PowerRefusal reason) => PowerRefused?.Invoke(player, reason);
 
-        // Whether the player may launch the power in hand right now — the
-        // per-power rules of PoolPower (own turn only, opponent's turn only,
-        // while the balls roll). In hot-seat solo (one shared input) the
-        // player always stands in for whoever is up, so there's no
-        // "other turn" to send from: both turn rules are skipped there, or
-        // a power refused during one's own turn could never be used.
+        // Whether the power in hand can be launched now (PoolPower's turn and
+        // rolling-balls rules). In hot-seat solo the turn rules are skipped,
+        // or a power refused during one's own turn could never be used.
         public PowerRefusal CheckPowerUse(int player)
         {
             PoolPower power = GetHeldPower(player);
@@ -350,9 +293,8 @@ namespace UntitledPoolGame.Pool
             return PowerRefusal.None;
         }
 
-        // Returns false if the player wasn't holding anything. target: the
-        // pocket picked for a PocketTargetPower (LocalPoolPowerController);
-        // without one, such a power falls back to a random open pocket.
+        // target: the pocket picked for a PocketTargetPower (random open
+        // pocket if none). False if nothing was held.
         public bool TryActivatePower(int player, PoolPocket target = null) => ActivateHeld(player, target, null);
 
         // Same for a TablePointPower, with the point of the table picked.
@@ -394,44 +336,18 @@ namespace UntitledPoolGame.Pool
             return multiplier;
         }
 
-        // Turn-bound debuff for an Attack-type power (see VisionImpairPower)
-        // — whoever it's applied to gets a screen overlay and reduced look
-        // sensitivity while it's active. Starts the moment they enter aim
-        // mode (ConsumePendingVisionImpair, called from
-        // LocalPoolAimController.EnterAim()) and is cleared the moment they
-        // leave aim mode (EndVisionImpair, called from ExitAim()) — either by
-        // taking the shot or backing out of it. SwitchTurn() also clears it
-        // as a safety net for the case where a turn ends without an explicit
-        // ExitAim() call. Previously a fixed-duration real-time timer, which
-        // could tick out entirely before the opponent even got a turn, or
-        // cut off mid-shot on a slow player. Tracked here (not on the
-        // player's own controller) for the
-        // same reason everything else in this class is: PoolMatchRules is
-        // the one place that already knows "player 0" / "player 1" as stable
-        // identities, and the affected player's own
-        // LocalPoolPowerEffectReceiver just polls this every frame — no
-        // direct reference from one player to another needed.
+        // Vision Impair (Attack): overlay and lower look sensitivity on the
+        // target. It starts when they enter aim and ends with their shot, so
+        // it lasts exactly one of their shots. SwitchTurn clears it in case.
         private readonly bool[] visionImpaired = new bool[2];
         private readonly float[] visionImpairedSensitivity = new float[2];
 
-        // Set on activation but NOT active yet — see QueueVisionImpair. It
-        // would often go to waste (or feel completely disconnected from the
-        // eventual shot) if it started counting down immediately, while it's
-        // still the activating player's own turn.
+        // Activated but waiting for the target's turn.
         private readonly bool[] visionImpairPending = new bool[2];
         private readonly float[] pendingVisionImpairSensitivity = new float[2];
 
-        // Called by the power on activation — queues the debuff instead of
-        // starting it immediately. The affected player's own aim controller
-        // calls ConsumePendingVisionImpair() the moment THEY actually enter
-        // aim mode on their own turn, which is when it actually starts.
-        // Off-turn activation (see PoolPower.RequiresOwnTurn) means it can
-        // already BE the target's turn the moment this is called — waiting
-        // for their next EnterAim() in that case could sit stale for the
-        // rest of THIS shot (if they're already aiming) or even miss their
-        // whole turn entirely, defeating the entire point of interrupting a
-        // turn already in progress. So: if it's already their turn, apply
-        // right now instead of queuing.
+        // Queued until the target enters aim on their turn. If it's already
+        // their turn (power launched off-turn), it applies right away.
         public void QueueVisionImpair(int player, float sensitivityMultiplier)
         {
             if (CurrentPlayer == player)
@@ -453,17 +369,11 @@ namespace UntitledPoolGame.Pool
             visionImpairedSensitivity[player] = pendingVisionImpairSensitivity[player];
         }
 
-        // Called from LocalPoolAimController.ExitAim() — ends the effect as
-        // soon as the affected player leaves aim mode, rather than leaving
-        // it running (flicker/shake/sensitivity cut) while they walk around
-        // between shots for the rest of their turn.
+        // Ends when the target leaves aim.
         public void EndVisionImpair(int player) => visionImpaired[player] = false;
 
-        // Leaving aim WITHOUT shooting (put the cue down, walked off): the
-        // debuff isn't spent, it goes back to pending and comes back at the
-        // player's next EnterAim this turn. Ending it there (as a shot does)
-        // let the target shake it off just by backing out once. SwitchTurn
-        // drops what's left pending for the player whose turn ends.
+        // Backing out of aim without shooting puts the debuff back on hold
+        // until the next aim this turn, so it can't be shaken off that way.
         public void SuspendVisionImpair(int player)
         {
             if (!visionImpaired[player]) return;
@@ -474,32 +384,21 @@ namespace UntitledPoolGame.Pool
 
         public bool IsVisionImpaired(int player) => visionImpaired[player];
 
-        // 1 while active, 0 otherwise — no fade anymore, since there's no
-        // timer left to fade against; it's simply on for the player's whole
-        // turn, then off.
+        // On for the whole turn, no fade.
         public float VisionImpairmentStrength(int player) => visionImpaired[player] ? 1f : 0f;
 
         public float GetVisionImpairmentSensitivityMultiplier(int player) =>
             visionImpaired[player] ? visionImpairedSensitivity[player] : 1f;
 
-        // Second Attack-type turn-bound debuff (see InvertedControlsPower) —
-        // same queue/consume/end lifecycle as Vision Impair above, just
-        // inverting look (plus a sensitivity boost and hiding the
-        // trajectory preview — see IsControlsInverted's call sites) instead
-        // of blinding it. Kept as separate arrays rather than generalizing
-        // the two into one "debuffs" system for now — with only two of
-        // these so far, a shared abstraction would be guesswork about what
-        // future debuffs actually need in common.
+        // Inverted Controls (Attack): same lifecycle as Vision Impair, but it
+        // flips the look, boosts sensitivity and hides the preview.
         private readonly bool[] invertedControls = new bool[2];
         private readonly float[] invertedControlsSensitivity = new float[2];
 
         private readonly bool[] invertedControlsPending = new bool[2];
         private readonly float[] pendingInvertedControlsSensitivity = new float[2];
 
-        // Same reasoning as QueueVisionImpair above — off-turn activation
-        // means it can already be the target's turn, so apply immediately
-        // instead of queuing for an EnterAim() that might already have
-        // happened (or not come again until much later).
+        // Same as QueueVisionImpair.
         public void QueueInvertedControls(int player, float sensitivityMultiplier)
         {
             if (CurrentPlayer == player)
@@ -532,34 +431,21 @@ namespace UntitledPoolGame.Pool
             pendingInvertedControlsSensitivity[player] = invertedControlsSensitivity[player];
         }
 
-        // Also gates hiding the trajectory preview (LocalPoolAimController.
-        // UpdateAim()) — no separate flag, it's the same "controls are
-        // inverted" moment driving all three symptoms (look flip,
-        // sensitivity boost, blind aiming) together.
+        // Also hides the trajectory preview.
         public bool IsControlsInverted(int player) => invertedControls[player];
 
         public float GetInvertedControlsSensitivityMultiplier(int player) =>
             invertedControls[player] ? invertedControlsSensitivity[player] : 1f;
 
-        // Third Attack-type power (see ClosePocketPower) — a physical,
-        // shared table effect rather than a per-player screen debuff, but
-        // still turn-bound the same way: see QueueClosePocket below for
-        // when it applies immediately vs. waits for SwitchTurn().
+        // Close Pocket (Attack): a table effect, closed for the opponent's
+        // whole turn.
         private PoolPocket closedPocket;
         private int closedPocketOwner;
         private PoolPocket pendingClosePocket;
         private int pendingClosePocketOwner;
 
-        // Called by ClosePocketPower.Activate. If it's already the OPPONENT's
-        // turn (off-turn activation — see PoolPower.RequiresOwnTurn), there's
-        // nothing left of the activator's own turn to protect, so it closes
-        // right away instead of waiting for a SwitchTurn() that might not
-        // come for a while (the opponent could have several shots left).
-        // Otherwise (activated during the activator's own turn), the picked
-        // pocket only closes later, in SwitchTurn(), once their turn is
-        // genuinely over — closing it immediately here would eat into their
-        // OWN remaining shots instead of only hindering the opponent about
-        // to receive it.
+        // Launched during the opponent's turn: closes now. During one's own
+        // turn: closes at SwitchTurn, so it never costs the launcher a shot.
         public void QueueClosePocket(int activatingPlayer, PoolPocket pocket)
         {
             if (CurrentPlayer != activatingPlayer)
@@ -572,13 +458,11 @@ namespace UntitledPoolGame.Pool
             pendingClosePocketOwner = activatingPlayer;
         }
 
-        // Closes the picked pocket (see PoolPocket.SetClosed) — stays closed
-        // through the activating player's opponent's ENTIRE turn, reopened
-        // by SwitchTurn() once play actually comes back around to the
-        // activator.
+        // Stays closed for the opponent's whole turn, reopened by SwitchTurn
+        // when play comes back to the launcher.
         private void ApplyPocketClose(int owner, PoolPocket pocket)
         {
-            closedPocket?.SetClosed(false);
+            if (closedPocket != null) closedPocket.SetClosed(false);
             closedPocket = null;
             if (pocket == null) return;
 
@@ -587,10 +471,8 @@ namespace UntitledPoolGame.Pool
             closedPocketOwner = owner;
         }
 
-        // Fourth Attack-type turn-bound power (IdenticalGroupsPower): every
-        // ball but the cue ball looks the same for the target's whole turn.
-        // A shared table effect like Close Pocket, so a single slot: the
-        // player it targets, -1 when none.
+        // Identical Groups (Attack): every ball but the cue ball looks the same
+        // for the target's turn. One slot: the target, -1 when none.
         private int identicalGroupsTarget = -1;
         private IdenticalGroupsPower pendingIdenticalGroups;
         private int pendingIdenticalGroupsTarget;
@@ -599,9 +481,7 @@ namespace UntitledPoolGame.Pool
         // (balls left per group), which would otherwise give them away.
         public bool AreGroupsDisguised => identicalGroupsTarget >= 0;
 
-        // Same rule as QueueVisionImpair: already the target's turn (off-turn
-        // activation) = right now; otherwise once their turn starts
-        // (SwitchTurn), never eating into the activator's own turn.
+        // Same rule as QueueVisionImpair.
         public void QueueIdenticalGroups(int targetPlayer, IdenticalGroupsPower power)
         {
             if (CurrentPlayer == targetPlayer)
@@ -625,11 +505,8 @@ namespace UntitledPoolGame.Pool
             identicalGroupsTarget = -1;
         }
 
-        // Magnet (MagnetPower): armed with its picked pocket, it waits for
-        // the activating player's next shot, which consumes it
-        // (NotifyShotFired) — same lifecycle as Ball Blast below. During
-        // that shot, FixedUpdate catches one of the shooter's balls and
-        // pulls it into the pocket.
+        // Magnet: armed on a pocket, used by the launcher's next shot, during
+        // which FixedUpdate catches one of their balls and pulls it in.
         private readonly MagnetPower[] magnetArmed = new MagnetPower[2];
         private readonly PoolPocket[] magnetArmedPocket = new PoolPocket[2];
         private MagnetPower magnetThisShot;
@@ -637,9 +514,7 @@ namespace UntitledPoolGame.Pool
         private int magnetShooter;
         private PoolBall magnetCaught;
         private float magnetCaughtAt;
-        // The pocket's looping VFX (MagnetPower.SpawnPocketVfx): from the
-        // pick until the magnet is done — handed over with the magnet itself
-        // from armed to this shot.
+        // The pocket's looping VFX, kept until the magnet is done.
         private readonly GameObject[] magnetArmedVfx = new GameObject[2];
         private GameObject magnetVfxThisShot;
 
@@ -706,10 +581,9 @@ namespace UntitledPoolGame.Pool
             magnetCaught = null;
         }
 
-        // The balls a player is "after" — what the magnet may catch for
-        // them. 8-ball: their group (the 8 once it's cleared); while the
-        // groups are still undecided, any solid or stripe, never the 8.
-        // Modes without groups (9-ball, 14.1): any object ball.
+        // Balls the player is after (what the magnet may catch). 8-ball: their
+        // group, the 8 once cleared, any solid or stripe while undecided.
+        // Other modes: any object ball.
         public bool IsOwnBall(int player, PoolBall ball)
         {
             if (ball.IsCueBall) return false;
@@ -719,17 +593,13 @@ namespace UntitledPoolGame.Pool
             return group == BallGroup.Cue ? ball.Group != BallGroup.Eight : ball.Group == group;
         }
 
-        // What a numbered ball potted during the current player's shot
-        // means for them — for the HUD's shout and Feel, at the moment it
-        // drops (the rules judge the whole shot at its end, separately):
-        //   Good       one of theirs (any ball outside 8-ball group play);
-        //   Opponent   one of the other group: nothing to cheer (on its own
-        //              it even makes the shot a foul — EightBallRuleSet);
-        //   EarlyEight the 8 before their group is cleared: the game is
-        //              lost, the end screen says so.
-        // Read while the ball is still on the table (PoolBall.Pocketed is
-        // raised before it's removed), so potting one's last ball still
-        // counts as one's own.
+        // What a ball potted during the current shot means for the shooter,
+        // for the HUD and Feel (the rules judge the whole shot later):
+        //   Good       one of theirs;
+        //   Opponent   the other group's (a foul on its own);
+        //   EarlyEight the 8 before their group is cleared (game lost).
+        // Read before the ball leaves the table, so potting one's last ball
+        // still counts as one's own.
         public enum PotMeaning { Good, Opponent, EarlyEight }
 
         public PotMeaning MeaningOfPot(PoolBall ball)
@@ -738,14 +608,9 @@ namespace UntitledPoolGame.Pool
             return ball.Group == BallGroup.Eight ? PotMeaning.EarlyEight : PotMeaning.Opponent;
         }
 
-        // In split-screen (2 local PlayerInputs), a physical player always IS
-        // the same index throughout — returns it unchanged. In hot-seat solo
-        // testing (1 local PlayerInput, PlayerInput.playerIndex always 0),
-        // that one screen represents whichever side is CURRENTLY up instead —
-        // returns CurrentPlayer so per-player state (activating a power,
-        // receiving a debuff meant for "the opponent") resolves against
-        // whoever the single player is standing in for right now, rather than
-        // being permanently locked to slot 0.
+        // Split screen: the player's own index. Hot-seat solo (one
+        // PlayerInput): whoever's turn it is, so powers and debuffs resolve
+        // against the side being played.
         public int GetEffectivePlayerIndex(int physicalPlayerIndex) =>
             PlayerInput.all.Count <= 1 ? CurrentPlayer : physicalPlayerIndex;
 
@@ -754,10 +619,8 @@ namespace UntitledPoolGame.Pool
             if (!MatchStarted) return;
             firstContactThisShot = other;
 
-            // Ball Blast armed for this shot: the touched ball explodes and
-            // leaves the table as if pocketed by the shooter — the rule set
-            // then judges it like any pot (own ball: turn kept; wrong ball:
-            // illegal first contact, so a foul, and the ball is gone anyway).
+            // Ball Blast: the touched ball explodes and leaves the table as if
+            // potted by the shooter, then the rule set judges it like any pot.
             BallBlastPower blast = ballBlastThisShot;
             ballBlastThisShot = null;
             if (blast == null) return;
@@ -771,9 +634,7 @@ namespace UntitledPoolGame.Pool
             other.OnPocketed();
         }
 
-        // Ball Blast (BallBlastPower): armed by the power, it waits for the
-        // activating player's next shot, which consumes it (NotifyShotFired)
-        // whatever that shot touches.
+        // Ball Blast: armed, used by the launcher's next shot.
         private readonly BallBlastPower[] ballBlastArmed = new BallBlastPower[2];
         private BallBlastPower ballBlastThisShot;
 
@@ -784,28 +645,17 @@ namespace UntitledPoolGame.Pool
         // the shooter. For the explosion's HUD shout.
         public static event Action<PoolBall, int> BallBlasted;
 
-        // Whether playerIndex (0 or 1) is currently allowed to shoot — used by
-        // the offline aim controllers (PlayerInput.playerIndex identifies which
-        // player is which) to stop the player who isn't up from grabbing the
-        // cue or shooting. Not yet enforced online — see TODO.md.
-        //
-        // Falls back to "always allowed" when at most one local PlayerInput is
-        // actually active (no split-screen P2 spawned) — otherwise a solo
-        // player testing/playing 2-player rules alone would get completely
-        // locked out the moment CurrentPlayer switches to "player 2", since
-        // there's no second controller around to ever take that turn. With a
-        // real P2 present, turns are enforced normally.
+        // Whether this player may shoot (offline only for now). With at most
+        // one active PlayerInput, always true: a solo player would otherwise
+        // be locked out on player 2's turn.
         public bool CanPlayerShoot(int playerIndex) =>
             MatchStarted && !GameOver && (CurrentPlayer == playerIndex || PlayerInput.all.Count <= 1);
 
-        // Static, same convention as PowerGranted above — fired before
-        // SwitchTurn(), so CurrentPlayer at invocation time is still the
-        // player who committed the foul, not who it's rebounding to.
+        // Raised before SwitchTurn: CurrentPlayer is the one who fouled.
         public static event Action Fouled;
 
-        // Called by a rule set from ResolveShot whenever the shot was a foul
-        // (wrong ball hit first, no contact at all, or a scratch) — parks the
-        // cue ball in a pickup-able state for the player who now has the turn.
+        // Called by the rule set after a foul: the cue ball goes in hand for
+        // the player who now has the turn.
         public void RegisterFoul()
         {
             BallInHand = true;
@@ -817,9 +667,7 @@ namespace UntitledPoolGame.Pool
         // ball's new position.
         public void ConfirmBallPlaced() => BallInHand = false;
 
-        // Called by the aim controllers right when a shot is actually struck —
-        // this (not ball movement alone) is what defines "a shot happened", so
-        // physics settling never gets mistaken for one.
+        // Called when a shot is struck: only this starts a shot.
         public void NotifyShotFired()
         {
             pocketedThisShot.Clear();
@@ -868,10 +716,8 @@ namespace UntitledPoolGame.Pool
         // match lands without opening anything (TableHoleMeteor).
         public int MatchGeneration { get; private set; }
 
-        // Holes waiting for the activator's opponent's turn (TableHolePower
-        // used during the activator's own turn, same idea as Close Pocket):
-        // the spots are locked, each marked by a ring on the felt, and the
-        // meteors fall in SwitchTurn once the turn has passed.
+        // Holes launched during the launcher's own turn: spots marked by a
+        // ring, meteors fall at SwitchTurn.
         private class PendingTableHoles
         {
             public TableHolePower power;
@@ -932,12 +778,9 @@ namespace UntitledPoolGame.Pool
             });
         }
 
-        // A ball rolled over a table hole. The cue ball is a foul, as if
-        // potted (scratch: respawn, ball in hand once the shot is judged).
-        // Any other ball sinks out of sight and comes back to where it was
-        // before the shot once everything has stopped
-        // (ReturnBallsFromTableHoles). Outside a shot (pushed by the meteor's
-        // blast, say) it's simply set back on the hole's edge.
+        // A ball fell in a table hole. The cue ball is a foul (like a
+        // scratch). Others sink and come back to where they were once the
+        // shot is over. Outside a shot, the ball goes back on the hole's edge.
         public void HandleBallFellInTableHole(PoolBall ball, TableHole hole)
         {
             if (!MatchStarted || GameOver) return;
@@ -978,9 +821,8 @@ namespace UntitledPoolGame.Pool
             ballsInTableHoles.Clear();
         }
 
-        // target if nothing's there, otherwise the closest free spot around
-        // it (rings of growing size): not on another ball, a hole or a
-        // pocket, and on the felt.
+        // target, or the nearest free spot around it: on the felt, away from
+        // balls, holes and pockets.
         private static Vector3 FreeSpotNear(Vector3 target, PoolBall ball)
         {
             if (IsFreeSpot(target, ball)) return target;
@@ -1053,30 +895,19 @@ namespace UntitledPoolGame.Pool
             pendingTableHoles.Clear();
         }
 
-        // Which pocket a ball pocketed THIS shot actually fell into — null if
-        // ball wasn't pocketed this shot, or fell off the table instead of
-        // going in a pocket (see PoolBall.FixedUpdate's off-table check).
+        // Pocket a ball of this shot fell into; null if it didn't, or fell
+        // off the table.
         public PoolPocket GetPocketFor(PoolBall ball) =>
             pocketByBallThisShot.TryGetValue(ball, out PoolPocket pocket) ? pocket : null;
 
-        // 8-ball call-shot: which pocket the current player has declared for
-        // their next attempt at the 8 (see EightBallRuleSet.ResolveShot).
-        // Null means no call is in effect. Set directly by the aim
-        // controllers' top-down call-pocket view (HandleCallPocket) when the
-        // player confirms — no deferred-mutation dance needed here (unlike
-        // pendingModeChange etc. below) since that confirmation happens in
-        // Update(), not from an OnGUI button click.
+        // Pocket called for the next shot at the 8; null if none.
         private PoolPocket calledEightBallPocket;
 
         public PoolPocket CalledEightBallPocket => calledEightBallPocket;
 
         public void CallEightBallPocket(PoolPocket pocket) => calledEightBallPocket = pocket;
 
-        // Read-and-clear, same convention as ConsumeShotPowerMultiplier — a
-        // call only ever covers the very next shot resolution. EightBallRuleSet
-        // consumes this on EVERY shot (not just ones that pocket the 8), so a
-        // call made ahead of a shot that turns out not to be the 8 is simply
-        // discarded rather than lingering into a later, unrelated attempt.
+        // Read and cleared on every shot, so a call never carries over.
         public PoolPocket ConsumeCalledEightBallPocket()
         {
             PoolPocket pocket = calledEightBallPocket;
@@ -1084,20 +915,12 @@ namespace UntitledPoolGame.Pool
             return pocket;
         }
 
-        // Whether player is currently eligible to shoot at the 8 (group
-        // assigned and fully cleared) — only EightBallRuleSet (and Party's
-        // Classic sub-mode, which reuses it) has this concept, hence the
-        // type check rather than a method on IPoolRuleSet every mode would
-        // need to implement for no reason.
+        // Group assigned and cleared (8-ball rules only).
         public bool IsShootingForEightBall(int player) =>
             ruleSet is EightBallRuleSet eightBall && eightBall.IsShootingForEightBall(player);
 
-        // Test-only: skips straight to "the current player's group is
-        // cleared, next legal shot is the 8" without having to actually pot
-        // 7 balls first — lets the 8-ball win condition / call-shot flow be
-        // tested on demand. Triggered by the C+W cheat, see
-        // Assets/Scripts/Core/EightBallEndgameCheat.cs (same idea as
-        // SplitScreenCheatSpawner's C+P).
+        // Test (C+W cheat): the current player's group counts as cleared,
+        // next legal shot is the 8.
         public void DebugForceEightBallEndgame()
         {
             if (!MatchStarted || GameOver)
@@ -1112,9 +935,7 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            // Snapshot first — deactivating a ball removes it from
-            // PoolBall.Active via OnDisable, which would otherwise modify
-            // the list out from under this same foreach.
+            // Copy: deactivating a ball removes it from Active.
             foreach (PoolBall ball in new List<PoolBall>(PoolBall.Active))
             {
                 if (ball.Group == BallGroup.Solid || ball.Group == BallGroup.Stripe)
@@ -1126,18 +947,14 @@ namespace UntitledPoolGame.Pool
         }
 
         // ---------- Test-only entry points (DebugMenu) ----------
-        // They go through the same paths as real play (PowerGranted, the
-        // rule set's ResolveShot, RegisterFoul/SwitchTurn), so what they
-        // trigger looks and behaves like the real thing.
+        // Same paths as real play, so they behave like the real thing.
 
         // A match is on and the table is still: the only time a fake shot
         // or a turn change makes sense.
         public bool DebugCanAct => MatchStarted && !GameOver && !shotInProgress && !PoolBall.AnyMoving();
 
-        // Gives power at that level: on its own slot if already in stock,
-        // else a free slot, else in place of the selected one (unlike
-        // GrantPower, which loses a pickup when both slots are taken). Null
-        // empties both slots.
+        // Sets a power at that level: its own slot if already in stock, else a
+        // free slot, else replaces the selected one. Null empties both.
         public void DebugSetHeldPower(int player, PoolPower power, int level = 1)
         {
             if (power == null)
@@ -1173,9 +990,8 @@ namespace UntitledPoolGame.Pool
             SwitchTurn();
         }
 
-        // A shot by the current player, judged by the real rule set: pocketed
-        // (may be null) leaves the table as if potted, firstContact is what
-        // the cue ball touched first (null = touched nothing).
+        // A shot judged by the real rule set: pocketed (may be null) leaves the
+        // table, firstContact is what the cue ball touched (null = nothing).
         public void DebugResolveShot(PoolBall pocketed, PoolBall firstContact)
         {
             if (!DebugCanAct) return;
@@ -1192,15 +1008,8 @@ namespace UntitledPoolGame.Pool
         {
             if (!MatchStarted || GameOver)
             {
-                // LocalFpsPlayerController locks and hides the
-                // cursor as soon as the player spawns, which happens before this
-                // menu is even shown — without this, the cursor stays pinned to
-                // the screen center and none of the buttons below are reachable.
-                // Asserted every frame (not just once) in case a player spawns
-                // after this screen is already up and re-locks it. Also applies
-                // once GameOver — otherwise the "Rejouer" button on the
-                // game-over screen would be unclickable (cursor still locked
-                // to screen center from normal gameplay).
+                // The players lock the cursor when they spawn; the menu and the
+                // end screen need it. Every frame, in case a player spawns later.
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
@@ -1257,25 +1066,15 @@ namespace UntitledPoolGame.Pool
 
         public void SwitchTurn()
         {
-            // Any turn-bound debuff against the player finishing their turn
-            // ends with it — see VisionImpairPower/InvertedControlsPower:
-            // meant to last exactly as long as the affected player holds the
-            // cue, not a fixed real-time duration. (Normally already cleared
-            // by ExitAim() calling EndVisionImpair/EndInvertedControls —
-            // this is the safety net for a turn ending without one.)
+            // Turn-bound debuffs end with the turn (normally already done by
+            // ExitAim).
             visionImpaired[CurrentPlayer] = false;
             invertedControls[CurrentPlayer] = false;
-            // Suspended by backing out of aim (Suspend*): the turn is over.
-            // Nothing else can be pending for the player whose turn ends —
-            // an attack sent during their own turn applies at once.
+            // On hold since the player backed out of aim: the turn is over.
             visionImpairPending[CurrentPlayer] = false;
             invertedControlsPending[CurrentPlayer] = false;
 
-            // Reopens once the CLOSING player's opponent's turn actually
-            // ends (CurrentPlayer here is whoever's turn is finishing) —
-            // not the instant that turn begins — so ClosePocketPower covers
-            // the opponent's whole turn instead of vanishing before their
-            // first shot.
+            // Reopens when the opponent's turn ends, not when it begins.
             if (closedPocket != null && CurrentPlayer != closedPocketOwner)
             {
                 closedPocket.SetClosed(false);
@@ -1297,10 +1096,7 @@ namespace UntitledPoolGame.Pool
                 pendingIdenticalGroups = null;
             }
 
-            // Applied right here, the moment control actually leaves the
-            // activator — not in QueueClosePocket()/Activate(), which could
-            // still be mid-way through the activator's own turn (never
-            // eats into their own remaining shots).
+            // Now that control leaves the launcher.
             if (pendingClosePocket != null && CurrentPlayer != pendingClosePocketOwner)
             {
                 ApplyPocketClose(pendingClosePocketOwner, pendingClosePocket);
@@ -1318,22 +1114,12 @@ namespace UntitledPoolGame.Pool
             Winner = player;
         }
 
-        // "Rejouer" on the game-over screen — resets every ball back to its
-        // rack position (PoolBall.ResetToSpawn, works whether a ball is
-        // still active or was pocketed/deactivated) and clears all
-        // per-match state, then starts a fresh match with the same
-        // mode/settings as the one that just ended. Mode/selectedPartyMode
-        // are reused rather than re-shown on a menu — selectedPartyMode
-        // never changes once a match starts (the mode-select screen is
-        // gone), and Mode is literally "whichever mode actually got locked
-        // in" (see its own doc comment above), so both already hold exactly
-        // what was just played.
+        // "Rejouer": every ball back to the rack, match state cleared, same
+        // mode again.
         private void Restart()
         {
-            // FindObjectsInactive.Include: a pocketed ball is an inactive
-            // GameObject, and PoolBall.Active (OnEnable/OnDisable-driven)
-            // wouldn't include it — this needs every ball regardless.
-            foreach (PoolBall ball in FindObjectsByType<PoolBall>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            // Include inactive: potted balls are inactive and not in Active.
+            foreach (PoolBall ball in FindObjectsByType<PoolBall>(FindObjectsInactive.Include))
                 ball.ResetToSpawn();
 
             for (int p = 0; p < 2; p++)
@@ -1355,7 +1141,7 @@ namespace UntitledPoolGame.Pool
             invertedControlsPending[0] = false;
             invertedControlsPending[1] = false;
 
-            closedPocket?.SetClosed(false);
+            if (closedPocket != null) closedPocket.SetClosed(false);
             closedPocket = null;
             pendingClosePocket = null;
             EndIdenticalGroups();
@@ -1400,14 +1186,10 @@ namespace UntitledPoolGame.Pool
             Cursor.visible = false;
         }
 
-        // One case per PoolPartyMode — add a new one here (and its own
-        // IPoolRuleSet if it needs different base rules) alongside a new
-        // enum value and a button in DrawPartySubmenuGUI.
+        // One case per PoolPartyMode.
         private static IPoolRuleSet CreatePartyRuleSet(PoolPartyMode partyMode) => partyMode switch
         {
-            // Classic: plain 8-ball rules — the powers themselves come from
-            // PoolPowerCrate/PowerBall/the two spawn managers, not from the
-            // ruleset, so no dedicated IPoolRuleSet is needed for this one.
+            // Classic: 8-ball rules, the powers come from the spawners.
             _ => new EightBallRuleSet(),
         };
 
@@ -1436,13 +1218,8 @@ namespace UntitledPoolGame.Pool
             if (BallInHand)
                 GUILayout.Label($"Faute ! Joueur {CurrentPlayer + 1} a la main libre — regarde où placer la bille blanche et valide avec Interact.");
 
-            // 8-ball call-shot: once a player's group is cleared, potting the
-            // 8 in an uncalled (or wrong) pocket doesn't win — see
-            // EightBallRuleSet.ResolveShot. The actual declaring happens in
-            // a pocket pick (LocalPoolAimController's HandleCallPocket,
-            // looking at the pocket through LocalPocketPointer) rather than
-            // buttons here — this is just a status line so it's clear from
-            // the regular HUD whether a call is still needed.
+            // Status line only; the call itself is made in
+            // LocalPoolAimController.HandleCallPocket.
             if (IsShootingForEightBall(CurrentPlayer))
             {
                 GUILayout.Label(calledEightBallPocket != null
@@ -1452,9 +1229,7 @@ namespace UntitledPoolGame.Pool
             GUILayout.EndArea();
         }
 
-        // Centered, large "match over" message — replaces the small
-        // top-left label the rest of the HUD uses, since this is the one
-        // moment worth actually stopping to read clearly.
+        // Big centered "match over" box.
         private void DrawGameOverGUI()
         {
             GUILayout.BeginArea(new Rect(Screen.width / 2f - 200f, Screen.height / 2f - 110f, 400f, 220f), GUI.skin.box);
@@ -1493,11 +1268,7 @@ namespace UntitledPoolGame.Pool
             DrawModeButton(PoolGameMode.NineBall, "9-Ball");
             DrawModeButton(PoolGameMode.FourteenOne, "14.1 (score cible)");
 
-            // Party doesn't select immediately like the others above — it
-            // opens a second screen (DrawPartySubmenuGUI) listing whichever
-            // party sub-modes exist, since Party is meant to grow into
-            // several distinct variants over time rather than the top-level
-            // list itself growing with them.
+            // Party opens a second screen with its sub-modes.
             GUI.color = selectedMode == PoolGameMode.Party ? Color.green : Color.white;
             string partyLabel = selectedMode == PoolGameMode.Party
                 ? $"Party — {PartyModeLabel(selectedPartyMode)}"

@@ -7,12 +7,10 @@ using UntitledPoolGame.Player;
 
 namespace UntitledPoolGame.Pool
 {
-    // Pool aiming/shooting: requires holding the Cue and being near a
-    // stopped cue ball. Interact enters/exits aim mode (camera orbits the
-    // ball, body placed behind the cue), Look aims, Move shifts the strike
-    // point (spin), hold Attack to charge and release to shoot. Also owns
-    // the top-down ball-in-hand placement and 8-ball pocket call views.
-    // Reads its actions from this player's own PlayerInput instance.
+    // Aiming and shooting. Holding the cue near a still cue ball, Interact
+    // enters aim (camera orbits the ball), Look aims, Move sets the strike
+    // point, Attack charges and shoots. Also runs the top-down ball-in-hand
+    // view and the 8-ball pocket call.
     [RequireComponent(typeof(LocalFpsPlayerController))]
     [RequireComponent(typeof(LocalPlayerHandController))]
     [RequireComponent(typeof(PlayerInput))]
@@ -25,10 +23,7 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private Transform cameraTransform;
         [SerializeField] private float orbitDistance = 0.6f;
         [SerializeField] private float orbitHeight = 0.35f;
-        // Mouse delta and gamepad stick values are on completely different
-        // scales (a few pixels vs. a normalized -1..1), same reason
-        // LocalFpsPlayerController splits its own look sensitivity — reusing
-        // one constant for both made gamepad orbiting painfully slow.
+        // Mouse deltas are pixels, sticks are -1..1: one speed each.
         [SerializeField] private float mouseAimTurnSpeed = 0.1f;
         [SerializeField] private float gamepadAimTurnSpeed = 150f;
 
@@ -36,9 +31,7 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private float minPower = 0.1f;
         [SerializeField] private float maxPower = 1f;
         [SerializeField] private float chargeSpeed = 0.85f;
-        // Charging zoom distance lives in PoolScreenJuiceSettings (shared
-        // with LocalPoolPowerEffectReceiver's charge shake — same "how does
-        // charging a shot feel" moment), not a local field here.
+        // The charging zoom is in PoolScreenJuiceSettings, next to the charge shake.
 
         [Header("Spin (strike point on the cue ball)")]
         [SerializeField] private float offsetAdjustSpeed = 1.2f;
@@ -57,41 +50,25 @@ namespace UntitledPoolGame.Pool
         // looks at then (see lookAtIK below).
         [SerializeField] private Transform aimIKTarget;
 
-        // The held cue is never moved or rotated while aiming: its
-        // InteractionTargets (the grip points) are children of it, so
-        // FBBIK would drag the hands — and through them the whole body —
-        // after every change (that's what made the character fall apart
-        // whenever the cue was repositioned). Instead the BODY is placed and
-        // turned each frame so the cue, exactly as it's held, points along
-        // the shot line at the ball (see ComputeAimBodyPose). This is the
-        // local axis of the cue that points along its length, tip-first —
-        // if the body ends up facing the wrong way, flip its sign or try
-        // another axis: one of a handful of choices, not a value to guess.
+        // The cue is never moved while aiming: the hands follow its grip
+        // points and FBBIK would drag the whole body along. The body is turned
+        // around it instead (ComputeAimBodyPose). This is the cue's local
+        // axis along its length, tip first; flip it if the body faces backwards.
         [SerializeField] private Vector3 aimHoldAxis = Vector3.forward;
 
-        // Of that extra reach, how much the held cue (grip points, so the
-        // hands) is moved forward along its own axis, like arms stretching
-        // out over the rail — the rest is left to the mesh sliding through
-        // the hands. Kept small: FBBIK pulls the body toward its hand
-        // targets, so a big shift is what tore the character apart earlier.
+        // Part of the extra reach taken by moving the cue (so the hands)
+        // forward; the rest is the mesh sliding through the hands. Kept small,
+        // FBBIK pulls the body after the hands.
         [SerializeField] private float maxHandShift = 0.4f;
 
-        // How far the hands themselves may actually go forward, whatever
-        // Max Hand Shift allows as reach: beyond it the arms stretch and
-        // FBBIK folds the whole body over the rail after them (seen with Max
-        // Hand Shift at 1.8 m, out of reach). The rest of the reach is the
-        // cue mesh sliding through the hands (CueChargeSlide, AimMeshReach).
-        // 0.75 m: shots with the hands 0.66–0.73 m forward looked right in
-        // testing; 0.4 made most shots "too far". (Renamed from
-        // maxArmStretch so the new default replaces the saved 0.4.)
+        // How far the hands themselves may go forward. Further, the arms
+        // stretch and FBBIK folds the body over the rail; the rest of the
+        // reach is the mesh sliding (CueChargeSlide). 0.75 m looked right.
         [Tooltip("Avancée maximale des mains (mètres), à portée comme hors de portée. Max Hand Shift reste la portée jusqu'à laquelle on peut tirer ; au-delà de cette avancée, c'est la queue qui glisse dans les mains. Trop grand = le corps se plie par-dessus la bande pour suivre les mains ; trop petit = beaucoup de coups « trop loin ».")]
         [SerializeField] private float maxHandStretch = 0.75f;
 
-        // Reach past the arms' comfortable stretch comes from the torso
-        // leaning over the table, as a real player does on a long shot: the
-        // arms keep their pose, the body goes forward (and a little down)
-        // just before FBBIK solves. Without it, shots 1–25 cm past Max Hand
-        // Stretch were refused although a player could clearly reach them.
+        // Past the arms' stretch, the torso leans over the table, like a
+        // real player on a long shot.
         [Tooltip("Penché du buste au-dessus de la table (mètres) pour les coups plus loin que Max Hand Stretch : ajoute cette distance à la portée jouable, les bras gardant leur position.")]
         [SerializeField] private float maxBodyLean = 0.45f;
         [Tooltip("Flexion du buste (degrés) au penché maximal.")]
@@ -99,13 +76,8 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Full Body Biped IK du personnage, pour le penché (vide = le premier trouvé sous ce joueur).")]
         [SerializeField] private FullBodyBipedIK leanIK;
 
-        // Past the normal reach, a stretched shot (a real player's one leg up,
-        // hip on the rail): the body keeps going forward with the hands — so
-        // the arms never stretch further than usual — the hips rise onto the
-        // rail instead of sinking, the torso lies flatter, the support foot
-        // stays planted (IK) and the other leg lifts behind. Before this,
-        // reaching that far bent the torso flat with the head down and the
-        // legs dragged along by the body (no foot was held).
+        // Beyond the normal reach: one leg up, hip on the rail. The hips rise
+        // onto the rail, the support foot stays planted and the other leg lifts.
         [Header("Stretched shot (beyond the normal reach)")]
         [Tooltip("Portée supplémentaire (mètres) au-delà de la portée normale, couverte par le coup allongé (hanche sur la bande, jambe levée). 0 = pas de coup allongé : « trop loin » dès la portée normale dépassée.")]
         [SerializeField] private float maxStretchReach = 0.6f;
@@ -132,21 +104,15 @@ namespace UntitledPoolGame.Pool
         // back from the felt and raised above the table.
         private float lastHipHeldBack, lastHipRaise, lastCompensationBend;
 
-        // Smoothed versions of the above (they jump when the player orbits
-        // past a corner — the hips switch between clear of the felt and over
-        // it — which made the torso snap), and the support foot, picked once
-        // per lean: re-picked every frame (nearest foot to the ball) it
-        // flipped when both were about as near, swapping the lifted leg and
-        // twisting the hips round.
+        // These jump when the player orbits past a corner, hence the smoothing.
+        // The support foot is picked once per lean, otherwise it flips
+        // between the two feet when both are about as close.
         [Tooltip("Vitesse de lissage de la retenue, de la montée et de la flexion du bassin (plus grand = plus réactif, plus petit = plus doux).")]
         [SerializeField] private float hipAdjustSharpness = 6f;
         private float smoothHeldBack, smoothRaise, smoothCompensation;
 
-        // Out of reach (even stretched), the player stops straining: the front
-        // hand lets go of the cue (LocalCueHolder.FrontHandRelease), the body
-        // straightens up (no lean, no stretched shot) and the hand takes the
-        // cue again once the shot is reachable. Held at full stretch instead,
-        // the body twisted oddly while the player orbited looking for an angle.
+        // Out of reach even stretched: the front hand lets go and the body
+        // straightens up until the shot is reachable again.
         [Header("Out of reach")]
         [Tooltip("Hors de portée : la main avant lâche la queue et le corps se redresse, puis elle la reprend dès que le coup redevient possible.")]
         [SerializeField] private bool releaseFrontHandOutOfReach = true;
@@ -159,42 +125,31 @@ namespace UntitledPoolGame.Pool
         private float frontHandRelease;
         private bool supportFootChosen, leftFootSupports;
 
-        // Current lean over the table (metres), from the hand shift beyond
-        // Max Hand Stretch; applied in ApplyLean. Past Max Body Lean it's the
-        // stretched shot.
+        // Lean over the table (m) beyond Max Hand Stretch, applied in
+        // ApplyLean. Past Max Body Lean it's the stretched shot.
         private float bodyLean;
         private bool feetDriven;
 
         // 0 = normal reach, 1 = stretched as far as Max Stretch Reach allows.
         public float StretchFraction => maxStretchReach > 0f ? Mathf.Clamp01((AimHandShift - maxHandStretch - maxBodyLean) / maxStretchReach) : 0f;
 
-        // Where the cue sits relative to the body ONLY while aiming, added on
-        // top of its normal held pose (Pivot/Hold Point, untouched), in the
-        // body's own axes: x = right, y = up, z = forward. Re-read every
-        // frame, so drag it live while aiming; the body re-places itself
-        // around whatever this makes of the cue. Left at zero = same spot as
-        // when just carrying it.
+        // Cue offset while aiming only, on top of its carried pose, in body
+        // axes (x right, y up, z forward). Read every frame, tweakable live.
         [SerializeField] private Vector3 aimCueOffset;
 
         public float AimReachExtra { get; private set; }
         public float AimHandShift { get; private set; }
 
-        // True while the ball is further than the arms can reach from outside
-        // the table (needs more than MaxReach): the aiming pose is kept
-        // (arms stretched as far as they go, cue tilted at the ball) but the
-        // tip doesn't reach it and no shot can be taken until the player
-        // orbits to an angle that's within reach.
+        // The ball is further than the arms reach from outside the table: the
+        // pose stays but no shot until the player orbits to a closer angle.
         public bool IsOutOfReach => isAiming && AimReachExtra > StretchedReach;
 
         // The normal reach plus the stretched shot's, still within Max Hand
         // Shift (the hands never go further forward than that).
         private float StretchedReach => Mathf.Max(MaxReach, Mathf.Min(maxHandShift, MaxReach + maxStretchReach));
 
-        // The reach actually playable: Max Hand Shift, but never more than
-        // the arms (Max Arm Stretch) plus what the cue can slide through the
-        // hands without its butt leaving them (CueChargeSlide.MaxMeshReach) —
-        // with Max Hand Shift at 1.8 m the cue ended up floating ahead of
-        // the hands on long shots.
+        // Playable reach: Max Hand Shift, capped at the arms plus what the cue
+        // can slide without its butt leaving the hands.
         private float MaxReach
         {
             get
@@ -205,27 +160,20 @@ namespace UntitledPoolGame.Pool
             }
         }
 
-        // How far CueChargeSlide should slide the mesh through the hands:
-        // whatever reach the hands' own shift didn't cover, or nothing at
-        // all while out of reach (the cue isn't extended then).
+        // How far CueChargeSlide slides the mesh: what the hands didn't cover.
         public float AimMeshReach => IsOutOfReach ? 0f : Mathf.Max(0f, AimReachExtra - AimHandShift);
 
-        // Distance from the cue's origin (mid-cue pivot) to the ball at which
-        // the TIP touches it: measured from the mesh (CueChargeSlide.TipDistance)
-        // plus the ball's radius, or plain standDistance if that isn't
-        // available. Replaces hand-tuning standDistance for this.
+        // Distance from the cue's origin to the ball at which the tip
+        // touches it (measured from the mesh, else standDistance).
         private float aimBaseDistance;
 
         // Gap between the cue tip and the ball's surface at rest (metres):
         // 0 = touching, positive = a little way back from it.
         [SerializeField] private float aimTipGap = 0.02f;
 
-        // While aiming, the held cue is tilted (about its own origin, not
-        // moved) so its tip points at the ball instead of keeping the
-        // level pose it's carried in — otherwise it passes over the ball
-        // when the hands are higher than the table. Capped in degrees so
-        // the grips (and so the hands) never swing far. Height of the hands
-        // themselves is Aim Cue Offset's y.
+        // Tilts the cue about its origin so the tip points at the ball, or it
+        // passes over the ball when the hands are high. Capped so the grips
+        // don't swing far.
         [SerializeField] private bool tiltCueToBall = true;
 
         [Tooltip("Diagnostic : pendant la visée, écrit toutes les 0,5 s la portée demandée, le décalage des mains, l'inclinaison de la queue, la position du corps et du bassin, pour comparer à portée / limite / hors de portée.")]
@@ -240,19 +188,12 @@ namespace UntitledPoolGame.Pool
         private Vector3 cueLocalTipDirection;
         private bool hasCueLine;
 
-        // The head/spine turn toward the ball while aiming, via FinalIK's
-        // Look At IK — assign its own Target field to this same aimIKTarget
-        // in the Inspector (it already tracks the ball every frame, see
-        // UpdateAimIKTarget below) rather than wiring a second target.
-        // Doesn't fight InteractionSystem's own internal look-at: that one
-        // only runs briefly during the cue's pickup reach, long over by the
-        // time aiming (and this) starts.
+        // Head and spine turn toward the ball while aiming. Set the Look At
+        // IK's Target to aimIKTarget, which already follows the ball.
         [SerializeField] private LookAtIK lookAtIK;
 
-        // Existing bend goal Transforms (already assigned on Full Body Biped
-        // IK's own arm chains, with their own weight already tuned there —
-        // untouched by this script) — repositioned, not swapped, between an
-        // idle local offset and an aiming one. Left empty = not moved.
+        // FBBIK's own bend goals, moved between an idle and an aiming offset
+        // (weights untouched). Empty = not moved.
         [SerializeField] private Transform leftArmBendGoal;
         [SerializeField] private Vector3 leftArmBendGoalAimLocalOffset;
         [SerializeField] private Transform rightArmBendGoal;
@@ -261,25 +202,21 @@ namespace UntitledPoolGame.Pool
         private Vector3 leftArmBendGoalRestLocalPosition;
         private Vector3 rightArmBendGoalRestLocalPosition;
 
-        // What the head follows when NOT aiming: the child of CM_FPS, so it
-        // tracks where the camera looks. While aiming, Look At IK's target
-        // is swapped to aimIKTarget (on the cue ball) instead, and back
-        // again on exit. Leave empty to have no head look outside aiming.
+        // What the head follows outside aiming (child of CM_FPS). Empty = no
+        // head look outside aiming.
         [SerializeField] private Transform normalLookTarget;
 
         private void Start()
         {
             EnableHeadLook(false);
-            // Start, not Awake: LocalPlayerHandController.Awake adds it when
-            // the prefab doesn't carry one, possibly after this Awake.
+            // Start, not Awake: LocalPlayerHandController.Awake adds them when
+            // the prefab doesn't carry them, possibly after this Awake.
             powerController = GetComponent<LocalPoolPowerController>();
+            effectReceiver = GetComponent<LocalPoolPowerEffectReceiver>();
         }
 
-        // Extra yaw (degrees) added to the body on top of whatever lines the
-        // held cue up with the shot (see ComputeAimBodyPose). The cue stays
-        // on the shot line either way — the body is placed around it — so
-        // this only changes how the body stands relative to the cue (e.g.
-        // side-on, like a real pool stance).
+        // Body yaw added on top of the cue's line (90 = side-on stance). The
+        // cue stays on the shot line either way.
         [SerializeField] private float bodyYawOffsetWhileAiming = 90f;
 
         [Header("Body positioning while aiming")]
@@ -288,10 +225,7 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private float tableClearanceMargin = 0.5f;
 
         [Header("Ball-in-hand placement (top-down view)")]
-        // Plain manual height above the table — set this directly in the
-        // Inspector until the framing looks right for your setup (an
-        // auto-computed height from FOV/aspect was tried here and didn't
-        // actually give predictable control over the shot).
+        // Camera height above the table, set by hand.
         [SerializeField] private float placementCameraHeight = 3.5f;
         [SerializeField] private float placementMoveSpeed = 1.2f;
 
@@ -312,18 +246,14 @@ namespace UntitledPoolGame.Pool
         private LocalUnarmedMelee unarmedMelee;
         // Optional: while it's picking a pocket for a power, aiming stands aside.
         private LocalPoolPowerController powerController;
+        private LocalPoolPowerEffectReceiver effectReceiver;
         // The pocket pick for the 8-ball call (shared with the powers).
         private LocalPocketPointer pocketPointer;
         private bool IsChoosingPowerPocket => powerController != null && powerController.IsChoosingPocket;
         private CharacterController characterController;
         private PlayerInput playerInput;
-        // CinemachineBrain overwrites the actual camera's Transform every
-        // LateUpdate to match whichever vcam (CM_FPS) currently has
-        // priority — disabling fpsController alone only stops its look
-        // INPUT handling, not this, so without also disabling the Brain
-        // itself, cameraTransform's manual orbit position/rotation (set in
-        // Update(), i.e. before CinemachineBrain's own LateUpdate) gets
-        // silently reverted every single frame during aim.
+        // The Brain rewrites the camera every LateUpdate, which would undo
+        // the aim orbit: it's turned off while aiming.
         private CinemachineBrain cinemachineBrain;
         private InputAction lookAction;
         private InputAction moveAction;
@@ -332,15 +262,10 @@ namespace UntitledPoolGame.Pool
 
         private PoolBall currentCueBall;
         private bool isAiming;
-        // While aiming, cameraTransform's WORLD position/rotation are driven
-        // directly here (camera orbit) every frame — anything else that also
-        // wants to nudge the camera (e.g. a power's screen shake) needs to
-        // know this, so it can add to the current position instead of
-        // fighting/overwriting the orbit.
+        // While aiming the camera's world pose is set here every frame:
+        // shakes must add to it, not overwrite it.
         public bool IsAiming => isAiming;
-        // 0 while not charging, up to 1 at maxPower — read by
-        // LocalPoolPowerEffectReceiver to grow the charge shake in step with
-        // how loaded the shot is, and used locally for the charging zoom.
+        // 0..1 charge, for the charge shake and the zoom.
         public float ChargeFraction => maxPower > 0f ? Mathf.Clamp01(chargedPower / maxPower) : 0f;
         private float aimYaw;
         private float chargedPower;
@@ -396,10 +321,8 @@ namespace UntitledPoolGame.Pool
         }
 
         // A player spawned by PlayerInputManager only has what its prefab
-        // holds: wiring done on a player placed in a scene (Inspector
-        // overrides, e.g. the preview lines in BarSplitscreen) never reaches
-        // it. Everything here lives on the player itself, so whatever was
-        // left empty is found among its children, or created.
+        // holds (scene overrides don't reach it): anything left empty is
+        // found among its children or created.
         private void ResolveMissingReferences()
         {
             if (cameraTransform == null)
@@ -473,12 +396,10 @@ namespace UntitledPoolGame.Pool
 
         private static bool IsCue(LocalGrabbable heldObject)
         {
-            return heldObject != null && heldObject.TryGetComponent(out Cue _);
+            return heldObject != null && heldObject.IsCue;
         }
 
-        // Whether it's this player's turn to shoot at all — used to stop the
-        // player who isn't up from entering aim mode. Cue pickup itself is
-        // gated the same way in LocalPlayerHandController.
+        // Only the player whose turn it is can aim.
         private bool CanShootNow()
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
@@ -491,9 +412,7 @@ namespace UntitledPoolGame.Pool
             return rules != null && rules.BallInHand && rules.CanPlayerShoot(playerInput.playerIndex);
         }
 
-        // 8-ball call-shot (see EightBallRuleSet/PoolMatchRules): true once
-        // this player's group is cleared and they haven't already called a
-        // pocket for their next attempt at the 8.
+        // 8-ball call: group cleared and no pocket called yet.
         private bool IsMyTurnToCallPocket()
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
@@ -505,15 +424,10 @@ namespace UntitledPoolGame.Pool
         }
 
         private PoolBall placingCueBall;
-        // Own flag per interaction (ball placement vs. pocket call below)
-        // rather than one shared bool, so neither handler ever tears down
-        // the other one's state.
+        // One flag per interaction so neither clears the other's state.
         private bool ballPlacementActive;
         private bool callPocketActive;
-        // Same reason as IsAiming above — the top-down view also drives
-        // cameraTransform's WORLD position/rotation directly every frame, a
-        // THIRD state distinct from both aiming and normal FPS view. (The
-        // 8-ball call no longer counts: it's picked in the normal view.)
+        // The top-down view also drives the camera directly (see IsAiming).
         public bool IsPlacementViewActive => ballPlacementActive;
         // Read by the in-game HUD (MatchHud): which interaction is up, and
         // the pocket currently pointed at for the 8-ball call.
@@ -531,13 +445,9 @@ namespace UntitledPoolGame.Pool
         private Camera placementCamera;
         private float placementRestNearClip = -1f;
 
-        // Ball-in-hand: after a foul, the player who now has the turn switches
-        // to a top-down view of the whole table and slides the cue ball around
-        // with Move, confirming with Interact. (A first-person look-ray to pick
-        // a spot on the felt was tried first — too fiddly to aim precisely at a
-        // small target while also just trying to look around normally.)
-        // Consumes the frame (returns true) whenever in progress, so normal
-        // aim-entry/exit below doesn't also run.
+        // After a foul, the player who has the turn sees the table from above
+        // and moves the cue ball with Move, Interact to confirm. Returns true
+        // while active so the aim code below doesn't run.
         private bool HandleBallInHand()
         {
             if (!IsMyTurnToPlaceBall())
@@ -558,11 +468,7 @@ namespace UntitledPoolGame.Pool
             PoolTableSurface surface = PoolTableSurface.Instance;
             if (surface != null)
             {
-                // The camera's own right/up (not the table's — the table can
-                // be rotated to line up with a custom asset, but the top-down
-                // camera itself always looks straight down the same way), so
-                // Move always matches what's shown on screen regardless of
-                // how the table itself is oriented.
+                // Camera axes, not the table's, so Move matches the screen.
                 Vector2 moveInput = moveAction.ReadValue<Vector2>();
                 Vector3 delta = (cameraTransform.right * moveInput.x + cameraTransform.up * moveInput.y)
                     * placementMoveSpeed * Time.deltaTime;
@@ -587,17 +493,12 @@ namespace UntitledPoolGame.Pool
         }
 
         private PoolPocket highlightedPocket;
-        // The call was confirmed this frame: Interact still counts as taken
-        // for LocalPlayerHandController (WantsInteractThisFrame), which may
-        // run after this and would otherwise drop the cue on the same press.
+        // Interact was used for the call this frame: the hands mustn't
+        // take it as a drop (WantsInteractThisFrame).
         private int callConfirmedFrame = -1;
 
-        // 8-ball call-shot: the same pocket pick as the powers aimed at a
-        // pocket (LocalPocketPointer) — the player looks at a pocket through
-        // the white pointer in the normal first-person view (they can still
-        // walk around the table), and Interact confirms. Aim entry waits
-        // until a pocket is called, as before (consumes the frame). (It used
-        // to be a top-down view with Move stepping from pocket to pocket.)
+        // 8-ball call: same pocket pick as the powers (LocalPocketPointer),
+        // in the normal view; Interact confirms. Aiming waits for it.
         private bool HandleCallPocket()
         {
             // A power's pocket pick holds the pointer: the call waits for it.
@@ -632,10 +533,8 @@ namespace UntitledPoolGame.Pool
             callPocketActive = false;
         }
 
-        // Pure camera plumbing for the top-down view (ball in hand) —
-        // doesn't track whether it's active itself (see
-        // ballPlacementActive), just moves the camera and hands FPS control
-        // back and forth.
+        // Camera handling of the top-down view only (state is in
+        // ballPlacementActive).
         private void StartPlacementView()
         {
             fpsController.enabled = false;
@@ -651,11 +550,9 @@ namespace UntitledPoolGame.Pool
             placementCameraExpected = cameraTransform.position;
             placementCheckFrames = 10;
 
-            // Whatever hangs over the table (its lamp, the ceiling, a player
-            // leaning over it) stood between this camera and the felt and hid
-            // part of the table. Moving the near clip plane down to just above
-            // the felt leaves only the table, the balls and the felt in view.
-            // Cinemachine is off during this view, so it doesn't reset the lens.
+            // Anything over the table (lamp, ceiling, a player) hid the felt:
+            // the near clip plane goes down to just above it. Cinemachine is
+            // off here, so the lens stays as set.
             placementCamera = cameraTransform.GetComponent<Camera>();
             if (placementCamera != null)
             {
@@ -693,14 +590,9 @@ namespace UntitledPoolGame.Pool
             }
         }
 
-        // Placement Camera Height is tuned by hand for full-screen (solo) —
-        // split-screen narrows each player's viewport (typically side-by-side,
-        // so a narrower width/height ratio), which shrinks the horizontal FOV
-        // and makes the SAME height show less of the table lengthwise, i.e.
-        // "too close" even though nothing changed except the viewport shape.
-        // Scaling by how much the current viewport's aspect differs from the
-        // full window's keeps the hand-tuned solo value correct everywhere,
-        // instead of needing a separate number per screen layout.
+        // The height is tuned full screen. A narrower split-screen viewport
+        // shows less of the table at the same height, so it's scaled by the
+        // aspect ratio difference.
         private float PlacementHeightForCurrentViewport()
         {
             Camera cam = cameraTransform != null ? cameraTransform.GetComponent<Camera>() : null;
@@ -767,10 +659,7 @@ namespace UntitledPoolGame.Pool
             // The in-game HUD (MatchHud) draws all of this in its own style.
             if (PoolMatchRules.ExternalHud) return;
 
-            // highlightedPocket is only ever non-null while the call-pocket
-            // top-down view (HandleCallPocket) is active and has already
-            // found a nearest pocket — a reliable enough signal on its own
-            // for this hint without re-deriving the whole call-mode state.
+            // Only set while the call is in progress.
             if (highlightedPocket != null)
             {
                 GUI.Box(new Rect(Screen.width / 2f - 160f, 20f, 320f, 40f),
@@ -805,23 +694,28 @@ namespace UntitledPoolGame.Pool
 
         private const float MaxSpeedToAim = 0.05f;
 
+        private int nearbyCueBallFrame = -1;
+        private PoolBall nearbyCueBall;
+
+        // Cue ball at rest within interactRange. Asked twice a frame
+        // (Update, WantsInteractThisFrame), so worked out once.
         private PoolBall FindNearbyCueBall()
         {
-            Collider[] hits = Physics.OverlapSphere(transform.position, interactRange);
-            foreach (Collider hit in hits)
-            {
-                if (hit.TryGetComponent(out PoolBall ball) && ball.IsCueBall && ball.Rigidbody.linearVelocity.magnitude < MaxSpeedToAim)
-                    return ball;
-            }
-            return null;
+            if (nearbyCueBallFrame == Time.frameCount) return nearbyCueBall;
+            nearbyCueBallFrame = Time.frameCount;
+            nearbyCueBall = null;
+            PoolBall ball = PoolBall.FindCueBall();
+            // Parked (ball in hand, table hole): its collider is off, the
+            // overlap test never found it either.
+            if (ball == null || ball.Rigidbody.isKinematic) return null;
+            float reach = interactRange + ball.Radius;
+            if ((ball.transform.position - transform.position).sqrMagnitude > reach * reach) return null;
+            if (ball.Rigidbody.linearVelocity.magnitude < MaxSpeedToAim) nearbyCueBall = ball;
+            return nearbyCueBall;
         }
 
-        // CharacterController resolves movement incrementally through Move();
-        // reassigning transform.position directly while it's enabled fights
-        // that internal state on a jump this large (it can report a bogus
-        // collision against whatever the capsule swept through on the way),
-        // so it's briefly disabled for the teleport — the standard trick for
-        // relocating a CharacterController outside of Move().
+        // The CharacterController fights a direct jump this big (bogus
+        // collisions), so it's off for the teleport.
         private void TeleportBody(Vector3 position, float yaw)
         {
             characterController.enabled = false;
@@ -829,33 +723,21 @@ namespace UntitledPoolGame.Pool
             characterController.enabled = true;
         }
 
-        // How far past aimBaseDistance the body needs to stand back for this
-        // shot so that the BODY (its root, rootOffset away from the cue's
-        // origin) is clear of the table by Table Clearance Margin — NEVER
-        // capped: the body must always end up outside, or it stands inside
-        // the table. The cue itself may well be over the table, as it is for
-        // a real player leaning over a rail. What the hands/cue mesh stretch
-        // to cover is a separate concern (IsOutOfReach/AimMeshReach).
-        // Before 02/10 this required the cue's middle (the hands) to be
-        // clear, with the margin counted twice: the body ended up more than
-        // a metre from the rail and many shots read as out of reach.
+        // How much further back the body must stand so its root clears the
+        // table by Table Clearance Margin. Never capped, or the body ends up
+        // inside the table; the cue itself can be over it.
         private float RequiredReachExtra(Vector3 ballPos, Vector3 aimDirection, Vector3 rootOffset)
         {
             PoolTableSurface surface = PoolTableSurface.Instance;
             if (surface == null) return 0f;
-            // The root sits at ballPos + rootOffset - aimDirection * distance:
-            // walking back along the line from ballPos + rootOffset gives the
-            // distance at which it leaves the table.
+            // Walk back from the root's spot until it leaves the table.
             float clearDistance = surface.DistanceToClearPlayArea(ballPos + rootOffset, -aimDirection, tableClearanceMargin);
             return Mathf.Max(0f, clearDistance - aimBaseDistance);
         }
 
-        // Where the body should stand, and which way it faces, for a shot
-        // along aimDirection (pointing THROUGH the ball). Uses the held cue's
-        // own line (captured in EnterAim, in this body's local space) rather
-        // than the body's forward: the yaw is whatever makes the cue point
-        // along aimDirection, the position whatever puts the ball on that
-        // line, aimBaseDistance + AimReachExtra along the cue from its origin.
+        // Where the body stands and faces for a shot along aimDirection: the
+        // yaw that points the held cue's line (captured in EnterAim) at the
+        // ball, the position that puts the ball on that line.
         private void ComputeAimBodyPose(Vector3 ballPos, Vector3 aimDirection, out Vector3 position, out float yaw)
         {
             Vector3 originHorizontal = new Vector3(cueLocalOrigin.x + aimCueOffset.x, 0f, cueLocalOrigin.z + aimCueOffset.z);
@@ -897,9 +779,7 @@ namespace UntitledPoolGame.Pool
             EnableHeadLook(true);
             SetArmBendGoals(aiming: true);
 
-            // Snapshot the held cue's line in this body's local space while
-            // it's still in its idle pose — ComputeAimBodyPose then keeps
-            // that exact relationship while lining the shot up.
+            // The cue's line in body space, taken in its idle pose.
             LocalGrabbable heldCueOnEnter = handController.HeldObject;
             hasCueLine = heldCueOnEnter != null;
             if (hasCueLine)
@@ -915,13 +795,8 @@ namespace UntitledPoolGame.Pool
                 cueLocalTipDirection = transform.InverseTransformDirection(held.TransformDirection(CueTipAxis(heldCueOnEnter)));
             }
 
-            // Entering aim mode already only happens on this player's own
-            // turn (gated by CanShootNow() before EnterAim() is ever called)
-            // — exactly the moment a queued VisionImpairPower against them
-            // should actually start counting down, not whenever it happened
-            // to be activated. GetEffectivePlayerIndex so hot-seat solo (one
-            // PlayerInput playing both sides) resolves to whichever side is
-            // actually up right now, not permanently slot 0.
+            // A queued Vision Impair starts counting on entering aim, i.e. at
+            // the start of this player's turn.
             PoolMatchRules rulesForPower = PoolMatchRules.Instance;
             if (rulesForPower != null)
             {
@@ -940,21 +815,15 @@ namespace UntitledPoolGame.Pool
                 ? Quaternion.LookRotation(toBall).eulerAngles.y
                 : transform.eulerAngles.y;
 
-            // Stand behind the cue ball on the shooting side — re-applied
-            // every frame in UpdateAim() too, so the body keeps following
-            // the shot line as the aim direction is adjusted.
+            // Re-applied every frame in UpdateAim.
             Vector3 aimDirectionOnEnter = toBall.sqrMagnitude > 0.001f ? toBall.normalized : transform.forward;
             ComputeAimBodyPose(cueBallPosition, aimDirectionOnEnter, out Vector3 standPosition, out float standYaw);
 
             TeleportBody(standPosition, standYaw);
         }
 
-        // Points the head/spine at the cue ball while aiming (aimIKTarget), and
-        // at the camera-following target (normalLookTarget) the rest of the
-        // time, by swapping Look At IK's Target — its weight stays up as long
-        // as there's something to look at. Enables the component itself too
-        // (a disabled Look At IK solves nothing whatever its weight) and
-        // reports what's missing instead of failing silently.
+        // Look At IK target: the cue ball while aiming, the camera target
+        // otherwise. Also enables the component and logs what's missing.
         private void EnableHeadLook(bool aiming)
         {
             if (lookAtIK == null)
@@ -979,11 +848,8 @@ namespace UntitledPoolGame.Pool
                 Debug.LogWarning($"[LocalPoolAimController] Look At IK isn't set up correctly: {message}", lookAtIK);
         }
 
-        // Moves each existing bend goal (see the fields above) between its
-        // idle local position (captured fresh on entering aim, so it's
-        // whatever it actually was, not a guessed value) and that same
-        // position plus the aim-only offset. Weight and every other FBBIK
-        // setting are left exactly as already configured.
+        // Moves each bend goal between its idle position (taken on entering
+        // aim) and that position plus the aim offset.
         private void SetArmBendGoals(bool aiming)
         {
             if (aiming)
@@ -1006,10 +872,7 @@ namespace UntitledPoolGame.Pool
             }
         }
 
-        // Where the tip should actually touch the ball, given the current
-        // strike point (contactOffset — the "Strike point" GUI dot, spin/
-        // effect) instead of always dead centre — the same offset Shoot()
-        // turns into spin, so the cue points exactly where the shot strikes.
+        // Where the tip touches the ball, strike point (spin) included.
         private Vector3 StrikePointWorld()
         {
             if (currentCueBall == null) return Vector3.zero;
@@ -1035,32 +898,21 @@ namespace UntitledPoolGame.Pool
             return cue != null && cue.TryGetComponent(out CueChargeSlide slide) ? slide.TipAxis : aimHoldAxis.normalized;
         }
 
-        // Moves the held cue (and with it the grip points, hence the hands)
-        // forward along its own axis by AimReachExtra (never past
-        // maxHandShift), relative to the pose it was held in before aiming.
-        // Never more than maxHandStretch (the rest is the mesh sliding).
-        // Out of reach it stays at that and keeps its tilt: dropping
-        // the cue back to its carry pose there left the body in its aiming
-        // stance with the arms pulled up, which looked broken — the pose now
-        // stays, only the shot is refused (UpdateAim) and the mesh doesn't
-        // extend to the ball (AimMeshReach).
+        // Moves the cue (so the hands) forward along its axis by the reach,
+        // up to Max Hand Stretch; the mesh slides for the rest. Out of reach
+        // the pose stays, only the shot is refused.
         private void ApplyHandShift()
         {
             LocalGrabbable cue = handController.HeldObject;
             if (cue == null || !hasCueLine) return;
 
-            // The cue (so the hands) goes forward by up to the arms' stretch
-            // plus the torso lean; the lean itself is whatever the shift asks
-            // beyond the arms (ApplyLean moves the body so the arms keep
-            // their pose).
-            // Past the normal reach (the cue sliding through the hands
-            // included), the stretched shot takes the hands and body further.
+            // Hands forward up to the arms' stretch plus the lean; past the
+            // normal reach the stretched shot adds to it.
             float stretch = Mathf.Clamp(AimReachExtra - MaxReach, 0f, maxStretchReach);
             float targetShift = Mathf.Min(AimReachExtra, maxHandShift, maxHandStretch + maxBodyLean + stretch);
 
-            // Out of reach with some margin (hysteresis: no letting go and
-            // taking back at the limit): front hand off, body upright — the
-            // hands only go as far as the arms comfortably do, no lean.
+            // Some hysteresis so the hand doesn't let go and grab again at
+            // the limit.
             if (releaseFrontHandOutOfReach)
             {
                 if (!reachLost && AimReachExtra > StretchedReach + outOfReachHysteresis) reachLost = true;
@@ -1080,19 +932,14 @@ namespace UntitledPoolGame.Pool
                 : aimCueOffset;
             held.localPosition = cueRestLocalPosition + offsetInParent + axisInParent * AimHandShift;
 
-            // Tilt about the cue's own origin so the tip points at the ball,
-            // starting from the pose it was carried in (not from last
-            // frame's, which would compound). Smoothed so crossing the
-            // out-of-reach limit doesn't snap it.
+            // From the carried pose (not last frame's, it would compound),
+            // smoothed so the reach limit doesn't snap it.
             Quaternion restWorld = held.parent != null ? held.parent.rotation * cueRestLocalRotation : cueRestLocalRotation;
             Quaternion targetTilt = Quaternion.identity;
             if (tiltCueToBall && currentCueBall != null)
             {
-                // Out of reach, the cue is tilted as for the farthest shot
-                // still possible (a point pulled back toward the player by
-                // the part of the distance the arms can't cover): tilting it
-                // at the real ball made a pose no in-reach shot has, and the
-                // body ended up folded over the rail.
+                // Out of reach: tilted as for the farthest possible shot.
+                // Aiming at the real ball folded the body over the rail.
                 Vector3 aimPoint = StrikePointWorld();
                 if (IsOutOfReach)
                 {
@@ -1132,21 +979,15 @@ namespace UntitledPoolGame.Pool
 
         private void ExitAim() => LeaveAim(returnControlToPlayer: true);
 
-        // Disabled mid-aim or mid-placement: a ragdoll knockdown (see
-        // LocalPlayerRagdollController.OnKnockedDown), or scene teardown. Without
-        // this, the CinemachineBrain stayed off — so the ragdoll camera, which
-        // works through the Brain, never showed — and ExitAim only ran once the
-        // player was back up, snapping the recovered body to the old aim yaw.
-        // FPS control and the body's facing are left to whoever disabled this.
+        // Disabled mid-aim (ragdoll knockdown, teardown): the Brain must come
+        // back on or the ragdoll camera never shows.
         private void OnEnable()
         {
             if (leanIK != null) leanIK.solver.OnPreUpdate += ApplyLean;
         }
 
-        // Leans the body over the table by bodyLean, just before FBBIK
-        // solves (after the Animator): forward along the flattened cue line
-        // and a little down, with the spine bent forward to match — the
-        // hands, on the cue, keep their place relative to the shoulders.
+        // Leans the body over the table after the Animator, before FBBIK:
+        // forward and a bit down, spine bent to match.
         private void ApplyLean()
         {
             if (leanIK == null) return;
@@ -1169,10 +1010,8 @@ namespace UntitledPoolGame.Pool
             float sink = Mathf.Min(bodyLean, maxBodyLean) * 0.3f;
             Vector3 offset = forward * bodyLean + Vector3.up * (stretchHipRise * s - sink);
 
-            // The hips stop at the felt's edge (over the rail) and stay above
-            // whatever is under them: pushed straight forward they went into
-            // the table. What they can't go forward, the torso makes up by
-            // bending further (shoulders forward, hands kept in reach).
+            // The hips stop at the felt's edge and stay above what's under
+            // them; the torso bends further to make up the difference.
             float heldBack = 0f, raise = 0f, compensation = 0f;
             if (r.pelvis != null)
             {
@@ -1213,9 +1052,8 @@ namespace UntitledPoolGame.Pool
 
             if (!plantFeetWhileLeaning || r.leftFoot == null || r.rightFoot == null) { ReleaseFeet(keepLean: true); return; }
 
-            // Feet as animated (read before FBBIK solves): the one nearer the
-            // ball is the support foot and stays put; the other one stays put
-            // too in a normal lean, and lifts up and back when stretched.
+            // Feet as animated: the one nearer the ball supports, the other
+            // lifts up and back when stretched.
             if (!supportFootChosen)
             {
                 Vector3 ball = currentCueBall != null ? currentCueBall.transform.position : transform.position + forward;
@@ -1244,17 +1082,17 @@ namespace UntitledPoolGame.Pool
         }
 
         private readonly RaycastHit[] surfaceHits = new RaycastHit[16];
+        private int surfaceMask;   // built on first use (GetMask isn't allowed in a field initializer)
 
-        // Height of the highest solid thing under a point (rail, felt, or
-        // the floor), ignoring this player (body, ragdoll), the held cue and
-        // the balls. -Infinity if nothing.
+        // Height of the highest solid surface under a point, ignoring this
+        // player, the held cue and the balls. -Infinity if none.
         private float SurfaceHeightBelow(Vector3 point)
         {
             Transform cue = handController != null && handController.HeldObject != null ? handController.HeldObject.transform : null;
             // Player layers excluded too: the ragdoll's own colliders sit
             // right under this ray and would push the hips up frame after frame.
-            int mask = ~LayerMask.GetMask("Ragdoll", "Player", "PlayerAnimated");
-            int count = Physics.RaycastNonAlloc(point + Vector3.up, Vector3.down, surfaceHits, 2.5f, mask, QueryTriggerInteraction.Ignore);
+            if (surfaceMask == 0) surfaceMask = ~LayerMask.GetMask("Ragdoll", "Player", "PlayerAnimated");
+            int count = Physics.RaycastNonAlloc(point + Vector3.up, Vector3.down, surfaceHits, 2.5f, surfaceMask, QueryTriggerInteraction.Ignore);
             float best = float.NegativeInfinity;
             for (int i = 0; i < count; i++)
             {
@@ -1318,11 +1156,8 @@ namespace UntitledPoolGame.Pool
             EnableHeadLook(false);
             SetArmBendGoals(aiming: false);
 
-            // Mirrors the ConsumePending* calls in EnterAim(): a debuff that
-            // started when this player entered aim mode ends with the shot,
-            // and only goes on hold when they back out without shooting — it
-            // comes back at their next aim this turn (it used to end there
-            // too: putting the cue down and picking it up again shook it off).
+            // A debuff started on entering aim ends with the shot; without a
+            // shot it goes on hold until the next aim this turn.
             PoolMatchRules rulesForPower = PoolMatchRules.Instance;
             if (rulesForPower != null)
             {
@@ -1339,10 +1174,7 @@ namespace UntitledPoolGame.Pool
                 }
             }
 
-            // Keep facing the direction of the shot just taken (or backed out
-            // of) instead of snapping back to whatever the body happened to
-            // be facing before aiming started — aimYaw already tracks
-            // wherever the player was last looking while aiming.
+            // Keep facing the shot instead of snapping back.
             if (returnControlToPlayer) transform.rotation = Quaternion.Euler(0f, aimYaw, 0f);
 
             if (cameraTransform != null)
@@ -1361,13 +1193,9 @@ namespace UntitledPoolGame.Pool
             bool isGamepad = lookAction.activeControl?.device is Gamepad;
             float turnSpeed = isGamepad ? gamepadAimTurnSpeed * Time.deltaTime : mouseAimTurnSpeed;
 
-            // InvertedControlsPower — same look inversion + sensitivity boost
-            // as the normal FPS view (LocalFpsPlayerController.InvertLook/
-            // SensitivityMultiplier), applied directly here since the aim
-            // orbit reads its own look input rather than going through that
-            // controller (disabled while aiming). previewHidden also drives
-            // hiding the trajectory preview below — no way to "read" the
-            // flip off the line to compensate for it.
+            // Inverted Controls: same inversion and boost as the FPS view
+            // (that controller is off while aiming). The preview is hidden
+            // too, or it would give the flip away.
             PoolMatchRules rules = PoolMatchRules.Instance;
             int effectivePlayer = rules != null ? rules.GetEffectivePlayerIndex(playerInput.playerIndex) : 0;
             bool previewHidden = rules != null && rules.IsControlsInverted(effectivePlayer);
@@ -1383,26 +1211,19 @@ namespace UntitledPoolGame.Pool
             contactOffset += moveInput * offsetAdjustSpeed * Time.deltaTime;
             if (contactOffset.magnitude > 1f) contactOffset = contactOffset.normalized;
 
-            // Stretched shot: the aim sways a little (slow noise, scaled by
-            // how far the body is stretched) — shown on the cue and preview,
-            // so the player times the shot rather than being cheated.
+            // Stretched shot: the aim sways with the stretch, shown on the
+            // cue and the preview so the player can time it.
             float wobble = stretchAimWobble * StretchFraction;
             if (wobble > 0f) wobble *= (Mathf.PerlinNoise(Time.time * 1.3f, playerInput.playerIndex * 7.1f) - 0.5f) * 2f;
             Vector3 aimDirection = Quaternion.Euler(0f, aimYaw + wobble, 0f) * Vector3.forward;
             Vector3 ballPos = currentCueBall.Rigidbody.position;
 
-            // Keeps the body standing behind the cue (and facing it) as the
-            // aim direction is adjusted — a plain direct set rather than
-            // TeleportBody's disable/enable dance, since the per-frame delta
-            // here is small (driven by look input) rather than the one big
-            // jump EnterAim() makes.
+            // Small per-frame change: set directly, no teleport needed.
             ComputeAimBodyPose(ballPos, aimDirection, out Vector3 standPosition, out float standYaw);
             transform.SetPositionAndRotation(standPosition, Quaternion.Euler(0f, standYaw, 0f));
             ApplyHandShift();
 
-            // Creeps the camera in toward the cue tip as the shot charges —
-            // a "charging zoom", on top of the shake LocalPoolPowerEffectReceiver
-            // layers on separately (reads ChargeFraction).
+            // Charging zoom toward the tip.
             float currentOrbitDistance = orbitDistance - juiceSettings.chargeZoomDistance * ChargeFraction;
             cameraTransform.position = ballPos - aimDirection * currentOrbitDistance + Vector3.up * orbitHeight;
             cameraTransform.LookAt(ballPos + Vector3.up * (orbitHeight * 0.3f));
@@ -1427,9 +1248,8 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            // Charging needs a press made during this aim: Attack sometimes
-            // read as already held on entering aim (first aim, and at random),
-            // which charged a shot nobody asked for.
+            // Attack sometimes reads as held on entering aim: only a press
+            // made during this aim charges.
             if (attackAction.WasPressedThisFrame())
             {
                 chargeArmed = true;
@@ -1454,21 +1274,12 @@ namespace UntitledPoolGame.Pool
 
             float cueRadiusWorld = currentCueBall.Radius;
 
-            // Physics.SphereCast never reports a hit against a collider the
-            // sphere already overlaps AT THE START of the sweep (documented
-            // Unity behaviour) — starting exactly at the cue ball's own center
-            // with its own radius meant any ball or rail already touching it
-            // got silently skipped, making the line vanish depending on aim
-            // direction whenever the cue ball was resting right up against
-            // something. Starting just past its own surface avoids that.
+            // A sphere cast ignores what it overlaps at the start, so it
+            // starts just past the cue ball's surface.
             Vector3 castOrigin = ballPos + direction * (cueRadiusWorld + 0.001f);
             float castDistance = Mathf.Max(0f, previewMaxDistance - cueRadiusWorld);
 
-            // Always show the cue ball's line, all the way to previewMaxDistance
-            // if nothing was hit (aiming through a pocket gap, or any other case
-            // that isn't a real obstacle) — hiding it entirely whenever nothing
-            // was hit within range made it disappear in totally normal aiming
-            // situations, which read as "broken" rather than "nothing there".
+            // The line always shows, full length when nothing is hit.
             bool didHit = Physics.SphereCast(castOrigin, cueRadiusWorld, direction, out RaycastHit hit, castDistance);
             Vector3 cueBallCenterAtContact = didHit
                 ? castOrigin + direction * hit.distance
@@ -1519,11 +1330,8 @@ namespace UntitledPoolGame.Pool
             chargedPower = 0f;
             LeaveAim(returnControlToPlayer: true, shotTaken: true);
 
-            // Called after ExitAim(), not before: by then the camera is back
-            // to its normal FPS local-position control (ExitAim already
-            // reset it), so the recoil kick doesn't have to fight the aim
-            // orbit's own per-frame world-position override.
-            GetComponent<LocalPoolPowerEffectReceiver>()?.PlayShotFeedback();
+            // After ExitAim, so the recoil doesn't fight the aim orbit.
+            if (effectReceiver != null) effectReceiver.PlayShotFeedback();
         }
     }
 }

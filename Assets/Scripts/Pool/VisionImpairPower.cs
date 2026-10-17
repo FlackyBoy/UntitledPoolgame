@@ -15,11 +15,7 @@ namespace UntitledPoolGame.Pool
         public override void Activate(PoolMatchRules match, int activatingPlayer)
         {
             int opponent = 1 - activatingPlayer;
-            // Queued, not applied immediately — see PoolMatchRules.
-            // QueueVisionImpair for why: the effect only starts once the
-            // opponent actually enters aim mode on their own turn, and lasts
-            // until PoolMatchRules.SwitchTurn() clears it at the end of that
-            // same turn.
+            // Starts when the opponent enters aim on their turn, ends with it.
             match.QueueVisionImpair(opponent, sensitivityMultiplier);
         }
     }

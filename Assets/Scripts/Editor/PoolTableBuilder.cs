@@ -6,70 +6,36 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // One-click generator for a placeholder pool table + standard 8-ball rack,
-    // so we can validate ball/cushion physics before building the aiming/shot
-    // mechanic on top. Dimensions are approximate regulation values in meters,
-    // editable on the PoolTableAssetSettings asset (Tools > Pool > Select
-    // Custom Table Settings) — tune them there and re-run to iterate.
+    // Builds a placeholder pool table with a standard rack, or the physics
+    // under an imported table model. Sizes are in PoolTableAssetSettings
+    // (Tools > Pool > Select Custom Table Settings).
     public static class PoolTableBuilder
     {
-        // Set once at the top of BuildTable() and read by every helper method
-        // below it in the same call — dimensions now live as editable fields
-        // on PoolTableAssetSettings (Tools > Pool > Select Custom Table
-        // Settings) instead of hardcoded constants, so fitting a new table
-        // model doesn't need a code edit.
+        // Set at the top of each build, read by the helpers below.
         private static PoolTableAssetSettings settings;
 
-        // Tools > Pool is grouped by priority (a gap of more than 10 draws a
-        // separator): 0–2 editors (Menu Studio, Text FX Studio, Level
-        // Maker), 20–22 project setup (config assets, menu scene, build
-        // scenes), 40–43 table, 60+ R&D submenu.
+        // Tools > Pool is grouped by priority (a gap over 10 adds a
+        // separator): 0-2 editors, 20-22 project setup, 40-43 table, 60+ R&D.
         [MenuItem("Tools/Pool/Build Table", priority = 40)]
         public static void BuildTableMenu() => BuildTable();
 
-        // For a custom table asset (a purchased/imported model) instead of our
-        // placeholder cubes: builds the exact same invisible physics scaffold
-        // (rail/surface colliders with the tuned PhysicsMaterials, pocket
-        // triggers, rack, cues, PoolMatchRules) but skips the visible
-        // surface/rail cubes — nested as a child under your table asset
-        // instead of standing alone. The asset comes from
-        // PoolTableAssetSettings.customTablePrefab (Tools > Pool > Select
-        // Custom Table Settings to assign it) and gets instantiated
-        // automatically; if that's not assigned, falls back to whatever
-        // GameObject is currently selected in the Hierarchy.
+        // For an imported table model: builds the same invisible physics
+        // (rails, felt, pockets, rack, cues, rules) without the placeholder
+        // cubes, as a "PoolPhysics" child of the model. The model is
+        // customTablePrefab, or the selected object if none is set.
         //
-        // The generated "PoolPhysics" child is built at local (0,0,0)/identity
-        // rotation, sized from PoolTableAssetSettings' dimension fields — it's
-        // internally consistent (rack/rails/pockets/cues correctly proportioned
-        // relative to each other) but has no idea where your asset's felt
-        // actually is. Deliberately NOT auto-measured/auto-aligned from the
-        // model (an earlier version tried guessing the pivot offset and long
-        // axis from a placed guide object — too many ways for a guess like
-        // that to be wrong on an arbitrary asset, and hard to debug blind).
-        // Instead: after running this, select the generated "PoolPhysics"
-        // object and Move/Rotate it (Scene view gizmo) until it lines up with
-        // your table's felt — one direct, visual, undo-able step instead of
-        // chasing measurements. Do NOT use Scale to resize it, non-uniform
-        // scale distorts every SphereCollider under it (balls, pockets) into
-        // ellipsoids — Unity spheres don't support non-uniform scale. If the
-        // size is off, change Play Length/Play Width/Table Surface Y on
-        // PoolTableAssetSettings instead (real-world meters) and regenerate;
-        // PoolPhysics itself should always stay at scale (1,1,1).
+        // PoolPhysics isn't aligned automatically (guessing it on an arbitrary
+        // model went wrong too often): move and rotate it by hand onto the
+        // felt. Never scale it, non-uniform scale turns the sphere colliders
+        // into ellipsoids; change the sizes in the settings and rebuild.
         [MenuItem("Tools/Pool/Attach Physics To Custom Table", priority = 41)]
         public static void AttachPhysicsToCustomTable() => BuildTable(hideVisuals: true, parentToSelection: true);
 
         [MenuItem("Tools/Pool/Select Custom Table Settings", priority = 42)]
         public static void SelectCustomTableSettings() => Selection.activeObject = GetOrCreateTableAssetSettings();
 
-        // Standalone from BuildTable() on purpose: "Attach Physics To Custom
-        // Table" destroys and fully regenerates the whole "PoolPhysics"
-        // child every time it runs (see the comment above it) — including
-        // the 6 pockets, wiping out any manual alignment already done on an
-        // existing table. Someone just wanting the Resources config assets
-        // created (PoolPhysicsSettings/PoolScreenJuiceSettings/
-        // PoolPotEffectSettings) shouldn't have to risk that. Safe to run
-        // any time — each Ensure*Asset() is a no-op if its asset already
-        // exists.
+        // Separate from the table builds, which regenerate PoolPhysics and
+        // would lose its alignment. Safe to run any time.
         [MenuItem("Tools/Pool/Ensure Config Assets Exist", priority = 20)]
         public static void EnsureConfigAssetsExist()
         {
@@ -97,9 +63,8 @@ namespace UntitledPoolGame.PoolEditor
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<UntitledPoolGame.Core.HudSettings>(), path);
         }
 
-        // The "Bille destructrice" power asset, with Cartoon FX Remaster's
-        // "CFXR2 WW Explosion" assigned (the user's pick), added to the powers handed out if it isn't
-        // there yet (the spawn settings asset itself is otherwise left as is).
+        // "Bille destructrice", with the CFXR2 WW Explosion, added to the
+        // powers handed out if missing.
         private static void EnsureBallBlastPowerAsset()
         {
             EnsurePowerAsset<BallBlastPower>("BallBlastPower", "Bille destructrice", serialized =>
@@ -109,9 +74,8 @@ namespace UntitledPoolGame.PoolEditor
             });
         }
 
-        // The "Trou" power asset (TableHolePower): an attack, usable during
-        // the opponent's turn, with Cartoon FX Remaster's fire for the
-        // meteor, its fire explosion for the impact and its smoke for the hole.
+        // "Trou": an attack usable during the opponent's turn, with CFXR fire
+        // for the meteor and impact and smoke for the hole.
         private static void EnsureTableHolePowerAsset()
         {
             EnsurePowerAsset<TableHolePower>("TableHolePower", "Trou", serialized =>
@@ -137,9 +101,8 @@ namespace UntitledPoolGame.PoolEditor
             });
         }
 
-        // Creates Assets/Powers/<fileName>.asset when missing (named, then
-        // configure applied), and adds it to the powers handed out if it
-        // isn't there yet (the spawn settings asset is otherwise left as is).
+        // Creates Assets/Powers/<fileName>.asset when missing and adds it to
+        // the powers handed out.
         private static void EnsurePowerAsset<T>(string fileName, string powerName, System.Action<SerializedObject> configure) where T : PoolPower
         {
             EnsureFolder("Assets/Powers");
@@ -167,26 +130,16 @@ namespace UntitledPoolGame.PoolEditor
             Debug.Log($"[PoolTableBuilder] {powerName} added to PoolPowerSpawnSettings > Available Powers.");
         }
 
-        // The "Groupe identique" power asset (IdenticalGroupsPower): an
-        // attack, so usable during the opponent's turn (Requires Own Turn
-        // off).
+        // "Groupe identique": an attack, so Requires Own Turn is off.
         private static void EnsureIdenticalGroupsPowerAsset()
         {
             EnsurePowerAsset<IdenticalGroupsPower>("IdenticalGroupsPower", "Groupe identique",
                 serialized => serialized.FindProperty("requiresOwnTurn").boolValue = false);
         }
 
-        // Bridges an EXISTING table (built before PoolPowerCrateManager/
-        // PoolPowerBallRotator existed) onto the new power spawn system,
-        // without going through BuildTable() — that destroys and rebuilds
-        // the whole "PoolPhysics" child from scratch (see the comment on
-        // "Attach Physics To Custom Table" above), which would throw away
-        // any manual alignment already done. This only ADDS what's missing:
-        // safe to run more than once, and safe on a table built before this
-        // feature existed. Select the table's root GameObject first (the
-        // one BuildTable() itself would have created — "PoolPhysics" for a
-        // custom table, "PoolTable"/"PoolTable (Offline)" for a generated
-        // one).
+        // Adds the power spawners to a table built before they existed,
+        // without rebuilding it (that would lose its alignment). Select the
+        // table's root first ("PoolPhysics" or "PoolTable").
         [MenuItem("Tools/Pool/Add Power Spawn System To Selected Table", priority = 43)]
         public static void AddPowerSpawnSystemToSelectedTable()
         {
@@ -226,10 +179,8 @@ namespace UntitledPoolGame.PoolEditor
             Debug.Log($"[PoolTableBuilder] Power spawn system added — PowerBall added to {addedTo} ball(s) that didn't already have one.");
         }
 
-        // Level Maker entry point: the physics scaffold under a table model
-        // already placed in the scene (not the settings' prefab, not the
-        // selection). Without cues: the builder's cylinders have none of the
-        // parts LocalCueHolder needs, the Level Maker places the Cue prefab.
+        // Level Maker: physics under a table model already in the scene. No
+        // cues by default: the Level Maker places the Cue prefab.
         public static GameObject AttachPhysicsTo(GameObject table, bool createCues)
             => BuildTable(hideVisuals: true, parentToSelection: true, target: table, createCues: createCues);
 
@@ -240,33 +191,18 @@ namespace UntitledPoolGame.PoolEditor
         {
             settings = GetOrCreateTableAssetSettings();
 
-            // Balls: near-elastic collisions between themselves (real pool balls have
-            // a coefficient of restitution around 0.92-0.98), very low friction.
-            // bounceCombine=Average, NOT Maximum: Unity resolves a contact's
-            // combine mode by picking whichever of the two touching materials
-            // declares the higher-priority mode (order: Average < Minimum <
-            // Multiply < Maximum), then applies THAT mode using both
-            // materials' values — regardless of which side it came from. With
-            // Maximum here, ball-felt contacts were ALSO forced through
-            // Maximum (nothing beats it), giving bounce = max(0.92, felt's
-            // 0.05) = 0.92 — the ball bouncing off the flat felt itself like
-            // it would off another ball, intermittently whenever it moved
-            // fast enough to clear the bounce-velocity threshold. Average has
-            // the lowest priority, so it never overrides what it's touching:
-            // ball-ball stays 0.92 (both sides Average), ball-rail still gets
-            // Rail's own Maximum (0.92, lively), ball-felt gets Felt's own
-            // Minimum (0.05, correctly dead).
+            // Balls: nearly elastic (0.92), very low friction. Bounce combine
+            // Average because Unity uses the higher-priority mode of the two
+            // materials: with Maximum, ball-on-felt contacts bounced at 0.92
+            // too. Average never wins, so rails (Maximum) and felt (Minimum)
+            // keep their own.
             PhysicsMaterial ballMaterial = GetOrCreatePhysicsMaterial("BallPhysics", friction: 0.03f, bounciness: 0.92f,
                 PhysicsMaterialCombine.Minimum, PhysicsMaterialCombine.Average);
-            // Rails: bouncy. bounceCombine=Maximum guarantees a lively rebound
-            // by itself (highest priority — wins regardless of what it's
-            // touching), so the ball material no longer needs to also claim
-            // Maximum for rail bounces to stay lively.
+            // Rails: Maximum wins over the balls' Average, so rebounds stay lively.
             PhysicsMaterial railMaterial = GetOrCreatePhysicsMaterial("RailPhysics", friction: 0.15f, bounciness: 0.85f,
                 PhysicsMaterialCombine.Average, PhysicsMaterialCombine.Maximum);
-            // Felt: friction here mostly affects settling/contact behaviour — the
-            // actual rolling/sliding deceleration is handled by PoolBall.cs, since
-            // PhysX has no native rolling resistance.
+            // Felt: rolling and sliding slow-down is done in PoolBall, PhysX has
+            // no rolling resistance.
             PhysicsMaterial feltMaterial = GetOrCreatePhysicsMaterial("FeltPhysics", friction: 0.35f, bounciness: 0.05f,
                 PhysicsMaterialCombine.Average, PhysicsMaterialCombine.Minimum);
 
@@ -285,12 +221,8 @@ namespace UntitledPoolGame.PoolEditor
                     return null;
                 }
 
-                // Re-running this after tweaking dimensions used to just add
-                // ANOTHER "PoolPhysics" alongside the old one instead of
-                // replacing it — easy to end up with several overlapping
-                // Surface/rail colliders at slightly different heights,
-                // which is exactly what makes a resting ball jitter/"bounce
-                // on itself". Only ever keep the latest.
+                // Replace the old one: two sets of colliders at slightly
+                // different heights make resting balls jitter.
                 Transform existing = tableInstance.transform.Find("PoolPhysics");
                 if (existing != null)
                 {
@@ -300,9 +232,7 @@ namespace UntitledPoolGame.PoolEditor
 
                 root = new GameObject("PoolPhysics");
                 root.transform.SetParent(tableInstance.transform);
-                // Starts at the asset's own pivot with no rotation — see the
-                // menu item's comment above for why this isn't auto-aligned,
-                // and adjust this object's transform by hand afterward.
+                // At the model's pivot, to be aligned by hand.
                 root.transform.localPosition = Vector3.zero;
                 root.transform.localRotation = Quaternion.identity;
             }
@@ -332,22 +262,10 @@ namespace UntitledPoolGame.PoolEditor
             return root;
         }
 
-        // An inset grid with random per-point jitter — a pure grid read as
-        // too mechanical (retour utilisateur), pure random scatter risks
-        // clustering/overlap or landing on a rail, so this keeps the grid as
-        // a baseline spacing and nudges each point around within its own
-        // cell.
-        //
-        // spawnPointsParent.SetParent(..., worldPositionStays: false) is the
-        // actual fix for "spawns but not on the table": the default
-        // (worldPositionStays: true) keeps a newly-created object's WORLD
-        // transform unchanged across a reparent, which for a table root
-        // that's been manually Moved/Rotated away from world origin (see
-        // the "Attach Physics" comment above) bakes in whatever arbitrary
-        // offset cancels that out — instead of just sitting at the root's
-        // own local origin like everything else on the table. Passing false
-        // makes it land at local (0,0,0)/identity relative to root,
-        // deterministically, regardless of the root's current transform.
+        // A grid with some random jitter per point: a plain grid looked too
+        // regular, pure random clusters or lands on a rail.
+        // Parented with worldPositionStays false so the points sit relative
+        // to the table even when it was moved away from the origin.
         private static void BuildPowerSpawnPoints(Transform parent)
         {
             GameObject spawnPointsParent = new GameObject("PowerSpawnPoints");
@@ -361,10 +279,7 @@ namespace UntitledPoolGame.PoolEditor
             float marginZ = settings.playWidth * 0.25f;
             float y = settings.tableSurfaceY + 0.02f;
 
-            // How far a point can drift from its grid cell center, in each
-            // axis — a fraction of the spacing between adjacent cells, so
-            // jittered points never have a real chance of overlapping their
-            // neighbor's cell.
+            // Jitter stays within a fraction of a cell, so points can't overlap.
             float cellSpacingX = (settings.playLength - 2f * marginX) / (columns - 1);
             float cellSpacingZ = rows > 1 ? (settings.playWidth - 2f * marginZ) / (rows - 1) : 0f;
             float jitterX = cellSpacingX * 0.35f;
@@ -445,9 +360,7 @@ namespace UntitledPoolGame.PoolEditor
             if (hideVisuals) StripVisuals(rail);
         }
 
-        // Keeps the collider (for physics) but removes the rendering — used
-        // when a custom table asset already provides the visuals, so we don't
-        // end up with a duplicate placeholder cube floating over/under it.
+        // Keeps the collider, removes the rendering (the model has the visuals).
         private static void StripVisuals(GameObject go)
         {
             Object.DestroyImmediate(go.GetComponent<MeshRenderer>());
@@ -476,23 +389,13 @@ namespace UntitledPoolGame.PoolEditor
                 collider.radius = settings.pocketRadius;
                 collider.isTrigger = true;
 
-                // No per-pocket wiring needed anymore — halo/aura tuning
-                // (including the rising aura prefab reference) lives on the
-                // shared PoolPotEffectSettings asset, see
-                // EnsurePotEffectSettingsAsset().
+                // Halo and aura settings are shared, in PoolPotEffectSettings.
                 pocket.AddComponent<PoolPocket>();
             }
         }
 
-        // Standard tournament rack, row-major from the apex (closest to the head
-        // spot / cue ball) to the back row: 1-ball at the apex, 8-ball dead
-        // center, one solid and one stripe in the two back corners. The
-        // previous version placed balls via a running counter that skipped
-        // incrementing at the 8-ball's slot — it never actually reached 15,
-        // and reused the value 8 a second time on a later slot. Hardcoded here
-        // instead of derived, since the only real constraints (apex/center/
-        // corners) leave everything else free — this exact layout matches
-        // what's normally shown as "the" standard rack.
+        // Standard rack from the apex to the back row: 1 at the apex, 8 in the
+        // centre, a solid and a stripe in the back corners.
         private static readonly int[] RackOrder =
         {
             1,
@@ -505,15 +408,7 @@ namespace UntitledPoolGame.PoolEditor
         private static void RackBalls(Transform parent, PhysicsMaterial material)
         {
             GameObject rackParent = new GameObject("Balls");
-            // worldPositionStays: false — see the comment on
-            // BuildPowerSpawnPoints for why the default (true) is wrong
-            // here: it would bake in whatever offset cancels out the root's
-            // CURRENT world transform instead of just sitting at its local
-            // origin. Hasn't caused a visible issue so far only because
-            // this has always run at build time, before the table root gets
-            // manually Moved/Rotated into alignment — fixed proactively
-            // rather than waiting for a table where that coincidence
-            // doesn't hold.
+            // Local origin of the table, whatever its current transform.
             rackParent.transform.SetParent(parent, worldPositionStays: false);
             rackParent.transform.localPosition = Vector3.zero;
             rackParent.transform.localRotation = Quaternion.identity;
@@ -551,9 +446,7 @@ namespace UntitledPoolGame.PoolEditor
                 Color.yellow, Color.blue, Color.red, new Color(0.5f, 0f, 0.5f),
                 new Color(1f, 0.5f, 0f), Color.green, new Color(0.5f, 0f, 0f),
             };
-            // Solids (1-7) and stripes (9-15) pair up by color like a real set
-            // (1&9 yellow, 2&10 blue, ...) — number 8 is handled separately by
-            // the caller (black), so it never reaches this palette indexing.
+            // 1 and 9 share a colour, 2 and 10... (the 8 is handled by the caller).
             int paletteIndex = number <= 8 ? number - 1 : number - 9;
             return palette[paletteIndex % palette.Length];
         }
@@ -588,9 +481,7 @@ namespace UntitledPoolGame.PoolEditor
             if (isCueBall) so.FindProperty("isCueBall").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            // Every non-cue ball is a candidate for PoolPowerBallRotator to
-            // pick — starts with no power assigned (Power == null) until the
-            // rotator chooses it.
+            // Any object ball can be picked by PoolPowerBallRotator.
             if (!isCueBall) ball.AddComponent<PowerBall>();
 
             Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"))
@@ -602,10 +493,8 @@ namespace UntitledPoolGame.PoolEditor
             ball.GetComponent<Renderer>().sharedMaterial = mat;
         }
 
-        // Instantiates PoolTableAssetSettings.customTablePrefab, if assigned,
-        // as a real prefab instance (keeping its blue prefab link, unlike
-        // Object.Instantiate) — returns null if nothing's assigned there, so
-        // the caller can fall back to the current Hierarchy selection.
+        // Instantiates customTablePrefab as a prefab instance; null if unset
+        // (the caller then uses the selection).
         private static GameObject InstantiateCustomTablePrefab()
         {
             GameObject prefab = GetOrCreateTableAssetSettings().customTablePrefab;
@@ -616,10 +505,7 @@ namespace UntitledPoolGame.PoolEditor
             return instance;
         }
 
-        // Created once and left alone afterwards — unlike the PhysicsMaterials
-        // below, this asset is meant to be hand-tuned directly in the
-        // Inspector (prefab reference + dimensions), so re-running the
-        // builder must never overwrite whatever values are already saved on it.
+        // Created once, then tuned by hand: never overwritten.
         private static PoolTableAssetSettings GetOrCreateTableAssetSettings()
         {
             EnsureFolder("Assets/Editor");
@@ -679,11 +565,8 @@ namespace UntitledPoolGame.PoolEditor
 
             PoolPowerSpawnSettings settings = ScriptableObject.CreateInstance<PoolPowerSpawnSettings>();
 
-            // Auto-populate with whatever PoolPower assets already exist in
-            // the project (t:PoolPower matches subclasses too) — a
-            // reasonable starting pool rather than leaving it empty (which
-            // both PoolPowerCrateManager and PoolPowerBallRotator treat as
-            // "nothing to spawn").
+            // Starts with every PoolPower asset in the project (an empty list
+            // spawns nothing).
             string[] guids = AssetDatabase.FindAssets("t:PoolPower");
             PoolPower[] powers = new PoolPower[guids.Length];
             for (int i = 0; i < guids.Length; i++)
@@ -703,9 +586,7 @@ namespace UntitledPoolGame.PoolEditor
             bool isNew = material == null;
             if (isNew) material = new PhysicsMaterial(name);
 
-            // Always (re)apply the tuning, even on an existing asset — otherwise
-            // re-running the builder after adjusting these values silently keeps
-            // whatever was saved the first time this material was created.
+            // Always reapplied, so changed values reach an existing material.
             material.dynamicFriction = friction;
             material.staticFriction = friction;
             material.bounciness = bounciness;

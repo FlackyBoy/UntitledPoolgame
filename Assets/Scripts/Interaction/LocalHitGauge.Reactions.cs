@@ -10,19 +10,13 @@ namespace UntitledPoolGame.Interaction
 
     // The visible side of the hit gauge (CombatSettings > Coups localisés,
     // Encaissement):
-    // - zones: a blow fills the gauge by Head / Body / Leg Damage;
-    // - blows taken: a GetHit clip from the side the blow came from, light,
-    //   or heavy for the head or someone dazed, on the "R&D Coup reçu"
-    //   layer — the PuppetMaster physics of the muscle hit stays on top;
-    // - dazed: the Stunned loop on the "R&D Sonné" layers, upper body by the
-    //   amount dazed, legs only while standing still (so walking keeps its
-    //   legs);
-    // - knock-out: the body goes limp (Knock Out Limp) and is pushed the way
-    //   the last blow went, differently by zone — head: falls backwards;
-    //   body: hips back and shoulders forward, it folds; legs: the legs go
-    //   out from under it.
-    // Layers built by Tools > Pool > R&D > Préparer le joueur de R&D;
-    // without them, only the animations are skipped.
+    // - zones: Head / Body / Leg Damage;
+    // - blows taken: a GetHit clip from the blow's side, heavy for the head
+    //   or when dazed ("R&D Coup reçu" layer), physics on top;
+    // - dazed: the Stunned loop ("R&D Sonné"), legs only while standing still;
+    // - knock-out: the body goes limp and is pushed by zone (head falls
+    //   back, body folds, legs go out from under it).
+    // Layers built by Préparer le joueur de R&D; without them, no animations.
     public partial class LocalHitGauge
     {
         public const string DazedUpperLayer = "R&D Sonné (haut)";
@@ -111,18 +105,16 @@ namespace UntitledPoolGame.Interaction
             Log($"réaction {state} ({ZoneName(zone)})");
         }
 
-        // Guard broken (LocalUnarmedMelee.BreakGuard): the heavy reaction
-        // from the blow's side, so the break reads — the hit gauge itself
-        // isn't touched.
+        // Guard broken: the heavy reaction from the blow's side (the hit gauge
+        // isn't touched).
         public void PlayGuardBreakReaction(Vector3 direction)
         {
             if (IsKnockedOut) return;
             PlayHitReaction(HitZone.Head, direction, CombatSettings.Instance);
         }
 
-        // The guard goes up (LocalUnarmedMelee): a hit reaction still
-        // playing would hide the block pose — its layer is above the combat
-        // layer — so it fades out now.
+        // Guard raised: a hit reaction still playing (layer above) would hide
+        // the block pose, so it fades out.
         public void CancelHitReaction() => hitPlaying = false;
 
         // Every frame (Update): layer weights for the blow taken and the

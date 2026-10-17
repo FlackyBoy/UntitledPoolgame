@@ -7,11 +7,9 @@ using UntitledPoolGame.Core;
 
 namespace UntitledPoolGame.PoolEditor
 {
-    // Builds rooms from a RoomOutline and a PrefabPalette. Every piece is
-    // placed from its measured bounds (not its pivot): centered on its cell,
-    // base on the floor — so any kit works whatever its pivots. The outline
-    // is the source of truth: rebuilding (other kit, flipped walls) deletes
-    // the modules and places them again, openings included.
+    // Builds rooms from a RoomOutline and a PrefabPalette. Pieces are placed
+    // from their measured bounds, not their pivots, so any kit works. The
+    // outline is the source of truth: a rebuild replaces every module.
     public static class RoomBuilder
     {
         public const string PropsRootName = "Décor (props)";
@@ -27,10 +25,8 @@ namespace UntitledPoolGame.PoolEditor
             public Vector3 scale;
         }
 
-        // Non-null while previewing: Place and PlaceStairs add their piece
-        // here instead of instantiating it, so a preview runs the very same
-        // layout code as the build (cells, wall facing, tiling, stairs
-        // stretch) — what the ghost shows is what gets built.
+        // Set while previewing: pieces are recorded instead of instantiated,
+        // so the ghost runs the very same layout code as the build.
         private static List<GhostPiece> recording;
 
         private static void Record(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale) =>
@@ -48,9 +44,8 @@ namespace UntitledPoolGame.PoolEditor
 
         // ---------- Measuring ----------
 
-        // The prefab's mesh bounds in its placement frame: its own root
-        // rotation and scale applied (kept when placed, only yaw is added),
-        // origin at its pivot.
+        // Mesh bounds in the placement frame (root rotation and scale applied,
+        // origin at the pivot).
         public static bool TryMeasure(GameObject prefab, out Bounds bounds)
         {
             bounds = default;
@@ -84,9 +79,8 @@ namespace UntitledPoolGame.PoolEditor
         // Prefabs may have been edited since the last build.
         public static void ClearMeasures() => boundsCache.Clear();
 
-        // What placement sees of each piece: a piece whose bounds differ
-        // from the wall's (thicker, off-center, lower) is placed shifted
-        // relative to it, since pieces are centered on their bounds.
+        // Logs each piece's bounds: one that differs from the wall's gets
+        // placed shifted relative to it.
         public static void LogPalette(PrefabPalette palette)
         {
             if (palette == null) return;
@@ -117,10 +111,9 @@ namespace UntitledPoolGame.PoolEditor
             Debug.Log(log.ToString(), palette);
         }
 
-        // Width of one wall module: measured on the wall variant in use (a
-        // room's own, the one selected for tracing) — variants of different
-        // widths laid at the first variant's spacing overlapped or gaped.
-        // Doors and windows used in a room are expected to share its width.
+        // Width of a wall module, measured on the variant in use (variants of
+        // different widths overlapped or left gaps). Doors and windows are
+        // expected to match it.
         public static float ModuleWidth(PrefabPalette palette, int wallVariant = 0)
         {
             if (palette == null) return 2f;
@@ -169,14 +162,13 @@ namespace UntitledPoolGame.PoolEditor
 
         // ---------- Rooms ----------
 
-        // A closed room gets its floor right away when the kit has a tile.
-        // Variants: the ones selected in the Level Maker (-1 pillar = none).
-        // build = false: the caller sets openings first and builds after.
+        // A closed room gets its floor right away if the kit has a tile.
+        // build = false: the caller sets openings first.
         public static RoomOutline CreateRoom(List<Vector3> points, bool closed, PrefabPalette palette,
             int wallVariant, int pillarVariant, int floorVariant, int ceilingVariant,
             int level = 0, Transform parent = null, bool build = true, bool hasWalls = true)
         {
-            int index = Object.FindObjectsByType<RoomOutline>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length + 1;
+            int index = Object.FindObjectsByType<RoomOutline>(FindObjectsInactive.Include).Length + 1;
             string label = hasWalls ? "Salle" : "Sol";
             var go = new GameObject(level > 0 ? $"{label} {index} (étage {level})" : $"{label} {index}");
             Undo.RegisterCreatedObjectUndo(go, "Tracer une salle");
@@ -205,7 +197,7 @@ namespace UntitledPoolGame.PoolEditor
         public static float StoreyHeight(PrefabPalette palette, int wallVariant = 0) => WallHeight(palette, wallVariant);
 
         public static List<RoomOutline> AllRooms() =>
-            Object.FindObjectsByType<RoomOutline>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).ToList();
+            Object.FindObjectsByType<RoomOutline>(FindObjectsInactive.Exclude).ToList();
 
         // Deletes every built module of the room and places them again.
         public static void Build(RoomOutline room)
@@ -286,9 +278,8 @@ namespace UntitledPoolGame.PoolEditor
                 if (other != room && Mathf.Abs(other.level - room.level) == 1) Build(other);
         }
 
-        // Railings along the edges of the floor void, one per module, except
-        // where an edge runs along the room's own walls and on the cells left
-        // open for stairs. Cells are numbered along the void, edge after edge.
+        // Railings along the floor void, one per module, except along the
+        // room's own walls and where stairs leave a cell open.
         public static IEnumerable<(int index, Vector3 center, float yaw)> VoidCells(RoomOutline room)
         {
             float w = ModuleWidth(room);
@@ -378,11 +369,9 @@ namespace UntitledPoolGame.PoolEditor
             };
         }
 
-        // The stairs' bounds in their placement frame and the local
-        // horizontal direction they climb toward: along their longest side,
-        // toward the half whose mesh reaches higher (read from the vertices
-        // when the mesh is readable, else its +axis; the palette's
-        // stairsReversed flips it for kits where that guess is wrong).
+        // Stairs bounds and the direction they climb: along the longest side,
+        // toward the higher half of the mesh (else +axis). The palette's
+        // stairsReversed fixes kits where the guess is wrong.
         public static bool TryStairsShape(PrefabPalette palette, GameObject prefab, out Bounds bounds, out Vector3 uphillLocal)
         {
             uphillLocal = Vector3.forward;
@@ -509,12 +498,10 @@ namespace UntitledPoolGame.PoolEditor
             b = room.points[(segment + 1) % room.points.Count];
         }
 
-        // Yaw that lays the wall's length axis along the segment. In a closed
-        // room the same face of every module ends up inside whichever way
-        // the outline was traced (a clockwise trace is turned around); the
-        // palette's flip says which face that is for its kit, the room's
-        // own flip is a manual override.
-        // piece: what is laid there (its own length axis; the room's wall when null).
+        // Yaw that lays a piece's length along the segment. In a closed room
+        // the same face ends up inside however it was traced; the palette's
+        // flip picks that face, the room's flip overrides it.
+        // piece: what's laid there (the room's wall when null).
         private static float SegmentYaw(RoomOutline room, int segment, GameObject piece = null)
         {
             SegmentEnds(room, segment, out Vector3 a, out Vector3 b);
@@ -544,9 +531,8 @@ namespace UntitledPoolGame.PoolEditor
             _ => null,
         };
 
-        // How many wall modules a piece takes along the wall: a door wider
-        // than the module takes the neighbouring cells instead of overlapping
-        // the walls there (5 % tolerance for measuring noise).
+        // Cells a piece takes along the wall: a wide door takes its
+        // neighbours (5 % tolerance).
         public static int SpanOf(PrefabPalette palette, GameObject piece, float moduleWidth)
         {
             if (piece == null || !TryMeasure(piece, out Bounds b)) return 1;
@@ -605,11 +591,9 @@ namespace UntitledPoolGame.PoolEditor
                 room.openings.RemoveAll(e => e.segment == segment && e.cell == c);
         }
 
-        // Puts a piece in a wall cell (even an empty one, which has no module
-        // to click). A piece wider than the module takes as many cells as it
-        // needs, centred on the clicked one when the side allows; whatever
-        // stood in them goes. insert = nest it in the piece already there
-        // instead of replacing it (kind None removes the nested piece).
+        // Puts a piece in a wall cell (empty ones too). A wide piece takes
+        // the cells it needs, centred when possible, replacing what was
+        // there. insert = nest it in the existing piece (None removes it).
         public static bool SetCell(RoomOutline room, int segment, int cell, RoomModuleKind kind, int variant, bool insert = false)
         {
             ClearMeasures();
@@ -644,13 +628,9 @@ namespace UntitledPoolGame.PoolEditor
             return true;
         }
 
-        // Wall cells left empty: their centers, to click them back.
-        // A room traced inside another on the same level (every point inside
-        // it or on its outline): it takes no floor of its own (the host's is
-        // already there; two floors on top of each other flicker), and its
-        // wall cells standing exactly where a wall already stands — on the
-        // host's outline or any other room's — are left empty instead of
-        // built twice. Returns the host, or null when the room is on its own.
+        // A room traced inside another on the same level takes no floor (two
+        // floors flicker), and its wall cells that stand on an existing wall
+        // are left empty. Returns the host, or null.
         public static RoomOutline FitIntoHost(RoomOutline room)
         {
             if (room.palette == null || room.points.Count < 2) return null;
@@ -681,11 +661,8 @@ namespace UntitledPoolGame.PoolEditor
         private static float WallHalfThickness(PrefabPalette palette, int wallVariant) =>
             TryMeasure(palette.Wall(wallVariant), out Bounds b) ? Mathf.Min(b.size.x, b.size.z) / 2f : 0.1f;
 
-        // A new wall module at center, running along dir, would stand inside
-        // a wall of other: parallel to one of its sides, within the two walls'
-        // thickness of it, and within its length. Geometric rather than
-        // module-for-module, so it holds when the new room's modules are
-        // shifted along the wall or traced just inside it.
+        // A wall module at center along dir would stand inside one of other's
+        // walls. Geometric, so it works when modules are shifted along it.
         private static bool AlongExistingWall(RoomOutline other, Vector3 center, Vector3 dir, float ownHalf)
         {
             float reach = ownHalf + WallHalfThickness(other.palette, other.wallVariant) + 0.05f;
@@ -727,16 +704,10 @@ namespace UntitledPoolGame.PoolEditor
             SetCell(room, module.segment, module.cell, kind, variant, insert);
         }
 
-        // Tiles on the room's grid (starting at its first point) whose
-        // center is inside the outline. Floor tiles: top at the floor;
-        // ceiling tiles: bottom at the top of the walls.
-        // skip(center, halfSize): leave that tile out (stairs hole, room above).
-        // A tile close to the wall module (Fit Tiles To Module, within Tile
-        // Fit Tolerance) is stretched to exactly one module cell, so the
-        // floor ends right at the walls with no seam. Any other tile keeps
-        // its own size (a floor picked on purpose isn't rescaled) and every
-        // tile touching the room is laid, so the floor still reaches the
-        // walls — the last row runs on under them.
+        // Tiles on the room's grid whose centre is inside the outline (floor:
+        // top at y; ceiling: bottom at y). skip leaves a tile out. A tile close
+        // to the module size is stretched to exactly one cell so the floor
+        // meets the walls; others keep their size and run on under the walls.
         private static void FillOutline(RoomOutline room, GameObject tile, Transform parent, float y, bool topAtY, RoomModuleKind kind,
             System.Func<Vector3, Vector2, bool> skip = null) =>
             FillOutline(room.points, room.palette, room.wallVariant, room.hasWalls, room.name, tile, parent, y, topAtY, kind, skip);
@@ -835,11 +806,9 @@ namespace UntitledPoolGame.PoolEditor
 
         // ---------- Previews (ghosts of the Level Maker's tools) ----------
 
-        // A trace being drawn: its walls and corner pillars, and its floor
-        // once closed. faceAsClosed: walls facing as in the room the trace
-        // will most likely become (closed), even while still open — a
-        // clockwise closed room turns them around. Walls laid by a room
-        // traced inside another (FitIntoHost) aren't left out here.
+        // Preview of a trace being drawn: walls, pillars, and the floor once
+        // closed. faceAsClosed: walls face as in the closed room it will
+        // likely become.
         public static void PreviewTrace(List<Vector3> points, bool closed, bool faceAsClosed, PrefabPalette palette,
             int wallVariant, int pillarVariant, int floorVariant, bool hasWalls, List<GhostPiece> into)
         {
@@ -927,9 +896,7 @@ namespace UntitledPoolGame.PoolEditor
             Preview(into, () => PlaceStairs(room, flight, null));
         }
 
-        // Where a prop placed with PlaceProp ends up: base centered on point,
-        // standing along normal, turned by yaw. Shared with the ghost of the
-        // Props tool (PrefabGhost), so the preview is exactly what's placed.
+        // Pose of a prop placed with PlaceProp. Shared with the Props ghost.
         public static void PropPose(GameObject prefab, Vector3 point, Vector3 normal, float yaw, float scale,
             out Vector3 position, out Quaternion rotation, out Vector3 localScale)
         {
@@ -967,9 +934,7 @@ namespace UntitledPoolGame.PoolEditor
             return go;
         }
 
-        // The prefab's local scale multiplied, on each of its local axes, by
-        // the stretch of the placement-frame axis it lines up with (its root
-        // may be rotated, e.g. -90° on X for an imported model).
+        // Local scale stretched along the placement axes, for a rotated root.
         private static Vector3 StretchedScale(Transform root, Vector3 stretch)
         {
             Vector3 scale = root.localScale;
@@ -996,9 +961,8 @@ namespace UntitledPoolGame.PoolEditor
                 foreach (MeshFilter filter in go.GetComponentsInChildren<MeshFilter>(true))
                     if (filter.sharedMesh != null) filter.gameObject.AddComponent<MeshCollider>().sharedMesh = filter.sharedMesh;
 
-            // Ready for baked lighting (lot 5): contributes to the probes' bake
-            // and takes its indirect light from them (nothing is baked into
-            // lightmaps, so "Lightmaps" would leave it without indirect light).
+            // For baked lighting: contributes to the probes and gets its
+            // indirect light from them (nothing goes in lightmaps).
             if (makeStatic)
             {
                 foreach (Transform t in go.GetComponentsInChildren<Transform>(true))

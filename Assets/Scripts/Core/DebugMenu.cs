@@ -6,21 +6,15 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Core
 {
-    // In-game test menu: hold the left mouse button and press the right one
-    // 4 times quickly to open it (same gesture, or its "Fermer" button, to
-    // close it). From it:
-    //   - give any power to player 1 or 2 without touching a crate (replaces
-    //     what they hold), or empty their slot;
+    // In-game test menu: hold the left mouse button and press the right one 4
+    // times quickly (same gesture or "Fermer" to close). It can:
+    //   - give any power to player 1 or 2, or empty their slots;
     //   - make the current player win or lose;
-    //   - jump to the "pot the 8" phase (same as the C+W cheat);
-    //   - trigger an error, choosing the condition: a plain foul by player
-    //     1 or 2, the current player potting a ball of group 1 (solids) or
-    //     2 (stripes), or their shot touching a ball of group 1 or 2 first.
-    //     Shots are judged by the real rule set (PoolMatchRules.Debug*).
-    // While it's open, the players' inputs are off and the cursor is free,
-    // as in the pause menu. Provisional OnGUI drawing (a test tool, not part
-    // of the game's UI). Created automatically in any scene that has a
-    // PoolMatchRules.
+    //   - jump to the "pot the 8" phase (like C+W);
+    //   - trigger a foul, a pot of group 1 or 2, or a first contact with
+    //     group 1 or 2, judged by the real rule set.
+    // Inputs are off and the cursor free while open. Provisional OnGUI.
+    // Created in any scene with a PoolMatchRules.
     public class DebugMenu : MonoBehaviour
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -108,9 +102,8 @@ namespace UntitledPoolGame.Core
             }
         }
 
-        // Every power asset of the project in the editor (no need to add a
-        // new power anywhere to test it); in a build, the ones handed out by
-        // the crates (PoolPowerSpawnSettings).
+        // In the editor every power asset of the project, in a build the ones
+        // in PoolPowerSpawnSettings.
         private void CollectPowers()
         {
             powers.Clear();

@@ -2,11 +2,8 @@ using System.Collections.Generic;
 
 namespace UntitledPoolGame.Pool
 {
-    // Casual 14.1 (straight pool), 2 players: no group restriction, and no
-    // re-rack when the table runs low on balls (deliberately out of scope —
-    // see TODO.md). Every legally pocketed ball (any number, not the cue) is
-    // worth 1 point for whoever's shooting. First to reach the target score
-    // (announced at match start) wins. A legal pot keeps your turn; a miss or
+    // Casual 14.1 for 2 players: no groups, no re-rack. Every legal pot is a
+    // point; first to the target score wins. A pot keeps the turn, a miss or
     // a scratch passes it.
     public class FourteenOneRuleSet : IPoolRuleSet
     {

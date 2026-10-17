@@ -3,14 +3,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Base for a power aimed at one pocket of the player's choosing
-    // (MagnetPower, ClosePocketPower). Pressing "use power" while holding one
-    // doesn't fire it straight away: LocalPoolPowerController first runs a
-    // pocket pick (look at a pocket through the white pointer, Interact to
-    // confirm, "use power" again to cancel), then calls
-    // PoolMatchRules.TryActivatePower with the picked pocket. (Later the
-    // pick is meant to be a pointing finger + thumbs-up gesture — only the
-    // input side changes, not this contract.)
+    // Base of a power aimed at a pocket (Magnet, Close Pocket). The power
+    // button starts a pocket pick (LocalPoolPowerController), then
+    // TryActivatePower gets the pocket.
     public abstract class PocketTargetPower : PoolPower
     {
         // Fallback when activated without a pick (the frozen online
