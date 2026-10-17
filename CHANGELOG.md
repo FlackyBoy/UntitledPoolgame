@@ -4,6 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-17
+- **Niveau de test et palette Forest Bar** (PR #24) : la scène `NouveauNiveau` (construite avec le Level Maker) et son éclairage précalculé sont enregistrés ; la palette Forest Bar ne garde qu'une sélection de props (17 au lieu de plus de 300).
 - **Jouer à deux manettes** (PR #22 ; compilé, non testé).
   - **Avant** : en partie seul, prendre une manette ne faisait pas bouger le joueur, et son premier bouton faisait arriver un deuxième joueur.
   - **Maintenant** : seul, le joueur prend l'appareil qu'on touche (manette ou clavier). Quand il a déjà une manette, un bouton d'une deuxième manette fait arriver J2 (scènes lancées sans le menu). Depuis le menu, ce sont les appareils choisis dans la salle d'attente, aussi quand le niveau est ouvert directement dans l'éditeur.
