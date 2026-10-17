@@ -67,6 +67,7 @@ Assets/Scripts/
 ├── Core/                           outils transverses
 │   ├── PhysicsLayerSetup.cs        couches ignorées par les billes (au lancement)
 │   ├── SplitScreenCheatSpawner.cs  C+P : faire rejoindre un joueur ; Tab : passer le clavier au joueur suivant (créé tout seul)
+│   ├── PlayerDeviceRouter.cs       qui joue avec quel appareil : joueur seul qui suit l'appareil touché, 2e manette = J2 (créé tout seul)
 │   ├── EightBallEndgameCheat.cs    C+W : fin de partie 8-ball directe
 │   ├── DebugMenu.cs                menu debug en jeu (clic gauche maintenu + 4 clics droits)
 │   ├── RagdollDummySpawner.cs      G : mannequin de test pour le ragdoll

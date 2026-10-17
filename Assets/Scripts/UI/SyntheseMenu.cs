@@ -394,16 +394,22 @@ namespace UntitledPoolGame.Core
         {
             List<LevelEntry> levels = GameFlowSettings.Instance.levels;
             LevelEntry entry = levelIndex >= 0 && levelIndex < levels.Count ? levels[levelIndex] : null;
-            PoolMatchRules matchRules = PoolMatchRules.Instance;
-            if (entry == null || (matchRules != null && SceneManager.GetActiveScene().name == entry.sceneName))
-            {
-                if (matchRules != null) matchRules.RequestStart(gameMode, chosenParty, targetScore);
-                Hide();
-                return;
-            }
             var devices = new List<InputDevice>();
             if (local) { foreach (InputDevice d in slotDevices) if (d != null) devices.Add(d); }
             else devices.Add(menuDevice ?? (InputDevice)Keyboard.current ?? Gamepad.current);
+            PoolMatchRules matchRules = PoolMatchRules.Instance;
+            if (entry == null || (matchRules != null && SceneManager.GetActiveScene().name == entry.sceneName))
+            {
+                if (matchRules != null)
+                {
+                    // In place: the players get the lobby's devices here, as
+                    // the loading screen would.
+                    PlayerDeviceRouter.Assign(devices);
+                    matchRules.RequestStart(gameMode, chosenParty, targetScore);
+                }
+                Hide();
+                return;
+            }
             LevelLoader.Load(entry, levelIndex, gameMode, chosenParty, targetScore, devices);
             Hide();
         }

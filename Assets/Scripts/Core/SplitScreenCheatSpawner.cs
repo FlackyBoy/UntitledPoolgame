@@ -14,8 +14,8 @@ namespace UntitledPoolGame.Core
     // PlayerInputManager.
     public class SplitScreenCheatSpawner : MonoBehaviour
     {
-        private const string KeyboardScheme = "Keyboard&Mouse";
-        private const string GamepadScheme = "Gamepad";
+        private const string KeyboardScheme = PlayerDeviceRouter.KeyboardScheme;
+        private const string GamepadScheme = PlayerDeviceRouter.GamepadScheme;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
@@ -153,7 +153,6 @@ namespace UntitledPoolGame.Core
             return null;
         }
 
-        private static InputDevice[] KeyboardAndMouse() =>
-            Mouse.current != null ? new InputDevice[] { Keyboard.current, Mouse.current } : new InputDevice[] { Keyboard.current };
+        private static InputDevice[] KeyboardAndMouse() => PlayerDeviceRouter.KeyboardAndMouse();
     }
 }
