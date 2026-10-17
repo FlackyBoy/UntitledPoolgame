@@ -4,6 +4,10 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-17
+- **Jouer à deux manettes** (PR #22 ; compilé, non testé).
+  - **Avant** : en partie seul, prendre une manette ne faisait pas bouger le joueur, et son premier bouton faisait arriver un deuxième joueur.
+  - **Maintenant** : seul, le joueur prend l'appareil qu'on touche (manette ou clavier). Quand il a déjà une manette, un bouton d'une deuxième manette fait arriver J2 (scènes lancées sans le menu). Depuis le menu, ce sont les appareils choisis dans la salle d'attente, aussi quand le niveau est ouvert directement dans l'éditeur.
+  - **Code** : nouveau `PlayerDeviceRouter` (remplace l'arrivée par bouton du `PlayerInputManager`, qui empêchait un joueur seul de changer d'appareil) ; `LevelLoader` et `SyntheseMenu` passent par `PlayerDeviceRouter.Assign`.
 - **Les messages du HUD ne se superposent plus** (branche `fix/hud-superpositions-optimisation` ; compilé, non testé).
   - **Avant** : rentrer une bille de son groupe puis la blanche affichait « Dans le mille ! » et « Oups ! » au même endroit, l'un sur l'autre. Pareil pour toutes les interjections rapprochées, deux cartes sponsor (deux jetons ramassés d'un tir) ou deux cartes « pouvoir reçu ».
   - **Maintenant** : un message à la fois. Le suivant attend que le premier soit resté lisible (0,6 s pour une interjection, 1,2 s pour une carte : *Min Shout Time* / *Min Card Time* dans HudSettings), puis le premier sort et le suivant arrive.

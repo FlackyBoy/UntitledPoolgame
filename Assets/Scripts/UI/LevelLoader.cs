@@ -313,7 +313,6 @@ namespace UntitledPoolGame.Core
         // a stray press can't add a third.
         private void JoinPlayers()
         {
-            PlayerInputManager manager = PlayerInputManager.instance;
             List<InputDevice> devices = new List<InputDevice>(GameSession.Devices);
             if (devices.Count == 0)
             {
@@ -321,39 +320,9 @@ namespace UntitledPoolGame.Core
                 else if (Gamepad.current != null) devices.Add(Gamepad.current);
             }
 
-            // A player already placed in the scene is reused and given the
-            // menu's device; only missing ones are joined, under a free index.
-            var existing = new List<PlayerInput>(PlayerInput.all);
-            existing.Sort((a, b) => a.playerIndex.CompareTo(b.playerIndex));
-            if (manager != null) manager.DisableJoining();
-            for (int i = 0; i < devices.Count; i++)
-            {
-                InputDevice device = devices[i];
-                string scheme = device is Gamepad ? "Gamepad" : "Keyboard&Mouse";
-                InputDevice[] paired = DevicesFor(device);
-                if (i < existing.Count)
-                {
-                    existing[i].SwitchCurrentControlScheme(scheme, paired);
-                    existing[i].ActivateInput();
-                }
-                else if (manager != null)
-                    manager.JoinPlayer(-1, -1, scheme, paired);
-                else
-                    Debug.LogWarning("[Loading] Pas de PlayerInputManager dans le niveau : le joueur " + (i + 1) + " ne peut pas être ajouté.");
-            }
-
+            PlayerDeviceRouter.Assign(devices);
             for (int i = 0; i < devices.Count; i++) AddReadyPill(i, devices[i]);
             TracePlayers("players joined");
-        }
-
-        // A gamepad alone; the keyboard with the mouse.
-        private static InputDevice[] DevicesFor(InputDevice device)
-        {
-            if (device is Gamepad) return new[] { device };
-            var kbm = new List<InputDevice>();
-            if (Keyboard.current != null) kbm.Add(Keyboard.current);
-            if (Mouse.current != null) kbm.Add(Mouse.current);
-            return kbm.ToArray();
         }
 
         // Diagnostic: each player's index, devices, scheme and input state.

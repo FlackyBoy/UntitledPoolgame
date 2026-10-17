@@ -15,6 +15,13 @@ Nouvelle partie · Charger · Just for fun (niveau puis type de partie) · Multi
 
 Quand le niveau est chargé, chaque joueur appuie sur **A / ✕** (manette) ou **Entrée / Espace / clic** (clavier) pour dire qu'il est prêt ; la partie démarre quand tout le monde l'est. Dans le menu, J1 est celui qui navigue ; en Multijoueur > Local, J2 rejoint en appuyant sur A / Start (ou Entrée si J1 joue à la manette).
 
+## Manettes et clavier en partie
+
+- **Seul**, le joueur prend l'appareil qu'on touche : une manette libre (un bouton ou un stick), ou le clavier et la souris (une touche ou un clic, pas un simple mouvement de souris). Pratique pour passer la manette de main en main.
+- **À deux manettes**, dans une scène lancée sans le menu (*Lancer sans le menu*, arène de R&D) : quand J1 a déjà une manette, un bouton d'une deuxième manette fait arriver J2 avec elle. Jusqu'à *Max Player Count* du PlayerInputManager (2 s'il est illimité).
+- **Depuis le menu**, ce sont les appareils choisis dans le menu (J1 = celui qui navigue, J2 = celui qui a rejoint dans la salle d'attente) ; aucun joueur n'arrive plus par un bouton ensuite. C'est aussi le cas d'un niveau lancé directement depuis l'éditeur, qui passe par le menu.
+- **Clavier contre manette** : choisir les deux appareils dans la salle d'attente du menu, ou C + P en test.
+
 ## Pause (en partie)
 
 | Clavier / souris | Manette | Action |
