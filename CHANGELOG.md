@@ -3,6 +3,9 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-22
+- **Plus de commandes après avoir été frappé en pleine visée** (compilé, non testé). Le joueur qui visait (ou plaçait la blanche) et se faisait frapper se relevait sans pouvoir bouger ni regarder. La visée éteint le contrôleur FPS le temps de viser ; à la chute, le ragdoll notait « éteint » et le remettait tel quel au relevé. Il le compte maintenant comme allumé (`LocalPlayerRagdollController.RememberEnabled`).
+
 ## 2026-10-21
 - **Prototype Speed Pool** (branche `feature/speed-pool` ; compilé, non testé). Nouveau mode : les deux joueurs tirent en même temps, chacun avec sa blanche (bleue pour J1, rouge pour J2). J1 a les pleines, J2 les rayées, la 8 est retirée. Le premier qui a vidé son groupe gagne. Une blanche rentrée revient sur la table au bout de 2 s ; il n'y a ni tour, ni faute, ni ralenti à la bille rentrée.
   - **Code** : `SpeedPoolRuleSet`, `SpeedPoolSettings` ; `PoolMatchRules.IsSimultaneous` / `PotOwner` ; `PoolBall.CueOwner` (la 2e blanche est clonée au lancement) ; la visée ne prend que sa blanche ; HUD : « À toi » pour les deux, cris pour le joueur à qui est la bille.

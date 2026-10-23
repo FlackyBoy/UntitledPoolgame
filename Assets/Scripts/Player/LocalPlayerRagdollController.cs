@@ -190,8 +190,12 @@ namespace UntitledPoolGame.Player
                 ik = new bool[ikComponents.Length];
                 for (int i = 0; i < ik.Length; i++) ik[i] = ikComponents[i] != null && ikComponents[i].enabled;
             }
+            // Aiming and the top-down view switch the FPS controller off for
+            // their own duration, and the fall ends them: it counts as on, or
+            // the player got up with no look or move.
+            bool aimTookFps = aimController != null && (aimController.IsAiming || aimController.IsPlacementViewActive);
             wasEnabled = (characterController.enabled,
-                fpsController != null && fpsController.enabled,
+                fpsController != null && (fpsController.enabled || aimTookFps),
                 aimController != null && aimController.enabled,
                 animController != null && animController.enabled,
                 ik);
