@@ -17,8 +17,9 @@ Quand le niveau est chargé, chaque joueur appuie sur **A / ✕** (manette) ou *
 
 ## Manettes et clavier en partie
 
-- **Seul**, le joueur prend l'appareil qu'on touche : une manette libre (un bouton ou un stick), ou le clavier et la souris (une touche ou un clic, pas un simple mouvement de souris). Pratique pour passer la manette de main en main.
-- **À deux manettes**, dans une scène lancée sans le menu (*Lancer sans le menu*, arène de R&D) : quand J1 a déjà une manette, un bouton d'une deuxième manette fait arriver J2 avec elle. Jusqu'à *Max Player Count* du PlayerInputManager (2 s'il est illimité).
+- **Arrivée de J2**, dans une scène lancée sans le menu (*Lancer sans le menu*, arène de R&D) : un bouton d'une manette libre fait arriver J2 avec elle, même quand J1 joue au clavier (changé le 21/10 : avant, J1 au clavier prenait la manette). Jusqu'à *Max Player Count* du PlayerInputManager (2 s'il est illimité).
+- **Une manette de plus** quand plus personne ne peut arriver (J1 au clavier, J2 à la manette, 2 joueurs au maximum) : un bouton ou un stick la donne au premier joueur qui n'a pas de manette, donc J1.
+- **Seul**, le joueur reprend le clavier et la souris dès qu'on s'en sert (une touche ou un clic, pas un simple mouvement de souris). Il ne prend une manette libre que si plus personne ne peut arriver (joueurs au maximum, ou appareils choisis dans le menu) ; pour jouer seul à la manette, la scène doit donc être lancée par le menu.
 - **Depuis le menu**, ce sont les appareils choisis dans le menu (J1 = celui qui navigue, J2 = celui qui a rejoint dans la salle d'attente) ; aucun joueur n'arrive plus par un bouton ensuite. C'est aussi le cas d'un niveau lancé directement depuis l'éditeur, qui passe par le menu.
 - **Clavier contre manette** : choisir les deux appareils dans la salle d'attente du menu, ou C + P en test.
 

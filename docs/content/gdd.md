@@ -165,7 +165,7 @@ Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoir
 
 ## 10. Multijoueur
 
-- **Écran partagé local, 2 joueurs** : chaque joueur rejoint en appuyant sur un bouton de son appareil, avec sa propre caméra et ses propres contrôles. ✅ Deux manettes : seul, le joueur prend la manette qu'on touche ; une deuxième manette fait arriver J2. 🔄 (à tester)
+- **Écran partagé local, 2 joueurs** : chaque joueur rejoint en appuyant sur un bouton de son appareil, avec sa propre caméra et ses propres contrôles. ✅ Deux manettes : une manette libre fait arriver J2, même quand J1 joue au clavier ; seul, le joueur reprend le clavier dès qu'on s'en sert. 🔄 (changé le 21/10, à tester)
 - **En ligne** 📌 : Netcode for GameObjects. La couche réseau viendra se poser sur les scripts du mode local, avec un serveur qui fait autorité sur la physique des billes. Transport envisagé : Unity Relay + Lobby.
 
 ## 11. Game feel 🔄

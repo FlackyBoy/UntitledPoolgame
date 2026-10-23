@@ -1276,8 +1276,11 @@ namespace UntitledPoolGame.Core
             Keyboard kb = Keyboard.current;
             if (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame))
                 return true;
+            // A pad nobody plays with is someone joining (PlayerDeviceRouter),
+            // not a rematch.
             foreach (Gamepad pad in Gamepad.all)
-                if (pad.buttonSouth.wasPressedThisFrame || pad.buttonNorth.wasPressedThisFrame) return true;
+                if ((pad.buttonSouth.wasPressedThisFrame || pad.buttonNorth.wasPressedThisFrame)
+                    && UnityEngine.InputSystem.Users.InputUser.FindUserPairedToDevice(pad) != null) return true;
             Mouse mouse = Mouse.current;
             if (mouse != null && mouse.leftButton.wasPressedThisFrame && root.panel != null)
             {

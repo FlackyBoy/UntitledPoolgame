@@ -11,11 +11,14 @@ namespace UntitledPoolGame.Core
     // button press": while it listens, Unity turns off a lone player's device
     // switching (PlayerInput.isSinglePlayer is false), so picking up a
     // gamepad didn't move P1 and its first button spawned P2.
-    // - Alone, the player follows the device last used: keyboard and mouse,
-    //   or a free gamepad (hotseat, or picking up a pad mid-game).
-    // - A free gamepad's button joins one more player once the player(s)
-    //   already have one, during the match (up to Max Player Count, 2 when
-    //   unlimited). A player left without a device (C+P cheat) gets it first.
+    // - A free gamepad's button joins one more player during the match (up
+    //   to Max Player Count, 2 when unlimited), even when P1 plays on the
+    //   keyboard: keyboard P1 + pad P2 is the usual couch setup. A player
+    //   left without a device (C+P cheat) gets it first.
+    // - A free gamepad that can't join (players at the maximum, devices
+    //   picked in the menu) goes to the first player without one, e.g. the
+    //   keyboard P1 next to a pad P2.
+    // - Alone, the player also takes the keyboard back when it's used.
     // - The menu and the loading screen hand out their own devices through
     //   Assign; nobody joins by button after that.
     // Created in any scene with a PlayerInputManager.
@@ -86,18 +89,21 @@ namespace UntitledPoolGame.Core
             {
                 PlayerInput idle = PlayerWithoutDevice();
                 if (idle != null) Give(idle, GamepadScheme, pressedPad);
-                else if (CanJoin(players.Count) && !(players.Count == 1 && !HasGamepad(players[0])))
-                    manager.JoinPlayer(-1, -1, GamepadScheme, pressedPad);
-                else if (players.Count == 1) Give(players[0], GamepadScheme, pressedPad);
+                else if (CanJoin(players.Count))
+                {
+                    PlayerInput joined = manager.JoinPlayer(-1, -1, GamepadScheme, pressedPad);
+                    Debug.Log($"[Devices] {pressedPad.displayName} : arrivée de J{players.Count + 1} {(joined != null ? "réussie" : "REFUSÉE par le PlayerInputManager")}.");
+                }
+                else if (PlayerWithoutGamepad() is PlayerInput taker) Give(taker, GamepadScheme, pressedPad);
+                else Debug.Log($"[Devices] {pressedPad.displayName} ignorée : {JoinRefusal(players.Count)}, et tout le monde a déjà une manette.");
                 return;
             }
 
-            if (players.Count != 1) return;
-            PlayerInput solo = players[0];
-            // A stick only takes a pad for a player without one: it must not
-            // steal P1 from the pad in use.
-            if (movedPad != null && !HasGamepad(solo)) Give(solo, GamepadScheme, movedPad);
-            else if (keyboardUsed) Give(solo, KeyboardScheme, KeyboardAndMouse());
+            // A stick only takes a pad for a player without one (it must not
+            // steal a pad in use), and only when that pad can't join instead.
+            if (movedPad != null && !CanJoin(players.Count) && PlayerWithoutGamepad() is PlayerInput mover)
+                Give(mover, GamepadScheme, movedPad);
+            else if (keyboardUsed && players.Count == 1) Give(players[0], KeyboardScheme, KeyboardAndMouse());
         }
 
         // Pairs the devices with the players in order (a gamepad alone, the
@@ -143,6 +149,18 @@ namespace UntitledPoolGame.Core
             return playerCount < max;
         }
 
+        // Why CanJoin said no (diagnostic).
+        private string JoinRefusal(int playerCount)
+        {
+            if (!joinOnPress) return "l'arrivée par bouton n'est pas active dans le PlayerInputManager";
+            if (joinLocked) return "les appareils ont été choisis dans le menu";
+            if (PauseMenu.IsPaused) return "jeu en pause";
+            if (LevelLoader.Busy) return "chargement en cours";
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            if (rules != null && !rules.MatchStarted) return "la partie n'a pas commencé";
+            return $"déjà {playerCount} joueurs (max {(manager.maxPlayerCount >= 0 ? manager.maxPlayerCount : DefaultMaxPlayers)})";
+        }
+
         private static void Give(PlayerInput player, string scheme, params InputDevice[] devices)
         {
             // Joined without a device: no InputUser, nothing can be paired.
@@ -156,6 +174,15 @@ namespace UntitledPoolGame.Core
             foreach (PlayerInput player in PlayerInput.all)
                 if (player.user.valid && player.devices.Count == 0) return player;
             return null;
+        }
+
+        // Lowest player index first, so P1 gets the pad before P2.
+        private static PlayerInput PlayerWithoutGamepad()
+        {
+            PlayerInput best = null;
+            foreach (PlayerInput player in PlayerInput.all)
+                if (player.user.valid && !HasGamepad(player) && (best == null || player.playerIndex < best.playerIndex)) best = player;
+            return best;
         }
 
         private static bool HasGamepad(PlayerInput player)

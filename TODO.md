@@ -32,6 +32,7 @@ Tout ce qui est mergé sur `master` mais pas encore essayé en jeu. Les détails
   - ⬜ **C+P et Tab** (PR #16) : ajouter un joueur dans le bar, passer le clavier de l'un à l'autre, un seul personnage bouge à la fois. <!-- notion:3fb166170a8181f0a4d6e87f394c17d8 -->
 - **Joueur**
   - ⬜ **Deux manettes** (PR #22) : seul, J1 suit la manette puis le clavier ; Multijoueur > Local à deux manettes ; scène *Lancer sans le menu* (2e manette = J2) ; clavier contre manette depuis la salle d'attente ; C+P et Tab toujours bons. <!-- notion:3fc166170a81815e8d05e1309247b799 -->
+  - ⬜ **J2 à la manette quand J1 est au clavier** (changé le 21/10) : dans une scène *Lancer sans le menu*, J1 au clavier, un bouton d'une manette libre fait arriver J2 ; une manette de plus va à J1 quand on est déjà deux ; seul, le clavier reprend la main dès qu'on s'en sert. La Console note chaque arrivée ou refus (`[Devices]`). Pas encore dans Notion : espace plein.
   - ⬜ **Animation après le menu pause** (PR #16) : ouvrir puis fermer la pause, le personnage marche de nouveau. <!-- notion:3fb166170a818117b3ffc5e4d5be0442 -->
 - **Caméra**
   - ⬜ **Caméra trop haute en écran partagé** (vue de dessus, plan de coupe *Placement Clear Above*). <!-- notion:3fb166170a8181aab212e20e910c8629 -->
