@@ -206,6 +206,9 @@ namespace UntitledPoolGame.Pool
 
         private static SpeedPoolSettings speedPoolSettings;
 
+        // target, or the nearest free spot on the felt around it.
+        public static Vector3 FindFreeSpot(Vector3 target, PoolBall ball) => FreeSpotNear(target, ball);
+
         // A potted ball back on the table, at its rack spot or the nearest
         // free one (Speed Pool scratch penalty).
         public void RespotBall(PoolBall ball)
@@ -660,19 +663,20 @@ namespace UntitledPoolGame.Pool
 
         public PotMeaning MeaningOfPot(PoolBall ball)
         {
-            // Speed Pool: every group ball is good news for its owner (PotOwner).
-            if (IsSimultaneous) return PotMeaning.Good;
+            // Speed Pool: good when the shooter who sent it in (PotOwner) owns it.
+            if (IsSimultaneous) return SpeedPoolRuleSet.OwnerOf(ball) == PotOwner(ball) ? PotMeaning.Good : PotMeaning.Opponent;
             if (IsOwnBall(CurrentPlayer, ball)) return PotMeaning.Good;
             return ball.Group == BallGroup.Eight ? PotMeaning.EarlyEight : PotMeaning.Opponent;
         }
 
-        // Who a pot is about, for the HUD's shout: the shooter, or in Speed
-        // Pool the owner of the cue ball or of the ball's group.
+        // Who a pot is about, for the HUD's shout: the shooter. Speed Pool:
+        // the owner of a cue ball; for another ball, whoever's shot sent it
+        // in (the ball's group owner if nobody's shot touched it).
         public int PotOwner(PoolBall ball)
         {
             if (!IsSimultaneous) return CurrentPlayer;
             if (ball.IsCueBall) return Mathf.Max(0, ball.CueOwner);
-            return Mathf.Max(0, SpeedPoolRuleSet.OwnerOf(ball));
+            return ball.LastShooter >= 0 ? ball.LastShooter : Mathf.Max(0, SpeedPoolRuleSet.OwnerOf(ball));
         }
 
         // Split screen: the player's own index. Hot-seat solo (one

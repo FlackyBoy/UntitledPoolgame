@@ -15,5 +15,6 @@ MonoBehaviour:
   player1CueColor: {r: 0.2, g: 0.45, b: 1, a: 1}
   player2CueColor: {r: 1, g: 0.25, b: 0.2, a: 1}
   cueSpread: 0.5
+  extraBallsPerPlayer: 0
   cueRespawnDelay: 5
   respotOwnBallOnScratch: 1

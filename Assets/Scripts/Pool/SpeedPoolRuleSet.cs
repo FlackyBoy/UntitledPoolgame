@@ -52,6 +52,8 @@ namespace UntitledPoolGame.Pool
             sharedCue.MakePlayerCueBall(0, spot - across * offset, settings.player1CueColor);
             secondCue.MakePlayerCueBall(1, spot + across * offset, settings.player2CueColor);
 
+            SetupExtraBalls();
+
             if (match.TraceShots)
                 Debug.Log($"[SpeedPool] Départ : blanche J1 {sharedCue.transform.position}, J2 {secondCue.transform.position} ({secondCue.name}), " +
                           $"{CountGroup(BallGroup.Solid)} pleines, {CountGroup(BallGroup.Stripe)} rayées, {PoolBall.Active.Count} billes actives.");
@@ -85,6 +87,114 @@ namespace UntitledPoolGame.Pool
             potted.RemoveAt(potted.Count - 1);
             match.RespotBall(ball);
             if (match.TraceShots) Debug.Log($"[SpeedPool] Blanche de J{player + 1} rentrée : la bille {ball.Number} ressort.", ball);
+        }
+
+        // Copies of each group's balls up to Extra Balls Per Player. Kept by
+        // "Rejouer" (back at their own spawn), only the missing ones are made.
+        private void SetupExtraBalls()
+        {
+            var originals = new[] { new List<PoolBall>(), new List<PoolBall>() };
+            var extras = new[] { new List<PoolBall>(), new List<PoolBall>() };
+            foreach (PoolBall ball in PoolBall.Active)
+            {
+                int owner = OwnerOf(ball);
+                if (owner >= 0) (ball.IsExtra ? extras : originals)[owner].Add(ball);
+            }
+
+            int wanted = settings.extraBallsPerPlayer;
+            originals[0].Sort((a, b) => a.Number.CompareTo(b.Number));
+            originals[1].Sort((a, b) => a.Number.CompareTo(b.Number));
+            // Worked out before any copy exists: a new copy sits on its model
+            // until placed, and would count as part of the rack.
+            Vector3 rackCenter = RackCenter();
+            var spots = new List<Vector3>();
+            int missing = Mathf.Max(0, wanted - extras[0].Count) + Mathf.Max(0, wanted - extras[1].Count);
+            IEnumerator<Vector3> rows = RackExtensionSpots();
+            while (spots.Count < missing && rows.MoveNext()) spots.Add(rows.Current);
+            int nextSpot = 0;
+            for (int i = 0; i < Mathf.Max(wanted, Mathf.Max(extras[0].Count, extras[1].Count)); i++)
+            {
+                // Alternated, so the added rows mix both groups like the rack.
+                for (int p = 0; p < 2; p++)
+                {
+                    if (i < extras[p].Count)
+                    {
+                        // Fewer wanted than last match: this one sits out.
+                        if (i >= wanted) extras[p][i].gameObject.SetActive(false);
+                        continue;
+                    }
+                    if (i >= wanted || originals[p].Count == 0) continue;
+                    PoolBall model = originals[p][i % originals[p].Count];
+                    PoolBall extra = Object.Instantiate(model, model.transform.parent);
+                    extra.name = $"{model.name} (Speed Pool +{i + 1})";
+                    extra.MarkExtra(nextSpot < spots.Count ? spots[nextSpot++] : PoolMatchRules.FindFreeSpot(rackCenter, extra));
+                }
+            }
+        }
+
+        private static Vector3 RackCenter()
+        {
+            Vector3 sum = Vector3.zero;
+            int count = 0;
+            foreach (PoolBall ball in PoolBall.Active)
+            {
+                if (ball.IsCueBall || ball.IsExtra) continue;
+                sum += ball.SpawnPosition;
+                count++;
+            }
+            return count > 0 ? sum / count : Vector3.zero;
+        }
+
+        // Rows behind the rack's back row, one ball wider each time, until
+        // a whole row would be off the felt or in a pocket.
+        private static IEnumerator<Vector3> RackExtensionSpots()
+        {
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            var rack = new List<PoolBall>();
+            foreach (PoolBall ball in PoolBall.Active)
+                if (!ball.IsCueBall && !ball.IsExtra) rack.Add(ball);
+            if (surface == null || rack.Count == 0) yield break;
+
+            float radius = rack[0].Radius;
+            float diameter = radius * 2f;
+            Vector3 center = surface.transform.position;
+            Vector3 across = surface.transform.rotation * Vector3.forward;
+            Vector3 along = surface.transform.rotation * Vector3.right;
+            if (Vector3.Dot(RackCenter() - center, along) < 0f) along = -along;
+
+            float back = float.MinValue;
+            foreach (PoolBall ball in rack) back = Mathf.Max(back, Vector3.Dot(ball.SpawnPosition - center, along));
+            int backCount = 0;
+            float acrossSum = 0f;
+            foreach (PoolBall ball in rack)
+            {
+                if (Mathf.Abs(Vector3.Dot(ball.SpawnPosition - center, along) - back) > radius * 0.5f) continue;
+                backCount++;
+                acrossSum += Vector3.Dot(ball.SpawnPosition - center, across);
+            }
+            float acrossMid = acrossSum / backCount;
+            float y = rack[0].SpawnPosition.y;
+            const float RowSpacing = 0.8660254f; // sqrt(3)/2: balls touching in a triangle
+
+            for (int row = 1; ; row++)
+            {
+                int n = backCount + row;
+                bool any = false;
+                for (int i = 0; i < n; i++)
+                {
+                    Vector3 p = center + along * (back + diameter * RowSpacing * row)
+                              + across * (acrossMid + (i - (n - 1) * 0.5f) * diameter);
+                    p.y = y;
+                    Vector3 onFelt = surface.ClampToPlayArea(p, radius);
+                    onFelt.y = y;
+                    Vector3 clear = PoolPocket.AvoidAllPockets(onFelt, radius);
+                    clear.y = y;
+                    if ((onFelt - p).sqrMagnitude > 1e-6f || (clear - p).sqrMagnitude > 1e-6f) continue;
+                    any = true;
+                    yield return p;
+                }
+                if (!any) yield break;
+            }
         }
 
         private static int CountGroup(BallGroup group)

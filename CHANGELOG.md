@@ -3,6 +3,9 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-23
+- **Speed Pool : billes en plus par joueur** (compilé, non testé). Réglage *Extra Balls Per Player* (SpeedPoolSettings, 0 à 14) : des copies des billes de chaque groupe s'ajoutent en rangées derrière le triangle, une bille de plus par rangée, puis à la place libre la plus proche. « Rejouer » garde les copies. Le HUD félicite maintenant le joueur dont le tir a envoyé la bille (il était au propriétaire du groupe) : chaque bille retient le dernier tir qui l'a mise en mouvement (`PoolBall.LastShooter`).
+
 ## 2026-10-22
 - **Plus de commandes après avoir été frappé en pleine visée** (compilé, non testé). Le joueur qui visait (ou plaçait la blanche) et se faisait frapper se relevait sans pouvoir bouger ni regarder. La visée éteint le contrôleur FPS le temps de viser ; à la chute, le ragdoll notait « éteint » et le remettait tel quel au relevé. Il le compte maintenant comme allumé (`LocalPlayerRagdollController.RememberEnabled`).
 
