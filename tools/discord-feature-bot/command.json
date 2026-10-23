@@ -1,0 +1,22 @@
+{
+  "name": "feature",
+  "type": 1,
+  "description": "Envoyer une idée ou une demande pour le jeu (elle arrive dans Notion, à trier)",
+  "contexts": [0],
+  "options": [
+    {
+      "name": "titre",
+      "description": "L'idée ou la demande, en une phrase",
+      "type": 3,
+      "required": true,
+      "max_length": 100
+    },
+    {
+      "name": "details",
+      "description": "Précisions : pourquoi, exemple, quand ça arrive…",
+      "type": 3,
+      "required": false,
+      "max_length": 1800
+    }
+  ]
+}

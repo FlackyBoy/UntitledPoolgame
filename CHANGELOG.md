@@ -3,6 +3,11 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-20
+- **Bot Discord `/feature`** (branche `feature/bot-discord-feature` ; pas encore déployé). Dans un salon Discord dédié, `/feature titre:… details:…` crée une page dans la base Notion « Tâches » au statut « À trier », avec l'auteur et le lien du message ; le bot confirme dans le salon. Réservé à certains rôles du serveur (`ALLOWED_ROLE_IDS`). Claude range ensuite ces demandes (tâche ou piste).
+  - **Code** : Worker Cloudflare sans dépendance dans `tools/discord-feature-bot/` (vérification de la signature Discord, réponse différée pour ne pas dépasser les 3 s de Discord, API Notion). Jetons dans les secrets du Worker, jamais dans le dépôt.
+  - **Mise en place** : marche à suivre pas à pas dans `tools/discord-feature-bot/README.md` (Discord, intégration Notion, Worker depuis le tableau de bord Cloudflare sans rien installer, enregistrement de la commande).
+
 ## 2026-10-17
 - **Niveau de test et palette Forest Bar** (PR #24) : la scène `NouveauNiveau` (construite avec le Level Maker) et son éclairage précalculé sont enregistrés ; la palette Forest Bar ne garde qu'une sélection de props (17 au lieu de plus de 300).
 - **Jouer à deux manettes** (PR #22 ; compilé, non testé).

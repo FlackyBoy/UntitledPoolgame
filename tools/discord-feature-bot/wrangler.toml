@@ -1,0 +1,11 @@
+# Cloudflare Worker of the Discord "/feature" bot (see README.md).
+# Secrets are set with `npx wrangler secret put <NAME>`, never written here.
+name = "untitledpoolgame-feature"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+[vars]
+# "Tâches — UntitledPoolGame" database (.claude/skills/notion-todo/config.md).
+NOTION_DATABASE_ID = "2f7670d7d35343a0bca9d3c4d3e25cd9"
+# Discord role IDs allowed to use /feature, comma-separated. Empty = nobody.
+ALLOWED_ROLE_IDS = ""
