@@ -43,6 +43,37 @@ Autres idées autour des pouvoirs :
 - **Pool Ragdoll.**
 - **Combat au billard** avec barre de vie : on gagne au billard **ou** au combat.
 - **Earthquake** (voir aussi les pouvoirs).
+- **Billards face à face** (idée du 20/10) : deux tables l'une en face de l'autre, chaque joueur sur la sienne. Des **tremplins** sur la table font décoller les billes, qu'on envoie sur l'autre table. On vise une **cible**, un **trou**, ou **le joueur adverse** directement. Il reste à choisir l'objectif : marquer des points, défendre sa table ou les deux. Il faut aussi trancher si on joue chacun son tour ou en même temps.
+- **Speed Pool** (retenu au brainstorm du 20/10 ; **prototype en cours le 21/10**, voir la TODO et le GDD) : les deux joueurs tirent **en même temps** sur la même table, chacun avec sa blanche (bleue et rouge). Le premier qui vide son groupe gagne. Il n'y a plus de temps mort. Encore à décider : garder ou non la 8, groupes fixes ou attribués à la première bille rentrée, un chrono.
+
+### Structure « party game » (idée du 20/10)
+
+L'utilisateur envisage un jeu construit comme *Mario Party*. Une **soirée** enchaîne plusieurs modes courts. Ceux qui ne veulent pas de soirée choisissent un mode à part. Les billards face à face seraient l'un de ces modes.
+
+- **Deux façons de jouer** dans le menu :
+  - **La Soirée** : une suite de manches dans des modes différents, avec un classement général ;
+  - **Partie libre** : un seul mode, choisi dans la liste (c'est ce que fait aujourd'hui *Just for fun*).
+- **Une soirée** :
+  - 5 manches environ, chacune de 2 à 4 minutes ;
+  - entre deux manches, l'**ardoise** du bar montre le classement ;
+  - le mode suivant est choisi par une roulette, par le perdant de la manche, ou en tirant sur une bille comme dans le menu ;
+  - le gagnant de la soirée est celui qui a le plus de points (ou d'étoiles), avec une **manche finale** qui rapporte plus.
+- **Garder la soirée ouverte jusqu'au bout** : un bonus au joueur mené, des étoiles bonus à la fin (« le plus de fautes », « le plus long tir »), comme les étoiles bonus de *Mario Party*.
+- **Modes candidats** : 8-ball court, 9-ball, Speed Pool, billards face à face, trick shots, Wack-a-Ball, Pistolet, la borne d'arcade…
+- **Conséquence** : chaque mode doit tenir en quelques minutes et partager le même cadre (début, chrono, score, fin, résultat transmis à la soirée).
+- **À renommer** : le mode actuel « Party — Classique » (8-ball + pouvoirs) deviendrait « Pouvoirs », pour laisser le mot « Party » à la soirée.
+
+### Rythme de partie (brainstorm du 20/10)
+
+Constat de départ : le jeu manque de rythme. Le joueur qui attend n'a rien à faire, le cycle d'un tir est long, et une partie ne monte pas en intensité. Idées retenues par l'utilisateur :
+
+- **Pronostic** : pendant que l'adversaire vise, celui qui attend parie en un bouton (« il rate », « il rentre », « il fait faute »). S'il a raison, il gagne un pouvoir.
+- **Chrono de tir** : un compte à rebours visible pour chaque tir, qui accélère en fin de partie.
+- **Événements du bar** : tous les 3 ou 4 tours, un événement est annoncé comme un sponsor, par exemple « Panne de courant ! », « La table penche ! » ou « Happy hour : pouvoirs x2 ».
+- **Mort subite** : quand il reste une ou deux billes, la musique change, la lumière vire au rouge et des caisses de pouvoirs forts apparaissent.
+- **Parties plus courtes, en plusieurs manches** : par exemple 5 billes chacun, en deux manches gagnantes. Chaque manche finit sur un pic d'intensité.
+
+Proposées sans retour pour l'instant : frapper le tireur pendant sa charge fait dévier son tir, mais il peut répliquer et un K.O. lui donne la main libre ; raccourcir le cycle d'un tir (queue en main au début du tour, arrêt plus tôt des billes presque immobiles), en chronométrant d'abord un tour type ; un public de PNJ dans le bar qui réagit.
 
 ### Gameplay
 
@@ -88,7 +119,6 @@ Autres idées autour des pouvoirs :
 - **Pouvoirs de rattrapage** — le joueur mené au score tire plus souvent des pouvoirs forts (comme les objets de Mario Kart, déjà la référence du slot unique). *Pourquoi :* les party games restent drôles quand la partie reste ouverte jusqu'au bout.
 - **Premiers pouvoirs de Défense** — la catégorie est vide. Pistes naturelles : « Bouclier » (annule la prochaine attaque reçue) et « Renvoi » (retourne l'attaque à l'envoyeur). *Pourquoi :* sans défense, les attaques n'ont pas de contre, et on réagit en jouant au lieu de subir.
 - **Dimensions = pile de modificateurs** — plutôt qu'un jeu de règles complet par dimension, une dimension combine plusieurs petites règles réutilisables (gravité basse, poches mobiles, billes lourdes…), chacune dans son fichier de configuration. *Pourquoi :* on crée une nouvelle dimension en assemblant des briques existantes, et les pouvoirs peuvent réutiliser les mêmes règles.
-- **Chrono de tir optionnel en Party** — *Pourquoi :* garde le rythme d'une soirée entre amis et donne de la valeur aux pouvoirs qui font perdre du temps (Vision brouillée, Commandes inversées).
 - **Ralenti ou revoir le dernier coup** sur les beaux tirs et les fautes spectaculaires. *Pourquoi :* ce sont les moments qu'on partage dans un « friend slop ».
 - **Emotes et provocations** (déjà prévues dans les animations) liées aux événements : faute adverse, bille empochée. *Pourquoi :* peu de travail et beaucoup de réactions entre joueurs.
 - **Défis de trick-shots en solo** — positions de billes imposées, un seul tir. *Pourquoi :* donne du contenu à jouer seul et sert de tutoriel pour la visée et l'effet.
