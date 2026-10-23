@@ -500,6 +500,21 @@ Ajouter un pouvoir = une nouvelle classe dérivée de `PoolPower` + un asset cr�
   - **Version** : notée dans les réglages d'import de la texture (`userData`). Une texture générée plus ancienne est refaite.
 - **Fumée** : le débit d'émission de chaque `ParticleSystem` du prefab est multiplié par *Smoke Rate*. Avec *Smoke Duration*, l'émission s'arrête au bout de ce temps.
 
+**Catch the Hole, trous vivants** (`CatchTheHole`, `LivingHole`, réglages `CatchTheHoleSettings`) : des `TableHole` du Trou, sans météore, qui vivent sur le tapis.
+- **Lancement** : le mode `PoolGameMode.CatchTheHole` joue les règles 8-ball. `PoolMatchRules.StartMatch` appelle `CatchTheHole.Ensure().Begin()` (aussi à Rejouer, qui repasse par là), et ferme les trous vivants (`Clear`) quand un autre mode démarre. Le menu debug peut aussi les lancer dans une autre partie.
+- **`CatchTheHole`** (un par scène, créé à la demande) : `Begin` ouvre *Start Holes* trous, puis `AddHole` en ajoute un toutes les N billes rentrées (`PoolBall.Pocketed`) ou toutes les N secondes, jusqu'à *Max Holes*. Un nouveau trou s'ouvre au point du tapis le plus loin des billes et des autres trous (20 essais). `Intensity` (0 → 1) vient de la part des billes de couleur rentrées, du minuteur, ou du plus avancé des deux (*Ramp*) ; `CruiseSpeed` en découle. Quand `MatchGeneration` change (Rejouer), il ferme tout (`Clear`).
+- **`LivingHole`** (sur l'objet du `TableHole`, qui le connaît par `TableHole.Living`) :
+  - **Taille** : bruit de Perlin remis sur 0 → 1, entre *Min* et *Max Radius*, multiplié par `SizeMultiplier` (pour les pouvoirs) et par l'ouverture (*Open Time*, en douceur). Appliquée par `TableHole.Size` = rayon voulu / rayon de la forme générée.
+  - **Trajet** : une cible au hasard sur le tapis (12 essais, loin des autres trous). La vitesse voulue vise la cible, la vitesse réelle la rejoint avec une accélération limitée (`MoveTowards`) : pas de virage sec. Sans pause prévue, la cible suivante est prise avant d'arriver, et la courbe se fait seule. Avec une pause (*Pause Chance*), il ralentit jusqu'à la cible, s'arrête *Pause Time*, puis repart. `SpeedMultiplier` est là pour les pouvoirs.
+  - **Écarts** : chaque image, `TablePointPower.ClampToTable` (bandes et poches) avec le rayon actuel + *Edge Clearance*. La part de la vitesse qui va dans une bande ou une poche est perdue, et il glisse le long. Les trous trop proches se repoussent (*Hole Gap*).
+- **`TableHole.Size`** : multiplie le contour (`RadiusToward`, `MaxRadius`, donc `Contains`, `Overlaps`, `AvoidAll`), le maillage, le decal et le cercle de bord. Ce dernier est maintenant en coordonnées locales, pour suivre un trou qui bouge.
+- **Chute** (`PoolMatchRules.HandleBallCaughtByLivingHole`, à la place des règles du Trou quand `hole.Living` est rempli) :
+  - **bille non jouée** (hors tir, ou immobile pendant le tir) : replacée à `FreeSpotNear`, hors de tous les trous ;
+  - **blanche qui roule** : `OnPocketed`, faute comme une blanche rentrée ;
+  - **la 8 qui roule alors que le tireur n'en est pas à elle** : chute du Trou, retour à sa place d'avant le tir ;
+  - **autre bille qui roule** : `FallIntoTableHole(…, pocket: true)`. La bille glisse au centre et s'enfonce, puis la chute finit en `OnPocketed()` (poche nulle, comme une bille sortie de la table). Elle est aussi mise dans `ballsInTableHoles`, pour que le tir attende la fin de la chute (`AnyBallSinking`), et dans `caughtByLivingHoleThisShot`. `EightBallRuleSet` accepte la 8 sans annonce si `WasCaughtByLivingHole`.
+  - **Diagnostic** : une ligne `[CatchTheHole]` par bille avalée (rayon, vitesse, tir en cours, décision).
+
 L'**aimant** suit le cycle de la bille destructrice : `ArmMagnet`, consommé par `NotifyShotFired`. Pendant le tir, `PoolMatchRules.FixedUpdate` capte une bille du joueur (`IsOwnBall`) puis appelle `MagnetPower.Pull` à chaque pas de physique, jusqu'à l'empochage, la fin du coup ou *Max Pull Duration*.
 
 ## Interface (menus et HUD)

@@ -3,6 +3,19 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-23
+- **Catch the Hole, lot 2 : le mode** (branche `feature/catch-the-hole`, posée sur Speed Pool ; compilé, non testé). Catch the Hole se choisit comme les autres modes :
+  - **menu Just for fun** : bille orange « Catch the Hole » dans l'écran du type de partie, avec ses règles sur la carte ;
+  - **composant *Lancer sans le menu*** : *Mode* = *CatchTheHole* ;
+  - **règles** : 8-ball, sans pouvoirs pour l'instant (les pouvoirs du trou viendront aux lots 3 et 4). Les trous s'ouvrent au lancement et se rouvrent à Rejouer ; ils sont retirés quand on lance un autre mode.
+- **Catch the Hole, lot 1 : le trou vivant** (branche `feature/catch-the-hole` ; compilé, non testé). Premier morceau du mode Catch the Hole (ancien nom de travail « Marble Mix »).
+  - **Le trou vivant** : un trou sur le tapis, avec l'apparence du pouvoir Trou. Il grandit et rétrécit doucement au hasard, se déplace de cible en cible sans à-coups (virages larges, départs progressifs), s'arrête parfois un moment puis repart, et garde ses distances avec les bandes, les poches et les autres trous. Il accélère au fil de la partie : avec les billes rentrées, avec un minuteur, ou les deux.
+  - **Plusieurs trous** : un nombre de départ, puis un de plus toutes les N billes rentrées ou toutes les N secondes, jusqu'à un maximum. Un nouveau trou s'ouvre loin des billes, en grandissant depuis rien.
+  - **Ce qui tombe** : une bille qui roule dedans est empochée comme dans une poche (la blanche fait faute). Une bille immobile que le trou vient avaler réapparaît à côté. La 8 ne compte que si le tireur en est à la jouer (sans annonce) ; sinon elle revient à sa place d'avant le tir.
+  - **Pour l'essayer** : menu debug > *Catch the Hole* > *Démarrer*, *Ajouter un trou*, *Retirer*, dans n'importe quelle partie.
+  - **Réglages** : `CatchTheHoleSettings` (Resources), créé par *Ensure Config Assets Exist*. La console note chaque bille avalée et pourquoi (`[CatchTheHole]`).
+  - **Code** : `LivingHole` et `CatchTheHole` (nouveaux) ; `TableHole.Size` met à l'échelle la détection, le contour, le decal et le cercle (qui suit maintenant un trou qui bouge) ; `PoolBall.FallIntoTableHole(…, pocket: true)` finit la chute en empochage ; `PoolMatchRules.HandleBallCaughtByLivingHole` et `WasCaughtByLivingHole` (la 8 sans annonce, dans `EightBallRuleSet`).
+
 ## 2026-10-22
 - **Plus de commandes après avoir été frappé en pleine visée** (compilé, non testé). Le joueur qui visait (ou plaçait la blanche) et se faisait frapper se relevait sans pouvoir bouger ni regarder. La visée éteint le contrôleur FPS le temps de viser ; à la chute, le ragdoll notait « éteint » et le remettait tel quel au relevé. Il le compte maintenant comme allumé (`LocalPlayerRagdollController.RememberEnabled`).
 

@@ -176,6 +176,7 @@ Assets/Scripts/
     ├── PocketTargetPower.cs + ClosePocket/MagnetPower.cs   pouvoirs qui visent un trou
     ├── BallDisguise.cs             aspect commun des billes (Groupe identique), restauré ensuite
     ├── TablePointPower.cs + TableHolePower.cs, TableHole.cs, TableHoleMeteor.cs   pouvoir Trou (météore, trou, billes tombées)
+    ├── CatchTheHole.cs, LivingHole.cs, CatchTheHoleSettings.cs   Catch the Hole : trous vivants (apparition, trajet, taille, accélération)
     ├── PoolPowerCrate.cs, PoolPowerCrateManager.cs, PoolPowerSpawnPoint.cs   caisses
     ├── PowerTokenFloat.cs          rotation et flottement des jetons de pouvoir (générés par Editor/PowerTokenGenerator.cs)
     ├── PowerBall.cs, PoolPowerBallRotator.cs   bille à pouvoir

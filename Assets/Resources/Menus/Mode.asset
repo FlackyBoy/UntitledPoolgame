@@ -261,6 +261,40 @@ MonoBehaviour:
     idleSpeed: 1
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
+  - id: catch-the-hole
+    kind: 0
+    visible: 1
+    position: {x: 42, y: 57.5}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.9411765, g: 0.5411765, b: 0.10980392, a: 1}
+    stripe: 1
+    number: 13
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Catch the Hole
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 5
+    description: "Des trous vivants se baladent sur le tapis. Une bille qui roule dedans est rentrée, même la tienne... ou la blanche."
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.25
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
   - id: rules
     kind: 4
     visible: 1

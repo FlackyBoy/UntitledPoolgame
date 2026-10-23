@@ -50,21 +50,19 @@ namespace UntitledPoolGame.Pool
         public static bool AnyMoving()
         {
             foreach (PoolBall ball in active)
-            {
-                Vector3 v = ball.rb.linearVelocity;
-                if (new Vector3(v.x, 0f, v.z).magnitude > settings.sleepVelocityThreshold)
-                    return true;
-            }
+                if (ball.IsRolling) return true;
             return false;
         }
 
         // Same threshold as AnyMoving, for one ball.
-        public bool IsRolling
+        public bool IsRolling => HorizontalSpeed > settings.sleepVelocityThreshold;
+
+        public float HorizontalSpeed
         {
             get
             {
                 Vector3 v = rb.linearVelocity;
-                return new Vector3(v.x, 0f, v.z).magnitude > settings.sleepVelocityThreshold;
+                return new Vector3(v.x, 0f, v.z).magnitude;
             }
         }
 
@@ -179,15 +177,17 @@ namespace UntitledPoolGame.Pool
         private Coroutine tableHoleRoutine;
         private Renderer[] renderers;
 
-        public void FallIntoTableHole(Vector3 holeCenter, float sinkTime)
+        // pocket: the fall ends like a pocketed ball (Catch the Hole's living
+        // holes) instead of waiting under the felt to come back.
+        public void FallIntoTableHole(Vector3 holeCenter, float sinkTime, bool pocket = false)
         {
             BeginBallInHand();
             InTableHole = true;
             if (tableHoleRoutine != null) StopCoroutine(tableHoleRoutine);
-            tableHoleRoutine = StartCoroutine(SinkRoutine(holeCenter, Mathf.Max(0.01f, sinkTime)));
+            tableHoleRoutine = StartCoroutine(SinkRoutine(holeCenter, Mathf.Max(0.01f, sinkTime), pocket));
         }
 
-        private System.Collections.IEnumerator SinkRoutine(Vector3 holeCenter, float time)
+        private System.Collections.IEnumerator SinkRoutine(Vector3 holeCenter, float time, bool pocket)
         {
             Vector3 from = transform.position;
             Vector3 over = new Vector3(holeCenter.x, from.y, holeCenter.z);
@@ -202,6 +202,13 @@ namespace UntitledPoolGame.Pool
             }
             SetVisible(false);
             tableHoleRoutine = null;
+            if (!pocket) yield break;
+            // Left in the state of a ball potted in a pocket: Rejouer and the
+            // rules see nothing different.
+            InTableHole = false;
+            SetVisible(true);
+            EndBallInHand();
+            OnPocketed();
         }
 
         public void ReturnFromTableHole(Vector3 position)

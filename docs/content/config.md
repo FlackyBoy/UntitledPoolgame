@@ -6,7 +6,7 @@
 
 | Type de réglage | Où | Créé par | Pour quoi |
 |---|---|---|---|
-| **Fichiers de réglages partagés** | `Assets/Resources/*.asset` | *Tools > Pool > Ensure Config Assets Exist* | Physique des billes, sensations caméra, effets d'empochage, apparition des pouvoirs, HUD, niveaux du menu, menu et pause, écran de chargement |
+| **Fichiers de réglages partagés** | `Assets/Resources/*.asset` | *Tools > Pool > Ensure Config Assets Exist* | Physique des billes, sensations caméra, effets d'empochage, apparition des pouvoirs, HUD, niveaux du menu, menu et pause, écran de chargement, trous vivants (Catch the Hole) |
 | **Scène du menu** | `Assets/Scenes/MainMenu.unity` | *Tools > Pool > Create Main Menu Scene* | Le menu principal, première scène du jeu |
 | **Écrans des menus** | `Assets/Resources/Menus/*.asset` | *Ensure Config Assets Exist*, modifiés dans *Tools > Pool > Menu Studio* | Accueil, pages du menu, réglages, pause, chargement : éléments, positions, textes, effets, Feel |
 | **Séquences Feel** | `Assets/Feel/Sequences/*.prefab`, liées dans `Resources/GameFeelSettings` | *Tools > Pool > Text FX Studio* ou à la main | Son, vibration, texte du HUD, secousse… à un moment de la partie |
@@ -94,6 +94,21 @@ Créé par *Tools > Pool > Ensure Config Assets Exist* ; sans fichier, les valeu
 | Geste : pouce levé | une fois le pouvoir envoyé (tous les pouvoirs), le poing devant la poitrine, pouce en l'air : oui / non, durée, position de la main par rapport à l'épaule (devant, hauteur, vers le milieu du corps), fermeture des doigts, du pouce (négatif = plus ouvert) ; position du coude par rapport à l'épaule (*Thumbs Up Elbow Offset* : devant, hauteur, vers le milieu du corps ; sous l'épaule, près du corps) ; pour les deux gestes : force du guide du coude (*Gesture Elbow Out*, 0 = il suit l'animation et peut rentrer dans le corps), ligne de diagnostic dans la console à chaque pouce levé (*Gesture Debug Logs*), durée pour lever le bras (*Gesture Blend Time*) et pour le redescendre (*Gesture Lower Time*) ; la main passe en arc devant le corps | oui, 1,2 s, (0,32 ; 0,02 ; 0,1) m pour un bras de 0,6 m (mis à l'échelle du personnage), 95°, −15°, (0,08 ; −0,3 ; −0,06) m, 0,7, oui, 0,3 s, 0,5 s |
 
 Les pouvoirs n'apparaissent qu'en mode **Party**. Pour retirer un pouvoir du jeu sans le supprimer, enlevez-le de *Available Powers*.
+
+### CatchTheHoleSettings — trous vivants (mode Catch the Hole)
+
+Les trous qui bougent, grandissent et rétrécissent sur le tapis, en mode **Catch the Hole** (menu Just for fun, ou *Lancer sans le menu* réglé sur *CatchTheHole*). Le menu debug (*Catch the Hole*) les lance aussi dans une autre partie.
+
+| Groupe | Champs | Défauts |
+|---|---|---|
+| Apparence | *Look* : l'asset du pouvoir Trou dont le trou reprend la forme, le bord, le decal brûlé et le temps de chute (rempli par *Ensure Config Assets Exist*) ; *Smoke* : garder sa fumée | `TableHolePower`, non |
+| Nombre de trous | au départ, maximum en même temps, un de plus toutes les N billes rentrées (0 = jamais), un de plus toutes les N secondes (0 = jamais), temps d'ouverture d'un nouveau trou | 1, 3, 5, 0, 0,8 s |
+| Taille | rayon minimal et maximal (la forme a des éclats un peu plus longs), vitesse de variation (0 = taille fixe) | 5 cm, 12 cm, 0,12 |
+| Déplacement | vitesse de croisière au début et au bout de l'accélération, accélération (plus faible = virages plus larges), distance de ralentissement avant une pause, durée maximale d'un trajet | 10 cm/s, 35 cm/s, 0,12 m/s², 15 cm, 8 s |
+| Pauses | chance de s'arrêter à une cible, durée d'une pause (entre deux valeurs) | 0,35, 1 à 3 s |
+| Écarts | bord du trou ↔ bandes et poches, bord à bord entre deux trous | 3 cm, 8 cm |
+| Accélération | *Ramp* : aucune, déroulé (part des billes de couleur rentrées), minuteur (*Ramp Seconds*), les deux (le plus avancé) | les deux, 300 s |
+| Diagnostic | *Debug Logs* : une ligne `[CatchTheHole]` par bille avalée (vitesse, tir en cours, décision) et par trou ouvert | oui |
 
 ### GameFlowSettings — niveaux et menu
 
@@ -646,7 +661,7 @@ Une scène qui contient une table de billard, lancée directement depuis l'édit
 
 | Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps) | Party |
+| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`) | Party |
 | Party Mode | Avec *SpeedPool* : *Classic* = sans pouvoirs, *Pouvoirs* = avec les caisses de pouvoirs. *Party* a toujours les pouvoirs. | Classic |
 | Target Score | Score à atteindre, si 14.1 | 150 |
 
