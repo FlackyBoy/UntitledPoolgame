@@ -96,6 +96,7 @@ Frottement de roulement et de glissement calculés par bille, rebonds vifs sur l
 | **9-ball** | Billes 1 à 9 seulement. Toucher d'abord la plus petite bille. Empocher la 9 gagne (sauf avec la blanche = défaite). | ✅ |
 | **14.1 continu** | 1 point par bille empochée légalement, premier au score cible. Pas de re-rack. | ✅ |
 | **Party — Classique** | 8-ball + pouvoirs. Premier sous-mode Party : d'autres pourront s'ajouter au sous-menu. | ✅ |
+| **Speed Pool** | Pas de tour : les deux joueurs tirent **en même temps**, chacun avec sa blanche (bleue J1, rouge J2). J1 a les pleines, J2 les rayées, sans la 8. Le premier qui a vidé son groupe gagne (rentrer une bille de l'autre l'aide). Blanche rentrée : elle revient à son point de départ au bout de 5 s, et la dernière bille de ton groupe que tu avais rentrée ressort. Aucune autre faute (rentrer une bille de l'autre l'aide déjà). **Avec ou sans pouvoirs** (option du menu) : avec, seulement les caisses ; une Attaque touche l'adversaire tout de suite et dure jusqu'à la fin de son prochain tir. | 🔄 prototype |
 
 D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions*).
 
@@ -189,7 +190,7 @@ Proposé le 05/10 dans le prototype [Parcours des menus](ui/parcours.html), int�
 - **Menu principal** :
   - **Nouvelle partie** : histoire, avec tutoriel au début (à venir) ;
   - **Charger une partie** : emplacements de sauvegarde ;
-  - **Just for fun** : une partie tout de suite, choix du niveau puis du type de partie (Classique, Pouvoirs, 9-ball, 14.1) ;
+  - **Just for fun** : une partie tout de suite, choix du niveau puis du type de partie (Classique, Pouvoirs, 9-ball, 14.1, Speed Pool) ;
   - **Multijoueur** : local (écran partagé, J2 rejoint) ou en ligne (héberger / rejoindre avec un code), puis niveau et type de partie ;
   - **Réglages** : pour l'instant les touches (clavier / souris et manette, réaffectables) ;
   - **Quitter**.

@@ -58,12 +58,43 @@ namespace UntitledPoolGame.Pool
             return false;
         }
 
-        // There's only one cue ball.
+        // Same threshold as AnyMoving, for one ball.
+        public bool IsRolling
+        {
+            get
+            {
+                Vector3 v = rb.linearVelocity;
+                return new Vector3(v.x, 0f, v.z).magnitude > settings.sleepVelocityThreshold;
+            }
+        }
+
+        // The cue ball shared by both players. Speed Pool has one per player
+        // (CueOwner): this returns the first, look them up through Active.
         public static PoolBall FindCueBall()
         {
             foreach (PoolBall ball in active)
                 if (ball.isCueBall) return ball;
             return null;
+        }
+
+        // Speed Pool: the player this cue ball belongs to. -1 = shared (every
+        // other mode).
+        public int CueOwner { get; private set; } = -1;
+
+        // Where the table put it (rack, head spot), whatever a mode did since.
+        public Vector3 SpawnPosition => tableSpawnPosition;
+        // Where it comes back after a scratch (a mode may have moved it).
+        public Vector3 RespawnPosition => spawnPosition;
+
+        // Speed Pool: this cue ball becomes the player's, tinted, starting
+        // (and coming back after a scratch) at spawn.
+        public void MakePlayerCueBall(int player, Vector3 spawn, Color tint)
+        {
+            CueOwner = player;
+            spawnPosition = spawn;
+            ResetToSpawn();
+            Renderer meshRenderer = GetComponentInChildren<Renderer>();
+            if (meshRenderer != null) meshRenderer.material.color = tint;
         }
 
         // Raised just before a potted ball goes away. The pocket is null when
@@ -84,6 +115,7 @@ namespace UntitledPoolGame.Pool
         private SphereCollider sphereCollider;
         private float radius;
         private Vector3 spawnPosition;
+        private Vector3 tableSpawnPosition;
         private Quaternion spawnRotation;
         private bool contactTrackingArmed;
 
@@ -92,7 +124,7 @@ namespace UntitledPoolGame.Pool
             rb = GetComponent<Rigidbody>();
             sphereCollider = GetComponent<SphereCollider>();
             radius = sphereCollider.radius * transform.lossyScale.x;
-            spawnPosition = transform.position;
+            spawnPosition = tableSpawnPosition = transform.position;
             spawnRotation = transform.rotation;
 
             if (settings == null)

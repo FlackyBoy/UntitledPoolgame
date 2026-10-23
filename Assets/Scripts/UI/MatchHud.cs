@@ -514,7 +514,7 @@ namespace UntitledPoolGame.Core
         {
             int p = h.player;
             bool solo = PlayerInput.all.Count <= 1;
-            bool myTurn = solo || rules.CurrentPlayer == p;
+            bool myTurn = solo || rules.IsSimultaneous || rules.CurrentPlayer == p;
             float t = Time.unscaledTime;
 
             h.dim.style.display = cfg.dimWaitingPlayer && !myTurn && !rules.GameOver ? DisplayStyle.Flex : DisplayStyle.None;
@@ -805,17 +805,19 @@ namespace UntitledPoolGame.Core
             if (rules == null || !rules.MatchStarted || rules.GameOver) return;
             // Destroyed by Ball Blast: "BOUM !" already said it.
             if (ball == lastBlasted) { lastBlasted = null; return; }
-            if (ball.IsCueBall) { Shout(rules.CurrentPlayer, cfg.cueBallPottedShout, Red, false); return; }
+            // Speed Pool: the owner of the cue ball or of the group, not the turn.
+            int player = rules.PotOwner(ball);
+            if (ball.IsCueBall) { Shout(player, cfg.cueBallPottedShout, Red, false); return; }
             if (!cfg.showPotShouts) return;
             // Cheered only when it's one of the shooter's balls: an opponent's
             // ball gets its own (rueful) shout, the early 8 none.
             switch (rules.MeaningOfPot(ball))
             {
                 case PoolMatchRules.PotMeaning.Good:
-                    ShoutOneOf(rules.CurrentPlayer, cfg.potShouts, Yellow, true);
+                    ShoutOneOf(player, cfg.potShouts, Yellow, true);
                     break;
                 case PoolMatchRules.PotMeaning.Opponent:
-                    ShoutOneOf(rules.CurrentPlayer, cfg.opponentBallPotShouts, Red, false);
+                    ShoutOneOf(player, cfg.opponentBallPotShouts, Red, false);
                     break;
             }
         }
@@ -1243,7 +1245,7 @@ namespace UntitledPoolGame.Core
                 endWhoBox.style.backgroundColor = w == 0 ? P1 : P2;
                 TextFx.Set(endWho, Format(cfg.playerTagFormat, w + 1));
                 TextFx.Reveal(endTitle, Format(cfg.winnerFormat, w + 1));
-                TextFx.Set(endSubtitle, ModeName(rules.Mode));
+                TextFx.Set(endSubtitle, rules.Mode == PoolGameMode.Party && rules.IsSimultaneous ? "Speed Pool + pouvoirs" : ModeName(rules.Mode));
                 foreach (Half h in halves) h.plateKey = default;
             }
             float t = now - endShownAt;
@@ -1291,6 +1293,7 @@ namespace UntitledPoolGame.Core
             PoolGameMode.NineBall => "9-ball",
             PoolGameMode.FourteenOne => "14.1",
             PoolGameMode.Party => "Party",
+            PoolGameMode.SpeedPool => "Speed Pool",
             _ => "8-ball",
         };
 

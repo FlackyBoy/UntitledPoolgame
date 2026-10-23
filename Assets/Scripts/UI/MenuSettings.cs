@@ -149,10 +149,15 @@ namespace UntitledPoolGame.Core
             rules = "Touche toujours la plus petite bille. Qui rentre la 9 gagne." };
         public MenuModeBall fourteenOneMode = new MenuModeBall { ball = new MenuBall("14.1", "3", "#d8261c"),
             rules = "Chaque bille rentrée rapporte 1 point." };
+        public MenuModeBall speedPoolMode = new MenuModeBall { ball = new MenuBall("Speed Pool", "11", "#2f7cf6", true),
+            rules = "Tout le monde tire en même temps, chacun sa blanche. Le premier qui vide son groupe gagne." };
         [Tooltip("Option du 14.1. {0} = score à atteindre.")]
         public string targetScoreFormat = "Premier à {0}   < >  (LB / RB, molette, - / +)";
         public string powersOption = "Pouvoirs : Attaque · Défense · Effet";
         public string noPowersOption = "Sans pouvoirs";
+        [Tooltip("Option du Speed Pool, changée comme le score du 14.1.")]
+        public string speedPoolPowersOff = "Sans pouvoirs   < >  (LB / RB, molette, - / +)";
+        public string speedPoolPowersOn = "Avec pouvoirs (caisses)   < >  (LB / RB, molette, - / +)";
 
         [Header("Multijoueur")]
         public string multiplayerHeading = "Multijoueur";

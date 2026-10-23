@@ -164,7 +164,7 @@ Assets/Scripts/
 └── Pool/
     ├── PoolBall.cs, PoolPocket.cs, PoolTableSurface.cs   billes, poches, zone de jeu
     ├── PoolMatchRules.cs           partie : tours, fautes, main libre, pouvoirs, HUD
-    ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOneRuleSet.cs   règles par mode
+    ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOne/SpeedPoolRuleSet.cs   règles par mode
     ├── PoolGameMode.cs, PoolPartyMode.cs   modes et sous-modes Party
     ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre), annonce de la 8
     ├── LocalPocketPointer.cs       choix d'une poche ou d'un point de la table en le visant (pouvoirs, annonce de la 8)

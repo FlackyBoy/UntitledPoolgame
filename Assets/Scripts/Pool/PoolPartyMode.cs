@@ -4,8 +4,9 @@ namespace UntitledPoolGame.Pool
     // a case in PoolMatchRules.CreatePartyRuleSet and a button.
     public enum PoolPartyMode
     {
-        // 8-ball rules with powers active on top (PoolPowerCrate/PowerBall) —
-        // the only party mode so far.
+        // 8-ball rules with powers active on top (PoolPowerCrate/PowerBall).
         Classic,
+        // Speed Pool (SpeedPoolRuleSet) with the crates; no power ball.
+        SpeedPool,
     }
 }

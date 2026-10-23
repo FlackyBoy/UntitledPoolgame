@@ -639,7 +639,8 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            if (currentCueBall == null || !IsCue(handController.HeldObject))
+            // Parked: potted (Speed Pool, knocked in by the other player).
+            if (currentCueBall == null || currentCueBall.Rigidbody.isKinematic || !IsCue(handController.HeldObject))
             {
                 ExitAim();
                 return;
@@ -697,20 +698,29 @@ namespace UntitledPoolGame.Pool
         private int nearbyCueBallFrame = -1;
         private PoolBall nearbyCueBall;
 
-        // Cue ball at rest within interactRange. Asked twice a frame
-        // (Update, WantsInteractThisFrame), so worked out once.
+        // Nearest cue ball at rest within interactRange that this player may
+        // shoot: the shared one, or in Speed Pool their own (either one when
+        // playing alone). Asked twice a frame (Update, WantsInteractThisFrame),
+        // so worked out once.
         private PoolBall FindNearbyCueBall()
         {
             if (nearbyCueBallFrame == Time.frameCount) return nearbyCueBall;
             nearbyCueBallFrame = Time.frameCount;
             nearbyCueBall = null;
-            PoolBall ball = PoolBall.FindCueBall();
-            // Parked (ball in hand, table hole): its collider is off, the
-            // overlap test never found it either.
-            if (ball == null || ball.Rigidbody.isKinematic) return null;
-            float reach = interactRange + ball.Radius;
-            if ((ball.transform.position - transform.position).sqrMagnitude > reach * reach) return null;
-            if (ball.Rigidbody.linearVelocity.magnitude < MaxSpeedToAim) nearbyCueBall = ball;
+            bool solo = PlayerInput.all.Count <= 1;
+            float bestSqr = float.MaxValue;
+            foreach (PoolBall ball in PoolBall.Active)
+            {
+                if (!ball.IsCueBall || (ball.CueOwner >= 0 && ball.CueOwner != playerInput.playerIndex && !solo)) continue;
+                // Parked (ball in hand, table hole): its collider is off, the
+                // overlap test never found it either.
+                if (ball.Rigidbody.isKinematic || ball.Rigidbody.linearVelocity.magnitude >= MaxSpeedToAim) continue;
+                float reach = interactRange + ball.Radius;
+                float sqr = (ball.transform.position - transform.position).sqrMagnitude;
+                if (sqr > reach * reach || sqr >= bestSqr) continue;
+                bestSqr = sqr;
+                nearbyCueBall = ball;
+            }
             return nearbyCueBall;
         }
 
@@ -1291,7 +1301,7 @@ namespace UntitledPoolGame.Pool
             cueBallPreview.SetPosition(1, cueBallCenterAtContact);
 
             if (didHit && objectBallPreview != null && hit.rigidbody != null &&
-                hit.rigidbody.TryGetComponent(out PoolBall objectBall) && !objectBall.IsCueBall)
+                hit.rigidbody.TryGetComponent(out PoolBall objectBall) && objectBall != currentCueBall)
             {
                 Vector3 objectBallCenter = hit.rigidbody.position;
                 Vector3 objectDirection = (objectBallCenter - cueBallCenterAtContact).normalized;
@@ -1318,7 +1328,7 @@ namespace UntitledPoolGame.Pool
             Vector3 impulse = direction * power;
 
             currentCueBall.ArmContactTracking();
-            rules?.NotifyShotFired();
+            rules?.NotifyShotFired(currentCueBall);
 
             Rigidbody cueBallBody = currentCueBall.Rigidbody;
             cueBallBody.AddForce(impulse, ForceMode.Impulse);
