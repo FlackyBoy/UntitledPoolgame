@@ -96,6 +96,7 @@ Frottement de roulement et de glissement calculés par bille, rebonds vifs sur l
 | **9-ball** | Billes 1 à 9 seulement. Toucher d'abord la plus petite bille. Empocher la 9 gagne (sauf avec la blanche = défaite). | ✅ |
 | **14.1 continu** | 1 point par bille empochée légalement, premier au score cible. Pas de re-rack. | ✅ |
 | **Party — Classique** | 8-ball + pouvoirs. Premier sous-mode Party : d'autres pourront s'ajouter au sous-menu. | ✅ |
+| **Speed Pool** | Pas de tour : les deux joueurs tirent **en même temps**, chacun avec sa blanche (bleue J1, rouge J2). J1 a les pleines, J2 les rayées, sans la 8. Le premier qui a vidé son groupe gagne (rentrer une bille de l'autre l'aide). Blanche rentrée : elle revient à son point de départ au bout de 5 s, et la dernière bille de ton groupe que tu avais rentrée ressort. Aucune autre faute (rentrer une bille de l'autre l'aide déjà, et le jeu le fait remarquer à celui qui l'a rentrée). Nombre de billes par joueur réglable. **Avec ou sans pouvoirs** (option du menu) : avec, seulement les caisses ; une Attaque touche l'adversaire tout de suite et dure jusqu'à la fin de son prochain tir. | 🔄 prototype |
 | **Catch the Hole** | Un ou plusieurs **trous apparaissent sur le tapis**, en plus des six poches (qui ne bougent pas). Une bille qui passe dessus tombe. Le trou est vivant : il **grandit et rétrécit** au hasard, et **se déplace au hasard mais de façon fluide**. Il peut rester en place un moment, puis repartir. Il peut **accélérer** au fil de la partie, ou avec un minuteur. **Les pouvoirs donnent la main aux joueurs sur tout ça** : la taille, la vitesse, le déplacement et l'arrêt du trou. À cadrer : nombre de trous et moment où ils apparaissent, sort d'une bille tombée (revient à sa place comme avec le Trou, ou compte comme empochée), ce qui fait accélérer (le déroulé de la partie ou un minuteur), liste des pouvoirs. | 📌 à cadrer |
 | **Play Anywhere** | Un genre de **golf dans le décor** : la bille se joue dans toute la salle, et plus seulement sur la table. À cadrer : but (trou, cible, parcours), surfaces jouables, visée et tir hors de la table. | 📌 à cadrer |
 
@@ -166,7 +167,7 @@ Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoir
 
 ## 10. Multijoueur
 
-- **Écran partagé local, 2 joueurs** : chaque joueur rejoint en appuyant sur un bouton de son appareil, avec sa propre caméra et ses propres contrôles. ✅ Deux manettes : seul, le joueur prend la manette qu'on touche ; une deuxième manette fait arriver J2. ✅
+- **Écran partagé local, 2 joueurs** : chaque joueur rejoint en appuyant sur un bouton de son appareil, avec sa propre caméra et ses propres contrôles. ✅ Deux manettes : une manette libre fait arriver J2, même quand J1 joue au clavier ; seul, le joueur reprend le clavier dès qu'on s'en sert. 🔄 (changé le 21/10, à tester)
 - **En ligne** 📌 : Netcode for GameObjects. La couche réseau viendra se poser sur les scripts du mode local, avec un serveur qui fait autorité sur la physique des billes. Transport envisagé : Unity Relay + Lobby.
 
 ## 11. Game feel 🔄
@@ -191,7 +192,7 @@ Proposé le 05/10 dans le prototype [Parcours des menus](ui/parcours.html), int�
 - **Menu principal** :
   - **Nouvelle partie** : histoire, avec tutoriel au début (à venir) ;
   - **Charger une partie** : emplacements de sauvegarde ;
-  - **Just for fun** : une partie tout de suite, choix du niveau puis du type de partie (Classique, Pouvoirs, 9-ball, 14.1) ;
+  - **Just for fun** : une partie tout de suite, choix du niveau puis du type de partie (Classique, Pouvoirs, 9-ball, 14.1, Speed Pool) ;
   - **Multijoueur** : local (écran partagé, J2 rejoint) ou en ligne (héberger / rejoindre avec un code), puis niveau et type de partie ;
   - **Réglages** : pour l'instant les touches (clavier / souris et manette, réaffectables) ;
   - **Quitter**.

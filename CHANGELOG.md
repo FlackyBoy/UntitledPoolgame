@@ -3,6 +3,20 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-22
+- **Plus de commandes après avoir été frappé en pleine visée** (compilé, non testé). Le joueur qui visait (ou plaçait la blanche) et se faisait frapper se relevait sans pouvoir bouger ni regarder. La visée éteint le contrôleur FPS le temps de viser ; à la chute, le ragdoll notait « éteint » et le remettait tel quel au relevé. Il le compte maintenant comme allumé (`LocalPlayerRagdollController.RememberEnabled`).
+
+## 2026-10-21
+- **Prototype Speed Pool** (branche `feature/speed-pool` ; compilé, non testé). Nouveau mode : les deux joueurs tirent en même temps, chacun avec sa blanche (bleue pour J1, rouge pour J2). J1 a les pleines, J2 les rayées, la 8 est retirée. Le premier qui a vidé son groupe gagne. Une blanche rentrée revient sur la table au bout de 2 s ; il n'y a ni tour, ni faute, ni ralenti à la bille rentrée.
+  - **Code** : `SpeedPoolRuleSet`, `SpeedPoolSettings` ; `PoolMatchRules.IsSimultaneous` / `PotOwner` ; `PoolBall.CueOwner` (la 2e blanche est clonée au lancement) ; la visée ne prend que sa blanche ; HUD : « À toi » pour les deux, cris pour le joueur à qui est la bille.
+  - **Menu** : bille « Speed Pool » dans l'écran du type de partie (et dans le composant *Lancer sans le menu*).
+  - **Avec ou sans pouvoirs** : option sur la bille Speed Pool du menu (LB / RB). Avec pouvoirs : les caisses seulement, pas de bille à pouvoir. Le « tour » d'un joueur va de son tir à l'arrêt de sa blanche ; une Attaque touche l'adversaire tout de suite et dure jusqu'à la fin de son prochain tir ; une caisse va au joueur dont la blanche la touche. Billes identiques brouille aussi la vue du lanceur (limite connue).
+  - **Pénalités revues (23/10)** : blanche rentrée = 5 s sans pouvoir tirer (au lieu de 2 s) et la dernière bille de son groupe que le joueur avait rentrée ressort sur la table. Rentrer une bille de l'adversaire reste sans pénalité (elle compte pour lui), les contacts aussi.
+  - **Qui a rentré la bille (23/10)** : le message (félicitations ou « raté ») va au joueur dont le tir a envoyé la bille, et non plus toujours au propriétaire du groupe. Avant, rentrer une bille de l'adversaire affichait des félicitations.
+  - **Plus de billes (23/10)** : réglage *Extra Balls Per Player* (copies des billes de chaque groupe, ajoutées derrière le triangle).
+  - **Corrigé au premier essai** : une blanche rentrée revenait dans la poche (sa position était lue sur le transform, resté dans la poche) et rentrait de nouveau toutes les 2 s, avec un « Oups ! » à chaque fois. Elle revient maintenant à son point de départ, ramenée sur le tapis et hors des poches.
+- **J2 arrive avec une manette même quand J1 est au clavier** (demande du 21/10 ; compilé, non testé). Dans une scène lancée sans le menu, un bouton d'une manette libre fait arriver J2 ; avant, J1 au clavier prenait cette manette. Quand les joueurs sont au complet, une manette libre va au premier joueur sans manette (J1 au clavier à côté de J2 à la manette). Une manette libre ne lance plus « Revanche » sur l'écran de fin (elle sert à rejoindre). Logs `[Devices]` pour chaque manette libre pressée (arrivée, ou pourquoi elle est ignorée), et `[Match]` / `[SpeedPool]` pour la fin de partie (diagnostic d'une victoire qui tombe toute seule en Speed Pool).
+
 ## 2026-10-20
 - **Bot Discord `/feature`** (branche `feature/bot-discord-feature` ; pas encore déployé). Dans un salon Discord dédié, `/feature titre:… details:…` crée une page dans la base Notion « Tâches » au statut « À trier », avec l'auteur et le lien du message ; le bot confirme dans le salon. Réservé à certains rôles du serveur (`ALLOWED_ROLE_IDS`). Claude range ensuite ces demandes (tâche ou piste).
   - **Code** : Worker Cloudflare sans dépendance dans `tools/discord-feature-bot/` (vérification de la signature Discord, réponse différée pour ne pas dépasser les 3 s de Discord, API Notion). Jetons dans les secrets du Worker, jamais dans le dépôt.

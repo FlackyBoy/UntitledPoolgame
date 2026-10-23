@@ -9,10 +9,15 @@ namespace UntitledPoolGame.Core
     [AddComponentMenu("Pool/Lancer sans le menu")]
     public class SkipMainMenu : MonoBehaviour
     {
-        [Tooltip("Règles de la partie lancée directement. Party = 8-ball avec les pouvoirs (caisses, bille à pouvoir).")]
+        // What the Inspector offers, rather than PoolPartyMode: Speed Pool
+        // with powers is a Party sub-mode internally, but it's picked here as
+        // Mode SpeedPool + Pouvoirs. Classic keeps 0, so scenes keep their value.
+        public enum Variant { Classic, Pouvoirs }
+
+        [Tooltip("Règles de la partie lancée directement. Party = 8-ball avec les pouvoirs (caisses, bille à pouvoir). SpeedPool = les deux joueurs tirent en même temps.")]
         [SerializeField] private PoolGameMode mode = PoolGameMode.Party;
-        [Tooltip("Sous-mode, si Party.")]
-        [SerializeField] private PoolPartyMode partyMode = PoolPartyMode.Classic;
+        [Tooltip("Speed Pool : Classic = sans pouvoirs, Pouvoirs = avec les caisses de pouvoirs. Party : toujours avec les pouvoirs (8-ball). Sans effet sur les autres modes.")]
+        [SerializeField] private Variant partyMode = Variant.Classic;
         [Tooltip("Score à atteindre, si 14.1.")]
         [Min(1)] [SerializeField] private int targetScore = 150;
 
@@ -28,7 +33,11 @@ namespace UntitledPoolGame.Core
                 Debug.LogWarning("[SkipMainMenu] Pas de PoolMatchRules dans la scène : rien à lancer.", this);
                 return;
             }
-            if (!rules.MatchStarted) rules.RequestStart(mode, partyMode, targetScore);
+            if (rules.MatchStarted) return;
+            if (mode == PoolGameMode.SpeedPool && partyMode == Variant.Pouvoirs)
+                rules.RequestStart(PoolGameMode.Party, PoolPartyMode.SpeedPool, targetScore);
+            else
+                rules.RequestStart(mode, PoolPartyMode.Classic, targetScore);
         }
     }
 }

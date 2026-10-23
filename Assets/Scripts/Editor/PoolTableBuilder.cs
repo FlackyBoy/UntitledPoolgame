@@ -43,6 +43,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureScreenJuiceSettingsAsset();
             EnsurePotEffectSettingsAsset();
             EnsurePowerSpawnSettingsAsset();
+            EnsureSpeedPoolSettingsAsset();
             EnsureBallBlastPowerAsset();
             EnsureMagnetPowerAsset();
             EnsureIdenticalGroupsPowerAsset();
@@ -539,6 +540,14 @@ namespace UntitledPoolGame.PoolEditor
 
             PoolScreenJuiceSettings settings = ScriptableObject.CreateInstance<PoolScreenJuiceSettings>();
             AssetDatabase.CreateAsset(settings, path);
+        }
+
+        private static void EnsureSpeedPoolSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/SpeedPoolSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<SpeedPoolSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SpeedPoolSettings>(), path);
         }
 
         private static void EnsurePotEffectSettingsAsset()

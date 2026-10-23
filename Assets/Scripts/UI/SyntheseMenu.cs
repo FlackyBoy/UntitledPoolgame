@@ -96,6 +96,8 @@ namespace UntitledPoolGame.Core
         private bool joinedThisFrame;
         private PoolPartyMode chosenParty = PoolPartyMode.Classic;
         private int targetScore = 25;
+        // Speed Pool's option, switched like the 14.1 score (LB / RB...).
+        private bool speedPoolPowers;
 
         // Shot animation: pull back, thrust, the ball flies off, then the action.
         private Option shooting, lastFocused;
@@ -392,6 +394,13 @@ namespace UntitledPoolGame.Core
         // from the editor, choosing the same level starts the match in place.
         private void Launch(PoolGameMode gameMode)
         {
+            // Speed Pool with powers is a Party sub-mode (the crates only run in Party).
+            PoolPartyMode chosenParty = this.chosenParty;
+            if (gameMode == PoolGameMode.SpeedPool && speedPoolPowers)
+            {
+                gameMode = PoolGameMode.Party;
+                chosenParty = PoolPartyMode.SpeedPool;
+            }
             List<LevelEntry> levels = GameFlowSettings.Instance.levels;
             LevelEntry entry = levelIndex >= 0 && levelIndex < levels.Count ? levels[levelIndex] : null;
             var devices = new List<InputDevice>();
@@ -556,6 +565,7 @@ namespace UntitledPoolGame.Core
                 {
                     PoolGameMode.FourteenOne => Format(cfg.targetScoreFormat, targetScore),
                     PoolGameMode.Party => cfg.powersOption,
+                    PoolGameMode.SpeedPool => speedPoolPowers ? cfg.speedPoolPowersOn : cfg.speedPoolPowersOff,
                     _ => cfg.noPowersOption,
                 });
         }
@@ -630,6 +640,8 @@ namespace UntitledPoolGame.Core
                 MenuElement data = current.options[current.focused].data;
                 if (data != null && data.action == MenuAction.StartMode && data.mode == PoolGameMode.FourteenOne)
                     targetScore = Mathf.Clamp(targetScore + adjust * 5, 5, 200);
+                else if (data != null && data.action == MenuAction.StartMode && data.mode == PoolGameMode.SpeedPool)
+                    speedPoolPowers = !speedPoolPowers;
             }
             if (nav != Vector2.zero && current.options.Count > 1) Step(nav);
             if (back) GoBack();

@@ -39,11 +39,13 @@ namespace UntitledPoolGame.Core
             Devices.Clear();
         }
 
-        public static string ModeName(PoolGameMode mode) => mode switch
+        public static string ModeName(PoolGameMode mode, PoolPartyMode party = PoolPartyMode.Classic) => mode switch
         {
+            PoolGameMode.Party when party == PoolPartyMode.SpeedPool => "Speed Pool + pouvoirs",
             PoolGameMode.NineBall => "9-ball",
             PoolGameMode.FourteenOne => "14.1",
             PoolGameMode.Party => "Pouvoirs",
+            PoolGameMode.SpeedPool => "Speed Pool",
             _ => "Classique",
         };
 

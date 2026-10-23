@@ -71,6 +71,15 @@ Tous dans `Assets/Resources`, créés par **Tools > Pool > Ensure Config Assets 
 | Poche fermée (pouvoir) | prefab du bouchon (facultatif), échelle | —, 1 |
 | Ralenti | échelle de temps, durée | 0,3, 0,12 s |
 
+### SpeedPoolSettings — mode Speed Pool
+
+| Groupe | Champs | Défauts |
+|---|---|---|
+| Blanches | teinte de la blanche de J1, de J2 ; écart de chaque blanche par rapport au point de départ habituel (*Cue Spread*, part de la demi-largeur du tapis) | bleu, rouge, 0,5 |
+| Blanche rentrée | délai avant son retour sur la table (*Cue Respawn Delay*, temps réel), à son point de départ ou au plus près s'il est occupé ; la dernière bille de son groupe que le joueur a rentrée ressort à sa place du rack (*Respot Own Ball On Scratch*) | 5 s, oui |
+
+Créé par *Tools > Pool > Ensure Config Assets Exist* ; sans fichier, les valeurs par défaut s'appliquent.
+
 ### PoolPowerSpawnSettings — apparition des pouvoirs
 
 | Groupe | Champs | Défauts |
@@ -637,8 +646,8 @@ Une scène qui contient une table de billard, lancée directement depuis l'édit
 
 | Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs) | Party |
-| Party Mode | Sous-mode, si Party | Classic |
+| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps) | Party |
+| Party Mode | Avec *SpeedPool* : *Classic* = sans pouvoirs, *Pouvoirs* = avec les caisses de pouvoirs. *Party* a toujours les pouvoirs. | Classic |
 | Target Score | Score à atteindre, si 14.1 | 150 |
 
 Le composant n'a aucun effet quand le niveau est lancé depuis le menu. Le retirer (ou le désactiver) fait revenir le menu.

@@ -77,14 +77,22 @@ namespace UntitledPoolGame.Pool
             // Not while the cue ball is being placed.
             if (rules.BallInHand) return;
 
-            PoolBall cueBall = PoolBall.FindCueBall();
+            // Any cue ball: Speed Pool has one per player, and the power goes
+            // to that ball's owner (the shooter otherwise).
+            PoolBall cueBall = null;
+            foreach (PoolBall ball in PoolBall.Active)
+            {
+                // Parked (Speed Pool scratch) at its spawn: not rolling over anything.
+                if (!ball.IsCueBall || ball.Rigidbody.isKinematic) continue;
+                float reach = pickupRadius + ball.Radius;
+                if ((transform.position - ball.transform.position).sqrMagnitude > reach * reach) continue;
+                cueBall = ball;
+                break;
+            }
             if (cueBall == null) return;
 
-            float distance = Vector3.Distance(transform.position, cueBall.transform.position);
-            if (distance > pickupRadius + cueBall.Radius) return;
-
             collected = true;
-            rules.GrantPower(rules.CurrentPlayer, power);
+            rules.GrantPower(rules.IsSimultaneous && cueBall.CueOwner >= 0 ? cueBall.CueOwner : rules.CurrentPlayer, power);
             gameObject.SetActive(false);
             PoolPowerCrateManager.Instance?.NotifyCollected(this);
         }

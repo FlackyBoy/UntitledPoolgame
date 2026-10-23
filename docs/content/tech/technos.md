@@ -72,7 +72,7 @@ Contrôleur basé sur un Rigidbody, évalué au début. Remplacé par un contrô
 |---|---|
 | Contrôleur FPS (`LocalFpsPlayerController`) | Corps tourné par le regard, déplacement relatif au corps, attente du début de partie |
 | Physique des billes (`PoolBall`) | Modèle glissement / roulement ajouté à PhysX (voir *Sources*) |
-| Règles (`IPoolRuleSet`) | 8-ball, 9-ball, 14.1, interchangeables |
+| Règles (`IPoolRuleSet`) | 8-ball, 9-ball, 14.1, Speed Pool, interchangeables |
 | Pouvoirs (`PoolPower`) | ScriptableObjects, activation par `PoolMatchRules` |
 | Réglages (`PoolSettingsLoader`) | Chargement des ScriptableObjects avec valeurs par défaut |
 | Générateur de table (`PoolTableBuilder`) | Table, billes, poches, queues, points d'apparition, matériaux physiques — en un clic |

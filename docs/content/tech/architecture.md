@@ -281,10 +281,14 @@ classDiagram
   class EightBallRuleSet
   class NineBallRuleSet
   class FourteenOneRuleSet
+  class SpeedPoolRuleSet {
+    +HandlePocketed(match, ball)
+  }
   class PoolBall {
     +Active$
     +bool IsCueBall
     +int Number
+    +int CueOwner
     +float Radius
     +Rigidbody Rigidbody
     +AnyMoving()$ bool
@@ -313,6 +317,7 @@ classDiagram
   IPoolRuleSet <|.. EightBallRuleSet
   IPoolRuleSet <|.. NineBallRuleSet
   IPoolRuleSet <|.. FourteenOneRuleSet
+  IPoolRuleSet <|.. SpeedPoolRuleSet
   PoolMatchRules o-- IPoolRuleSet : règle active
   PoolMatchRules ..> PoolBall : écoute Pocketed, CueBallFirstContact
   PoolPocket ..> PoolBall : OnPocketed
@@ -323,6 +328,10 @@ classDiagram
 ```
 
 Le mode **Party** réutilise `EightBallRuleSet` ; ce sont les gestionnaires de pouvoirs qui ne s'activent qu'en Party.
+
+Le **Speed Pool** n'a pas de tour (`PoolMatchRules.IsSimultaneous`) : aucun tir n'est résolu à l'arrêt des billes (`ResolveShot` reste vide, `NotifyShotFired` ne fait rien), `CanPlayerShoot` est vrai pour les deux joueurs, et chaque bille rentrée est jugée tout de suite par `SpeedPoolRuleSet.HandlePocketed` (victoire dès qu'un groupe est vide). Chaque joueur a sa blanche (`PoolBall.CueOwner` ; la seconde est un clone de la blanche de la table, créé par `Setup` et gardé par Rejouer) ; `LocalPoolAimController` ne vise que la sienne. Une blanche rentrée revient après *Cue Respawn Delay* (`PoolMatchRules.RespawnCueBall`). Le HUD et Feel attribuent une bille rentrée à son propriétaire (`PotOwner`) plutôt qu'au joueur du tour.
+
+**Speed Pool avec pouvoirs** = `PoolGameMode.Party` + `PoolPartyMode.SpeedPool` (les caisses ne tournent qu'en Party ; *Lancer sans le menu* le choisit par Mode SpeedPool + Pouvoirs ; `PoolPowerBallRotator` s'arrête quand `IsSimultaneous`). Sans tour, le « tour » d'un joueur est son tir : `NotifyShotFired(cueBall)` → `BeginPlayerShot` (arme Explosion et Aimant de ce joueur), puis `UpdatePlayerShots` → `EndPlayerShot` quand sa blanche est de nouveau arrêtée (ou rentrée) : la poche fermée, les billes identiques et les trous visant ce joueur prennent fin. Les `Queue*` appliquent tout de suite ; `CheckPowerUse` ne refuse rien (ni tour, ni billes en mouvement) ; `PoolPowerCrate` donne le pouvoir au `CueOwner` de la blanche qui la touche.
 
 ## Pouvoirs
 

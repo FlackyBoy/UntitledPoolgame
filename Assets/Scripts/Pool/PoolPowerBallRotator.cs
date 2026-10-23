@@ -32,6 +32,8 @@ namespace UntitledPoolGame.Pool
 
             // Party mode only. The mode is known once the match has started.
             if (PoolMatchRules.Instance.Mode != PoolGameMode.Party) yield break;
+            // Speed Pool with powers: the crates only (decided 21/10).
+            if (PoolMatchRules.Instance.IsSimultaneous) yield break;
 
             Rotate();
 

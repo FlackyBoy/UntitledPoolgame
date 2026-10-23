@@ -10,5 +10,9 @@ namespace UntitledPoolGame.Pool
         // PoolMatchRules.DrawPartySubmenuGUI/CreatePartyRuleSet. Only one
         // sub-mode exists today (Classic: 8-ball rules + powers).
         Party,
+        // Both players shoot at the same time, each with their own cue ball
+        // (SpeedPoolRuleSet). Last on purpose: the value is serialized in
+        // menu assets and scenes.
+        SpeedPool,
     }
 }

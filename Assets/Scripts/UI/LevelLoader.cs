@@ -87,7 +87,7 @@ namespace UntitledPoolGame.Core
             // Context chip: game type and number of players.
             MenuNode chip = view.Item("context");
             if (chip?.text != null)
-                TextFx.Set(chip.text, Format(cfg.contextFormat, GameSession.ModeName(GameSession.Mode),
+                TextFx.Set(chip.text, Format(cfg.contextFormat, GameSession.ModeName(GameSession.Mode, GameSession.Party),
                     count == 1 ? cfg.onePlayerText : Format(cfg.playersFormat, count)));
 
             // The level's postcard.
