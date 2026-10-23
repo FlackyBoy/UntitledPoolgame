@@ -3,6 +3,9 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-20
+- **Validés en jeu par l'utilisateur** : jeu à deux manettes (PR #22) ; triche C+P et changement de joueur au Tab (PR #16) ; pouvoirs : Trou (PR #14), moment où un pouvoir peut partir, annonce de l'envoi et gestes (PR #16), Vision brouillée / Commandes inversées qui restent actives après avoir lâché la queue (PR #18) ; HUD : messages l'un après l'autre (PR #21), bille de l'adversaire rentrée (PR #15), annonce de la 8 au pointeur (PR #10). Les pouvoirs sont à peaufiner (nouvelle tâche « Polish des pouvoirs »).
+
 ## 2026-10-17
 - **Niveau de test et palette Forest Bar** (PR #24) : la scène `NouveauNiveau` (construite avec le Level Maker) et son éclairage précalculé sont enregistrés ; la palette Forest Bar ne garde qu'une sélection de props (17 au lieu de plus de 300).
 - **Jouer à deux manettes** (PR #22 ; compilé, non testé).
