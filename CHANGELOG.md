@@ -4,6 +4,9 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-20
+- **Bot Discord `/feature`** (branche `feature/bot-discord-feature` ; pas encore déployé). Dans un salon Discord dédié, `/feature titre:… details:…` crée une page dans la base Notion « Tâches » au statut « À trier », avec l'auteur et le lien du message ; le bot confirme dans le salon. Réservé à certains rôles du serveur (`ALLOWED_ROLE_IDS`). Claude range ensuite ces demandes (tâche ou piste).
+  - **Code** : Worker Cloudflare sans dépendance dans `tools/discord-feature-bot/` (vérification de la signature Discord, réponse différée pour ne pas dépasser les 3 s de Discord, API Notion). Jetons dans les secrets du Worker, jamais dans le dépôt.
+  - **Mise en place** : marche à suivre pas à pas dans `tools/discord-feature-bot/README.md` (Discord, intégration Notion, Worker depuis le tableau de bord Cloudflare sans rien installer, enregistrement de la commande).
 - **Validés en jeu par l'utilisateur** : jeu à deux manettes (PR #22) ; triche C+P et changement de joueur au Tab (PR #16) ; pouvoirs : Trou (PR #14), moment où un pouvoir peut partir, annonce de l'envoi et gestes (PR #16), Vision brouillée / Commandes inversées qui restent actives après avoir lâché la queue (PR #18) ; HUD : messages l'un après l'autre (PR #21), bille de l'adversaire rentrée (PR #15), annonce de la 8 au pointeur (PR #10). Les pouvoirs sont à peaufiner (nouvelle tâche « Polish des pouvoirs »).
 
 ## 2026-10-17

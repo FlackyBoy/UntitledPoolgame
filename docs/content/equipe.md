@@ -256,6 +256,8 @@ Claude suit les mêmes règles, inscrites dans `CLAUDE.md` :
 
 Lui dire sur quelle branche on est quand on reprend une tâche.
 
+**Proposer une idée depuis Discord** : dans le salon dédié, `/feature titre:… details:…` envoie l'idée dans Notion (statut « À trier »). Claude la range ensuite : tâche dans la TODO, ou idée dans les Pistes. Mise en place : `tools/discord-feature-bot/README.md`.
+
 ## Pense-bête
 
 | Quand | Dans GitHub Desktop |
