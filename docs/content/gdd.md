@@ -96,6 +96,8 @@ Frottement de roulement et de glissement calculés par bille, rebonds vifs sur l
 | **9-ball** | Billes 1 à 9 seulement. Toucher d'abord la plus petite bille. Empocher la 9 gagne (sauf avec la blanche = défaite). | ✅ |
 | **14.1 continu** | 1 point par bille empochée légalement, premier au score cible. Pas de re-rack. | ✅ |
 | **Party — Classique** | 8-ball + pouvoirs. Premier sous-mode Party : d'autres pourront s'ajouter au sous-menu. | ✅ |
+| **Catch the Hole** | Un ou plusieurs **trous apparaissent sur le tapis**, en plus des six poches (qui ne bougent pas). Une bille qui passe dessus tombe. Le trou est vivant : il **grandit et rétrécit** au hasard, et **se déplace au hasard mais de façon fluide**. Il peut rester en place un moment, puis repartir. Il peut **accélérer** au fil de la partie, ou avec un minuteur. **Les pouvoirs donnent la main aux joueurs sur tout ça** : la taille, la vitesse, le déplacement et l'arrêt du trou. À cadrer : nombre de trous et moment où ils apparaissent, sort d'une bille tombée (revient à sa place comme avec le Trou, ou compte comme empochée), ce qui fait accélérer (le déroulé de la partie ou un minuteur), liste des pouvoirs. | 📌 à cadrer |
+| **Play Anywhere** | Un genre de **golf dans le décor** : la bille se joue dans toute la salle, et plus seulement sur la table. À cadrer : but (trou, cible, parcours), surfaces jouables, visée et tir hors de la table. | 📌 à cadrer |
 
 D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions*).
 
@@ -108,10 +110,10 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 - **Deux sources** : des **caisses** qui apparaissent sur la table à des emplacements aléatoires et réapparaissent après ramassage (chacune est une forme 3D qui représente son pouvoir, sur un anneau à la couleur de sa catégorie, et qui tourne et flotte 🔄), et une **bille à pouvoir** (lumineuse, change régulièrement) qu'il faut empocher.
 - **Trois catégories**, chacune avec sa couleur, son matériau et son modèle de caisse : **Attaque**, **Défense**, **Effet**.
 - **Activation** avec le bouton de pouvoir. **Quand** on peut le lancer se règle pour chaque pouvoir : réservé à son propre tour (Effets), ou utilisable pendant le tour adverse (Attaques). Une attaque lancée pendant le tour adverse prend effet **immédiatement** ; lancée pendant son propre tour, elle attend le début du tour adverse, ou elle est refusée si le pouvoir le demande. Un pouvoir peut aussi être interdit pendant que les billes roulent.
-- **Retour à l'envoi** 🔄 : le lanceur voit « Envoyé ! » (ou « Activé ! »), l'adversaire reçoit une carte « J1 T'ENVOIE … » qui dit si ça frappe tout de suite ou au début de son tour, et chacun a son moment Feel. Un appui au mauvais moment fait trembler la pastille du pouvoir avec la raison. Le personnage **pointe** la cible pendant le choix et **lève le pouce** une fois le pouvoir envoyé, pour que l'adversaire le voie aussi dans la salle.
+- **Retour à l'envoi** ✅ : le lanceur voit « Envoyé ! » (ou « Activé ! »), l'adversaire reçoit une carte « J1 T'ENVOIE … » qui dit si ça frappe tout de suite ou au début de son tour, et chacun a son moment Feel. Un appui au mauvais moment fait trembler la pastille du pouvoir avec la raison. Le personnage **pointe** la cible pendant le choix et **lève le pouce** une fois le pouvoir envoyé, pour que l'adversaire le voie aussi dans la salle.
 - **Niveaux** 🔄 : un pouvoir a un niveau (1 ou 2, version renforcée), atteint en ramassant le même pouvoir une deuxième fois ; un badge « N2 » le montre dans le HUD. Seul le Trou a pour l'instant un vrai niveau 2 (un groupe de trous) ; les autres restent identiques au niveau 2, en attendant que leur version renforcée soit décidée.
-- **Pouvoirs qui visent la table** 🔄 (Trou) : même choix que pour une poche, mais le pointeur vise un point du tapis, avec un cercle d'aperçu de la zone touchée.
-- **Pouvoirs qui visent un trou** : le bouton de pouvoir ouvre d'abord un **choix du trou**. Un pointeur blanc au centre de la vue désigne le trou, qui est entouré d'un cercle. Interact valide, le bouton de pouvoir annule. Le personnage **pointe du doigt** l'endroit visé pendant le choix, puis **lève le pouce** une fois le pouvoir envoyé 🔄.
+- **Pouvoirs qui visent la table** ✅ (Trou) : même choix que pour une poche, mais le pointeur vise un point du tapis, avec un cercle d'aperçu de la zone touchée.
+- **Pouvoirs qui visent un trou** : le bouton de pouvoir ouvre d'abord un **choix du trou**. Un pointeur blanc au centre de la vue désigne le trou, qui est entouré d'un cercle. Interact valide, le bouton de pouvoir annule. Le personnage **pointe du doigt** l'endroit visé pendant le choix, puis **lève le pouce** une fois le pouvoir envoyé ✅.
 
 ### Pouvoirs implémentés ✅
 
@@ -124,7 +126,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Bille destructrice** | Effet | La première bille touchée explose et compte comme empochée. Une mauvaise bille explose aussi, mais c'est une faute et elle est perdue au profit de l'adversaire ; la 8 est épargnée | Prochain tir |
 | **Aimant** | Effet | La bille du joueur qui roule vers le trou choisi est captée et tirée dedans (la plus proche si plusieurs, une seule par tir). La 8 n'est attirée que vers la poche annoncée | Prochain tir |
 | **Groupe identique** | Attaque | Toutes les billes sauf la blanche prennent le même aspect (incolore, ou celui d'une bille choisie dans les réglages), la 8 comprise ; la plaque des billes restantes est masquée. Les règles ne changent pas | Tour de l'adversaire |
-| **Trou** 🔄 | Attaque | Le joueur vise un point de la table. Lancé pendant son tour, l'endroit est marqué et la boule de feu tombe au début du tour de l'adversaire (pendant le tour adverse, en écran partagé : tout de suite). Elle s'écrase et creuse un trou, avec une secousse et une vibration des manettes pour les deux joueurs. Une bille qui passe dessus tombe et revient à sa place d'avant le tir à la fin du coup ; la blanche, elle, est une faute. Niveau 2 : un groupe de trous répartis au hasard autour du point visé, parfois au milieu | Réglable : tour de l'adversaire, prochain tir, toute la partie ou N tours |
+| **Trou** ✅ | Attaque | Le joueur vise un point de la table. Lancé pendant son tour, l'endroit est marqué et la boule de feu tombe au début du tour de l'adversaire (pendant le tour adverse, en écran partagé : tout de suite). Elle s'écrase et creuse un trou, avec une secousse et une vibration des manettes pour les deux joueurs. Une bille qui passe dessus tombe et revient à sa place d'avant le tir à la fin du coup ; la blanche, elle, est une faute. Niveau 2 : un groupe de trous répartis au hasard autour du point visé, parfois au milieu | Réglable : tour de l'adversaire, prochain tir, toute la partie ou N tours |
 
 Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 
@@ -164,7 +166,7 @@ Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoir
 
 ## 10. Multijoueur
 
-- **Écran partagé local, 2 joueurs** : chaque joueur rejoint en appuyant sur un bouton de son appareil, avec sa propre caméra et ses propres contrôles. ✅ Deux manettes : seul, le joueur prend la manette qu'on touche ; une deuxième manette fait arriver J2. 🔄 (à tester)
+- **Écran partagé local, 2 joueurs** : chaque joueur rejoint en appuyant sur un bouton de son appareil, avec sa propre caméra et ses propres contrôles. ✅ Deux manettes : seul, le joueur prend la manette qu'on touche ; une deuxième manette fait arriver J2. ✅
 - **En ligne** 📌 : Netcode for GameObjects. La couche réseau viendra se poser sur les scripts du mode local, avec un serveur qui fait autorité sur la physique des billes. Transport envisagé : Unity Relay + Lobby.
 
 ## 11. Game feel 🔄
