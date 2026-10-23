@@ -16,6 +16,7 @@ UntitledPoolgame/
 │   ├── level.html, TODO.html   redirections vers les anciennes adresses
 │   ├── assets/             site.css, site.js (menu, rubriques, Markdown, diagrammes)
 │   └── content/            textes en Markdown (gdd.md, pistes.md, config.md, prompts.md, outils/*.md, tech/*.md…)
+├── tools/discord-feature-bot/   bot Discord /feature (Worker Cloudflare → Notion, voir son README)
 ├── TODO.md                 tâches + notes techniques détaillées
 ├── CHANGELOG.md            historique, plus récent en haut
 ├── CLAUDE.md               carte du projet et conventions pour Claude
