@@ -95,7 +95,7 @@ namespace UntitledPoolGame.Pool
                 if (score > bestScore) { bestScore = score; best = candidate; }
             }
 
-            TableHole hole = TableHole.Create(look, best, Settings.smoke);
+            TableHole hole = TableHole.Create(look, best, Settings.smoke, Settings.plainHole);
             hole.name = $"LivingHole {++holesOpened}";
             LivingHole living = hole.gameObject.AddComponent<LivingHole>();
             living.Init(this, Settings, look.HoleRadius);

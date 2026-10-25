@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: CatchTheHoleSettings
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.CatchTheHoleSettings
   look: {fileID: 11400000, guid: f2375f8a8b2cc3348b8da85bc9c20c7f, type: 2}
+  plainHole: 1
   smoke: 0
   startHoles: 1
   maxHoles: 3
@@ -22,6 +23,12 @@ MonoBehaviour:
   minRadius: 0.15
   maxRadius: 0.5
   sizeChangeRate: 0.12
+  growPerBall: 0.15
+  maxGrowth: 1.5
+  growStiffness: 260
+  growBounce: 0.3
+  gulpAmount: 0.6
+  gulpTime: 0.45
   baseSpeed: 0.15
   maxSpeed: 0.5
   acceleration: 0.12

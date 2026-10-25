@@ -19,7 +19,9 @@ namespace UntitledPoolGame.Pool
         [Header("Apparence")]
         [Tooltip("Asset du pouvoir Trou dont le trou vivant reprend l'apparence : forme, bord fondu, braises, decal brûlé, fumée, temps de chute d'une bille. Rempli par Ensure Config Assets Exist.")]
         public TableHolePower look;
-        [Tooltip("Garder la fumée du Trou sur les trous vivants.")]
+        [Tooltip("Un disque noir parfait, comme Hungry Hole. Décoché : le trou déchiré du météore (bord brûlé, braises, decal).")]
+        public bool plainHole = true;
+        [Tooltip("Garder la fumée du Trou sur les trous vivants (trou de météore seulement).")]
         public bool smoke;
 
         [Header("Nombre de trous")]
@@ -41,6 +43,18 @@ namespace UntitledPoolGame.Pool
         [Min(0.01f)] public float maxRadius = 0.12f;
         [Tooltip("Vitesse à laquelle la taille change (variations par seconde, environ). 0 = taille fixe, au milieu des deux.")]
         [Min(0f)] public float sizeChangeRate = 0.12f;
+
+        [Header("Croissance (billes avalées)")]
+        [Tooltip("Ce qu'un trou gagne pour de bon à chaque bille qui tombe dedans, en part de sa taille de base (0,15 = +15 %). Une bille immobile qui réapparaît à côté ne compte pas.")]
+        [Min(0f)] public float growPerBall = 0.15f;
+        [Tooltip("Croissance maximale (1,5 = jusqu'à +150 %).")]
+        [Min(0f)] public float maxGrowth = 1.5f;
+        [Tooltip("Changement de taille en ressort, comme Hungry Hole : raideur, et rebond (bas = il dépasse puis rebondit).")]
+        [Min(1f)] public float growStiffness = 260f;
+        [Range(0.05f, 1f)] public float growBounce = 0.3f;
+        [Tooltip("Bump du disque quand une bille tombe : de combien il gonfle (0,6 = +60 %), et en combien de temps il revient.")]
+        [Range(0f, 2f)] public float gulpAmount = 0.6f;
+        [Min(0.05f)] public float gulpTime = 0.45f;
 
         [Header("Déplacement")]
         [Tooltip("Vitesse de croisière (mètres par seconde) au début de la partie.")]

@@ -21,6 +21,10 @@ namespace UntitledPoolGame.Pool
         // For the powers (Gonfle, Turbo, Gel…): they scale what the hole does
         // without touching how it moves.
         public float SizeMultiplier { get; set; } = 1f;
+        // Grown for good by the balls that fell in (share of its base size),
+        // reached through a spring; and the gulp's bump.
+        private float growth, growthTarget, growthSpeed;
+        private float gulpStart = -1f;
         public float SpeedMultiplier { get; set; } = 1f;
 
         private CatchTheHole owner;
@@ -68,7 +72,7 @@ namespace UntitledPoolGame.Pool
                 float n = Settings.sizeChangeRate > 0f
                     ? Mathf.InverseLerp(0.25f, 0.75f, Mathf.PerlinNoise(noiseSeed, noiseTime))
                     : 0.5f;
-                return Mathf.Lerp(Settings.minRadius, Mathf.Max(Settings.minRadius, Settings.maxRadius), n) * SizeMultiplier;
+                return Mathf.Lerp(Settings.minRadius, Mathf.Max(Settings.minRadius, Settings.maxRadius), n) * SizeMultiplier * (1f + growth);
             }
         }
 
@@ -78,7 +82,40 @@ namespace UntitledPoolGame.Pool
             if (opened < 1f) opened = Mathf.Min(1f, opened + dt / Mathf.Max(0.01f, Settings.openTime));
             // Eased so a new hole swells out instead of popping.
             float open = opened * opened * (3f - 2f * opened);
-            Hole.Size = CurrentRadius * open / baseRadius;
+            UpdateGrowth(dt);
+            Hole.Size = CurrentRadius * open * GulpSwell() / baseRadius;
+        }
+
+        // A ball fell in: it grows for good, with a bump (Catch the Hole's
+        // take on Hungry Hole).
+        public void OnSwallowed(PoolBall ball)
+        {
+            float before = growthTarget;
+            growthTarget = Mathf.Min(Settings.maxGrowth, growthTarget + Settings.growPerBall);
+            growthSpeed += (growthTarget - before) * 6f;
+            gulpStart = Time.time;
+            if (Settings.debugLogs)
+                Debug.Log($"[CatchTheHole] {name} avale {(ball.IsCueBall ? "la blanche" : $"la {ball.Number}")} : +{(growthTarget - before) * 100f:0} % (croissance {growthTarget * 100f:0} %).", this);
+        }
+
+        // Damped spring towards the grown size: overshoots, then settles.
+        private void UpdateGrowth(float dt)
+        {
+            if (Mathf.Abs(growthTarget - growth) < 1e-4f && Mathf.Abs(growthSpeed) < 1e-3f) { growth = growthTarget; growthSpeed = 0f; return; }
+            dt = Mathf.Min(dt, 0.05f);
+            float k = Settings.growStiffness;
+            float c = 2f * Settings.growBounce * Mathf.Sqrt(k);
+            growthSpeed += (k * (growthTarget - growth) - c * growthSpeed) * dt;
+            growth = Mathf.Max(-0.5f, growth + growthSpeed * dt);
+        }
+
+        // Swells at once then wobbles back (1 = no bump).
+        private float GulpSwell()
+        {
+            if (gulpStart < 0f) return 1f;
+            float x = (Time.time - gulpStart) / Settings.gulpTime;
+            if (x >= 1f) { gulpStart = -1f; return 1f; }
+            return 1f + Settings.gulpAmount * Mathf.Sin(x * Mathf.PI * 3f) * (1f - x) * (1f - x);
         }
 
         private void UpdateMotion(float dt)
