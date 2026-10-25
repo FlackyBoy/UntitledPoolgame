@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19e89d2d44eb40038928f9c861ff08c5, type: 3}
+  m_Name: HungryHoleSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.HungryHoleSettings
+  smallestBall: 0.7
+  largestBall: 1.3
+  eightBall: 1.6
+  massExponent: 2
+  startSize: 0.8
+  growPerBall: 0.2
+  shrinkPerBall: 0.2
+  sizeLimits: {x: 0.6, y: 3.2}
+  growStiffness: 260
+  growBounce: 0.3
+  growRingTime: 0.5
+  growRingWidth: 0.02
+  growRingOvershoot: 0.15
+  eatHoleRatio: 1.2
+  growPerHoleEaten: 0.5
+  eatenSizeFactor: 0.6
+  sinkTime: 0.35
+  deceleration: 0.6
+  player1Ring: {r: 0.2, g: 0.55, b: 1, a: 1}
+  player2Ring: {r: 1, g: 0.25, b: 0.2, a: 1}
+  ringWidth: 0.006
+  gulpAmount: 1
+  discBump: 1.5
+  gulpTime: 0.45
+  ringPulse: 3
+  shockwave: 1
+  shockwaveReach: 3
+  shockwaveTime: 0.4
+  shockwaveWidth: 0.015
+  beam: 1
+  beamPrefab: {fileID: 0}
+  beamPrefabScale: 1
+  beamHeight: 4
+  beamWidth: 0.9
+  beamTime: 0.3
+  goodBiteColor: {r: 1, g: 1, b: 1, a: 1}
+  badBiteColor: {r: 1, g: 0.12, b: 0.08, a: 1}
+  beamAlpha: 0.75
+  beamLightIntensity: 0
+  beamLightRange: 0.8
+  shakeMagnitude: 0.12
+  shakeDuration: 0.25
+  shakeMinSize: 0.6
+  shakeFullSize: 2
+  bigBiteSize: 1.2
+  flashAlpha: 0.25
+  flashDuration: 0.25
+  hitstopTime: 0.07
+  propSpin: 540
+  props:
+  - prefab: {fileID: 4535766147920785960, guid: 2c608491f4b33ec4f9574f40c0f9b445, type: 3}
+    size: 0.5
+    weight: 2
+  - prefab: {fileID: 3414330570828339864, guid: 2cf0bac995a41734bb91891a413a7bc6, type: 3}
+    size: 0.5
+    weight: 2
+  - prefab: {fileID: 2766207089337961741, guid: b3843deefed506d4e9dbe27d5a81e99a, type: 3}
+    size: 0.5
+    weight: 1
+  - prefab: {fileID: 2863032504765340412, guid: cff7662ecdc21a742bf008f1bd4b983b, type: 3}
+    size: 0.55
+    weight: 1
+  - prefab: {fileID: 4240799311507374461, guid: a97f8a84cc4a6c940832921c6ca26aa2, type: 3}
+    size: 0.7
+    weight: 1
+  - prefab: {fileID: 5216765434413757200, guid: 4a090b7d3a6a8234da35f5050e4919aa, type: 3}
+    size: 0.7
+    weight: 1
+  - prefab: {fileID: 4771366543568450779, guid: c5451689c553c3a4db2b6860d4c8d1c2, type: 3}
+    size: 0.6
+    weight: 1
+  - prefab: {fileID: 4369482043023992102, guid: f9cb5f55ad3a5b64088e25c3673d4ef4, type: 3}
+    size: 0.8
+    weight: 1
+  - prefab: {fileID: 2480977724095021135, guid: 32df38cb5d7140f4392e76408d286070, type: 3}
+    size: 1.1
+    weight: 1
+  - prefab: {fileID: 1132513653147600359, guid: 42e11014635f13a44876efb5bb6c0237, type: 3}
+    size: 1.2
+    weight: 1
+  - prefab: {fileID: 2201140791911918954, guid: 77e4c855c4d277d449b6ce682668867e, type: 3}
+    size: 1.4
+    weight: 1
+  - prefab: {fileID: 7903973735080571365, guid: 9b4ef2c815a25a8488a37b45d149a398, type: 3}
+    size: 1.8
+    weight: 1
+  - prefab: {fileID: 2064392495266592208, guid: 190ffaa8d1f9162488810befa892292b, type: 3}
+    size: 1.8
+    weight: 0.7
+  - prefab: {fileID: 3228893759660557780, guid: 7d15572347250e249a1e7e78568856ab, type: 3}
+    size: 2.0
+    weight: 0.7
+  - prefab: {fileID: 8867840708870424271, guid: afa1d3f36f6b85247a3ab77ee88fbb79, type: 3}
+    size: 2.4
+    weight: 0.5
+  - prefab: {fileID: 5867793308636682201, guid: c64440326a912b24d80b5b0289bb2023, type: 3}
+    size: 2.6
+    weight: 0.5
+  - prefab: {fileID: 9125984199604754206, guid: 9b363a5b282b9f74fa0b070975b50f8a, type: 3}
+    size: 2.8
+    weight: 0.5
+  propCount: 10
+  propMaxHeight: 8
+  growPerPropSize: 0.15
+  propRespawnDelay: {x: 2, y: 6}
+  propPopTime: 0.3
+  propClearance: 1.5
+  debugLogs: 1

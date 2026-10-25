@@ -12,7 +12,8 @@ namespace UntitledPoolGame.Core
     //   - make the current player win or lose;
     //   - jump to the "pot the 8" phase (like C+W);
     //   - trigger a foul, a pot of group 1 or 2, or a first contact with
-    //     group 1 or 2, judged by the real rule set.
+    //     group 1 or 2, judged by the real rule set;
+    //   - start, add to or remove Catch the Hole's living holes.
     // Inputs are off and the cursor free while open. Provisional OnGUI.
     // Created in any scene with a PoolMatchRules.
     public class DebugMenu : MonoBehaviour
@@ -152,6 +153,7 @@ namespace UntitledPoolGame.Core
             DrawPowers(rules);
             DrawMatch(rules, current);
             DrawErrors(rules, current);
+            DrawCatchTheHole(rules);
             GUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(status)) GUILayout.Label(status);
@@ -264,6 +266,31 @@ namespace UntitledPoolGame.Core
                 if (GUILayout.Button("Groupe 2 (rayées)")) TriggerGroupError(rules, BallGroup.Stripe, 2);
                 GUILayout.EndHorizontal();
             }
+            GUI.enabled = wasEnabled;
+        }
+
+        // Living holes on the current match, until the mode exists in the menu.
+        private void DrawCatchTheHole(PoolMatchRules rules)
+        {
+            Section("Catch the Hole");
+            CatchTheHole holes = CatchTheHole.Instance;
+            bool running = holes != null && holes.Running;
+            GUILayout.Label(running
+                ? $"{holes.HoleCount}/{holes.Settings.maxHoles} trou(s), accélération {holes.Intensity * 100f:0} %, vitesse {holes.CruiseSpeed * 100f:0} cm/s."
+                : "Aucun trou vivant.");
+            bool wasEnabled = GUI.enabled;
+            GUI.enabled = !rules.GameOver;
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(running ? "Redémarrer" : "Démarrer"))
+            {
+                CatchTheHole.Ensure().Begin();
+                status = CatchTheHole.Instance.Running ? "Trous vivants ouverts." : "Impossible d'ouvrir les trous : voir la console.";
+            }
+            GUI.enabled = running && holes.HoleCount < holes.Settings.maxHoles;
+            if (GUILayout.Button("Ajouter un trou")) status = holes.AddHole() ? "Un trou de plus." : "Pas de trou ajouté.";
+            GUI.enabled = running;
+            if (GUILayout.Button("Retirer")) { holes.Clear(); status = "Trous vivants retirés."; }
+            GUILayout.EndHorizontal();
             GUI.enabled = wasEnabled;
         }
 

@@ -3,6 +3,44 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-24
+- **Catch the Hole : le trou grandit quand une bille y tombe** (branche `feature/blanche-trou` ; compilé, non testé), comme Hungry Hole : +15 % de sa taille par bille (jusqu'à +150 %), en ressort, avec un bump du disque. Une bille immobile qui réapparaît à côté ne compte pas. Réglages : section *Croissance* de `CatchTheHoleSettings`.
+- **Catch the Hole : un trou tout simple** (branche `feature/blanche-trou` ; compilé, non testé). Les trous vivants sont maintenant des disques noirs parfaits, comme dans Hungry Hole (plus de bord brûlé, de braises ni de decal). Le trou de météore reste disponible : décocher *Plain Hole* dans `CatchTheHoleSettings`. Le pouvoir Trou ne change pas.
+
+## 2026-10-23
+- **Hungry Hole, lot 1 : la blanche est un trou** (branche `feature/blanche-trou` ; nom provisoire ; compilé, non testé). Nouveau mode façon hole.io, en même temps comme Speed Pool :
+  - **la blanche de chaque joueur est un trou** : un disque noir, entouré d'un cercle bleu pour J1, rouge pour J2, qu'on tire à la queue. Il glisse comme un palet ;
+  - **les billes ont des tailles différentes** selon leur numéro : 1 et 9 petites, 7 et 15 grosses, la 8 plus grosse que toutes. Le triangle est refait à leur taille ;
+  - **une bille plus petite que le trou est avalée** quand son centre passe dedans ; une plus grosse rebondit dessus comme sur une bille ;
+  - **une de ses billes avalée fait grandir le trou**, une bille de l'adversaire le fait rétrécir (et compte pour l'adversaire) ;
+  - **victoire** : avoir vidé son groupe, puis avaler la 8. La 8 avalée trop tôt fait perdre ; rentrée dans une poche, elle revient ;
+  - **trou dans une poche** (son centre au-dessus) : pénalité de Speed Pool.
+  - **une de ses billes rentrée en poche** par son trou (le dernier trou à l'avoir touchée) compte et fait grandir le trou, comme si elle avait été avalée.
+  - **manger le trou de l'autre** : un trou au moins 1,2 fois plus gros qui passe sur le centre de l'autre le mange et grandit ; l'autre revient après le délai de Speed Pool, réduit à 60 % de sa taille (*Eaten Size Factor*), sans perdre de bille.
+  - **juice quand le trou avale** (24/10) : le trou gonfle d'un coup puis oscille en revenant, son cercle flashe en blanc, l'écran du joueur tremble (seul au clavier, l'écran unique, pour les deux trous), et un objet mangé tourne de plus en plus vite en tombant. Tout est proportionnel à la taille de ce qui est avalé (réglages *Juice* de `HungryHoleSettings`). Deux moments Feel pour brancher son, vibration ou texte : *Hungry Hole Swallow* et *Hungry Hole Ate Hole*. La console note chaque « gloups ».
+  - **faisceau net** (24/10) : une colonne pleine aux bords nets, jusqu'à 4 m de haut, à 75 % d'opacité (halo essayé puis retiré) ; il jaillit, tient, puis se pince jusqu'à disparaître au lieu de s'estomper. La lumière qui débordait sur les côtés est coupée par défaut (*Beam Light Intensity*). *Beam Prefab* permet de mettre un VFX à la place.
+  - **le disque noir fait le bump** (24/10) : sa taille est recalculée à chaque image et il bombe 1,5 fois plus que son contour (*Disc Bump*) ; l'onde de choc suit le trou ; disque posé un peu plus haut sur le tapis, avec une ligne de console qui compare sa hauteur à celle du tapis.
+  - **croissance plus marquée** (24/10) : le trou grandit en ressort (il dépasse sa nouvelle taille puis rebondit), un anneau épais saute tout de suite à la nouvelle taille et s'estompe pendant que le trou le rattrape (rouge quand il rétrécit), et un moment Feel *Hungry Hole Grow* pour le son ou un texte.
+  - **faisceau plus vif et coloré** (24/10) : il jaillit en moins d'un dixième de seconde et s'éteint en 0,3 s ; **blanc** pour un bon morceau (une de ses billes, un objet, la 8 au bon moment, l'autre trou), **rouge** pour un mauvais (bille adverse, 8 trop tôt), comme le flash du cercle et la lumière.
+  - **les objets mangés réapparaissent** ailleurs, au hasard, 2 à 6 s plus tard, en surgissant du tapis (jamais sous un trou).
+  - **faisceau de lumière** (24/10) : à chaque avalement, une colonne de lumière jaillit du trou (blanche au cœur, aux couleurs du joueur, transparente en haut), avec une lumière qui éclaire la table ; sa hauteur suit la taille avalée (réglages *Beam*).
+  - **juice renforcé** (24/10, « pas assez intense ») : « gloups » jusqu'à +100 %, cercle qui s'épaissit, onde de choc aux couleurs du joueur sur le tapis, secousse plus forte, et pour un gros morceau un flash de l'écran et un arrêt sur image de 70 ms.
+  - **ce qui est avalé suit le trou** : billes et objets glissent vers le centre du trou pendant qu'il bouge (vrai aussi pour les trous vivants de Catch the Hole).
+  - **des objets à manger sur le tapis** : 10 objets tirés au hasard (fruits, verres, bouteille, billets, pot de fleurs, cône, carton, caisse, tonneau, plante, petits arbres du pack Forest Bar), réduits à quelques rayons de bille. Le trou mange ceux qui sont plus petits que lui et grandit selon leur taille ; les autres, comme les billes, rebondissent sur lui. Ils n'appartiennent à personne.
+  - **Où** : *Lancer sans le menu* (*Mode* = *HungryHole*), bille noire « Hungry Hole » du menu Just for fun. Réglages : `HungryHoleSettings`. Console : lignes `[HungryHole]`.
+  - **Code** : `HungryHoleRuleSet` (dérivé de `SpeedPoolRuleSet`, qui s'ouvre un peu : `KeepsEightBall`, méthodes virtuelles), `HungryHoleCue`, `HungryHoleProp`, `HungryHoleSettings` ; `PoolBall.SetSize` / `ResetSize` / `UseBodyCollider` / `PuckDeceleration`.
+- **Catch the Hole, lot 2 : le mode** (branche `feature/catch-the-hole`, posée sur Speed Pool ; compilé, non testé). Catch the Hole se choisit comme les autres modes :
+  - **menu Just for fun** : bille orange « Catch the Hole » dans l'écran du type de partie, avec ses règles sur la carte ;
+  - **composant *Lancer sans le menu*** : *Mode* = *CatchTheHole* ;
+  - **règles** : 8-ball, sans pouvoirs pour l'instant (les pouvoirs du trou viendront aux lots 3 et 4). Les trous s'ouvrent au lancement et se rouvrent à Rejouer ; ils sont retirés quand on lance un autre mode.
+- **Catch the Hole, lot 1 : le trou vivant** (branche `feature/catch-the-hole` ; compilé, non testé). Premier morceau du mode Catch the Hole (ancien nom de travail « Marble Mix »).
+  - **Le trou vivant** : un trou sur le tapis, avec l'apparence du pouvoir Trou. Il grandit et rétrécit doucement au hasard, se déplace de cible en cible sans à-coups (virages larges, départs progressifs), s'arrête parfois un moment puis repart, et garde ses distances avec les bandes, les poches et les autres trous. Il accélère au fil de la partie : avec les billes rentrées, avec un minuteur, ou les deux.
+  - **Plusieurs trous** : un nombre de départ, puis un de plus toutes les N billes rentrées ou toutes les N secondes, jusqu'à un maximum. Un nouveau trou s'ouvre loin des billes, en grandissant depuis rien.
+  - **Ce qui tombe** : une bille qui roule dedans est empochée comme dans une poche (la blanche fait faute). Une bille immobile que le trou vient avaler réapparaît à côté. La 8 ne compte que si le tireur en est à la jouer (sans annonce) ; sinon elle revient à sa place d'avant le tir.
+  - **Pour l'essayer** : menu debug > *Catch the Hole* > *Démarrer*, *Ajouter un trou*, *Retirer*, dans n'importe quelle partie.
+  - **Réglages** : `CatchTheHoleSettings` (Resources), créé par *Ensure Config Assets Exist*. La console note chaque bille avalée et pourquoi (`[CatchTheHole]`).
+  - **Code** : `LivingHole` et `CatchTheHole` (nouveaux) ; `TableHole.Size` met à l'échelle la détection, le contour, le decal et le cercle (qui suit maintenant un trou qui bouge) ; `PoolBall.FallIntoTableHole(…, pocket: true)` finit la chute en empochage ; `PoolMatchRules.HandleBallCaughtByLivingHole` et `WasCaughtByLivingHole` (la 8 sans annonce, dans `EightBallRuleSet`).
+
 ## 2026-10-22
 - **Plus de commandes après avoir été frappé en pleine visée** (compilé, non testé). Le joueur qui visait (ou plaçait la blanche) et se faisait frapper se relevait sans pouvoir bouger ni regarder. La visée éteint le contrôleur FPS le temps de viser ; à la chute, le ragdoll notait « éteint » et le remettait tel quel au relevé. Il le compte maintenant comme allumé (`LocalPlayerRagdollController.RememberEnabled`).
 

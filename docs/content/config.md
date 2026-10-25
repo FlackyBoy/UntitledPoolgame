@@ -6,7 +6,7 @@
 
 | Type de réglage | Où | Créé par | Pour quoi |
 |---|---|---|---|
-| **Fichiers de réglages partagés** | `Assets/Resources/*.asset` | *Tools > Pool > Ensure Config Assets Exist* | Physique des billes, sensations caméra, effets d'empochage, apparition des pouvoirs, HUD, niveaux du menu, menu et pause, écran de chargement |
+| **Fichiers de réglages partagés** | `Assets/Resources/*.asset` | *Tools > Pool > Ensure Config Assets Exist* | Physique des billes, sensations caméra, effets d'empochage, apparition des pouvoirs, HUD, niveaux du menu, menu et pause, écran de chargement, trous vivants (Catch the Hole) |
 | **Scène du menu** | `Assets/Scenes/MainMenu.unity` | *Tools > Pool > Create Main Menu Scene* | Le menu principal, première scène du jeu |
 | **Écrans des menus** | `Assets/Resources/Menus/*.asset` | *Ensure Config Assets Exist*, modifiés dans *Tools > Pool > Menu Studio* | Accueil, pages du menu, réglages, pause, chargement : éléments, positions, textes, effets, Feel |
 | **Séquences Feel** | `Assets/Feel/Sequences/*.prefab`, liées dans `Resources/GameFeelSettings` | *Tools > Pool > Text FX Studio* ou à la main | Son, vibration, texte du HUD, secousse… à un moment de la partie |
@@ -94,6 +94,39 @@ Créé par *Tools > Pool > Ensure Config Assets Exist* ; sans fichier, les valeu
 | Geste : pouce levé | une fois le pouvoir envoyé (tous les pouvoirs), le poing devant la poitrine, pouce en l'air : oui / non, durée, position de la main par rapport à l'épaule (devant, hauteur, vers le milieu du corps), fermeture des doigts, du pouce (négatif = plus ouvert) ; position du coude par rapport à l'épaule (*Thumbs Up Elbow Offset* : devant, hauteur, vers le milieu du corps ; sous l'épaule, près du corps) ; pour les deux gestes : force du guide du coude (*Gesture Elbow Out*, 0 = il suit l'animation et peut rentrer dans le corps), ligne de diagnostic dans la console à chaque pouce levé (*Gesture Debug Logs*), durée pour lever le bras (*Gesture Blend Time*) et pour le redescendre (*Gesture Lower Time*) ; la main passe en arc devant le corps | oui, 1,2 s, (0,32 ; 0,02 ; 0,1) m pour un bras de 0,6 m (mis à l'échelle du personnage), 95°, −15°, (0,08 ; −0,3 ; −0,06) m, 0,7, oui, 0,3 s, 0,5 s |
 
 Les pouvoirs n'apparaissent qu'en mode **Party**. Pour retirer un pouvoir du jeu sans le supprimer, enlevez-le de *Available Powers*.
+
+### HungryHoleSettings — blanche-trou (mode Hungry Hole)
+
+La blanche de chaque joueur est un trou qui avale les billes plus petites que lui et grandit (*Lancer sans le menu* : *Mode* = *HungryHole*).
+
+| Groupe | Champs | Défauts |
+|---|---|---|
+| Taille des billes | la plus petite de chaque groupe (1 et 9), la plus grosse (7 et 15), la 8 ; les autres entre les deux selon leur numéro. Masse × taille^N (*Mass Exponent*) | ×0,7, ×1,3, ×1,6, 2 |
+| Le trou (un disque noir) | tailles en multiples du rayon d'une bille normale, quelle que soit l'échelle de la table : taille au départ, gain par bille de son groupe avalée, perte par bille adverse avalée, taille minimale / maximale ; changement de taille en ressort (*Grow Stiffness* : rapidité, *Grow Bounce* : rebond, plus bas = il dépasse plus) ; anneau de croissance qui saute à la nouvelle taille (durée, épaisseur, dépassement) ; durée de la chute d'une bille avalée | ×0,8, +0,2, −0,2, ×0,6 / ×3,2 ; 260, 0,3 ; 0,5 s, 2 cm, 15 % ; 0,35 s |
+| Manger l'autre trou | un trou mange l'autre s'il est au moins *Eat Hole Ratio* fois plus gros et passe sur son centre ; ce qu'il gagne alors ; taille du trou mangé quand il revient, en part de sa taille d'avant (*Eaten Size Factor*) | ×1,2, +0,5, ×0,6 |
+| Glisse | ralentissement du trou (m/s², une bille qui roule ralentit d'environ 0,5) | 0,6 |
+| Juice | « gloups » du trou (*Gulp Amount* : de combien il gonfle, *Gulp Time* ; le disque noir bombe *Disc Bump* fois plus que son contour), couleur d'un bon morceau (*Good Bite Color*, blanc : une de ses billes, un objet, la 8 au bon moment, l'autre trou) et d'un mauvais (*Bad Bite Color*, rouge : bille adverse, 8 trop tôt) pour le faisceau, le flash du cercle et la lumière, épaississement du cercle (*Ring Pulse*), onde de choc aux couleurs du joueur (*Shockwave*, portée en rayons du trou, durée, épaisseur), faisceau de lumière qui jaillit du trou (*Beam* ; *Beam Prefab* : un effet à toi à la place du faisceau généré, créé au centre du trou à *Beam Prefab Scale* diamètres, qui le suit et prend la couleur de la bouchée ; sinon : hauteur en mètres, largeur en rayons du trou, durée, opacité, intensité et portée de la lumière), secousse de l'écran du joueur (force, durée ; à partir de *Shake Min Size*, entière à *Shake Full Size*, en rayons de bille), gros morceau à partir de *Big Bite Size* : flash de l'écran à la couleur du joueur et arrêt sur image (*Hitstop Time*) ; rotation d'un objet mangé (°/s). Seul au clavier, l'écran unique joue tout pour les deux trous. Son, vibration, texte : moments Feel *Hungry Hole Swallow* et *Hungry Hole Ate Hole* | +100 %, 0,45 s, ×1,5, blanc / rouge, ×4, oui ×3 0,4 s 1,5 cm, oui 4 m ×0,9 0,3 s 75 % lumière 0 / 0,8 m, 0,12 / 0,25 s, 0,6 / 2, 1,2 : 25 % / 70 ms, 540 |
+| Cercle du joueur | couleur J1, couleur J2, épaisseur (0 = pas de cercle) | bleu, rouge, 6 mm |
+| Objets à manger | *Props* : la liste des objets possibles (prefab, *Size* = largeur en rayons de bille, *Weight* = chance relative) ; nombre posé au début ; un objet mangé réapparaît ailleurs au hasard après *Prop Respawn Delay* (s), en surgissant du tapis (*Prop Pop Time*) ; hauteur maximale (rayons de bille) ; gain du trou par objet mangé (taille × facteur) ; espace libre autour d'un objet posé | 17 objets du pack Forest Bar (fruits et légumes, verres, bouteille, billets, pot de fleurs, cône, carton, caisse, tonneau, plante, 3 arbres), 10, 2 à 6 s, 0,3 s, 8, 0,15, 1,5 |
+| Diagnostic | *Debug Logs* : une ligne `[HungryHole]` par bille avalée, objet mangé, poche, victoire | oui |
+
+Une bille n'est avalée que si elle est plus petite que le trou. Avec les valeurs par défaut, le trou avale les plus petites billes (×0,7) dès le départ ; il faut 3 billes à soi pour les plus grosses (×1,3) et 5 pour la 8 (×1,6). Les objets sont mis à l'échelle à leur apparition d'après leur vraie taille : un prefab immense arrive quand même à la taille demandée. Leurs colliders sont remplacés par une capsule : les billes rebondissent dessus, et un trou trop petit aussi. Les règles de Speed Pool (couleurs des blanches, délai après une blanche rentrée…) viennent de `SpeedPoolSettings`.
+
+### CatchTheHoleSettings — trous vivants (mode Catch the Hole)
+
+Les trous qui bougent, grandissent et rétrécissent sur le tapis, en mode **Catch the Hole** (menu Just for fun, ou *Lancer sans le menu* réglé sur *CatchTheHole*). Le menu debug (*Catch the Hole*) les lance aussi dans une autre partie.
+
+| Groupe | Champs | Défauts |
+|---|---|---|
+| Apparence | *Plain Hole* : un disque noir parfait, comme Hungry Hole (décoché : le trou déchiré du météore) ; *Look* : l'asset du pouvoir Trou dont le trou reprend la taille de base, le temps de chute et, sans *Plain Hole*, la forme, le bord et le decal brûlé (rempli par *Ensure Config Assets Exist*) ; *Smoke* : garder sa fumée (trou de météore seulement) | oui, `TableHolePower`, non |
+| Nombre de trous | au départ, maximum en même temps, un de plus toutes les N billes rentrées (0 = jamais), un de plus toutes les N secondes (0 = jamais), temps d'ouverture d'un nouveau trou | 1, 3, 5, 0, 0,8 s |
+| Taille | rayon minimal et maximal (la forme a des éclats un peu plus longs), vitesse de variation (0 = taille fixe) | 5 cm, 12 cm, 0,12 |
+| Croissance | chaque bille qui tombe dans un trou le fait grandir pour de bon (*Grow Per Ball*, en part de sa taille, jusqu'à *Max Growth*), en ressort (*Grow Stiffness*, *Grow Bounce*) avec un bump du disque (*Gulp Amount*, *Gulp Time*) ; une bille immobile qui réapparaît à côté ne compte pas | +15 %, +150 %, 260, 0,3, +60 %, 0,45 s |
+| Déplacement | vitesse de croisière au début et au bout de l'accélération, accélération (plus faible = virages plus larges), distance de ralentissement avant une pause, durée maximale d'un trajet | 10 cm/s, 35 cm/s, 0,12 m/s², 15 cm, 8 s |
+| Pauses | chance de s'arrêter à une cible, durée d'une pause (entre deux valeurs) | 0,35, 1 à 3 s |
+| Écarts | bord du trou ↔ bandes et poches, bord à bord entre deux trous | 3 cm, 8 cm |
+| Accélération | *Ramp* : aucune, déroulé (part des billes de couleur rentrées), minuteur (*Ramp Seconds*), les deux (le plus avancé) | les deux, 300 s |
+| Diagnostic | *Debug Logs* : une ligne `[CatchTheHole]` par bille avalée (vitesse, tir en cours, décision) et par trou ouvert | oui |
 
 ### GameFlowSettings — niveaux et menu
 
@@ -277,7 +310,7 @@ Les masques sont dans `Assets/Animations/Combat/`. Ordre des calques : sonné, c
 ### GameFeelSettings — Feel aux moments de la partie
 
 Associe un **moment de la partie** à une **séquence Feel** (un prefab avec un *MMF Player*) :
-- **moments** : bille rentrée (une des siennes), **bille adverse rentrée** (*Opponent Ball Potted*, 8-ball), blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*), **pouvoir lancé** (*Power Activated*, sur l'écran du lanceur), **attaque reçue** (*Power Received*, sur l'écran de la cible, au moment où l'attaque est lancée), **pouvoir refusé** (*Power Refused*, touche pressée au mauvais moment) ;
+- **moments** : bille rentrée (une des siennes), **bille adverse rentrée** (*Opponent Ball Potted*, 8-ball), blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*), **pouvoir lancé** (*Power Activated*, sur l'écran du lanceur), **attaque reçue** (*Power Received*, sur l'écran de la cible, au moment où l'attaque est lancée), **pouvoir refusé** (*Power Refused*, touche pressée au mauvais moment), **le trou avale** (*Hungry Hole Swallow*, Hungry Hole : une bille ou un objet ; l'intensité suit la taille avalée, sur l'écran du propriétaire du trou), **un trou mange l'autre** (*Hungry Hole Ate Hole*, sur l'écran du mangeur), **le trou grandit** (*Hungry Hole Grow*, intensité selon le gain) ; ces trois moments sont à ajouter en fin de liste ;
 - **pour chaque ligne** : le moment, la séquence, l'intensité (1 = normale). Plusieurs lignes pour le même moment jouent toutes ;
 - **aussi** : un interrupteur général et le seuil du « tir plein » (0,95).
 
@@ -646,7 +679,7 @@ Une scène qui contient une table de billard, lancée directement depuis l'édit
 
 | Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps) | Party |
+| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`) | Party |
 | Party Mode | Avec *SpeedPool* : *Classic* = sans pouvoirs, *Pouvoirs* = avec les caisses de pouvoirs. *Party* a toujours les pouvoirs. | Classic |
 | Target Score | Score à atteindre, si 14.1 | 150 |
 

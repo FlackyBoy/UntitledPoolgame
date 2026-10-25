@@ -78,7 +78,9 @@ namespace UntitledPoolGame.Pool
             if (pocketedEightBall)
             {
                 // The 8 must go in the called pocket; no call counts as a wrong one.
-                bool wonOnPocket = calledPocket != null && match.GetPocketFor(eightBall) == calledPocket;
+                // A living hole (Catch the Hole) can't be called: it counts as is.
+                bool wonOnPocket = (calledPocket != null && match.GetPocketFor(eightBall) == calledPocket)
+                    || match.WasCaughtByLivingHole(eightBall);
                 match.Win(groupCleared && !foul && wonOnPocket ? player : 1 - player);
                 return;
             }

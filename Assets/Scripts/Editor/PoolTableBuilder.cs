@@ -48,6 +48,8 @@ namespace UntitledPoolGame.PoolEditor
             EnsureMagnetPowerAsset();
             EnsureIdenticalGroupsPowerAsset();
             EnsureTableHolePowerAsset();
+            EnsureCatchTheHoleSettingsAsset();
+            EnsureHungryHoleSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -89,6 +91,32 @@ namespace UntitledPoolGame.PoolEditor
             });
             // The scorch decal, also for an asset created before it existed.
             TableHoleScorchGenerator.Ensure("Assets/Powers/TableHolePower.asset");
+        }
+
+        // Catch the Hole's living holes, looking like the Trou power's hole.
+        private static void EnsureCatchTheHoleSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/CatchTheHoleSettings.asset";
+            CatchTheHoleSettings settings = AssetDatabase.LoadAssetAtPath<CatchTheHoleSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<CatchTheHoleSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+            if (settings.look != null) return;
+            settings.look = AssetDatabase.LoadAssetAtPath<TableHolePower>("Assets/Powers/TableHolePower.asset");
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+        }
+
+        // Hungry Hole: the cue-ball holes and the balls' sizes.
+        private static void EnsureHungryHoleSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/HungryHoleSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<HungryHoleSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<HungryHoleSettings>(), path);
         }
 
         // The "Aimant" power asset (MagnetPower), with Cartoon FX Remaster's

@@ -14,5 +14,10 @@ namespace UntitledPoolGame.Pool
         // (SpeedPoolRuleSet). Last on purpose: the value is serialized in
         // menu assets and scenes.
         SpeedPool,
+        // 8-ball with living holes wandering the felt (CatchTheHole).
+        CatchTheHole,
+        // The cue ball is a hole that swallows smaller balls and grows
+        // (HungryHoleRuleSet).
+        HungryHole,
     }
 }

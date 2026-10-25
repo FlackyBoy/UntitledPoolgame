@@ -125,6 +125,8 @@ namespace UntitledPoolGame.Core
             ModeBall(s, "nine-ball", 18f, 71f, m.nineBallMode, PoolGameMode.NineBall, 2);
             ModeBall(s, "fourteen-one", 34f, 71f, m.fourteenOneMode, PoolGameMode.FourteenOne, 3);
             ModeBall(s, "speed-pool", 26f, 57.5f, m.speedPoolMode, PoolGameMode.SpeedPool, 4);
+            ModeBall(s, "catch-the-hole", 42f, 57.5f, m.catchTheHoleMode, PoolGameMode.CatchTheHole, 5);
+            ModeBall(s, "hungry-hole", 42f, 44f, m.hungryHoleMode, PoolGameMode.HungryHole, 6);
 
             MenuElement rules = Add(s, "rules", MenuElementKind.Panel, 67.5f, 47.5f, 634f, 300f);
             rules.color = K.Cube;
