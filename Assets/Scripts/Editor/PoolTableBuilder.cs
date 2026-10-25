@@ -49,6 +49,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureIdenticalGroupsPowerAsset();
             EnsureTableHolePowerAsset();
             EnsureCatchTheHoleSettingsAsset();
+            EnsureHungryHoleSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -107,6 +108,15 @@ namespace UntitledPoolGame.PoolEditor
             settings.look = AssetDatabase.LoadAssetAtPath<TableHolePower>("Assets/Powers/TableHolePower.asset");
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
+        }
+
+        // Hungry Hole: the cue-ball holes and the balls' sizes.
+        private static void EnsureHungryHoleSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/HungryHoleSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<HungryHoleSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<HungryHoleSettings>(), path);
         }
 
         // The "Aimant" power asset (MagnetPower), with Cartoon FX Remaster's

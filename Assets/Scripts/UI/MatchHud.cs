@@ -1298,6 +1298,7 @@ namespace UntitledPoolGame.Core
             PoolGameMode.Party => "Party",
             PoolGameMode.SpeedPool => "Speed Pool",
             PoolGameMode.CatchTheHole => "Catch the Hole",
+            PoolGameMode.HungryHole => "Hungry Hole",
             _ => "8-ball",
         };
 

@@ -151,6 +151,8 @@ namespace UntitledPoolGame.Core
             rules = "Chaque bille rentrée rapporte 1 point." };
         public MenuModeBall catchTheHoleMode = new MenuModeBall { ball = new MenuBall("Catch the Hole", "13", "#f08a1c", true),
             rules = "Des trous vivants se baladent sur le tapis. Une bille qui roule dedans est rentrée, même la tienne... ou la blanche." };
+        public MenuModeBall hungryHoleMode = new MenuModeBall { ball = new MenuBall("Hungry Hole", "8", "#1c1c1c"),
+            rules = "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8. Tout le monde joue en même temps." };
         public MenuModeBall speedPoolMode = new MenuModeBall { ball = new MenuBall("Speed Pool", "11", "#2f7cf6", true),
             rules = "Tout le monde tire en même temps, chacun sa blanche. Le premier qui vide son groupe gagne." };
         [Tooltip("Option du 14.1. {0} = score à atteindre.")]

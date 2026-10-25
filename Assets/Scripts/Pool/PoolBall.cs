@@ -116,12 +116,21 @@ namespace UntitledPoolGame.Pool
         private Vector3 tableSpawnPosition;
         private Quaternion spawnRotation;
         private bool contactTrackingArmed;
+        // The collider that touches the other balls: the sphere, or one a mode
+        // swaps in (Hungry Hole's cylinder). Off while in hand.
+        private Collider bodyCollider;
+        private Vector3 baseScale;
+        private float baseRadius;
+        private float baseMass;
 
         private void Awake()
         {
             rb = GetComponent<Rigidbody>();
             sphereCollider = GetComponent<SphereCollider>();
-            radius = sphereCollider.radius * transform.lossyScale.x;
+            bodyCollider = sphereCollider;
+            radius = baseRadius = sphereCollider.radius * transform.lossyScale.x;
+            baseScale = transform.localScale;
+            baseMass = rb.mass;
             spawnPosition = tableSpawnPosition = transform.position;
             spawnRotation = transform.rotation;
 
@@ -155,7 +164,7 @@ namespace UntitledPoolGame.Pool
                 rb.angularVelocity = Vector3.zero;
             }
             rb.isKinematic = true;
-            sphereCollider.enabled = false;
+            bodyCollider.enabled = false;
         }
 
         public void PlaceAt(Vector3 worldPosition)
@@ -166,9 +175,48 @@ namespace UntitledPoolGame.Pool
 
         public void EndBallInHand()
         {
-            sphereCollider.enabled = true;
+            bodyCollider.enabled = true;
             rb.isKinematic = false;
         }
+
+        // Hungry Hole: size as a multiple of the table's ball (radius, mass by
+        // massExponent). 1 = back to normal.
+        public float SizeScale { get; private set; } = 1f;
+
+        public void SetSize(float scale, float massExponent)
+        {
+            SizeScale = scale;
+            transform.localScale = baseScale * scale;
+            radius = baseRadius * scale;
+            rb.mass = baseMass * Mathf.Pow(scale, massExponent);
+        }
+
+        // Normal size, back on the table's own spot.
+        public void ResetSize()
+        {
+            if (Mathf.Approximately(SizeScale, 1f)) return;
+            SetSize(1f, 0f);
+            spawnPosition = tableSpawnPosition;
+        }
+
+        // Where it comes back on Rejouer or after a scratch (a mode re-racked it).
+        public void SetSpawn(Vector3 spawn) => spawnPosition = spawn;
+
+        public Collider BodyCollider => bodyCollider;
+
+        // null: the ball's own sphere again.
+        public void UseBodyCollider(Collider body)
+        {
+            Collider next = body != null ? body : sphereCollider;
+            if (next == bodyCollider) return;
+            bodyCollider.enabled = false;
+            bodyCollider = next;
+            bodyCollider.enabled = !rb.isKinematic;
+        }
+
+        // Hungry Hole: slides like a puck at this constant deceleration (m/s²)
+        // instead of rolling. 0 = a normal ball.
+        public float PuckDeceleration { get; set; }
 
         // Table hole: the ball sinks and hides but stays in play (enabled, in
         // Active) until PoolMatchRules brings it back.
@@ -178,35 +226,40 @@ namespace UntitledPoolGame.Pool
         private Renderer[] renderers;
 
         // pocket: the fall ends like a pocketed ball (Catch the Hole's living
-        // holes) instead of waiting under the felt to come back.
-        public void FallIntoTableHole(Vector3 holeCenter, float sinkTime, bool pocket = false)
+        // holes) instead of waiting under the felt to come back. follow: a
+        // hole that moves (its centre is read every frame instead of holeCenter).
+        public void FallIntoTableHole(Vector3 holeCenter, float sinkTime, bool pocket = false, Transform follow = null)
         {
             BeginBallInHand();
             InTableHole = true;
             if (tableHoleRoutine != null) StopCoroutine(tableHoleRoutine);
-            tableHoleRoutine = StartCoroutine(SinkRoutine(holeCenter, Mathf.Max(0.01f, sinkTime), pocket));
+            tableHoleRoutine = StartCoroutine(SinkRoutine(holeCenter, Mathf.Max(0.01f, sinkTime), pocket, follow));
         }
 
-        private System.Collections.IEnumerator SinkRoutine(Vector3 holeCenter, float time, bool pocket)
+        private System.Collections.IEnumerator SinkRoutine(Vector3 holeCenter, float time, bool pocket, Transform follow)
         {
             Vector3 from = transform.position;
-            Vector3 over = new Vector3(holeCenter.x, from.y, holeCenter.z);
-            Vector3 under = over + Vector3.down * radius * 3f;
+            // Kept relative to the hole, so the ball goes along when it moves.
+            Vector3 offset = from - holeCenter;
+            offset.y = 0f;
             for (float t = 0f; t < time; t += Time.deltaTime)
             {
                 float k = t / time;
+                Vector3 center = follow != null ? follow.position : holeCenter;
                 // First to the centre, then down (speeding up).
-                Vector3 p = k < 0.4f ? Vector3.Lerp(from, over, k / 0.4f) : Vector3.Lerp(over, under, Mathf.Pow((k - 0.4f) / 0.6f, 2f));
+                Vector3 p = new Vector3(center.x, from.y, center.z);
+                if (k < 0.4f) p += offset * (1f - k / 0.4f);
+                else p += Vector3.down * radius * 3f * Mathf.Pow((k - 0.4f) / 0.6f, 2f);
                 PlaceAt(p);
                 yield return null;
             }
-            SetVisible(false);
+            SetMeshesVisible(false);
             tableHoleRoutine = null;
             if (!pocket) yield break;
             // Left in the state of a ball potted in a pocket: Rejouer and the
             // rules see nothing different.
             InTableHole = false;
-            SetVisible(true);
+            SetMeshesVisible(true);
             EndBallInHand();
             OnPocketed();
         }
@@ -215,14 +268,14 @@ namespace UntitledPoolGame.Pool
         {
             if (tableHoleRoutine != null) { StopCoroutine(tableHoleRoutine); tableHoleRoutine = null; }
             InTableHole = false;
-            SetVisible(true);
+            SetMeshesVisible(true);
             PlaceAt(position);
             EndBallInHand();
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
 
-        private void SetVisible(bool visible)
+        public void SetMeshesVisible(bool visible)
         {
             if (renderers == null) renderers = GetComponentsInChildren<Renderer>(true);
             foreach (Renderer r in renderers)
@@ -241,6 +294,12 @@ namespace UntitledPoolGame.Pool
             if (transform.position.y < spawnPosition.y - settings.offTableDropThreshold)
             {
                 OnPocketed();
+                return;
+            }
+
+            if (PuckDeceleration > 0f)
+            {
+                SlideAsPuck();
                 return;
             }
 
@@ -295,6 +354,19 @@ namespace UntitledPoolGame.Pool
             rb.angularVelocity -= rollAxis * (deltaSpeed / radius);
         }
 
+        // Constant deceleration, no spin (its rotation is frozen).
+        private void SlideAsPuck()
+        {
+            Vector3 horizontal = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+            float speed = horizontal.magnitude;
+            if (speed < settings.sleepVelocityThreshold)
+            {
+                rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+                return;
+            }
+            rb.linearVelocity -= horizontal / speed * Mathf.Min(PuckDeceleration * Time.fixedDeltaTime, speed);
+        }
+
         public void OnPocketed(PoolPocket pocket = null)
         {
             Pocketed?.Invoke(this, pocket);
@@ -317,7 +389,7 @@ namespace UntitledPoolGame.Pool
             if (InTableHole) ReturnFromTableHole(spawnPosition);
             gameObject.SetActive(true);
             rb.isKinematic = false;
-            sphereCollider.enabled = true;
+            bodyCollider.enabled = true;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.position = spawnPosition;

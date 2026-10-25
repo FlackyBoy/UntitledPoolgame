@@ -210,7 +210,8 @@ namespace UntitledPoolGame.Pool
         // free one (Speed Pool scratch penalty).
         public void RespotBall(PoolBall ball)
         {
-            Vector3 spot = FreeSpotNear(ball.SpawnPosition, ball);
+            // Its respawn spot: a mode may have re-racked it (Hungry Hole's sizes).
+            Vector3 spot = FreeSpotNear(ball.RespawnPosition, ball);
             ball.ResetToSpawn();
             ball.PlaceAt(spot);
         }
@@ -989,7 +990,9 @@ namespace UntitledPoolGame.Pool
         {
             float sinkTime = hole.Power != null ? hole.Power.SinkTime : 0.35f;
             string decision;
-            if (!shotInProgress || !ball.IsRolling)
+            // Read before the fall stops the ball.
+            bool fellIn = shotInProgress && ball.IsRolling;
+            if (!fellIn)
             {
                 Vector3 spot = FreeSpotNear(ball.transform.position, ball);
                 ball.Rigidbody.linearVelocity = Vector3.zero;
@@ -1004,18 +1007,20 @@ namespace UntitledPoolGame.Pool
             }
             else if (ball.Group == BallGroup.Eight && !IsShootingForEightBall(CurrentPlayer))
             {
-                ball.FallIntoTableHole(hole.transform.position, sinkTime);
+                ball.FallIntoTableHole(hole.transform.position, sinkTime, follow: hole.transform);
                 ballsInTableHoles.Add(ball);
                 decision = "la 8 avant son tour : revient à sa place après le tir";
             }
             else
             {
-                ball.FallIntoTableHole(hole.transform.position, sinkTime, pocket: true);
+                ball.FallIntoTableHole(hole.transform.position, sinkTime, pocket: true, follow: hole.transform);
                 // Listed so the shot waits for the end of the fall (AnyBallSinking).
                 ballsInTableHoles.Add(ball);
                 caughtByLivingHoleThisShot.Add(ball);
                 decision = "empochée";
             }
+            // Every ball that really fell in grows it (not one popped aside).
+            if (fellIn) hole.Living.OnSwallowed(ball);
 
             if (hole.Living.Settings.debugLogs)
                 Debug.Log($"[CatchTheHole] {hole.name} (rayon {hole.MaxRadius * 100f:0.0} cm) attrape {(ball.IsCueBall ? "la blanche" : $"la {ball.Number}")} : " +
@@ -1407,8 +1412,11 @@ namespace UntitledPoolGame.Pool
                 PoolGameMode.FourteenOne => new FourteenOneRuleSet(targetScore),
                 PoolGameMode.Party => CreatePartyRuleSet(partyMode),
                 PoolGameMode.SpeedPool => new SpeedPoolRuleSet(),
+                PoolGameMode.HungryHole => new HungryHoleRuleSet(),
                 _ => new EightBallRuleSet(),
             };
+            // Normal balls again if the last match was Hungry Hole.
+            if (!(ruleSet is HungryHoleRuleSet)) HungryHoleRuleSet.Cleanup();
             ruleSet.Setup(this);
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).
@@ -1506,6 +1514,7 @@ namespace UntitledPoolGame.Pool
             DrawModeButton(PoolGameMode.FourteenOne, "14.1 (score cible)");
             DrawModeButton(PoolGameMode.SpeedPool, "Speed Pool (en même temps)");
             DrawModeButton(PoolGameMode.CatchTheHole, "Catch the Hole (trous vivants)");
+            DrawModeButton(PoolGameMode.HungryHole, "Hungry Hole (la blanche est un trou)");
 
             // Party opens a second screen with its sub-modes.
             GUI.color = selectedMode == PoolGameMode.Party ? Color.green : Color.white;

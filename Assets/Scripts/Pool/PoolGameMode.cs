@@ -16,5 +16,8 @@ namespace UntitledPoolGame.Pool
         SpeedPool,
         // 8-ball with living holes wandering the felt (CatchTheHole).
         CatchTheHole,
+        // The cue ball is a hole that swallows smaller balls and grows
+        // (HungryHoleRuleSet).
+        HungryHole,
     }
 }
