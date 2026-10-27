@@ -15,6 +15,10 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Écart de chaque blanche par rapport au point de départ habituel, en fraction de la demi-largeur du tapis (0 = au même endroit, 1 = contre la bande). J1 d'un côté, J2 de l'autre.")]
         [Range(0.1f, 0.9f)] public float cueSpread = 0.5f;
 
+        [Header("Balls")]
+        [Tooltip("Billes en plus pour chaque joueur, en plus de ses 7 : des copies des billes de son groupe, ajoutées en rangées derrière le triangle (une bille de plus par rangée), ou à la place libre la plus proche quand on arrive à la bande. 0 = les billes habituelles (sans la 8).")]
+        [Range(0, 14)] public int extraBallsPerPlayer = 0;
+
         [Header("Scratch (cue ball potted)")]
         [Tooltip("Temps (secondes, temps réel) avant qu'une blanche rentrée revienne sur la table, à son point de départ ou au plus près s'il est occupé. Le joueur ne peut pas tirer pendant ce temps.")]
         [Min(0f)] public float cueRespawnDelay = 5f;

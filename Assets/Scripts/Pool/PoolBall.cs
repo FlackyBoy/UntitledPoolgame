@@ -141,14 +141,44 @@ namespace UntitledPoolGame.Pool
         private void OnEnable() => active.Add(this);
         private void OnDisable() => active.Remove(this);
 
+        // Speed Pool: the player whose shot last set this ball moving, through
+        // their cue ball or a ball it hit (-1 = nobody yet). Tells who potted
+        // a ball, for the HUD's message.
+        public int LastShooter { get; private set; } = -1;
+        private float lastShotTime = -1f;
+
+        // Speed Pool: a copy added to its group (SpeedPoolSettings.extraBallsPerPlayer).
+        public bool IsExtra { get; private set; }
+
+        public void MarkExtra(Vector3 spawn)
+        {
+            IsExtra = true;
+            spawnPosition = tableSpawnPosition = spawn;
+            ResetToSpawn();
+        }
+
         // Called when a shot is struck.
-        public void ArmContactTracking() => contactTrackingArmed = true;
+        public void ArmContactTracking()
+        {
+            contactTrackingArmed = true;
+            if (CueOwner < 0) return;
+            LastShooter = CueOwner;
+            lastShotTime = Time.time;
+        }
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (!isCueBall || !contactTrackingArmed) return;
             if (!collision.gameObject.TryGetComponent(out PoolBall other)) return;
 
+            // The more recent shot wins: a ball set moving by A's shot is A's.
+            // Both balls get this call; whichever runs second sees no change.
+            if (other.lastShotTime > lastShotTime)
+            {
+                LastShooter = other.LastShooter;
+                lastShotTime = other.lastShotTime;
+            }
+
+            if (!isCueBall || !contactTrackingArmed) return;
             contactTrackingArmed = false;
             CueBallFirstContact?.Invoke(this, other);
         }
@@ -386,6 +416,8 @@ namespace UntitledPoolGame.Pool
         // Back to the rack position, potted or not ("Rejouer").
         public void ResetToSpawn()
         {
+            LastShooter = -1;
+            lastShotTime = -1f;
             if (InTableHole) ReturnFromTableHole(spawnPosition);
             gameObject.SetActive(true);
             rb.isKinematic = false;

@@ -75,6 +75,7 @@ Tous dans `Assets/Resources`, créés par **Tools > Pool > Ensure Config Assets 
 
 | Groupe | Champs | Défauts |
 |---|---|---|
+| Billes | billes en plus par joueur (*Extra Balls Per Player*, 0 à 14) : des copies des billes de son groupe, en rangées derrière le triangle, puis à la place libre la plus proche | 0 |
 | Blanches | teinte de la blanche de J1, de J2 ; écart de chaque blanche par rapport au point de départ habituel (*Cue Spread*, part de la demi-largeur du tapis) | bleu, rouge, 0,5 |
 | Blanche rentrée | délai avant son retour sur la table (*Cue Respawn Delay*, temps réel), à son point de départ ou au plus près s'il est occupé ; la dernière bille de son groupe que le joueur a rentrée ressort à sa place du rack (*Respot Own Ball On Scratch*) | 5 s, oui |
 

@@ -27,6 +27,7 @@ chronologique inverse (les plus récentes en haut).
 - **Catch the Hole : un trou tout simple** (branche `feature/blanche-trou` ; compilé, non testé). Les trous vivants sont maintenant des disques noirs parfaits, comme dans Hungry Hole (plus de bord brûlé, de braises ni de decal). Le trou de météore reste disponible : décocher *Plain Hole* dans `CatchTheHoleSettings`. Le pouvoir Trou ne change pas.
 
 ## 2026-10-23
+- **Speed Pool : billes en plus par joueur** (compilé, non testé). Réglage *Extra Balls Per Player* (SpeedPoolSettings, 0 à 14) : des copies des billes de chaque groupe s'ajoutent en rangées derrière le triangle, une bille de plus par rangée, puis à la place libre la plus proche. « Rejouer » garde les copies. Le HUD félicite maintenant le joueur dont le tir a envoyé la bille (il était au propriétaire du groupe) : chaque bille retient le dernier tir qui l'a mise en mouvement (`PoolBall.LastShooter`).
 - **Hungry Hole, lot 1 : la blanche est un trou** (branche `feature/blanche-trou` ; nom provisoire ; compilé, non testé). Nouveau mode façon hole.io, en même temps comme Speed Pool :
   - **la blanche de chaque joueur est un trou** : un disque noir, entouré d'un cercle bleu pour J1, rouge pour J2, qu'on tire à la queue. Il glisse comme un palet ;
   - **les billes ont des tailles différentes** selon leur numéro : 1 et 9 petites, 7 et 15 grosses, la 8 plus grosse que toutes. Le triangle est refait à leur taille ;
