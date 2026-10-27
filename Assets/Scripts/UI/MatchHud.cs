@@ -765,8 +765,11 @@ namespace UntitledPoolGame.Core
                 key = aim.HighlightedPocket != null ? (Hint.CallPocket, null, aim.HighlightedPocket) : (Hint.CallPocketNone, null, null);
             else if (aim != null && aim.IsOutOfReach)
                 key = (Hint.OutOfReach, null, null);
-            else if (myTurn && rules.IsShootingForEightBall(h.player))
-                key = rules.CalledEightBallPocket != null ? (Hint.EightCalled, null, rules.CalledEightBallPocket) : (Hint.EightToCall, null, null);
+            else if (myTurn && rules.IsGoingForPocket(h.player))
+            {
+                PoolPocket called = rules.CalledPocketOf(h.player);
+                key = called != null ? (Hint.EightCalled, null, called) : (Hint.EightToCall, null, null);
+            }
             else if (myTurn && rules.IsBallBlastArmed(h.player))
                 key = (Hint.BlastArmed, null, null);
             else if (magnet != null)
@@ -1299,6 +1302,7 @@ namespace UntitledPoolGame.Core
             PoolGameMode.SpeedPool => "Speed Pool",
             PoolGameMode.CatchTheHole => "Catch the Hole",
             PoolGameMode.HungryHole => "Hungry Hole",
+            PoolGameMode.SnakePool => "Snake Pool",
             _ => "8-ball",
         };
 

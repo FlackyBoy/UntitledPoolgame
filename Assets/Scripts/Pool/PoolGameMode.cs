@@ -19,5 +19,8 @@ namespace UntitledPoolGame.Pool
         // The cue ball is a hole that swallows smaller balls and grows
         // (HungryHoleRuleSet).
         HungryHole,
+        // Balls collected join a chain trailing behind your cue ball, the
+        // opponent cuts it (SnakePoolRuleSet).
+        SnakePool,
     }
 }

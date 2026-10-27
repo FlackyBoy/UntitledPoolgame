@@ -1143,6 +1143,25 @@ namespace UntitledPoolGame.Pool
         public bool IsShootingForEightBall(int player) =>
             ruleSet is EightBallRuleSet eightBall && eightBall.IsShootingForEightBall(player);
 
+        // A pocket to call before aiming: the 8 (8-ball), or the pocket the
+        // chain will pour into (Snake Pool, each player their own).
+        public bool NeedsPocketCall(int player) => ruleSet is SnakePoolRuleSet snake
+            ? snake.NeedsPocketCall(player)
+            : calledEightBallPocket == null && IsShootingForEightBall(player);
+
+        // Playing for a called pocket (HUD banner), called or not yet.
+        public bool IsGoingForPocket(int player) => ruleSet is SnakePoolRuleSet snake
+            ? snake.IsGoingForPocket(player)
+            : IsShootingForEightBall(player);
+
+        public PoolPocket CalledPocketOf(int player) => ruleSet is SnakePoolRuleSet snake ? snake.CalledPocket(player) : calledEightBallPocket;
+
+        public void CallPocket(int player, PoolPocket pocket)
+        {
+            if (ruleSet is SnakePoolRuleSet snake) snake.CallPocket(player, pocket);
+            else CallEightBallPocket(pocket);
+        }
+
         // Test (C+W cheat): the current player's group counts as cleared,
         // next legal shot is the 8.
         public void DebugForceEightBallEndgame()
@@ -1413,10 +1432,13 @@ namespace UntitledPoolGame.Pool
                 PoolGameMode.Party => CreatePartyRuleSet(partyMode),
                 PoolGameMode.SpeedPool => new SpeedPoolRuleSet(),
                 PoolGameMode.HungryHole => new HungryHoleRuleSet(),
+                PoolGameMode.SnakePool => new SnakePoolRuleSet(),
                 _ => new EightBallRuleSet(),
             };
             // Normal balls again if the last match was Hungry Hole.
             if (!(ruleSet is HungryHoleRuleSet)) HungryHoleRuleSet.Cleanup();
+            // No chain left from a Snake Pool match (Snake Pool clears its own).
+            if (!(ruleSet is SnakePoolRuleSet)) SnakePoolRuleSet.Cleanup();
             ruleSet.Setup(this);
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).
@@ -1515,6 +1537,7 @@ namespace UntitledPoolGame.Pool
             DrawModeButton(PoolGameMode.SpeedPool, "Speed Pool (en même temps)");
             DrawModeButton(PoolGameMode.CatchTheHole, "Catch the Hole (trous vivants)");
             DrawModeButton(PoolGameMode.HungryHole, "Hungry Hole (la blanche est un trou)");
+            DrawModeButton(PoolGameMode.SnakePool, "Snake Pool (chaîne de billes)");
 
             // Party opens a second screen with its sub-modes.
             GUI.color = selectedMode == PoolGameMode.Party ? Color.green : Color.white;

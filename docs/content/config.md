@@ -112,6 +112,18 @@ La blanche de chaque joueur est un trou qui avale les billes plus petites que lu
 
 Une bille n'est avalée que si elle est plus petite que le trou. Avec les valeurs par défaut, le trou avale les plus petites billes (×0,7) dès le départ ; il faut 3 billes à soi pour les plus grosses (×1,3) et 5 pour la 8 (×1,6). Les objets sont mis à l'échelle à leur apparition d'après leur vraie taille : un prefab immense arrive quand même à la taille demandée. Leurs colliders sont remplacés par une capsule : les billes rebondissent dessus, et un trou trop petit aussi. Les règles de Speed Pool (couleurs des blanches, délai après une blanche rentrée…) viennent de `SpeedPoolSettings`.
 
+### SnakePoolSettings — file de billes (mode Snake Pool)
+
+Les billes ramassées suivent la blanche en file, la blanche adverse la brise (*Lancer sans le menu* : *Mode* = *SnakePool*). Créé par *Ensure Config Assets Exist*. Le reste (couleur des blanches, délai après une blanche rentrée) vient de `SpeedPoolSettings`.
+
+| Groupe | Champs | Défauts |
+|---|---|---|
+| File | espace entre deux billes, en rayons de bille (*Link Gap*) ; temps pour qu'une bille ramassée rejoigne sa place (*Join Time*) ; hauteur du saut d'une bille qui ressort d'une poche (*Pocket Hop*, en rayons) ; la blanche garde sa vitesse en ramassant (*Keep Speed On Collect*, décoché : elle rebondit sur la bille) | 0,15, 0,25 s, 3, oui |
+| Briser | vitesse minimale de la blanche adverse pour briser la file (*Min Break Speed*, m/s : une file qui balaie une blanche arrêtée ne se brise pas) ; part de la vitesse de la blanche donnée à la bille touchée (*Break Kick*) ; part de leur élan que gardent les billes lâchées (*Released Speed*) | 0,15, 0,7, 1 |
+| Finale | *Finale Speed* : vitesse (m/s) à laquelle la file s'engouffre dans la poche derrière la blanche, une fois la 8 au bout (plus lent = plus de temps pour que l'adversaire la brise) | 1,2 |
+| Blanche rentrée | *Scratch Drops Chain* : sans la 8 au bout, toute la file tombe (décoché : elle attend et repart avec la blanche) | oui |
+| Diagnostic | *Debug Logs* : une ligne `[SnakePool]` par bille ramassée, file brisée, bille sortie de poche, victoire | oui |
+
 ### CatchTheHoleSettings — trous vivants (mode Catch the Hole)
 
 Les trous qui bougent, grandissent et rétrécissent sur le tapis, en mode **Catch the Hole** (menu Just for fun, ou *Lancer sans le menu* réglé sur *CatchTheHole*). Le menu debug (*Catch the Hole*) les lance aussi dans une autre partie.
@@ -310,7 +322,7 @@ Les masques sont dans `Assets/Animations/Combat/`. Ordre des calques : sonné, c
 ### GameFeelSettings — Feel aux moments de la partie
 
 Associe un **moment de la partie** à une **séquence Feel** (un prefab avec un *MMF Player*) :
-- **moments** : bille rentrée (une des siennes), **bille adverse rentrée** (*Opponent Ball Potted*, 8-ball), blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*), **pouvoir lancé** (*Power Activated*, sur l'écran du lanceur), **attaque reçue** (*Power Received*, sur l'écran de la cible, au moment où l'attaque est lancée), **pouvoir refusé** (*Power Refused*, touche pressée au mauvais moment), **le trou avale** (*Hungry Hole Swallow*, Hungry Hole : une bille ou un objet ; l'intensité suit la taille avalée, sur l'écran du propriétaire du trou), **un trou mange l'autre** (*Hungry Hole Ate Hole*, sur l'écran du mangeur), **le trou grandit** (*Hungry Hole Grow*, intensité selon le gain) ; ces trois moments sont à ajouter en fin de liste ;
+- **moments** : bille rentrée (une des siennes), **bille adverse rentrée** (*Opponent Ball Potted*, 8-ball), blanche rentrée, faute, tir, tir plein, pouvoir ramassé, BOUM, début de tour, victoire, **coup reçu** (poing ou pied qui touche un joueur, sur l'écran de celui qui le reçoit ; l'intensité est multipliée par la force du coup), **K.O.** (jauge d'encaissement pleine, sur l'écran de celui qui tombe), **garde brisée** (sur l'écran de celui dont la garde casse), **impact de météore** (pouvoir Trou, pour les deux joueurs ; à ajouter en fin de liste, *Table Hole Impact*), **pouvoir lancé** (*Power Activated*, sur l'écran du lanceur), **attaque reçue** (*Power Received*, sur l'écran de la cible, au moment où l'attaque est lancée), **pouvoir refusé** (*Power Refused*, touche pressée au mauvais moment), **le trou avale** (*Hungry Hole Swallow*, Hungry Hole : une bille ou un objet ; l'intensité suit la taille avalée, sur l'écran du propriétaire du trou), **un trou mange l'autre** (*Hungry Hole Ate Hole*, sur l'écran du mangeur), **le trou grandit** (*Hungry Hole Grow*, intensité selon le gain) ; ces trois moments sont à ajouter en fin de liste ; Snake Pool : **une bille rejoint la file** (*Snake Grow*, sur l'écran du propriétaire de la file), **une file est brisée** (*Snake Cut*, sur l'écran de celui qui la brise ; pleine intensité à partir de 4 billes lâchées) ;
 - **pour chaque ligne** : le moment, la séquence, l'intensité (1 = normale). Plusieurs lignes pour le même moment jouent toutes ;
 - **aussi** : un interrupteur général et le seuil du « tir plein » (0,95).
 
@@ -679,7 +691,7 @@ Une scène qui contient une table de billard, lancée directement depuis l'édit
 
 | Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`) | Party |
+| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`, *SnakePool* = les billes ramassées suivent la blanche en file, réglé dans `SnakePoolSettings`) | Party |
 | Party Mode | Avec *SpeedPool* : *Classic* = sans pouvoirs, *Pouvoirs* = avec les caisses de pouvoirs. *Party* a toujours les pouvoirs. | Classic |
 | Target Score | Score à atteindre, si 14.1 | 150 |
 

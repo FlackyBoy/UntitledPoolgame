@@ -412,15 +412,13 @@ namespace UntitledPoolGame.Pool
             return rules != null && rules.BallInHand && rules.CanPlayerShoot(playerInput.playerIndex);
         }
 
-        // 8-ball call: group cleared and no pocket called yet.
+        // 8-ball call (group cleared) or Snake Pool call (the 8 in the chain),
+        // no pocket called yet.
         private bool IsMyTurnToCallPocket()
         {
             PoolMatchRules rules = PoolMatchRules.Instance;
-            if (rules == null || !rules.CanPlayerShoot(playerInput.playerIndex) || rules.CalledEightBallPocket != null)
-                return false;
-
-            int effectivePlayer = rules.GetEffectivePlayerIndex(playerInput.playerIndex);
-            return rules.IsShootingForEightBall(effectivePlayer);
+            if (rules == null || !rules.CanPlayerShoot(playerInput.playerIndex)) return false;
+            return rules.NeedsPocketCall(rules.GetEffectivePlayerIndex(playerInput.playerIndex));
         }
 
         private PoolBall placingCueBall;
@@ -518,7 +516,8 @@ namespace UntitledPoolGame.Pool
 
             if (InteractPressedThisFrame() && highlightedPocket != null)
             {
-                PoolMatchRules.Instance.CallEightBallPocket(highlightedPocket);
+                PoolMatchRules rules = PoolMatchRules.Instance;
+                rules.CallPocket(rules.GetEffectivePlayerIndex(playerInput.playerIndex), highlightedPocket);
                 EndCallPocket();
                 callConfirmedFrame = Time.frameCount;
             }

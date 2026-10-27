@@ -64,6 +64,8 @@ namespace UntitledPoolGame.Core
             HungryHoleCue.Swallowed += OnHungryHoleSwallow;
             HungryHoleCue.AteHole += OnHungryHoleAteHole;
             HungryHoleCue.Grew += OnHungryHoleGrew;
+            SnakeChain.Grew += OnSnakeGrew;
+            SnakeChain.Cut += OnSnakeCut;
         }
 
         private void OnDisable()
@@ -83,6 +85,8 @@ namespace UntitledPoolGame.Core
             HungryHoleCue.Swallowed -= OnHungryHoleSwallow;
             HungryHoleCue.AteHole -= OnHungryHoleAteHole;
             HungryHoleCue.Grew -= OnHungryHoleGrew;
+            SnakeChain.Grew -= OnSnakeGrew;
+            SnakeChain.Cut -= OnSnakeCut;
         }
 
         // Everyone feels it: the table shook for both.
@@ -97,6 +101,11 @@ namespace UntitledPoolGame.Core
         {
             if (growth > 0f) Play(GameFeelEvent.HungryHoleGrow, owner, point, Mathf.Clamp(growth * 2f, 0.3f, 1.5f));
         }
+
+        private void OnSnakeGrew(int owner, Vector3 point, int length) => Play(GameFeelEvent.SnakeGrow, owner, point);
+        // Cutting 4 links or more plays at full intensity.
+        private void OnSnakeCut(int attacker, int victim, Vector3 point, int lost) =>
+            Play(GameFeelEvent.SnakeCut, attacker, point, Mathf.Clamp(lost / 4f, 0.3f, 1.5f));
 
         // The victim's moment (its screen for the HUD text), scaled by how
         // hard the blow was.

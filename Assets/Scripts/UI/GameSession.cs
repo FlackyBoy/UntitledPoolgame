@@ -48,6 +48,7 @@ namespace UntitledPoolGame.Core
             PoolGameMode.SpeedPool => "Speed Pool",
             PoolGameMode.CatchTheHole => "Catch the Hole",
             PoolGameMode.HungryHole => "Hungry Hole",
+            PoolGameMode.SnakePool => "Snake Pool",
             _ => "Classique",
         };
 
