@@ -45,6 +45,14 @@ Autres idées autour des pouvoirs :
 - **Earthquake** (voir aussi les pouvoirs).
 - **Billards face à face** (idée du 20/10) : deux tables l'une en face de l'autre, chaque joueur sur la sienne. Des **tremplins** sur la table font décoller les billes, qu'on envoie sur l'autre table. On vise une **cible**, un **trou**, ou **le joueur adverse** directement. Il reste à choisir l'objectif : marquer des points, défendre sa table ou les deux. Il faut aussi trancher si on joue chacun son tour ou en même temps.
 - **Speed Pool** (retenu au brainstorm du 20/10 ; **prototype en cours le 21/10**, voir la TODO et le GDD) : les deux joueurs tirent **en même temps** sur la même table, chacun avec sa blanche (bleue et rouge). Le premier qui vide son groupe gagne. Il n'y a plus de temps mort. Encore à décider : garder ou non la 8, groupes fixes ou attribués à la première bille rentrée, un chrono.
+- **Façon hole.io / Donut County** (idée du 23/10, à côté de Catch the Hole). Piloter le trou au stick ne serait plus du billard : c'est le coup de queue qui le fait bouger.
+  - **Version retenue pour l'instant : la blanche est un trou.** Chaque joueur a sa blanche-trou (bleue / rouge). On la tire comme une blanche ; elle avale sur son passage les billes **plus petites qu'elle** et **grandit** à chaque bille avalée.
+    - **Billes de tailles différentes** : une bille trop grosse pour le trou n'est pas avalée, elle est percutée comme au billard (obstacle, ou bille à pousser sur les autres). Idée : la 8 est la plus grosse, il faut avoir assez grandi pour la prendre.
+    - **Deux façons de jouer à deux** (23/10) :
+      - **Un seul trou, au tour par tour** : les joueurs tirent chacun leur tour la même blanche-trou. Bille adverse avalée : elle compte pour l'adversaire et le tour passe, comme en 8-ball.
+      - **Un trou chacun, en même temps (façon Speed Pool)** : bille adverse avalée, elle compte pour l'adversaire **et** ton trou rétrécit (pas de tour à passer). Option : le plus gros trou avale celui de l'autre.
+  - **Variante asymétrique** : le tireur joue au billard pendant que l'adversaire déplace un trou pour avaler ses billes en route ; les rôles tournent à chaque tir. Proche du pouvoir *Pilote* de Catch the Hole.
+- **Power Wash Pool, le Kärcher** (27/10, remis à plus tard) : le joueur tient aussi un nettoyeur haute pression ; hors visée, le jet lave un peu le tapis et pousse les billes. Le mode existe sans (voir la TODO et le GDD).
 
 ### Structure « party game » (idée du 20/10)
 

@@ -25,6 +25,12 @@ namespace UntitledPoolGame.Core
         PowerActivated,   // a power launched (the launcher's moment)
         PowerReceived,    // an Attack power sent at a player (the target's moment, at launch)
         PowerRefused,     // the power button pressed but nothing launched (wrong moment)
+        HungryHoleSwallow, // Hungry Hole: a hole swallows a ball or a prop (intensity × the bite's size)
+        HungryHoleAteHole, // Hungry Hole: a hole eats the other one (the eater's moment)
+        HungryHoleGrow,    // Hungry Hole: a hole grows (intensity × the growth; not when it shrinks)
+        SnakeGrow,         // Snake Pool: a ball joins a player's chain (that player's moment)
+        SnakeCut,          // Snake Pool: a chain is cut (the attacker's moment; intensity × the links lost)
+        PowerWashSplash,   // Power Wash Pool: a pot washes a disc around the pocket (the washer's moment; the 8's splash is stronger)
         // New moments go at the end: assets store the number.
     }
 

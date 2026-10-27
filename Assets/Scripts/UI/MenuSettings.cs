@@ -149,6 +149,14 @@ namespace UntitledPoolGame.Core
             rules = "Touche toujours la plus petite bille. Qui rentre la 9 gagne." };
         public MenuModeBall fourteenOneMode = new MenuModeBall { ball = new MenuBall("14.1", "3", "#d8261c"),
             rules = "Chaque bille rentrée rapporte 1 point." };
+        public MenuModeBall catchTheHoleMode = new MenuModeBall { ball = new MenuBall("Catch the Hole", "13", "#f08a1c", true),
+            rules = "Des trous vivants se baladent sur le tapis. Une bille qui roule dedans est rentrée, même la tienne... ou la blanche." };
+        public MenuModeBall hungryHoleMode = new MenuModeBall { ball = new MenuBall("Hungry Hole", "8", "#1c1c1c"),
+            rules = "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8. Tout le monde joue en même temps." };
+        public MenuModeBall snakePoolMode = new MenuModeBall { ball = new MenuBall("Snake Pool", "6", "#2e9e4a"),
+            rules = "Touche tes billes avec ta blanche : elles te suivent en file. Ta blanche brise la file de l'autre. File complète ? Attrape la 8, annonce ta poche et plonge dedans : toute la file te suit !" };
+        public MenuModeBall powerWashPoolMode = new MenuModeBall { ball = new MenuBall("Power Wash Pool", "3", "#2bb3d9"),
+            rules = "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !" };
         public MenuModeBall speedPoolMode = new MenuModeBall { ball = new MenuBall("Speed Pool", "11", "#2f7cf6", true),
             rules = "Tout le monde tire en même temps, chacun sa blanche. Le premier qui vide son groupe gagne." };
         [Tooltip("Option du 14.1. {0} = score à atteindre.")]

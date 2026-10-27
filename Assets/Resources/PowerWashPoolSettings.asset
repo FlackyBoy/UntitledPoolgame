@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e511c2b027f32fd4ba2a55faaf0417de, type: 3}
+  m_Name: PowerWashPoolSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PowerWashPoolSettings
+  matchDuration: 180
+  resolution: 512
+  sharpEdges: 0
+  dirtColor: {r: 0.32, g: 0.24, b: 0.13, a: 0.92}
+  dirtNoise: 0.35
+  dirtNoiseScale: 0.12
+  washedTint: 0.22
+  pocketClearance: 0.02
+  slowTrailWidth: 0.8
+  fastTrailWidth: 1.6
+  fullSpeed: 3
+  stealWashed: 1
+  pocketSplashRadius: 0.6
+  splashPuddleShare: 0.45
+  splashDrops: 14
+  splashSpread: 160
+  splashDuration: 0.15
+  freshPaintTime: 0.6
+  freshPaintWhiten: 0.35
+  splashVfx: {fileID: 8205706795460263314, guid: 326e86d5729c54e479798cacab220bb2, type: 3}
+  splashVfxScale: 0.35
+  tintSplashVfx: 0
+  splashVfxBoosted:
+  - Drops
+  - Foam
+  splashVfxDropCount: 2
+  splashVfxSpread: 2
+  splashVfxSpeed: 2
+  shakeMagnitude: 0.12
+  shakeDuration: 0.25
+  screenFlashAlpha: 0.2
+  screenFlashDuration: 0.25
+  mudTrailWidth: 1.2
+  eightSplashRadius: 0.6
+  debugLogs: 1

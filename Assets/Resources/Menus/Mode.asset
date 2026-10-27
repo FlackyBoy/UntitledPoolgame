@@ -261,6 +261,142 @@ MonoBehaviour:
     idleSpeed: 1
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
+  - id: catch-the-hole
+    kind: 0
+    visible: 1
+    position: {x: 42, y: 57.5}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.9411765, g: 0.5411765, b: 0.10980392, a: 1}
+    stripe: 1
+    number: 13
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Catch the Hole
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 5
+    description: "Des trous vivants se baladent sur le tapis. Une bille qui roule dedans est rentrée, même la tienne... ou la blanche."
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.25
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: hungry-hole
+    kind: 0
+    visible: 1
+    position: {x: 42, y: 44}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.10980392, g: 0.10980392, b: 0.10980392, a: 1}
+    stripe: 0
+    number: 8
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Hungry Hole
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 6
+    description: "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8. Tout le monde joue en même temps."
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.3
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: snake-pool
+    kind: 0
+    visible: 1
+    position: {x: 42, y: 71}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.18039216, g: 0.61960787, b: 0.2901961, a: 1}
+    stripe: 0
+    number: 6
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Snake Pool
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 7
+    description: "Touche tes billes avec ta blanche : elles te suivent en file. Ta blanche brise la file de l'autre. File complète ? Attrape la 8, annonce ta poche et plonge dedans : toute la file te suit !"
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.3
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: power-wash-pool
+    kind: 0
+    visible: 1
+    position: {x: 10, y: 57.5}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.16862746, g: 0.7019608, b: 0.8509804, a: 1}
+    stripe: 0
+    number: 3
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Power Wash Pool
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 8
+    description: "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !"
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.2
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
   - id: rules
     kind: 4
     visible: 1

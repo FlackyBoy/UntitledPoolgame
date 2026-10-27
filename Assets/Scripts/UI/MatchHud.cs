@@ -604,6 +604,8 @@ namespace UntitledPoolGame.Core
             BallGroup group = rules.GetGroup(p);
             bool hasScore = rules.TryGetScore(p, out int score, out int target);
             int nextNine = rules.Mode == PoolGameMode.NineBall ? LowestBallOnTable(9) : 0;
+            // Power Wash Pool: felt washed and the clock (-1 = overtime).
+            PowerWashDirt wash = rules.Mode == PoolGameMode.PowerWashPool ? PowerWashDirt.Instance : null;
             // Bit n set = ball n still on the table.
             int onTable = 0;
             foreach (PoolBall ball in PoolBall.Active)
@@ -613,6 +615,7 @@ namespace UntitledPoolGame.Core
             (int kind, int a, int b) key =
                 rules.AreGroupsDisguised ? (1, 0, 0)
                 : hasScore ? (2, score, target)
+                : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft))
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
                 : group == BallGroup.Solid || group == BallGroup.Stripe ? (4, (int)group, onTable)
                 : (5, 0, 0);
@@ -626,6 +629,12 @@ namespace UntitledPoolGame.Core
             {
                 Text(h.plateBalls, $"{score}", titleFont, 34, Ink);
                 Text(h.plateBalls, $" / {target}", bodyFont, 24, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (wash != null)
+            {
+                Text(h.plateBalls, $"{key.a} %", titleFont, 34, Ink);
+                string clock = key.b < 0 ? cfg.overtimeText : $"{key.b / 60}:{key.b % 60:00}";
+                Text(h.plateBalls, $"  ·  {clock}", bodyFont, 24, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
             }
             else if (rules.Mode == PoolGameMode.NineBall)
             {
@@ -765,8 +774,11 @@ namespace UntitledPoolGame.Core
                 key = aim.HighlightedPocket != null ? (Hint.CallPocket, null, aim.HighlightedPocket) : (Hint.CallPocketNone, null, null);
             else if (aim != null && aim.IsOutOfReach)
                 key = (Hint.OutOfReach, null, null);
-            else if (myTurn && rules.IsShootingForEightBall(h.player))
-                key = rules.CalledEightBallPocket != null ? (Hint.EightCalled, null, rules.CalledEightBallPocket) : (Hint.EightToCall, null, null);
+            else if (myTurn && rules.IsGoingForPocket(h.player))
+            {
+                PoolPocket called = rules.CalledPocketOf(h.player);
+                key = called != null ? (Hint.EightCalled, null, called) : (Hint.EightToCall, null, null);
+            }
             else if (myTurn && rules.IsBallBlastArmed(h.player))
                 key = (Hint.BlastArmed, null, null);
             else if (magnet != null)
@@ -1297,6 +1309,10 @@ namespace UntitledPoolGame.Core
             PoolGameMode.FourteenOne => "14.1",
             PoolGameMode.Party => "Party",
             PoolGameMode.SpeedPool => "Speed Pool",
+            PoolGameMode.CatchTheHole => "Catch the Hole",
+            PoolGameMode.HungryHole => "Hungry Hole",
+            PoolGameMode.SnakePool => "Snake Pool",
+            PoolGameMode.PowerWashPool => "Power Wash Pool",
             _ => "8-ball",
         };
 

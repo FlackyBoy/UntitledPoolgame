@@ -176,6 +176,10 @@ Assets/Scripts/
     ├── PocketTargetPower.cs + ClosePocket/MagnetPower.cs   pouvoirs qui visent un trou
     ├── BallDisguise.cs             aspect commun des billes (Groupe identique), restauré ensuite
     ├── TablePointPower.cs + TableHolePower.cs, TableHole.cs, TableHoleMeteor.cs   pouvoir Trou (météore, trou, billes tombées)
+    ├── CatchTheHole.cs, LivingHole.cs, CatchTheHoleSettings.cs   Catch the Hole : trous vivants (apparition, trajet, taille, accélération)
+    ├── HungryHoleRuleSet.cs, HungryHoleCue.cs, HungryHoleProp.cs, HungryHoleSettings.cs   Hungry Hole : la blanche est un trou qui grandit, objets à manger
+    ├── SnakePoolRuleSet.cs, SnakeChain.cs, SnakePoolSettings.cs   Snake Pool : les billes ramassées suivent la blanche en file
+    ├── PowerWashPoolRuleSet.cs, PowerWashDirt.cs, PowerWashMudBall.cs, PowerWashPoolSettings.cs   Power Wash Pool : les billes lavent le tapis crasseux
     ├── PoolPowerCrate.cs, PoolPowerCrateManager.cs, PoolPowerSpawnPoint.cs   caisses
     ├── PowerTokenFloat.cs          rotation et flottement des jetons de pouvoir (générés par Editor/PowerTokenGenerator.cs)
     ├── PowerBall.cs, PoolPowerBallRotator.cs   bille à pouvoir

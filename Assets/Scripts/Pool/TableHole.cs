@@ -26,17 +26,85 @@ namespace UntitledPoolGame.Pool
         private DecalProjector scorch;
         private GameObject smoke;
         private bool closing;
+        // Scale of the whole hole (outline, falls, scorch), 1 = as generated.
+        // Living holes (Catch the Hole) breathe through it.
+        private float size = 1f;
+        private Vector3 visualScale = Vector3.one;
+        private Vector3 scorchSize;
 
         public TableHolePower Power => power;
-        public float MaxRadius => maxRadius;
+        public float MaxRadius => maxRadius * size;
+        public bool IsClosing => closing;
+        // Set when Catch the Hole drives this hole: falls follow its rules.
+        public LivingHole Living { get; set; }
 
-        public static TableHole Create(TableHolePower power, Vector3 center)
+        public float Size
+        {
+            get => size;
+            set
+            {
+                size = Mathf.Max(0f, value);
+                ApplySize();
+            }
+        }
+
+        // plain: a perfect black disc of the power's Hole Radius, nothing
+        // else (no torn shape, scorch, rim or smoke) — Catch the Hole.
+        public static TableHole Create(TableHolePower power, Vector3 center, bool smoke = true, bool plain = false)
         {
             var go = new GameObject("TableHole");
             go.transform.position = center;
             TableHole hole = go.AddComponent<TableHole>();
-            hole.Build(power);
+            if (plain) hole.BuildPlain(power);
+            else hole.Build(power, smoke);
             return hole;
+        }
+
+        private void BuildPlain(TableHolePower p)
+        {
+            power = p;
+            float radius = p.HoleRadius;
+            for (int i = 0; i < Segments; i++) edge[i] = radius;
+            maxRadius = radius;
+            var disc = new GameObject("HoleDisc");
+            disc.transform.SetParent(transform, false);
+            disc.transform.localPosition = Vector3.up * 0.003f;
+            disc.transform.localScale = new Vector3(radius, 1f, radius);
+            disc.AddComponent<MeshFilter>().sharedMesh = PlainDiscMesh();
+            var r = disc.AddComponent<MeshRenderer>();
+            if (shapeMaterial == null) shapeMaterial = new Material(Shader.Find("Sprites/Default")) { renderQueue = 2450 };
+            r.sharedMaterial = shapeMaterial;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            visual = disc.transform;
+            visualScale = visual.localScale;
+        }
+
+        private static Mesh plainDiscMesh;
+
+        // A flat black disc of radius 1 facing up (black vertex colours under
+        // the shape material's white tint), shared by every plain hole.
+        private static Mesh PlainDiscMesh()
+        {
+            if (plainDiscMesh != null) return plainDiscMesh;
+            const int segments = 64;
+            var vertices = new Vector3[segments + 1];
+            var colors = new Color[segments + 1];
+            var triangles = new int[segments * 3];
+            colors[0] = Color.black;
+            for (int i = 0; i < segments; i++)
+            {
+                float a = i * Mathf.PI * 2f / segments;
+                vertices[i + 1] = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                colors[i + 1] = Color.black;
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = 1 + (i + 1) % segments;
+                triangles[i * 3 + 2] = 1 + i;
+            }
+            plainDiscMesh = new Mesh { name = "PlainHoleDisc", vertices = vertices, colors = colors, triangles = triangles };
+            plainDiscMesh.RecalculateNormals();
+            plainDiscMesh.RecalculateBounds();
+            return plainDiscMesh;
         }
 
         private void OnEnable() => active.Add(this);
@@ -44,7 +112,7 @@ namespace UntitledPoolGame.Pool
 
         private static Material shapeMaterial;
 
-        private void Build(TableHolePower p)
+        private void Build(TableHolePower p, bool withSmoke)
         {
             power = p;
             float radius = p.HoleRadius;
@@ -78,9 +146,10 @@ namespace UntitledPoolGame.Pool
                 scorchObject.transform.rotation = Quaternion.LookRotation(Vector3.down, new Vector3(Mathf.Cos(turn), 0f, Mathf.Sin(turn)));
                 scorch = scorchObject.AddComponent<DecalProjector>();
                 scorch.material = p.ScorchDecal;
-                float size = radius * 2f * p.ScorchScale;
+                float width = radius * 2f * p.ScorchScale;
                 float stretch = Random.Range(-p.ScorchStretch, p.ScorchStretch);
-                scorch.size = new Vector3(size * (1f + stretch), size * (1f - stretch), p.ScorchDepth);
+                scorchSize = new Vector3(width * (1f + stretch), width * (1f - stretch), p.ScorchDepth);
+                scorch.size = scorchSize;
                 scorch.pivot = new Vector3(0f, 0f, p.ScorchDepth * 0.5f);
                 scorch.fadeFactor = p.ScorchOpacity;
                 scorch.startAngleFade = 30f;
@@ -89,10 +158,21 @@ namespace UntitledPoolGame.Pool
             else if (p.RimColor.a > 0f && p.RimWidth > 0f)
             {
                 rim = RingLine.Create(transform, "HoleRim", p.RimWidth, p.RimColor);
+                // Local: the rim follows a hole that moves.
+                rim.useWorldSpace = false;
                 SetRim(1f);
             }
 
-            if (p.SmokePrefab != null) StartSmoke(p);
+            if (visual != null) visualScale = visual.localScale;
+            if (withSmoke && p.SmokePrefab != null) StartSmoke(p);
+        }
+
+        private void ApplySize()
+        {
+            if (closing) return;   // CloseRoutine owns the scale from there
+            if (visual != null) visual.localScale = new Vector3(visualScale.x * size, visualScale.y, visualScale.z * size);
+            if (scorch != null) scorch.size = new Vector3(scorchSize.x * size, scorchSize.y * size, scorchSize.z);
+            if (rim != null) SetRim(1f);
         }
 
         // A lumpy circle (smooth noise all the way round, so it closes up
@@ -201,12 +281,12 @@ namespace UntitledPoolGame.Pool
 
         private void SetRim(float scale)
         {
-            Vector3 center = transform.position + Vector3.up * 0.002f;
+            Vector3 center = Vector3.up * 0.002f;
             rim.positionCount = Segments;
             for (int i = 0; i < Segments; i++)
             {
                 float angle = i * Mathf.PI * 2f / Segments;
-                rim.SetPosition(i, center + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * edge[i] * scale);
+                rim.SetPosition(i, center + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * edge[i] * size * scale);
             }
         }
 
@@ -248,7 +328,7 @@ namespace UntitledPoolGame.Pool
             if (angle < 0f) angle += Mathf.PI * 2f;
             float f = angle / (Mathf.PI * 2f) * Segments;
             int i = Mathf.FloorToInt(f) % Segments;
-            return Mathf.Lerp(edge[i], edge[(i + 1) % Segments], f - Mathf.Floor(f));
+            return Mathf.Lerp(edge[i], edge[(i + 1) % Segments], f - Mathf.Floor(f)) * size;
         }
 
         // Whether a horizontal offset from the centre lies inside the outline
@@ -256,14 +336,15 @@ namespace UntitledPoolGame.Pool
         private bool Contains(Vector3 offset, float margin)
         {
             offset.y = 0f;
-            float limit = maxRadius + margin;
+            float limit = maxRadius * size + margin;
             float sqr = offset.sqrMagnitude;
             if (sqr >= limit * limit) return false;
             float reach = RadiusToward(offset) + margin;
             return sqr < reach * reach;
         }
 
-        // Ball centre inside the outline, rolling (not parked or in hand).
+        // Ball centre inside the outline (a ball at rest too: a living hole
+        // may come to it), not parked or in hand.
         private void FixedUpdate()
         {
             if (closing) return;

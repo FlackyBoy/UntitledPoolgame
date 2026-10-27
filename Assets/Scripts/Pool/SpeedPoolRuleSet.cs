@@ -15,10 +15,13 @@ namespace UntitledPoolGame.Pool
         private static readonly BallGroup[] PlayerGroup = { BallGroup.Solid, BallGroup.Stripe };
 
         // Each group's potted balls, last one on top: a scratch brings it back.
-        private readonly List<PoolBall>[] pottedByPlayer = { new List<PoolBall>(), new List<PoolBall>() };
+        protected readonly List<PoolBall>[] pottedByPlayer = { new List<PoolBall>(), new List<PoolBall>() };
         private SpeedPoolSettings settings;
 
-        public void Setup(PoolMatchRules match)
+        // Hungry Hole plays with the 8.
+        protected virtual bool KeepsEightBall => false;
+
+        public virtual void Setup(PoolMatchRules match)
         {
             settings = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
 
@@ -26,7 +29,7 @@ namespace UntitledPoolGame.Pool
             PoolBall sharedCue = null, secondCue = null;
             foreach (PoolBall ball in new List<PoolBall>(PoolBall.Active))
             {
-                if (ball.Group == BallGroup.Eight) ball.gameObject.SetActive(false);
+                if (ball.Group == BallGroup.Eight) { if (!KeepsEightBall) ball.gameObject.SetActive(false); }
                 else if (ball.IsCueBall && ball.CueOwner == 1) secondCue = ball;
                 else if (ball.IsCueBall && sharedCue == null) sharedCue = ball;
             }
@@ -63,7 +66,7 @@ namespace UntitledPoolGame.Pool
         public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact) { }
 
         // Called as a ball goes in, while it's still in PoolBall.Active.
-        public void HandlePocketed(PoolMatchRules match, PoolBall ball)
+        public virtual void HandlePocketed(PoolMatchRules match, PoolBall ball)
         {
             if (ball.IsCueBall)
             {
@@ -79,7 +82,7 @@ namespace UntitledPoolGame.Pool
             if (cleared) match.Win(owner);
         }
 
-        private void RespotLastPotted(PoolMatchRules match, int player)
+        protected void RespotLastPotted(PoolMatchRules match, int player)
         {
             List<PoolBall> potted = pottedByPlayer[player];
             if (potted.Count == 0) return;
@@ -211,13 +214,13 @@ namespace UntitledPoolGame.Pool
         public BallGroup GroupOf(int player) => PlayerGroup[player];
 
         // leaving: the ball being potted, not off the table yet.
-        private static bool IsGroupCleared(BallGroup group, PoolBall leaving)
+        protected static bool IsGroupCleared(BallGroup group, PoolBall leaving)
         {
             foreach (PoolBall ball in PoolBall.Active)
                 if (ball != leaving && ball.Group == group) return false;
             return true;
         }
 
-        public string DescribePlayer(int player) => player == 0 ? "Blanche bleue · Pleines (1-7)" : "Blanche rouge · Rayées (9-15)";
+        public virtual string DescribePlayer(int player) => player == 0 ? "Blanche bleue · Pleines (1-7)" : "Blanche rouge · Rayées (9-15)";
     }
 }

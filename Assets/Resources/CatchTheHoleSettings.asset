@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c128c4949a2437da7d12b2f3f6a8106, type: 3}
+  m_Name: CatchTheHoleSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.CatchTheHoleSettings
+  look: {fileID: 11400000, guid: f2375f8a8b2cc3348b8da85bc9c20c7f, type: 2}
+  plainHole: 1
+  smoke: 0
+  startHoles: 1
+  maxHoles: 3
+  addHoleEveryPots: 5
+  addHoleEverySeconds: 0
+  openTime: 0.8
+  minRadius: 0.15
+  maxRadius: 0.5
+  sizeChangeRate: 0.12
+  growPerBall: 0.15
+  maxGrowth: 1.5
+  growStiffness: 260
+  growBounce: 0.3
+  gulpAmount: 0.6
+  gulpTime: 0.45
+  baseSpeed: 0.15
+  maxSpeed: 0.5
+  acceleration: 0.12
+  arriveDistance: 0.15
+  maxLegTime: 8
+  pauseChance: 0.35
+  pauseTime: {x: 1, y: 3}
+  edgeClearance: 0.03
+  holeGap: 0.08
+  ramp: 3
+  rampSeconds: 300
+  debugLogs: 1

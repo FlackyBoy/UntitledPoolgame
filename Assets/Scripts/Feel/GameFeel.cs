@@ -61,6 +61,12 @@ namespace UntitledPoolGame.Core
             UntitledPoolGame.Interaction.LocalHitGauge.KnockedOut += OnKnockedOut;
             UntitledPoolGame.Interaction.LocalUnarmedMelee.GuardBroken += OnGuardBroken;
             TableHolePower.Impact += OnTableHoleImpact;
+            HungryHoleCue.Swallowed += OnHungryHoleSwallow;
+            HungryHoleCue.AteHole += OnHungryHoleAteHole;
+            HungryHoleCue.Grew += OnHungryHoleGrew;
+            SnakeChain.Grew += OnSnakeGrew;
+            SnakeChain.Cut += OnSnakeCut;
+            PowerWashDirt.Splashed += OnPowerWashSplash;
         }
 
         private void OnDisable()
@@ -77,10 +83,34 @@ namespace UntitledPoolGame.Core
             UntitledPoolGame.Interaction.LocalHitGauge.KnockedOut -= OnKnockedOut;
             UntitledPoolGame.Interaction.LocalUnarmedMelee.GuardBroken -= OnGuardBroken;
             TableHolePower.Impact -= OnTableHoleImpact;
+            HungryHoleCue.Swallowed -= OnHungryHoleSwallow;
+            HungryHoleCue.AteHole -= OnHungryHoleAteHole;
+            HungryHoleCue.Grew -= OnHungryHoleGrew;
+            SnakeChain.Grew -= OnSnakeGrew;
+            SnakeChain.Cut -= OnSnakeCut;
+            PowerWashDirt.Splashed -= OnPowerWashSplash;
         }
 
         // Everyone feels it: the table shook for both.
         private void OnTableHoleImpact(Vector3 point, int owner) => Play(GameFeelEvent.TableHoleImpact, -1, point);
+
+        // Intensity from the bite's size, never quite nothing for a small one.
+        private void OnHungryHoleSwallow(int owner, Vector3 point, float size) =>
+            Play(GameFeelEvent.HungryHoleSwallow, owner, point, Mathf.Lerp(0.4f, 1f, size));
+        private void OnHungryHoleAteHole(int eater, int eaten, Vector3 point) => Play(GameFeelEvent.HungryHoleAteHole, eater, point);
+        // A growth of half a ball radius plays at full intensity.
+        private void OnHungryHoleGrew(int owner, Vector3 point, float growth)
+        {
+            if (growth > 0f) Play(GameFeelEvent.HungryHoleGrow, owner, point, Mathf.Clamp(growth * 2f, 0.3f, 1.5f));
+        }
+
+        private void OnSnakeGrew(int owner, Vector3 point, int length) => Play(GameFeelEvent.SnakeGrow, owner, point);
+        // Cutting 4 links or more plays at full intensity.
+        private void OnSnakeCut(int attacker, int victim, Vector3 point, int lost) =>
+            Play(GameFeelEvent.SnakeCut, attacker, point, Mathf.Clamp(lost / 4f, 0.3f, 1.5f));
+        // A ball's splash (0.4 m reach) plays at normal intensity, the 8's stronger.
+        private void OnPowerWashSplash(int owner, Vector3 point, float radius) =>
+            Play(GameFeelEvent.PowerWashSplash, owner, point, Mathf.Clamp(radius / 0.4f, 0.3f, 1.5f));
 
         // The victim's moment (its screen for the HUD text), scaled by how
         // hard the blow was.
