@@ -51,6 +51,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureCatchTheHoleSettingsAsset();
             EnsureHungryHoleSettingsAsset();
             EnsureSnakePoolSettingsAsset();
+            EnsurePowerWashPoolSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -127,6 +128,25 @@ namespace UntitledPoolGame.PoolEditor
             const string path = "Assets/Resources/SnakePoolSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<SnakePoolSettings>(path) != null) return;
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SnakePoolSettings>(), path);
+        }
+
+        // Power Wash Pool: the grime on the felt and the match clock, with
+        // Cartoon FX Remaster's water splash at the pocket (also given to an
+        // existing asset that has none).
+        private static void EnsurePowerWashPoolSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/PowerWashPoolSettings.asset";
+            PowerWashPoolSettings settings = AssetDatabase.LoadAssetAtPath<PowerWashPoolSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<PowerWashPoolSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+            if (settings.splashVfx != null) return;
+            const string vfxPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Liquids/CFXR Water Splash (Smaller).prefab";
+            settings.splashVfx = AssetDatabase.LoadAssetAtPath<GameObject>(vfxPath);
+            EditorUtility.SetDirty(settings);
         }
 
         // The "Aimant" power asset (MagnetPower), with Cartoon FX Remaster's

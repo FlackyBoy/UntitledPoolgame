@@ -22,5 +22,8 @@ namespace UntitledPoolGame.Pool
         // Balls collected join a chain trailing behind your cue ball, the
         // opponent cuts it (SnakePoolRuleSet).
         SnakePool,
+        // The felt is caked in grime, your balls wash it as they roll
+        // (PowerWashPoolRuleSet).
+        PowerWashPool,
     }
 }

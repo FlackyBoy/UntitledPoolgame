@@ -155,6 +155,8 @@ namespace UntitledPoolGame.Core
             rules = "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8. Tout le monde joue en même temps." };
         public MenuModeBall snakePoolMode = new MenuModeBall { ball = new MenuBall("Snake Pool", "6", "#2e9e4a"),
             rules = "Touche tes billes avec ta blanche : elles te suivent en file. Ta blanche brise la file de l'autre. File complète ? Attrape la 8, annonce ta poche et plonge dedans : toute la file te suit !" };
+        public MenuModeBall powerWashPoolMode = new MenuModeBall { ball = new MenuBall("Power Wash Pool", "3", "#2bb3d9"),
+            rules = "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !" };
         public MenuModeBall speedPoolMode = new MenuModeBall { ball = new MenuBall("Speed Pool", "11", "#2f7cf6", true),
             rules = "Tout le monde tire en même temps, chacun sa blanche. Le premier qui vide son groupe gagne." };
         [Tooltip("Option du 14.1. {0} = score à atteindre.")]

@@ -183,12 +183,16 @@ namespace UntitledPoolGame.Pool
             return placeholder;
         }
 
+        // Off while a mode plays its own pot effect (Power Wash Pool's
+        // splash): no halo, no rising aura, no shake of both screens.
+        public static bool DefaultPotEffects { get; set; } = true;
+
         private void OnTriggerEnter(Collider other)
         {
             if (IsClosed) return;
             if (!other.TryGetComponent(out PoolBall ball)) return;
             ball.OnPocketed(this);
-            PlayHalo();
+            if (DefaultPotEffects) PlayHalo();
         }
 
         private void PlayHalo()

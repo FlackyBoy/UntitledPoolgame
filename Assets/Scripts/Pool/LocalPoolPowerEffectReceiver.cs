@@ -84,6 +84,7 @@ namespace UntitledPoolGame.Pool
         // Every pot shakes both screens (the flash is the halo at the pocket).
         private void HandleBallPocketed(PoolBall ball, PoolPocket pocket)
         {
+            if (!PoolPocket.DefaultPotEffects) return;
             RequestShake(settings.potShakeMagnitude, settings.potShakeDuration);
         }
 

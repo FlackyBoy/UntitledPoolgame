@@ -66,6 +66,7 @@ namespace UntitledPoolGame.Core
             HungryHoleCue.Grew += OnHungryHoleGrew;
             SnakeChain.Grew += OnSnakeGrew;
             SnakeChain.Cut += OnSnakeCut;
+            PowerWashDirt.Splashed += OnPowerWashSplash;
         }
 
         private void OnDisable()
@@ -87,6 +88,7 @@ namespace UntitledPoolGame.Core
             HungryHoleCue.Grew -= OnHungryHoleGrew;
             SnakeChain.Grew -= OnSnakeGrew;
             SnakeChain.Cut -= OnSnakeCut;
+            PowerWashDirt.Splashed -= OnPowerWashSplash;
         }
 
         // Everyone feels it: the table shook for both.
@@ -106,6 +108,9 @@ namespace UntitledPoolGame.Core
         // Cutting 4 links or more plays at full intensity.
         private void OnSnakeCut(int attacker, int victim, Vector3 point, int lost) =>
             Play(GameFeelEvent.SnakeCut, attacker, point, Mathf.Clamp(lost / 4f, 0.3f, 1.5f));
+        // A ball's splash (0.4 m reach) plays at normal intensity, the 8's stronger.
+        private void OnPowerWashSplash(int owner, Vector3 point, float radius) =>
+            Play(GameFeelEvent.PowerWashSplash, owner, point, Mathf.Clamp(radius / 0.4f, 0.3f, 1.5f));
 
         // The victim's moment (its screen for the HUD text), scaled by how
         // hard the blow was.
