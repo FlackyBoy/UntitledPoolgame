@@ -94,10 +94,12 @@ namespace UntitledPoolGame.Core
         private InputDevice menuDevice;
         private readonly InputDevice[] slotDevices = new InputDevice[2];
         private bool joinedThisFrame;
-        private PoolPartyMode chosenParty = PoolPartyMode.Classic;
         private int targetScore = 25;
-        // Speed Pool's option, switched like the 14.1 score (LB / RB...).
-        private bool speedPoolPowers;
+        // Type per mode: its own (PoolMatchSetup.NativeType) until switched
+        // with Y / Tab on its ball.
+        private readonly Dictionary<PoolGameMode, PoolMatchType> chosenTypes = new Dictionary<PoolGameMode, PoolMatchType>();
+        // Powers on/off, the same for every mode (X / P).
+        private bool powers;
 
         // Shot animation: pull back, thrust, the ball flies off, then the action.
         private Option shooting, lastFocused;
@@ -327,14 +329,14 @@ namespace UntitledPoolGame.Core
                     Toast(cfg.newGameToast);
                     local = false;
                     levelIndex = FirstPlayableLevel();
-                    Later(1.3f, () => Launch(PoolGameMode.EightBall));
+                    Later(1.3f, () => Launch(new PoolMatchSetup(PoolGameMode.EightBall, PoolMatchType.TurnBased, false, targetScore)));
                     break;
                 case MenuAction.LoadSlot: Toast(cfg.emptySlotToast); break;
                 case MenuAction.JustForFun: local = false; Show(level); break;
                 case MenuAction.PlayLocal: local = true; Show(lobby); break;
                 case MenuAction.PlayOnline: Toast(cfg.onlineToast); break;
                 case MenuAction.LobbyGo: Show(level); break;
-                case MenuAction.StartMode: Launch(e.mode); break;
+                case MenuAction.StartMode: Launch(SetupFor(e.mode)); break;
                 case MenuAction.OpenSettings: Show(settingsPage); break;
                 case MenuAction.Quit: Quit(); break;
             }
@@ -392,15 +394,8 @@ namespace UntitledPoolGame.Core
 
         // Loads the chosen level behind the loading screen. Played straight
         // from the editor, choosing the same level starts the match in place.
-        private void Launch(PoolGameMode gameMode)
+        private void Launch(PoolMatchSetup setup)
         {
-            // Speed Pool with powers is a Party sub-mode (the crates only run in Party).
-            PoolPartyMode chosenParty = this.chosenParty;
-            if (gameMode == PoolGameMode.SpeedPool && speedPoolPowers)
-            {
-                gameMode = PoolGameMode.Party;
-                chosenParty = PoolPartyMode.SpeedPool;
-            }
             List<LevelEntry> levels = GameFlowSettings.Instance.levels;
             LevelEntry entry = levelIndex >= 0 && levelIndex < levels.Count ? levels[levelIndex] : null;
             var devices = new List<InputDevice>();
@@ -414,12 +409,12 @@ namespace UntitledPoolGame.Core
                     // In place: the players get the lobby's devices here, as
                     // the loading screen would.
                     PlayerDeviceRouter.Assign(devices);
-                    matchRules.RequestStart(gameMode, chosenParty, targetScore);
+                    matchRules.RequestStart(setup);
                 }
                 Hide();
                 return;
             }
-            LevelLoader.Load(entry, levelIndex, gameMode, chosenParty, targetScore, devices);
+            LevelLoader.Load(entry, levelIndex, setup, devices);
             Hide();
         }
 
@@ -560,22 +555,34 @@ namespace UntitledPoolGame.Core
             // The rules come in letter by letter when the aimed ball changes.
             if (TextFx.Strip(data.text) != ruleTitle.text) TextFx.Reveal(ruleTitle, data.text);
             if (ruleText != null && TextFx.Strip(data.description) != ruleText.text) TextFx.Reveal(ruleText, data.description);
-            if (ruleOption != null)
-                TextFx.Set(ruleOption, data.mode switch
-                {
-                    PoolGameMode.FourteenOne => Format(cfg.targetScoreFormat, targetScore),
-                    PoolGameMode.Party => cfg.powersOption,
-                    PoolGameMode.SpeedPool => speedPoolPowers ? cfg.speedPoolPowersOn : cfg.speedPoolPowersOff,
-                    _ => cfg.noPowersOption,
-                });
+            if (ruleOption != null) TextFx.Set(ruleOption, DescribeOptions(data.mode));
         }
+
+        // One line per choice: type, powers, and the 14.1 score.
+        private string DescribeOptions(PoolGameMode gameMode)
+        {
+            // Types allowed per mode: PoolModeSettings.
+            bool turns = PoolMatchSetup.Supports(gameMode, PoolMatchType.TurnBased);
+            bool speedPool = PoolMatchSetup.Supports(gameMode, PoolMatchType.SpeedPool);
+            string type = !speedPool ? cfg.turnBasedOnlyOption
+                : !turns ? cfg.speedPoolOnlyOption
+                : TypeFor(gameMode) == PoolMatchType.SpeedPool ? cfg.speedPoolOption : cfg.turnBasedOption;
+            string text = type + "\n" + (powers ? cfg.powersOnOption : cfg.powersOffOption);
+            if (gameMode == PoolGameMode.FourteenOne) text += "\n" + Format(cfg.targetScoreFormat, targetScore);
+            return text;
+        }
+
+        private PoolMatchType TypeFor(PoolGameMode gameMode) =>
+            chosenTypes.TryGetValue(gameMode, out PoolMatchType type) ? type : PoolMatchSetup.NativeType(gameMode);
+
+        private PoolMatchSetup SetupFor(PoolGameMode gameMode) => new PoolMatchSetup(gameMode, TypeFor(gameMode), powers, targetScore);
 
         // ---------- Input ----------
 
         private void ReadInput()
         {
             Vector2 nav = Vector2.zero;
-            bool confirm = false, back = false;
+            bool confirm = false, back = false, switchType = false, switchPowers = false;
             int adjust = 0;
 
             Keyboard kb = Keyboard.current;
@@ -593,6 +600,8 @@ namespace UntitledPoolGame.Core
                 back |= kb.escapeKey.wasPressedThisFrame || kb.backspaceKey.wasPressedThisFrame;
                 if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame || kb.pageDownKey.wasPressedThisFrame) adjust = -1;
                 if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame || kb.pageUpKey.wasPressedThisFrame) adjust = 1;
+                switchType |= kb.tabKey.wasPressedThisFrame;
+                switchPowers |= kb.pKey.wasPressedThisFrame;
             }
 
             foreach (Gamepad pad in Gamepad.all)
@@ -612,6 +621,8 @@ namespace UntitledPoolGame.Core
                 back |= pad.buttonEast.wasPressedThisFrame;
                 if (pad.leftShoulder.wasPressedThisFrame) adjust = -1;
                 if (pad.rightShoulder.wasPressedThisFrame) adjust = 1;
+                switchType |= pad.buttonNorth.wasPressedThisFrame;
+                switchPowers |= pad.buttonWest.wasPressedThisFrame;
             }
 
             Mouse mouse = Mouse.current;
@@ -635,13 +646,17 @@ namespace UntitledPoolGame.Core
                 else if (wheel < -0.1f) adjust = -1;
             }
 
-            if (adjust != 0 && current == mode && current.options.Count > 0)
+            MenuElement aimed = current == mode && current.options.Count > 0 ? current.options[current.focused].data : null;
+            if (aimed != null && aimed.action == MenuAction.StartMode)
             {
-                MenuElement data = current.options[current.focused].data;
-                if (data != null && data.action == MenuAction.StartMode && data.mode == PoolGameMode.FourteenOne)
+                if (adjust != 0 && aimed.mode == PoolGameMode.FourteenOne)
                     targetScore = Mathf.Clamp(targetScore + adjust * 5, 5, 200);
-                else if (data != null && data.action == MenuAction.StartMode && data.mode == PoolGameMode.SpeedPool)
-                    speedPoolPowers = !speedPoolPowers;
+                if (switchType)
+                {
+                    PoolMatchType other = PoolMatchSetup.OtherType(TypeFor(aimed.mode));
+                    if (PoolMatchSetup.Supports(aimed.mode, other)) chosenTypes[aimed.mode] = other;
+                }
+                if (switchPowers) powers = !powers;
             }
             if (nav != Vector2.zero && current.options.Count > 1) Step(nav);
             if (back) GoBack();

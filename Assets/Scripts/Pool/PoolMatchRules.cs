@@ -23,9 +23,12 @@ namespace UntitledPoolGame.Pool
         public bool GameOver { get; private set; }
         public int Winner { get; private set; } = -1;
         public bool MatchStarted { get; private set; }
-        // Mode locked in at StartMatch (selectedMode changes while browsing
-        // the menu).
-        public PoolGameMode Mode { get; private set; }
+        // Type, mode and powers locked in at StartMatch (normalized: never
+        // the former Party / SpeedPool modes).
+        public PoolMatchSetup Setup { get; private set; }
+        public PoolGameMode Mode => Setup.mode;
+        // Read by the crates and the power ball.
+        public bool PowersEnabled => Setup.powers;
 
         // From a foul until the cue ball is placed again.
         public bool BallInHand { get; private set; }
@@ -35,7 +38,11 @@ namespace UntitledPoolGame.Pool
         // Speed Pool: no turns, both players shoot whenever their own cue ball
         // is still. No shot is ever resolved: the rule set judges each pot as
         // it happens (SpeedPoolRuleSet.HandlePocketed).
-        public bool IsSimultaneous => ruleSet is SpeedPoolRuleSet;
+        public bool IsSimultaneous => Setup.type == PoolMatchType.SpeedPool;
+
+        // Each player has their own cue ball (Speed Pool, Hungry Hole, Snake
+        // Pool, Power Wash Pool), in turns or not.
+        public bool HasPlayerCueBalls => ruleSet is SpeedPoolRuleSet;
 
         // Two powers in stock per player; the selected one is what the power
         // button launches (switched with the wheel / D-pad).
@@ -57,20 +64,15 @@ namespace UntitledPoolGame.Pool
         // loads would otherwise count as a shot (and a foul).
         private bool shotInProgress;
 
-        private PoolGameMode selectedMode = PoolGameMode.EightBall;
-        private PoolPartyMode selectedPartyMode = PoolPartyMode.Classic;
-        // Mode-select screen showing: top-level list or the Party sub-modes.
-        private bool showingPartySubmenu;
+        // The provisional OnGUI mode select.
+        private PoolMatchSetup selected = new PoolMatchSetup(PoolGameMode.EightBall, PoolMatchType.TurnBased, false, 150);
         private string targetScoreInput = "150";
 
         // OnGUI runs several passes per frame; changing what gets drawn from a
         // button click between passes breaks GUILayout. Clicks are stored here
         // and applied in Update.
-        private PoolGameMode? pendingModeChange;
-        private PoolPartyMode? pendingPartyModeChange;
-        private bool? pendingShowPartySubmenuChange;
+        private PoolMatchSetup? pendingSelection;
         private bool pendingStart;
-        private int pendingTargetScore;
         private bool pendingRestart;
 
         // Set by a menu drawn elsewhere (the Synthèse menu, UI Toolkit): the
@@ -110,12 +112,10 @@ namespace UntitledPoolGame.Pool
 
         // Starts a match from outside (a menu), through the same deferred path
         // as the OnGUI buttons: applied in the next Update.
-        public void RequestStart(PoolGameMode mode, PoolPartyMode partyMode, int targetScore)
+        public void RequestStart(PoolMatchSetup setup)
         {
             if (MatchStarted) return;
-            pendingModeChange = mode;
-            pendingPartyModeChange = partyMode;
-            pendingTargetScore = targetScore > 0 ? targetScore : 150;
+            pendingSelection = setup;
             pendingStart = true;
         }
 
@@ -158,18 +158,30 @@ namespace UntitledPoolGame.Pool
         {
             if (!MatchStarted) return;
 
-            if (ruleSet is SpeedPoolRuleSet speedPool)
+            SpeedPoolRuleSet ownCueBalls = ruleSet as SpeedPoolRuleSet;
+            if (IsSimultaneous)
             {
                 // No slow motion: the other player is mid-shot.
-                if (GameOver) return;
+                if (GameOver || ownCueBalls == null) return;
                 if (ball.IsCueBall) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
-                speedPool.HandlePocketed(this, ball);
+                ownCueBalls.HandlePocketed(this, ball);
                 return;
             }
 
             // Here rather than per pocket: Time.timeScale is global and two
             // coroutines would fight over it.
             TriggerPotSlowMotion();
+
+            // Each their own cue ball, in turns: judged on each pot as in Speed
+            // Pool, the shot only decides who plays next (ResolveShot).
+            if (ownCueBalls != null)
+            {
+                if (GameOver) return;
+                if (ball.IsCueBall) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
+                ownCueBalls.HandlePocketed(this, ball);
+                // Sending the opponent's cue ball in costs them, not the shooter.
+                if (ball.IsCueBall && ball.CueOwner >= 0 && ball.CueOwner != CurrentPlayer) return;
+            }
 
             if (ball.IsCueBall)
             {
@@ -184,14 +196,19 @@ namespace UntitledPoolGame.Pool
                 GrantPower(CurrentPlayer, powerBall.Power);
         }
 
-        // Speed Pool scratch: the cue ball waits in hand (PoolBall.OnPocketed
+        // A player's own cue ball potted: it waits in hand (PoolBall.OnPocketed
         // parked it on its spawn spot), then comes back there or as near as
-        // is free. The wait is the only penalty.
+        // is free. Speed Pool: after Cue Respawn Delay, the wait is the
+        // penalty. In turns: once the shot is over.
         private IEnumerator RespawnCueBall(PoolBall cueBall, int generation)
         {
-            if (speedPoolSettings == null)
-                speedPoolSettings = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
-            yield return new WaitForSecondsRealtime(speedPoolSettings.cueRespawnDelay);
+            if (IsSimultaneous)
+            {
+                if (speedPoolSettings == null)
+                    speedPoolSettings = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
+                yield return new WaitForSecondsRealtime(speedPoolSettings.cueRespawnDelay);
+            }
+            else yield return new WaitUntil(() => !shotInProgress || generation != MatchGeneration);
             // "Rejouer" meanwhile already put it back.
             if (generation != MatchGeneration || cueBall == null || !cueBall.Rigidbody.isKinematic) yield break;
             // Its own starting spot, not its transform: the transform may still
@@ -664,6 +681,8 @@ namespace UntitledPoolGame.Pool
             // Speed Pool: every group ball is good news for its owner (PotOwner).
             if (IsSimultaneous) return PotMeaning.Good;
             if (IsOwnBall(CurrentPlayer, ball)) return PotMeaning.Good;
+            // Own cue balls in turns: the 8 never loses on the spot there.
+            if (HasPlayerCueBalls) return PotMeaning.Opponent;
             return ball.Group == BallGroup.Eight ? PotMeaning.EarlyEight : PotMeaning.Opponent;
         }
 
@@ -756,6 +775,7 @@ namespace UntitledPoolGame.Pool
             cueBallPocketedThisShot = false;
             firstContactThisShot = null;
             shotInProgress = true;
+            if (ruleSet is SpeedPoolRuleSet ownCueBalls) ownCueBalls.BeginShot();
 
             ballBlastThisShot = ballBlastArmed[CurrentPlayer];
             ballBlastArmed[CurrentPlayer] = null;
@@ -990,8 +1010,9 @@ namespace UntitledPoolGame.Pool
         {
             float sinkTime = hole.Power != null ? hole.Power.SinkTime : 0.35f;
             string decision;
-            // Read before the fall stops the ball.
-            bool fellIn = shotInProgress && ball.IsRolling;
+            // Read before the fall stops the ball. Speed Pool has no shot loop:
+            // any rolling ball is in play.
+            bool fellIn = (shotInProgress || IsSimultaneous) && ball.IsRolling;
             if (!fellIn)
             {
                 Vector3 spot = FreeSpotNear(ball.transform.position, ball);
@@ -1004,6 +1025,13 @@ namespace UntitledPoolGame.Pool
             {
                 ball.OnPocketed();
                 decision = "blanche qui roule : faute";
+            }
+            else if (IsSimultaneous)
+            {
+                // Potted once sunk and judged then like any pot; nothing waits
+                // for it (no shot to settle).
+                ball.FallIntoTableHole(hole.transform.position, sinkTime, pocket: true, follow: hole.transform);
+                decision = "empochée (Speed Pool)";
             }
             else if (ball.Group == BallGroup.Eight && !IsShootingForEightBall(CurrentPlayer))
             {
@@ -1024,7 +1052,7 @@ namespace UntitledPoolGame.Pool
 
             if (hole.Living.Settings.debugLogs)
                 Debug.Log($"[CatchTheHole] {hole.name} (rayon {hole.MaxRadius * 100f:0.0} cm) attrape {(ball.IsCueBall ? "la blanche" : $"la {ball.Number}")} : " +
-                          $"vitesse {ball.HorizontalSpeed:0.000} m/s, {(shotInProgress ? "tir en cours" : "entre deux tirs")} → {decision}.");
+                          $"vitesse {ball.HorizontalSpeed:0.000} m/s, {(fellIn ? "en jeu" : "entre deux tirs")} → {decision}.");
         }
 
         private bool AnyBallSinking()
@@ -1070,6 +1098,15 @@ namespace UntitledPoolGame.Pool
         private static bool IsFreeSpot(Vector3 point, PoolBall ball)
         {
             if (TableHole.Overlaps(point, ball.Radius)) return false;
+            // Hungry Hole: the hole is much wider than its hidden cue ball, and
+            // a ball put back under it would be swallowed at once.
+            foreach (HungryHoleCue cue in HungryHoleCue.All)
+            {
+                Vector3 offset = cue.transform.position - point;
+                offset.y = 0f;
+                float min = cue.Radius + ball.Radius * 2f;
+                if (offset.sqrMagnitude < min * min) return false;
+            }
             foreach (PoolBall other in PoolBall.Active)
             {
                 if (other == ball || other.InTableHole) continue;
@@ -1257,28 +1294,16 @@ namespace UntitledPoolGame.Pool
                 Cursor.visible = true;
             }
 
-            if (pendingModeChange.HasValue)
+            if (pendingSelection.HasValue)
             {
-                selectedMode = pendingModeChange.Value;
-                pendingModeChange = null;
-            }
-
-            if (pendingPartyModeChange.HasValue)
-            {
-                selectedPartyMode = pendingPartyModeChange.Value;
-                pendingPartyModeChange = null;
-            }
-
-            if (pendingShowPartySubmenuChange.HasValue)
-            {
-                showingPartySubmenu = pendingShowPartySubmenuChange.Value;
-                pendingShowPartySubmenuChange = null;
+                selected = pendingSelection.Value;
+                pendingSelection = null;
             }
 
             if (pendingStart)
             {
                 pendingStart = false;
-                StartMatch(selectedMode, selectedPartyMode, pendingTargetScore);
+                StartMatch(selected);
             }
 
             if (pendingRestart)
@@ -1418,24 +1443,13 @@ namespace UntitledPoolGame.Pool
             GameOver = false;
             Winner = -1;
 
-            int targetScore = int.TryParse(targetScoreInput, out int parsed) && parsed > 0 ? parsed : 150;
-            StartMatch(Mode, selectedPartyMode, targetScore);
+            StartMatch(Setup);
         }
 
-        private void StartMatch(PoolGameMode mode, PoolPartyMode partyMode, int targetScore)
+        private void StartMatch(PoolMatchSetup setup)
         {
-            Mode = mode;
-            ruleSet = mode switch
-            {
-                PoolGameMode.NineBall => new NineBallRuleSet(),
-                PoolGameMode.FourteenOne => new FourteenOneRuleSet(targetScore),
-                PoolGameMode.Party => CreatePartyRuleSet(partyMode),
-                PoolGameMode.SpeedPool => new SpeedPoolRuleSet(),
-                PoolGameMode.HungryHole => new HungryHoleRuleSet(),
-                PoolGameMode.SnakePool => new SnakePoolRuleSet(),
-                PoolGameMode.PowerWashPool => new PowerWashPoolRuleSet(),
-                _ => new EightBallRuleSet(),
-            };
+            Setup = setup.Normalized();
+            ruleSet = CreateRuleSet(Setup);
             // Normal balls again if the last match was Hungry Hole.
             if (!(ruleSet is HungryHoleRuleSet)) HungryHoleRuleSet.Cleanup();
             // No chain left from a Snake Pool match (Snake Pool clears its own).
@@ -1445,22 +1459,26 @@ namespace UntitledPoolGame.Pool
             ruleSet.Setup(this);
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).
-            if (mode == PoolGameMode.CatchTheHole) CatchTheHole.Ensure().Begin();
+            if (Mode == PoolGameMode.CatchTheHole) CatchTheHole.Ensure().Begin();
             else if (CatchTheHole.Instance != null) CatchTheHole.Instance.Clear();
-            if (traceShots) Debug.Log($"[Match] Partie lancée : {mode} ({ruleSet.GetType().Name}), frame {Time.frameCount}.", this);
+            if (traceShots) Debug.Log($"[Match] Partie lancée : {Setup.Describe()} ({ruleSet.GetType().Name}), frame {Time.frameCount}.", this);
 
             // Hand cursor control back to normal FPS/aim look now that the menu is gone.
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
 
-        // One case per PoolPartyMode.
-        private static IPoolRuleSet CreatePartyRuleSet(PoolPartyMode partyMode) => partyMode switch
+        // setup is normalized: a type the mode supports. The powers don't
+        // change the rules, the crates and the power ball add them.
+        private static IPoolRuleSet CreateRuleSet(PoolMatchSetup setup) => setup.mode switch
         {
-            // Speed Pool with the crates (no power ball, PoolPowerBallRotator).
-            PoolPartyMode.SpeedPool => new SpeedPoolRuleSet(),
-            // Classic: 8-ball rules, the powers come from the spawners.
-            _ => new EightBallRuleSet(),
+            PoolGameMode.NineBall => new NineBallRuleSet(),
+            PoolGameMode.FourteenOne => new FourteenOneRuleSet(setup.targetScore),
+            PoolGameMode.HungryHole => new HungryHoleRuleSet(),
+            PoolGameMode.SnakePool => new SnakePoolRuleSet(),
+            PoolGameMode.PowerWashPool => new PowerWashPoolRuleSet(),
+            // 8-ball, and Catch the Hole (8-ball plus the living holes).
+            _ => setup.type == PoolMatchType.SpeedPool ? new SpeedPoolRuleSet() : new EightBallRuleSet(),
         };
 
         private void OnGUI()
@@ -1523,35 +1541,27 @@ namespace UntitledPoolGame.Pool
 
         private void DrawModeSelectGUI()
         {
-            GUILayout.BeginArea(new Rect(Screen.width / 2f - 150f, Screen.height / 2f - 150f, 300f, 300f), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(Screen.width / 2f - 150f, Screen.height / 2f - 190f, 300f, 380f), GUI.skin.box);
 
-            if (showingPartySubmenu)
-            {
-                DrawPartySubmenuGUI();
-                GUILayout.EndArea();
-                return;
-            }
+            GUILayout.Label("Type de partie");
+            GUILayout.BeginHorizontal();
+            DrawTypeButton(PoolMatchType.TurnBased);
+            DrawTypeButton(PoolMatchType.SpeedPool);
+            GUILayout.EndHorizontal();
 
-            GUILayout.Label("Choisir les règles de la partie");
-
-            DrawModeButton(PoolGameMode.EightBall, "8-Ball");
-            DrawModeButton(PoolGameMode.NineBall, "9-Ball");
+            GUILayout.Label("Mode");
+            DrawModeButton(PoolGameMode.EightBall, "Classique (8-ball)");
+            DrawModeButton(PoolGameMode.NineBall, "9-ball");
             DrawModeButton(PoolGameMode.FourteenOne, "14.1 (score cible)");
-            DrawModeButton(PoolGameMode.SpeedPool, "Speed Pool (en même temps)");
             DrawModeButton(PoolGameMode.CatchTheHole, "Catch the Hole (trous vivants)");
             DrawModeButton(PoolGameMode.HungryHole, "Hungry Hole (la blanche est un trou)");
             DrawModeButton(PoolGameMode.SnakePool, "Snake Pool (chaîne de billes)");
             DrawModeButton(PoolGameMode.PowerWashPool, "Power Wash Pool (laver le tapis)");
 
-            // Party opens a second screen with its sub-modes.
-            GUI.color = selectedMode == PoolGameMode.Party ? Color.green : Color.white;
-            string partyLabel = selectedMode == PoolGameMode.Party
-                ? $"Party — {PartyModeLabel(selectedPartyMode)}"
-                : "Party";
-            if (GUILayout.Button(partyLabel)) pendingShowPartySubmenuChange = true;
-            GUI.color = Color.white;
+            bool powers = GUILayout.Toggle(selected.powers, "Pouvoirs");
+            if (powers != selected.powers) Select((ref PoolMatchSetup s) => s.powers = powers);
 
-            if (selectedMode == PoolGameMode.FourteenOne)
+            if (selected.mode == PoolGameMode.FourteenOne)
             {
                 GUILayout.Label("Score cible :");
                 targetScoreInput = GUILayout.TextField(targetScoreInput);
@@ -1559,50 +1569,40 @@ namespace UntitledPoolGame.Pool
 
             if (GUILayout.Button("Commencer la partie"))
             {
-                if (!int.TryParse(targetScoreInput, out int targetScore) || targetScore <= 0)
-                    targetScore = 150;
-                pendingTargetScore = targetScore;
+                int targetScore = int.TryParse(targetScoreInput, out int parsed) && parsed > 0 ? parsed : 150;
+                Select((ref PoolMatchSetup s) => s.targetScore = targetScore);
                 pendingStart = true;
             }
 
             GUILayout.EndArea();
         }
 
-        private void DrawPartySubmenuGUI()
+        private delegate void SetupChange(ref PoolMatchSetup setup);
+
+        // From the latest pending click, so two clicks in a frame both count.
+        private void Select(SetupChange change)
         {
-            GUILayout.Label("Choisir un mode Party");
-
-            DrawPartyModeButton(PoolPartyMode.Classic, "Classic (8-ball + pouvoirs)");
-            DrawPartyModeButton(PoolPartyMode.SpeedPool, "Speed Pool + pouvoirs");
-            // Add a button here for each new PoolPartyMode as it's implemented.
-
-            if (GUILayout.Button("Retour")) pendingShowPartySubmenuChange = false;
+            PoolMatchSetup next = pendingSelection ?? selected;
+            change(ref next);
+            pendingSelection = next;
         }
 
+        private void DrawTypeButton(PoolMatchType type)
+        {
+            GUI.enabled = PoolMatchSetup.Supports(selected.mode, type);
+            GUI.color = selected.type == type ? Color.green : Color.white;
+            if (GUILayout.Button(PoolMatchSetup.TypeName(type))) Select((ref PoolMatchSetup s) => s.type = type);
+            GUI.color = Color.white;
+            GUI.enabled = true;
+        }
+
+        // A new mode starts on its own type (PoolMatchSetup.NativeType).
         private void DrawModeButton(PoolGameMode mode, string label)
         {
-            GUI.color = selectedMode == mode ? Color.green : Color.white;
-            if (GUILayout.Button(label)) pendingModeChange = mode;
-            GUI.color = Color.white;
-        }
-
-        private void DrawPartyModeButton(PoolPartyMode partyMode, string label)
-        {
-            GUI.color = selectedPartyMode == partyMode ? Color.green : Color.white;
+            GUI.color = selected.mode == mode ? Color.green : Color.white;
             if (GUILayout.Button(label))
-            {
-                pendingPartyModeChange = partyMode;
-                pendingModeChange = PoolGameMode.Party;
-                pendingShowPartySubmenuChange = false;
-            }
+                Select((ref PoolMatchSetup s) => { s.mode = mode; s.type = PoolMatchSetup.NativeType(mode); });
             GUI.color = Color.white;
         }
-
-        private static string PartyModeLabel(PoolPartyMode partyMode) => partyMode switch
-        {
-            PoolPartyMode.Classic => "Classic",
-            PoolPartyMode.SpeedPool => "Speed Pool",
-            _ => partyMode.ToString(),
-        };
     }
 }

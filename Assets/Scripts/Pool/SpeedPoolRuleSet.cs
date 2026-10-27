@@ -3,13 +3,17 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Speed Pool: no turns, both players shoot whenever their own cue ball is
-    // still. P1 (blue cue ball) has the solids, P2 (red) the stripes; the 8 is
-    // off the table. Whoever empties their group first wins, whoever potted
-    // the last ball: sinking the opponent's ball only helps them. Judged on
-    // each pot (PoolMatchRules.IsSimultaneous), never on a settled table,
-    // since the table is never still for long. Scratch: the cue ball is out
-    // for Cue Respawn Delay and the player's last potted ball comes back.
+    // 8-ball in Speed Pool, and the base of the modes where each player has
+    // their own cue ball (Hungry Hole, Snake Pool, Power Wash Pool). P1 (blue
+    // cue ball) has the solids, P2 (red) the stripes; the 8 is off the table.
+    // Whoever empties their group first wins, whoever potted the last ball:
+    // sinking the opponent's ball only helps them. Each pot is judged as it
+    // happens (HandlePocketed), whatever the match type. In Speed Pool no
+    // shot is ever resolved, the table is never still for long. Turn based
+    // (the subclasses), ResolveShot only passes the turn: the shooter plays
+    // again if one of their balls scored and their cue ball stayed on the
+    // table. Scratch: the cue ball is out (Cue Respawn Delay, or until the
+    // shot is over in turns) and the player's last potted ball comes back.
     public class SpeedPoolRuleSet : IPoolRuleSet
     {
         private static readonly BallGroup[] PlayerGroup = { BallGroup.Solid, BallGroup.Stripe };
@@ -17,6 +21,8 @@ namespace UntitledPoolGame.Pool
         // Each group's potted balls, last one on top: a scratch brings it back.
         protected readonly List<PoolBall>[] pottedByPlayer = { new List<PoolBall>(), new List<PoolBall>() };
         private SpeedPoolSettings settings;
+        // Turn based: whose balls scored during the current shot.
+        private readonly bool[] scoredThisShot = new bool[2];
 
         // Hungry Hole plays with the 8.
         protected virtual bool KeepsEightBall => false;
@@ -60,8 +66,31 @@ namespace UntitledPoolGame.Pool
                           $"{CountGroup(BallGroup.Solid)} pleines, {CountGroup(BallGroup.Stripe)} rayées, {PoolBall.Active.Count} billes actives.");
         }
 
-        // Shots are never resolved in this mode (see PoolMatchRules.Update).
-        public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact) { }
+        // Turn based only (Speed Pool never resolves a shot, see
+        // PoolMatchRules.Update). Called when a shot is struck.
+        public void BeginShot()
+        {
+            scoredThisShot[0] = scoredThisShot[1] = false;
+        }
+
+        // One of the player's balls did what the mode wants (potted, swallowed,
+        // joined the chain): in turns, they play again.
+        protected void MarkScored(int player)
+        {
+            if (player >= 0) scoredThisShot[player] = true;
+        }
+
+        // Turn based only. cueBallPocketed: the shooter's own cue ball.
+        public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
+        {
+            if (match.GameOver) return;
+            int player = match.CurrentPlayer;
+            bool again = scoredThisShot[player] && !cueBallPocketed;
+            if (match.TraceShots)
+                Debug.Log($"[ShotTrace] {GetType().Name}, J{player + 1} : {(cueBallPocketed ? "sa blanche est rentrée" : scoredThisShot[player] ? "une de ses billes a marqué" : "aucune de ses billes n'a marqué")} → " +
+                          (again ? "il rejoue" : "au tour de l'adversaire"));
+            if (!again) match.SwitchTurn();
+        }
 
         // Called as a ball goes in, while it's still in PoolBall.Active.
         public virtual void HandlePocketed(PoolMatchRules match, PoolBall ball)
@@ -73,6 +102,7 @@ namespace UntitledPoolGame.Pool
             }
             int owner = OwnerOf(ball);
             if (owner >= 0) pottedByPlayer[owner].Add(ball);
+            MarkScored(owner);
             bool cleared = owner >= 0 && IsGroupCleared(PlayerGroup[owner], ball);
             if (match.TraceShots)
                 Debug.Log($"[SpeedPool] Bille {ball.Number} rentrée à {ball.transform.position} (bille de J{owner + 1}), " +

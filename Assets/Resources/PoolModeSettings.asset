@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6461b98de7b0be4cb39f7833c2a4c05, type: 3}
+  m_Name: PoolModeSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolModeSettings
+  modes:
+  - mode: 0
+    turnBased: 1
+    speedPool: 1
+    defaultType: 0
+  - mode: 1
+    turnBased: 1
+    speedPool: 0
+    defaultType: 0
+  - mode: 2
+    turnBased: 1
+    speedPool: 0
+    defaultType: 0
+  - mode: 5
+    turnBased: 1
+    speedPool: 1
+    defaultType: 0
+  - mode: 6
+    turnBased: 1
+    speedPool: 1
+    defaultType: 1
+  - mode: 7
+    turnBased: 1
+    speedPool: 1
+    defaultType: 1
+  - mode: 8
+    turnBased: 1
+    speedPool: 1
+    defaultType: 1

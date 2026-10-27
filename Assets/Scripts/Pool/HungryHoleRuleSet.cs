@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Hungry Hole, both players at once: Speed Pool (each their own cue ball,
-    // P1 solids, P2 stripes, no turns), but each cue ball is a hole
+    // Hungry Hole: each player their own cue ball (SpeedPoolRuleSet: P1
+    // solids, P2 stripes, at once or in turns), but each cue ball is a hole
     // (HungryHoleCue) and the balls' sizes follow their number, the 8 the
     // biggest. Swallowing one of your balls grows your hole, one of the
     // opponent's shrinks it (and counts for them). Win: your group gone, then
@@ -209,6 +209,7 @@ namespace UntitledPoolGame.Pool
             // still to take.
             int owner = OwnerOf(ball);
             if (owner >= 0) pottedByPlayer[owner].Add(ball);
+            MarkScored(owner);
 
             // One of yours sent in a pocket by your hole: grows it like a swallow.
             if (eater < 0 && owner >= 0 && pusher == owner)

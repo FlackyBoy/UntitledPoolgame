@@ -6,7 +6,7 @@ using UntitledPoolGame.Pool;
 namespace UntitledPoolGame.Core
 {
     // What the main menu decided, carried over to the level scene: the
-    // level, the game type, and the device of each player (J1, J2…) as they
+    // level, the match (type, mode, powers), and the device of each player (J1, J2…) as they
     // joined in the menu — the level then joins its players with exactly
     // those devices (LevelLoader). Static: survives the scene change.
     public static class GameSession
@@ -16,18 +16,14 @@ namespace UntitledPoolGame.Core
         // menu itself.
         public static bool Active { get; private set; }
         public static LevelEntry Level { get; private set; }
-        public static PoolGameMode Mode { get; private set; }
-        public static PoolPartyMode Party { get; private set; }
-        public static int TargetScore { get; private set; }
+        public static PoolMatchSetup Setup { get; private set; }
         public static readonly List<InputDevice> Devices = new List<InputDevice>();
 
-        public static void Begin(LevelEntry level, PoolGameMode mode, PoolPartyMode party, int targetScore, IEnumerable<InputDevice> devices)
+        public static void Begin(LevelEntry level, PoolMatchSetup setup, IEnumerable<InputDevice> devices)
         {
             Active = true;
             Level = level;
-            Mode = mode;
-            Party = party;
-            TargetScore = targetScore;
+            Setup = setup.Normalized();
             Devices.Clear();
             foreach (InputDevice d in devices) if (d != null && !Devices.Contains(d)) Devices.Add(d);
         }
@@ -38,20 +34,6 @@ namespace UntitledPoolGame.Core
             Level = null;
             Devices.Clear();
         }
-
-        public static string ModeName(PoolGameMode mode, PoolPartyMode party = PoolPartyMode.Classic) => mode switch
-        {
-            PoolGameMode.Party when party == PoolPartyMode.SpeedPool => "Speed Pool + pouvoirs",
-            PoolGameMode.NineBall => "9-ball",
-            PoolGameMode.FourteenOne => "14.1",
-            PoolGameMode.Party => "Pouvoirs",
-            PoolGameMode.SpeedPool => "Speed Pool",
-            PoolGameMode.CatchTheHole => "Catch the Hole",
-            PoolGameMode.HungryHole => "Hungry Hole",
-            PoolGameMode.SnakePool => "Snake Pool",
-            PoolGameMode.PowerWashPool => "Power Wash Pool",
-            _ => "Classique",
-        };
 
         // Back to the main menu scene (from the pause); the current scene is
         // reloaded instead if the menu scene isn't in the build.

@@ -97,14 +97,6 @@ MonoBehaviour:
       color: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
       stripe: 0
     rules: "8-ball : pleines contre ray\xE9es, la 8 en dernier dans la poche annonc\xE9e."
-  powersMode:
-    ball:
-      label: Pouvoirs
-      sub: 
-      number: 12
-      color: {r: 0.41568628, g: 0.17254902, b: 0.5686275, a: 1}
-      stripe: 1
-    rules: "Les r\xE8gles du 8-ball, plus des caisses et une bille \xE0 pouvoir sur la table."
   nineBallMode:
     ball:
       label: 9-ball
@@ -122,8 +114,6 @@ MonoBehaviour:
       stripe: 0
     rules: "Chaque bille rentr\xE9e rapporte 1 point."
   targetScoreFormat: "Premier \xE0 {0}   < >  (LB / RB, molette, - / +)"
-  powersOption: "Pouvoirs : Attaque \xB7 D\xE9fense \xB7 Effet"
-  noPowersOption: Sans pouvoirs
   multiplayerHeading: Multijoueur
   localBall:
     label: Local
@@ -224,7 +214,7 @@ MonoBehaviour:
     sub: maintenir
   - id: Next
     label: Pouvoir
-    sub: mode Pouvoirs
+    sub: avec pouvoirs
   - id: Sprint
     label: Courir
     sub: 

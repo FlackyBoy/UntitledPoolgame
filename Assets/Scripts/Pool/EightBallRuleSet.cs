@@ -5,7 +5,7 @@ namespace UntitledPoolGame.Pool
 {
     // Casual 8-ball for 2 players. Group balls aren't called: potting one of
     // yours keeps the turn; potting only the opponent's is a foul. The 8 has
-    // to be called. Also used by Party's Classic sub-mode, the powers come
+    // to be called. Also Catch the Hole's rules; the powers, when on, come
     // on top.
     public class EightBallRuleSet : IPoolRuleSet
     {

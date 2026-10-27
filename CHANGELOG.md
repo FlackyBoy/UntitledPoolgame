@@ -4,6 +4,13 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-27
+- **Type de partie, mode et pouvoirs séparés** (compilé, non testé). Une partie se compose de trois choix : le **type** (chacun son tour ou Speed Pool, tout le monde en même temps), le **mode** (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool) et les **pouvoirs** (avec ou sans).
+  - **tous les modes dans les deux types**, sauf 9-ball et 14.1 (chacun son tour pour l'instant). Classique en Speed Pool = l'ancien mode Speed Pool ; Catch the Hole marche aussi en Speed Pool ;
+  - **Hungry Hole, Snake Pool et Power Wash Pool chacun son tour** : chacun garde sa blanche ; on rejoue si une de ses billes a marqué pendant le tir et que sa blanche est restée sur la table ; la blanche rentrée revient à la fin du tir ;
+  - **pouvoirs dans tous les modes** : l'ancien mode Pouvoirs = Classique avec pouvoirs. Nouveau champ *Only In Modes* sur chaque pouvoir pour le réserver à certains modes ;
+  - **menu** : plus de billes Pouvoirs ni Speed Pool ; sur la bille visée, Y / Tab change le type (chaque mode commence sur le sien), X / P les pouvoirs. *Lancer sans le menu* : champs *Type* et *Powers* ; les scènes réglées sur les anciens modes lancent la même partie qu'avant ;
+  - **réglages** : nouveau fichier `PoolModeSettings` (Resources) : pour chaque mode, chacun son tour oui / non, Speed Pool oui / non, type de départ. Les modes d'un pouvoir se règlent sur le pouvoir (*Only In Modes*) ;
+  - **code** : `PoolMatchType`, `PoolMatchSetup` (remplace `PoolPartyMode`), `PoolModeSettings` ; `IsSimultaneous` vient du type choisi, plus du jeu de règles.
 - **Nouveau mode Power Wash Pool, lot 1 : en même temps, au chrono** (branche `feature/power-wash-pool` ; compilé, non testé). Le tapis est couvert de crasse. Joué en même temps comme Speed Pool : J1 a les pleines (blanche bleue), J2 les rayées (blanche rouge).
   - **laver** : une de ses billes qui roule laisse une trace propre teintée à sa couleur, plus large quand elle va vite. Repasser sur le tapis lavé par l'autre le lui prend. La blanche ne lave pas ;
   - **bille rentrée** : elle éclabousse le tapis autour de la poche, vers le milieu de la table : une flaque aux bords irréguliers et des gouttes projetées au bout de traînées, qui s'étalent en 0,35 s et peignent pour le propriétaire de la bille, même sur le tapis lavé par l'autre (demande du 27/10). La bille ressort ensuite à sa place ;

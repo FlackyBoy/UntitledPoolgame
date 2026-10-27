@@ -3,8 +3,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Power Wash Pool, both players at once: Speed Pool (each their own cue
-    // ball, P1 solids, P2 stripes), on a felt caked in grime (PowerWashDirt).
+    // Power Wash Pool: each player their own cue ball (SpeedPoolRuleSet: P1
+    // solids, P2 stripes, at once or in turns), on a felt caked in grime
+    // (PowerWashDirt).
     // Your balls wash the felt as they roll, in your colour; going over the
     // opponent's washed felt takes it. One of your balls potted washes a
     // splash around the pocket and comes back to its spot. The 8 is a mud ball:
@@ -67,6 +68,7 @@ namespace UntitledPoolGame.Pool
             }
 
             int owner = OwnerOf(ball);
+            MarkScored(owner);
             dirt.Splash(point, wash.pocketSplashRadius, owner);
             if (wash.debugLogs)
                 Debug.Log($"[PowerWash] La {ball.Number} rentrée lave autour de la poche pour J{owner + 1} " +
