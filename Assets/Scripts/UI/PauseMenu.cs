@@ -225,14 +225,21 @@ namespace UntitledPoolGame.Core
             ReadInput();
         }
 
-        // Escape (keyboard player) or Start (any gamepad): which player asked.
-        // int.MinValue = nobody this frame; -1 = unknown player.
+        // Escape (keyboard player) or Start (a player's gamepad): which player
+        // asked. int.MinValue = nobody this frame; -1 = unknown player.
         private static int PausePressedBy()
         {
             Keyboard kb = Keyboard.current;
             if (kb != null && kb.escapeKey.wasPressedThisFrame) return PlayerUsing(kb);
             foreach (Gamepad pad in Gamepad.all)
-                if (pad.startButton.wasPressedThisFrame) return PlayerUsing(pad);
+            {
+                if (!pad.startButton.wasPressedThisFrame) continue;
+                // Start on a free pad joins P2 or hands the pad over
+                // (PlayerDeviceRouter), whichever script runs first.
+                if (PlayerDeviceRouter.ClaimedThisFrame(pad)) continue;
+                if (PlayerInput.all.Count > 0 && UnityEngine.InputSystem.Users.InputUser.FindUserPairedToDevice(pad) == null) continue;
+                return PlayerUsing(pad);
+            }
             return int.MinValue;
         }
 

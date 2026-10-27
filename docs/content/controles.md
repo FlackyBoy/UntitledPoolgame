@@ -17,11 +17,10 @@ Quand le niveau est chargé, chaque joueur appuie sur **A / ✕** (manette) ou *
 
 ## Manettes et clavier en partie
 
-- **Arrivée de J2**, dans une scène lancée sans le menu (*Lancer sans le menu*, arène de R&D) : un bouton d'une manette libre fait arriver J2 avec elle, même quand J1 joue au clavier (changé le 21/10 : avant, J1 au clavier prenait la manette). Jusqu'à *Max Player Count* du PlayerInputManager (2 s'il est illimité).
-- **Une manette de plus** quand plus personne ne peut arriver (J1 au clavier, J2 à la manette, 2 joueurs au maximum) : un bouton ou un stick la donne au premier joueur qui n'a pas de manette, donc J1.
-- **Seul**, le joueur reprend le clavier et la souris dès qu'on s'en sert (une touche ou un clic, pas un simple mouvement de souris). Il ne prend une manette libre que si plus personne ne peut arriver (joueurs au maximum, ou appareils choisis dans le menu) ; pour jouer seul à la manette, la scène doit donc être lancée par le menu.
-- **Depuis le menu**, ce sont les appareils choisis dans le menu (J1 = celui qui navigue, J2 = celui qui a rejoint dans la salle d'attente) ; aucun joueur n'arrive plus par un bouton ensuite. C'est aussi le cas d'un niveau lancé directement depuis l'éditeur, qui passe par le menu.
-- **Clavier contre manette** : choisir les deux appareils dans la salle d'attente du menu, ou C + P en test.
+- **Seul à la manette** : prendre une manette libre (un stick ou un bouton autre que Start) la donne au premier joueur qui n'en a pas, donc J1. Le joueur seul reprend le clavier et la souris dès qu'on s'en sert (une touche ou un clic, pas un simple mouvement de souris).
+- **Arrivée de J2 : Start** sur une manette libre, dans une scène lancée sans le menu (*Lancer sans le menu*, arène de R&D), même quand J1 joue au clavier. Quand tout le monde a déjà une manette, n'importe quel bouton d'une nouvelle manette fait aussi arriver un joueur. Jusqu'à *Max Player Count* du PlayerInputManager (2 s'il est illimité). Ce Start-là n'ouvre pas la pause.
+- **Depuis le menu**, ce sont les appareils choisis dans le menu (J1 = celui qui navigue, J2 = celui qui a rejoint dans la salle d'attente) ; aucun joueur n'arrive plus par un bouton ensuite, une manette libre va au joueur qui n'en a pas. C'est aussi le cas d'un niveau lancé directement depuis l'éditeur, qui passe par le menu.
+- **Clavier contre manette** : J1 au clavier, l'autre appuie sur Start ; ou choisir les deux appareils dans la salle d'attente du menu ; ou C + P en test.
 
 ## Pause (en partie)
 
