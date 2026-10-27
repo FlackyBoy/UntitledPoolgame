@@ -56,6 +56,8 @@ namespace UntitledPoolGame.Core
         [Tooltip("Plaque pendant « Groupe identique » : remplace les billes restantes, qui trahiraient les groupes.")]
         public string groupsDisguisedText = "??? Billes brouillées";
         public string nextBallText = "Prochaine ";
+        [Tooltip("Power Wash Pool : affiché à la place du chrono quand le temps est écoulé à égalité.")]
+        public string overtimeText = "Prolongation !";
         public string powerGaugeText = "Puissance";
         [Tooltip("Touche affichée sous le pouvoir en stock.")]
         public string powerKeyText = "Q / B";

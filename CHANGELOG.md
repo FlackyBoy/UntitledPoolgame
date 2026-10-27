@@ -3,6 +3,16 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-27
+- **Nouveau mode Power Wash Pool, lot 1 : en même temps, au chrono** (branche `feature/power-wash-pool` ; compilé, non testé). Le tapis est couvert de crasse. Joué en même temps comme Speed Pool : J1 a les pleines (blanche bleue), J2 les rayées (blanche rouge).
+  - **laver** : une de ses billes qui roule laisse une trace propre teintée à sa couleur, plus large quand elle va vite. Repasser sur le tapis lavé par l'autre le lui prend. La blanche ne lave pas ;
+  - **bille rentrée** : elle éclabousse le tapis autour de la poche, vers le milieu de la table : une flaque aux bords irréguliers et des gouttes projetées au bout de traînées, qui s'étalent en 0,35 s et peignent pour le propriétaire de la bille, même sur le tapis lavé par l'autre (demande du 27/10). La bille ressort ensuite à sa place ;
+  - **la 8, bille de boue** : elle resalit le tapis là où elle roule ; la rentrer arrête la partie, après un grand jet pour le dernier joueur à l'avoir touchée ;
+  - **fin** : au bout de 3 min, le plus de tapis lavé gagne ; à égalité, prolongation jusqu'à ce que l'un passe devant. La plaque du HUD montre le % lavé et le chrono ;
+  - **où** : bille cyan « Power Wash Pool » du menu Just for fun, *Lancer sans le menu* (*Mode* = *PowerWashPool*). Réglages : `PowerWashPoolSettings`. Moment Feel *Power Wash Splash*. Console : lignes `[PowerWash]`.
+  - **retours du 27/10** : traces plus nettes (2 fois plus de cases, bords francs, *Sharp Edges*) ; l'éclaboussure part dès que la bille rentre (la flaque tout de suite, les gouttes en 0,15 s) et elle est plus juicy : gerbe d'eau à la couleur du joueur (*CFXR Water Splash*), peinture fraîche qui brille puis se fond dans le tapis, secousse et flash de l'écran du joueur ; une blanche rentrée disparaît jusqu'à ce qu'elle revienne en jeu. Ensuite : la gerbe d'eau part du centre de la poche (elle partait du bord, là où la bille entrait) et garde ses couleurs (plus teintée au joueur) ; l'effet de base d'une bille rentrée (halo, aura, secousse des deux écrans) est coupé dans ce mode ; la gerbe d'eau devient une explosion : 10 fois plus de gouttes et d'écume, qui jaillissent en cône ;
+  - **code** : `PowerWashPoolRuleSet` (dérivé de `SpeedPoolRuleSet`), `PowerWashDirt` (grille de cases sur le tapis, texture posée dessus, comptage au fil des changements, chrono), `PowerWashMudBall`, `PowerWashPoolSettings`.
+
 ## 2026-10-25
 - **Nouveau mode Snake Pool** (branche `feature/snake-pool` ; testé par l'utilisateur le 27/10, à polir). Joué en même temps comme Speed Pool : J1 a les pleines (blanche bleue), J2 les rayées (blanche rouge), la 8 reste sur la table.
   - **ramasser** : toucher une de ses billes avec sa blanche l'ajoute au bout de sa file, qui suit la blanche dans tous ses virages, comme un snake. La blanche garde sa vitesse en ramassant (*Keep Speed On Collect*). Une de ses billes rentrée dans une poche ressort en sautant et rejoint aussi la file ;

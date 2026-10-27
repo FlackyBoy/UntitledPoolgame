@@ -363,6 +363,40 @@ MonoBehaviour:
     idleSpeed: 1
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
+  - id: power-wash-pool
+    kind: 0
+    visible: 1
+    position: {x: 10, y: 57.5}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.16862746, g: 0.7019608, b: 0.8509804, a: 1}
+    stripe: 0
+    number: 3
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Power Wash Pool
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 8
+    description: "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !"
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.2
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
   - id: rules
     kind: 4
     visible: 1

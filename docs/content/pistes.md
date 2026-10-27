@@ -52,6 +52,7 @@ Autres idées autour des pouvoirs :
       - **Un seul trou, au tour par tour** : les joueurs tirent chacun leur tour la même blanche-trou. Bille adverse avalée : elle compte pour l'adversaire et le tour passe, comme en 8-ball.
       - **Un trou chacun, en même temps (façon Speed Pool)** : bille adverse avalée, elle compte pour l'adversaire **et** ton trou rétrécit (pas de tour à passer). Option : le plus gros trou avale celui de l'autre.
   - **Variante asymétrique** : le tireur joue au billard pendant que l'adversaire déplace un trou pour avaler ses billes en route ; les rôles tournent à chaque tir. Proche du pouvoir *Pilote* de Catch the Hole.
+- **Power Wash Pool, le Kärcher** (27/10, remis à plus tard) : le joueur tient aussi un nettoyeur haute pression ; hors visée, le jet lave un peu le tapis et pousse les billes. Le mode existe sans (voir la TODO et le GDD).
 
 ### Structure « party game » (idée du 20/10)
 

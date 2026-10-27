@@ -1433,12 +1433,15 @@ namespace UntitledPoolGame.Pool
                 PoolGameMode.SpeedPool => new SpeedPoolRuleSet(),
                 PoolGameMode.HungryHole => new HungryHoleRuleSet(),
                 PoolGameMode.SnakePool => new SnakePoolRuleSet(),
+                PoolGameMode.PowerWashPool => new PowerWashPoolRuleSet(),
                 _ => new EightBallRuleSet(),
             };
             // Normal balls again if the last match was Hungry Hole.
             if (!(ruleSet is HungryHoleRuleSet)) HungryHoleRuleSet.Cleanup();
             // No chain left from a Snake Pool match (Snake Pool clears its own).
             if (!(ruleSet is SnakePoolRuleSet)) SnakePoolRuleSet.Cleanup();
+            // No grime left from a Power Wash match (Power Wash makes its own).
+            if (!(ruleSet is PowerWashPoolRuleSet)) PowerWashPoolRuleSet.Cleanup();
             ruleSet.Setup(this);
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).
@@ -1538,6 +1541,7 @@ namespace UntitledPoolGame.Pool
             DrawModeButton(PoolGameMode.CatchTheHole, "Catch the Hole (trous vivants)");
             DrawModeButton(PoolGameMode.HungryHole, "Hungry Hole (la blanche est un trou)");
             DrawModeButton(PoolGameMode.SnakePool, "Snake Pool (chaîne de billes)");
+            DrawModeButton(PoolGameMode.PowerWashPool, "Power Wash Pool (laver le tapis)");
 
             // Party opens a second screen with its sub-modes.
             GUI.color = selectedMode == PoolGameMode.Party ? Color.green : Color.white;

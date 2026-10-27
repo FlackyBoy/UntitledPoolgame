@@ -30,6 +30,7 @@ namespace UntitledPoolGame.Core
         HungryHoleGrow,    // Hungry Hole: a hole grows (intensity × the growth; not when it shrinks)
         SnakeGrow,         // Snake Pool: a ball joins a player's chain (that player's moment)
         SnakeCut,          // Snake Pool: a chain is cut (the attacker's moment; intensity × the links lost)
+        PowerWashSplash,   // Power Wash Pool: a pot washes a disc around the pocket (the washer's moment; the 8's splash is stronger)
         // New moments go at the end: assets store the number.
     }
 

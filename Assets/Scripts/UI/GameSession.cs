@@ -49,6 +49,7 @@ namespace UntitledPoolGame.Core
             PoolGameMode.CatchTheHole => "Catch the Hole",
             PoolGameMode.HungryHole => "Hungry Hole",
             PoolGameMode.SnakePool => "Snake Pool",
+            PoolGameMode.PowerWashPool => "Power Wash Pool",
             _ => "Classique",
         };
 
