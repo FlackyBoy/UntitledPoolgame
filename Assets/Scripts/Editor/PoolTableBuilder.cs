@@ -50,6 +50,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureTableHolePowerAsset();
             EnsureCatchTheHoleSettingsAsset();
             EnsureHungryHoleSettingsAsset();
+            EnsureSnakePoolSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -117,6 +118,15 @@ namespace UntitledPoolGame.PoolEditor
             const string path = "Assets/Resources/HungryHoleSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<HungryHoleSettings>(path) != null) return;
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<HungryHoleSettings>(), path);
+        }
+
+        // Snake Pool: the chains behind the cue balls.
+        private static void EnsureSnakePoolSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/SnakePoolSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<SnakePoolSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SnakePoolSettings>(), path);
         }
 
         // The "Aimant" power asset (MagnetPower), with Cartoon FX Remaster's

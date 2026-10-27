@@ -3,6 +3,15 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-25
+- **Nouveau mode Snake Pool** (branche `feature/snake-pool` ; testé par l'utilisateur le 27/10, à polir). Joué en même temps comme Speed Pool : J1 a les pleines (blanche bleue), J2 les rayées (blanche rouge), la 8 reste sur la table.
+  - **ramasser** : toucher une de ses billes avec sa blanche l'ajoute au bout de sa file, qui suit la blanche dans tous ses virages, comme un snake. La blanche garde sa vitesse en ramassant (*Keep Speed On Collect*). Une de ses billes rentrée dans une poche ressort en sautant et rejoint aussi la file ;
+  - **briser** : la blanche adverse qui tape la file la brise à cet endroit : la bille touchée et toutes celles derrière redeviennent libres, avec leur élan ; la bille touchée prend en plus une partie de la vitesse de la blanche. La file pousse les billes libres sur son passage ; sa propre blanche la traverse ;
+  - **gagner, la finale** : avoir ses 7 billes dans la file, puis attraper la 8, qui se met au bout. Il faut ensuite **annoncer sa poche**, comme la 8 au 8-ball (la viser, E / Y ; la visée attend l'annonce), puis y rentrer sa blanche. Un anneau reste sur la poche annoncée : l'adversaire voit où on va. Dans la poche annoncée, toute la file s'y engouffre derrière elle, bille par bille (*Finale Speed*), et la partie est gagnée quand la 8 est rentrée. Si l'adversaire tape la file pendant qu'elle rentre, c'est raté : la file est lâchée et les billes déjà rentrées ressortent à leur place. Dans une autre poche : la file tombe, 8 comprise ;
+  - **blanche rentrée** sans la 8 au bout : toute la file tombe sur le tapis, la blanche revient après le délai de Speed Pool ;
+  - **où** : bille verte « Snake Pool » du menu Just for fun, *Lancer sans le menu* (*Mode* = *SnakePool*). Réglages : `SnakePoolSettings`. Moments Feel *Snake Grow* et *Snake Cut*. Console : lignes `[SnakePool]`.
+  - **code** : `SnakePoolRuleSet` (dérivé de `SpeedPoolRuleSet`), `SnakeChain` (sur chaque blanche : chemin parcouru, billes de la file en kinematic), `SnakePoolSettings`.
+
 ## 2026-10-24
 - **Catch the Hole : le trou grandit quand une bille y tombe** (branche `feature/blanche-trou` ; compilé, non testé), comme Hungry Hole : +15 % de sa taille par bille (jusqu'à +150 %), en ressort, avec un bump du disque. Une bille immobile qui réapparaît à côté ne compte pas. Réglages : section *Croissance* de `CatchTheHoleSettings`.
 - **Catch the Hole : un trou tout simple** (branche `feature/blanche-trou` ; compilé, non testé). Les trous vivants sont maintenant des disques noirs parfaits, comme dans Hungry Hole (plus de bord brûlé, de braises ni de decal). Le trou de météore reste disponible : décocher *Plain Hole* dans `CatchTheHoleSettings`. Le pouvoir Trou ne change pas.

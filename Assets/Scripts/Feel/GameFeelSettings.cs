@@ -28,6 +28,8 @@ namespace UntitledPoolGame.Core
         HungryHoleSwallow, // Hungry Hole: a hole swallows a ball or a prop (intensity × the bite's size)
         HungryHoleAteHole, // Hungry Hole: a hole eats the other one (the eater's moment)
         HungryHoleGrow,    // Hungry Hole: a hole grows (intensity × the growth; not when it shrinks)
+        SnakeGrow,         // Snake Pool: a ball joins a player's chain (that player's moment)
+        SnakeCut,          // Snake Pool: a chain is cut (the attacker's moment; intensity × the links lost)
         // New moments go at the end: assets store the number.
     }
 
