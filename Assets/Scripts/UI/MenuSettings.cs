@@ -143,8 +143,6 @@ namespace UntitledPoolGame.Core
         public string modeHeading = "Quel type de partie ?";
         public MenuModeBall classicMode = new MenuModeBall { ball = new MenuBall("Classique", "8", "#111111"),
             rules = "8-ball : pleines contre rayées, la 8 en dernier dans la poche annoncée." };
-        public MenuModeBall powersMode = new MenuModeBall { ball = new MenuBall("Pouvoirs", "12", "#6a2c91", true),
-            rules = "Les règles du 8-ball, plus des caisses et une bille à pouvoir sur la table." };
         public MenuModeBall nineBallMode = new MenuModeBall { ball = new MenuBall("9-ball", "9", "#f4c20d", true),
             rules = "Touche toujours la plus petite bille. Qui rentre la 9 gagne." };
         public MenuModeBall fourteenOneMode = new MenuModeBall { ball = new MenuBall("14.1", "3", "#d8261c"),
@@ -152,20 +150,23 @@ namespace UntitledPoolGame.Core
         public MenuModeBall catchTheHoleMode = new MenuModeBall { ball = new MenuBall("Catch the Hole", "13", "#f08a1c", true),
             rules = "Des trous vivants se baladent sur le tapis. Une bille qui roule dedans est rentrée, même la tienne... ou la blanche." };
         public MenuModeBall hungryHoleMode = new MenuModeBall { ball = new MenuBall("Hungry Hole", "8", "#1c1c1c"),
-            rules = "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8. Tout le monde joue en même temps." };
+            rules = "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8." };
         public MenuModeBall snakePoolMode = new MenuModeBall { ball = new MenuBall("Snake Pool", "6", "#2e9e4a"),
             rules = "Touche tes billes avec ta blanche : elles te suivent en file. Ta blanche brise la file de l'autre. File complète ? Attrape la 8, annonce ta poche et plonge dedans : toute la file te suit !" };
         public MenuModeBall powerWashPoolMode = new MenuModeBall { ball = new MenuBall("Power Wash Pool", "3", "#2bb3d9"),
             rules = "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !" };
-        public MenuModeBall speedPoolMode = new MenuModeBall { ball = new MenuBall("Speed Pool", "11", "#2f7cf6", true),
-            rules = "Tout le monde tire en même temps, chacun sa blanche. Le premier qui vide son groupe gagne." };
+        [Tooltip("Type de la bille visée, changé avec Y / Tab. Chaque mode commence sur son type d'origine.")]
+        public string turnBasedOption = "Chacun son tour   < >  (Y / Tab)";
+        public string speedPoolOption = "Speed Pool : tout le monde en même temps   < >  (Y / Tab)";
+        [Tooltip("Mode qui ne se joue que chacun son tour (PoolModeSettings ; 9-ball et 14.1 n'ont pas de règles Speed Pool).")]
+        public string turnBasedOnlyOption = "Chacun son tour";
+        [Tooltip("Mode qui ne se joue qu'en Speed Pool (PoolModeSettings).")]
+        public string speedPoolOnlyOption = "Speed Pool : tout le monde en même temps";
+        [Tooltip("Pouvoirs, pour tous les modes, changés avec X / P.")]
+        public string powersOnOption = "Avec pouvoirs   < >  (X / P)";
+        public string powersOffOption = "Sans pouvoirs   < >  (X / P)";
         [Tooltip("Option du 14.1. {0} = score à atteindre.")]
         public string targetScoreFormat = "Premier à {0}   < >  (LB / RB, molette, - / +)";
-        public string powersOption = "Pouvoirs : Attaque · Défense · Effet";
-        public string noPowersOption = "Sans pouvoirs";
-        [Tooltip("Option du Speed Pool, changée comme le score du 14.1.")]
-        public string speedPoolPowersOff = "Sans pouvoirs   < >  (LB / RB, molette, - / +)";
-        public string speedPoolPowersOn = "Avec pouvoirs (caisses)   < >  (LB / RB, molette, - / +)";
 
         [Header("Multijoueur")]
         public string multiplayerHeading = "Multijoueur";
@@ -225,7 +226,7 @@ namespace UntitledPoolGame.Core
             new KeyRowText { id = "PunchRight", label = "Poing droit", sub = "mains vides" },
             new KeyRowText { id = "Kick", label = "Coup de pied", sub = "maintenir : spartiate" },
             new KeyRowText { id = "Block", label = "Garde", sub = "maintenir" },
-            new KeyRowText { id = "Next", label = "Pouvoir", sub = "mode Pouvoirs" },
+            new KeyRowText { id = "Next", label = "Pouvoir", sub = "avec pouvoirs" },
             new KeyRowText { id = "Sprint", label = "Courir", sub = "" },
             new KeyRowText { id = "Jump", label = "Sauter", sub = "prévu" },
             new KeyRowText { id = "Pause", label = "Pause", sub = "" },

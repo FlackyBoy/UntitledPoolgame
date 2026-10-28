@@ -44,6 +44,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePotEffectSettingsAsset();
             EnsurePowerSpawnSettingsAsset();
             EnsureSpeedPoolSettingsAsset();
+            EnsureModeSettingsAsset();
             EnsureBallBlastPowerAsset();
             EnsureMagnetPowerAsset();
             EnsureIdenticalGroupsPowerAsset();
@@ -598,6 +599,15 @@ namespace UntitledPoolGame.PoolEditor
 
             PoolScreenJuiceSettings settings = ScriptableObject.CreateInstance<PoolScreenJuiceSettings>();
             AssetDatabase.CreateAsset(settings, path);
+        }
+
+        // Which types each mode is played in (PoolModeSettings.Defaults).
+        private static void EnsureModeSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/PoolModeSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<PoolModeSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<PoolModeSettings>(), path);
         }
 
         private static void EnsureSpeedPoolSettingsAsset()

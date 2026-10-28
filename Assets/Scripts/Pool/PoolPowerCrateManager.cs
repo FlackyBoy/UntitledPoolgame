@@ -36,14 +36,14 @@ namespace UntitledPoolGame.Pool
         private void Start()
         {
             if (settings == null || settings.availablePowers == null || settings.availablePowers.Length == 0) return;
-            StartCoroutine(WaitForPartyModeThenSpawnInitialCrates());
+            StartCoroutine(WaitForMatchThenSpawnInitialCrates());
         }
 
-        // Party mode only, known once the match has started.
-        private IEnumerator WaitForPartyModeThenSpawnInitialCrates()
+        // Powers on only, known once the match has started.
+        private IEnumerator WaitForMatchThenSpawnInitialCrates()
         {
             yield return new WaitUntil(() => PoolMatchRules.Instance != null && PoolMatchRules.Instance.MatchStarted);
-            if (PoolMatchRules.Instance.Mode != PoolGameMode.Party) yield break;
+            if (!PoolMatchRules.Instance.PowersEnabled) yield break;
 
             if (spawnPoints.Count == 0)
             {
@@ -98,7 +98,14 @@ namespace UntitledPoolGame.Pool
 
         private void SpawnAt(PoolPowerCrate crate, PoolPowerSpawnPoint point)
         {
-            PoolPower power = settings.availablePowers[Random.Range(0, settings.availablePowers.Length)];
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            PoolPower power = rules != null ? settings.PickPower(rules.Mode) : null;
+            // No power allowed in this mode: the spot stays empty.
+            if (power == null)
+            {
+                crate.gameObject.SetActive(false);
+                return;
+            }
             crate.transform.position = point.transform.position;
             crate.gameObject.SetActive(true);
             // The power's own token (its icon) first, else its category's crate.

@@ -387,6 +387,7 @@ namespace UntitledPoolGame.PoolEditor
             if (Resources.Load<PoolPotEffectSettings>("PoolPotEffectSettings") == null) missingAssets.Add("PoolPotEffectSettings");
             if (Resources.Load<PoolPowerSpawnSettings>("PoolPowerSpawnSettings") == null) missingAssets.Add("PoolPowerSpawnSettings");
             if (Resources.Load<SpeedPoolSettings>("SpeedPoolSettings") == null) missingAssets.Add("SpeedPoolSettings");
+            if (Resources.Load<PoolModeSettings>("PoolModeSettings") == null) missingAssets.Add("PoolModeSettings");
             if (missingAssets.Count == 0)
                 Add(checks, CheckStatus.Ok, "Fichiers de réglages dans Resources");
             else

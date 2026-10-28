@@ -71,13 +71,28 @@ Tous dans `Assets/Resources`, créés par **Tools > Pool > Ensure Config Assets 
 | Poche fermée (pouvoir) | prefab du bouchon (facultatif), échelle | —, 1 |
 | Ralenti | échelle de temps, durée | 0,3, 0,12 s |
 
-### SpeedPoolSettings — mode Speed Pool
+### PoolModeSettings — types de partie de chaque mode
+
+Pour chaque mode, une ligne dans *Modes* : s'il se joue **chacun son tour** (*Turn Based*), **en Speed Pool** (*Speed Pool*), et sur quel type il démarre dans le menu et dans *Lancer sans le menu* réglé sur *ModeDefault* (*Default Type*). Un mode qui ne se joue que d'une façon affiche « Chacun son tour » ou « Speed Pool » sans flèches dans le menu, et Y / Tab n'y change rien. Ajouter un mode = ajouter sa ligne (un mode absent prend les valeurs par défaut du code).
+
+| Mode | Chacun son tour | Speed Pool | Type de départ |
+|---|---|---|---|
+| EightBall (Classique) | oui | oui | chacun son tour |
+| NineBall, FourteenOne | oui | non (pas encore de règles : cocher ne change rien) | chacun son tour |
+| CatchTheHole | oui | oui | chacun son tour |
+| HungryHole, SnakePool, PowerWashPool | oui | oui | Speed Pool |
+
+Si aucun des deux n'est coché, le mode se joue chacun son tour. Créé par *Tools > Pool > Ensure Config Assets Exist*.
+
+**Les pouvoirs de chaque mode** se règlent sur chaque pouvoir, dans `Assets/Powers` : champ *Only In Modes* (voir *Pouvoirs*).
+
+### SpeedPoolSettings — type Speed Pool, et les modes où chacun a sa blanche
 
 | Groupe | Champs | Défauts |
 |---|---|---|
 | Billes | billes en plus par joueur (*Extra Balls Per Player*, 0 à 14) : des copies des billes de son groupe, en rangées derrière le triangle, puis à la place libre la plus proche | 0 |
 | Blanches | teinte de la blanche de J1, de J2 ; écart de chaque blanche par rapport au point de départ habituel (*Cue Spread*, part de la demi-largeur du tapis) | bleu, rouge, 0,5 |
-| Blanche rentrée | délai avant son retour sur la table (*Cue Respawn Delay*, temps réel), à son point de départ ou au plus près s'il est occupé ; la dernière bille de son groupe que le joueur a rentrée ressort à sa place du rack (*Respot Own Ball On Scratch*) | 5 s, oui |
+| Blanche rentrée | délai avant son retour sur la table en Speed Pool (*Cue Respawn Delay*, temps réel ; chacun son tour, elle revient à la fin du tir), à son point de départ ou au plus près s'il est occupé ; la dernière bille de son groupe que le joueur a rentrée ressort à sa place du rack (*Respot Own Ball On Scratch*) | 5 s, oui |
 
 Créé par *Tools > Pool > Ensure Config Assets Exist* ; sans fichier, les valeurs par défaut s'appliquent.
 
@@ -94,7 +109,7 @@ Créé par *Tools > Pool > Ensure Config Assets Exist* ; sans fichier, les valeu
 | Geste : pointer la cible | pendant le choix d'un trou ou d'un point de la table, le bras se tend vers l'endroit visé et l'index le pointe : oui / non, main droite ou gauche (avec la queue en main, cette main la lâche le temps du geste), bras tendu (part de sa longueur), limites du bras devant le corps (*Point Limits* : vers l'extérieur, à travers le corps, vers le haut, vers le bas ; quand le pointeur n'est plus sur le billard, le bras se baisse), fermeture des autres doigts (sans effet sur le personnage actuel, dont la chaîne de l'index porte les quatre doigts), du pouce, de l'index (négatif = plus tendu) | oui, droite, 0,9, (80° ; 30° ; 50° ; 75°), 85°, 40°, −5° |
 | Geste : pouce levé | une fois le pouvoir envoyé (tous les pouvoirs), le poing devant la poitrine, pouce en l'air : oui / non, durée, position de la main par rapport à l'épaule (devant, hauteur, vers le milieu du corps), fermeture des doigts, du pouce (négatif = plus ouvert) ; position du coude par rapport à l'épaule (*Thumbs Up Elbow Offset* : devant, hauteur, vers le milieu du corps ; sous l'épaule, près du corps) ; pour les deux gestes : force du guide du coude (*Gesture Elbow Out*, 0 = il suit l'animation et peut rentrer dans le corps), ligne de diagnostic dans la console à chaque pouce levé (*Gesture Debug Logs*), durée pour lever le bras (*Gesture Blend Time*) et pour le redescendre (*Gesture Lower Time*) ; la main passe en arc devant le corps | oui, 1,2 s, (0,32 ; 0,02 ; 0,1) m pour un bras de 0,6 m (mis à l'échelle du personnage), 95°, −15°, (0,08 ; −0,3 ; −0,06) m, 0,7, oui, 0,3 s, 0,5 s |
 
-Les pouvoirs n'apparaissent qu'en mode **Party**. Pour retirer un pouvoir du jeu sans le supprimer, enlevez-le de *Available Powers*.
+Les pouvoirs n'apparaissent que dans une partie **avec pouvoirs** (option du menu, ou *Powers* de *Lancer sans le menu*) ; en Speed Pool, seulement les caisses. Pour retirer un pouvoir du jeu sans le supprimer, enlevez-le de *Available Powers* ; pour le réserver à certains modes, remplissez son *Only In Modes*.
 
 ### HungryHoleSettings — blanche-trou (mode Hungry Hole)
 
@@ -226,7 +241,7 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 | Accueil | Les deux lignes du titre (« Untitled », « POOL GAME »), les six billes, « vise une bille, tire ! », les aides de touches en bas |
 | Nouvelle partie / Charger | Titres, « Emplacement {0} », « Libre », « Vide », les notes du cube, les messages |
 | Choix du niveau | « On joue où ? », le tampon et le message « Bientôt », les étiquettes « Just for fun » et « Multijoueur · Local » |
-| Type de partie | « Quel type de partie ? », les quatre billes (Classique, Pouvoirs, 9-ball, 14.1) avec leurs règles, la ligne d'option (« Premier à {0} », pouvoirs ou non) |
+| Type de partie | « Quel type de partie ? », les billes de mode (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool) avec leurs règles, les lignes d'option sous les règles : type (*Turn Based Option*, *Speed Pool Option*, *Turn Based Only Option*), pouvoirs (*Powers On Option*, *Powers Off Option*), score du 14.1 (*Target Score Format*, « Premier à {0} ») |
 | Multijoueur et salon | Titres, billes Local et En ligne, « Qui joue ce soir ? », « C'est parti », « J{0} appuie ! », « {0} - prêt », noms des appareils, « Salut J2 ! » |
 | Pause | Titre, les trois pilules (Reprendre, Réglages, Menu principal), « J{0} a mis la partie en pause », la confirmation et ses deux pilules |
 | Réglages > Touches | Titre, onglets (le premier est actif, les autres reçoivent « · bientôt »), en-têtes de colonnes, boutons, et le nom de chaque action |
@@ -388,6 +403,7 @@ Dans `Assets/Powers`. Champs communs, qui décident **quand le pouvoir peut êtr
 - **Requires Own Turn** : ne peut être lancé que pendant son propre tour (pouvoirs d'Effet).
 - **Allow During Own Turn** (coché par défaut) : pour un pouvoir utilisable hors de son tour (*Requires Own Turn* décoché). Coché, lancé pendant son propre tour, il attend le début du tour adverse. Décoché, il est refusé pendant son tour et ne part que pendant le tour de l'adversaire.
 - **Allow While Balls Moving** (coché par défaut) : peut être lancé pendant que les billes roulent. Décoché, il est refusé jusqu'à l'arrêt des billes.
+- **Only In Modes** (vide par défaut) : les modes auxquels ce pouvoir peut être donné (caisses et bille à pouvoir). Vide = tous les modes ; sinon, seulement ceux de la liste (+ pour ajouter un mode). Dans un mode où aucun pouvoir n'est autorisé, aucune caisse n'apparaît.
 
 En solo (une seule manette ou un seul clavier pour les deux côtés), les deux règles de tour ne s'appliquent pas, sinon un pouvoir refusé pendant son tour ne pourrait jamais partir. Un appui refusé fait trembler la pastille du pouvoir avec la raison (textes dans HudSettings, *Pouvoir refusé*).
 
@@ -708,8 +724,9 @@ Une scène qui contient une table de billard, lancée directement depuis l'édit
 
 | Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
-| Mode | Règles de la partie démarrée toute seule (*Party* = 8-ball avec les pouvoirs, *SpeedPool* = les deux joueurs tirent en même temps, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`, *SnakePool* = les billes ramassées suivent la blanche en file, réglé dans `SnakePoolSettings`, *PowerWashPool* = les billes lavent le tapis crasseux, réglé dans `PowerWashPoolSettings`) | Party |
-| Party Mode | Avec *SpeedPool* : *Classic* = sans pouvoirs, *Pouvoirs* = avec les caisses de pouvoirs. *Party* a toujours les pouvoirs. | Classic |
+| Type | *ModeDefault* = le type d'origine du mode (Speed Pool pour Hungry Hole, Snake Pool et Power Wash Pool), *TurnBased* = chacun son tour, *SpeedPool* = les deux joueurs tirent en même temps, chacun sa blanche. 9-ball et 14.1 se jouent toujours chacun son tour | ModeDefault |
+| Mode | Règles de la partie démarrée toute seule (*EightBall* = classique, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`, *SnakePool* = les billes ramassées suivent la blanche en file, réglé dans `SnakePoolSettings`, *PowerWashPool* = les billes lavent le tapis crasseux, réglé dans `PowerWashPoolSettings`). *Party* et *SpeedPool* sont les anciens modes, gardés pour les scènes déjà réglées : *Party* = *EightBall* avec les pouvoirs, *SpeedPool* = *EightBall* en Speed Pool | EightBall |
+| Powers | Caisses de pouvoirs et bille à pouvoir (la bille seulement chacun son tour) | non |
 | Target Score | Score à atteindre, si 14.1 | 150 |
 
 Le composant n'a aucun effet quand le niveau est lancé depuis le menu. Le retirer (ou le désactiver) fait revenir le menu.

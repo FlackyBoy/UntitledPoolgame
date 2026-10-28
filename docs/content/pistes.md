@@ -44,7 +44,8 @@ Autres idées autour des pouvoirs :
 - **Combat au billard** avec barre de vie : on gagne au billard **ou** au combat.
 - **Earthquake** (voir aussi les pouvoirs).
 - **Billards face à face** (idée du 20/10) : deux tables l'une en face de l'autre, chaque joueur sur la sienne. Des **tremplins** sur la table font décoller les billes, qu'on envoie sur l'autre table. On vise une **cible**, un **trou**, ou **le joueur adverse** directement. Il reste à choisir l'objectif : marquer des points, défendre sa table ou les deux. Il faut aussi trancher si on joue chacun son tour ou en même temps.
-- **Speed Pool** (retenu au brainstorm du 20/10 ; **prototype en cours le 21/10**, voir la TODO et le GDD) : les deux joueurs tirent **en même temps** sur la même table, chacun avec sa blanche (bleue et rouge). Le premier qui vide son groupe gagne. Il n'y a plus de temps mort. Encore à décider : garder ou non la 8, groupes fixes ou attribués à la première bille rentrée, un chrono.
+- **Speed Pool** (retenu au brainstorm du 20/10 ; **prototype en cours le 21/10**, voir la TODO et le GDD) : les deux joueurs tirent **en même temps** sur la même table, chacun avec sa blanche (bleue et rouge). Le premier qui vide son groupe gagne. Depuis le 27/10, c'est un **type de partie** (chacun son tour ou Speed Pool) qui vaut pour tous les modes.
+  - **9-ball et 14.1 en Speed Pool** (laissés de côté le 27/10) : il faudrait savoir à qui compte une bille quand les deux blanches roulent. Proposition de Claude : au joueur dont la blanche l'a mise en mouvement en dernier, directement ou par ricochet. 14.1 : un point. 9-ball : la 9 gagne si ce tir a d'abord touché la plus petite bille, sinon elle revient sur son point (ou, plus simple : qui rentre la 9 gagne, peu importe l'ordre). Il n'y a plus de temps mort. Encore à décider : garder ou non la 8, groupes fixes ou attribués à la première bille rentrée, un chrono.
 - **Façon hole.io / Donut County** (idée du 23/10, à côté de Catch the Hole). Piloter le trou au stick ne serait plus du billard : c'est le coup de queue qui le fait bouger.
   - **Version retenue pour l'instant : la blanche est un trou.** Chaque joueur a sa blanche-trou (bleue / rouge). On la tire comme une blanche ; elle avale sur son passage les billes **plus petites qu'elle** et **grandit** à chaque bille avalée.
     - **Billes de tailles différentes** : une bille trop grosse pour le trou n'est pas avalée, elle est percutée comme au billard (obstacle, ou bille à pousser sur les autres). Idée : la 8 est la plus grosse, il faut avoir assez grandi pour la prendre.
@@ -69,7 +70,7 @@ L'utilisateur envisage un jeu construit comme *Mario Party*. Une **soirée** enc
 - **Garder la soirée ouverte jusqu'au bout** : un bonus au joueur mené, des étoiles bonus à la fin (« le plus de fautes », « le plus long tir »), comme les étoiles bonus de *Mario Party*.
 - **Modes candidats** : 8-ball court, 9-ball, Speed Pool, billards face à face, trick shots, Wack-a-Ball, Pistolet, la borne d'arcade…
 - **Conséquence** : chaque mode doit tenir en quelques minutes et partager le même cadre (début, chrono, score, fin, résultat transmis à la soirée).
-- **À renommer** : le mode actuel « Party — Classique » (8-ball + pouvoirs) deviendrait « Pouvoirs », pour laisser le mot « Party » à la soirée.
+- **« Party » libéré** (27/10) : l'ancien mode « Party — Classique » est devenu Classique avec l'option pouvoirs ; le mot « Party » reste libre pour la soirée.
 
 ### Rythme de partie (brainstorm du 20/10)
 

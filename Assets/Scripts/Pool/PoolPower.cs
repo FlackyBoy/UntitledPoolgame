@@ -24,6 +24,14 @@ namespace UntitledPoolGame.Pool
 
         public abstract PowerType Type { get; }
 
+        // A power that only makes sense with some rules (the 8-ball groups,
+        // the 8...) lists them; the crates and the power ball skip it elsewhere.
+        [Tooltip("Modes où ce pouvoir peut sortir (caisses, bille à pouvoir). Vide = tous les modes.")]
+        [SerializeField] private PoolGameMode[] onlyInModes = new PoolGameMode[0];
+
+        public bool AvailableIn(PoolGameMode mode) =>
+            onlyInModes == null || onlyInModes.Length == 0 || System.Array.IndexOf(onlyInModes, mode) >= 0;
+
         // Only on the holder's own turn (checked in PoolMatchRules.CheckPowerUse,
         // split screen only). Set per power: the category doesn't tell
         // (a Defense reacting to the opponent's shot needs it off).

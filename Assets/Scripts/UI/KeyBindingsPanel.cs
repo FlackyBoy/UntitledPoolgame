@@ -44,7 +44,7 @@ namespace UntitledPoolGame.Core
             new Row { action = "PunchRight", label = "Poing droit", sub = "mains vides" },
             new Row { action = "Kick", label = "Coup de pied", sub = "maintenir : spartiate" },
             new Row { action = "Block", label = "Garde", sub = "maintenir" },
-            new Row { action = "Next", label = "Pouvoir", sub = "mode Pouvoirs" },
+            new Row { action = "Next", label = "Pouvoir", sub = "avec pouvoirs" },
             new Row { action = "Sprint", label = "Courir", sub = "" },
             new Row { action = "Jump", label = "Sauter", sub = "prévu" },
             new Row { id = "Pause", label = "Pause", sub = "", kbFixed = "Échap", padFixed = "Start" },

@@ -30,8 +30,8 @@ namespace UntitledPoolGame.Pool
             // looked like power balls didn't work).
             yield return new WaitUntil(IsMatchLive);
 
-            // Party mode only. The mode is known once the match has started.
-            if (PoolMatchRules.Instance.Mode != PoolGameMode.Party) yield break;
+            // Powers on only, known once the match has started.
+            if (!PoolMatchRules.Instance.PowersEnabled) yield break;
             // Speed Pool with powers: the crates only (decided 21/10).
             if (PoolMatchRules.Instance.IsSimultaneous) yield break;
 
@@ -68,7 +68,8 @@ namespace UntitledPoolGame.Pool
             PoolBall chosen = candidates[Random.Range(0, candidates.Count)];
             if (!chosen.TryGetComponent(out PowerBall powerBall)) return;
 
-            PoolPower power = settings.availablePowers[Random.Range(0, settings.availablePowers.Length)];
+            PoolPower power = settings.PickPower(PoolMatchRules.Instance.Mode);
+            if (power == null) return;
             powerBall.SetGlow(power, settings.GetColor(power.Type), settings.ballGlowIntensity, settings.ballGlowRange, settings.GetBallMaterial(power.Type));
             currentBall = powerBall;
         }

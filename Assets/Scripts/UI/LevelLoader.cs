@@ -21,10 +21,10 @@ namespace UntitledPoolGame.Core
         private static LevelLoader instance;
         public static bool Busy => instance != null;
 
-        public static void Load(LevelEntry level, int levelIndex, PoolGameMode mode, PoolPartyMode party, int targetScore, IEnumerable<InputDevice> devices)
+        public static void Load(LevelEntry level, int levelIndex, PoolMatchSetup setup, IEnumerable<InputDevice> devices)
         {
             if (instance != null || level == null) return;
-            GameSession.Begin(level, mode, party, targetScore, devices);
+            GameSession.Begin(level, setup, devices);
             var go = new GameObject("Loading screen");
             DontDestroyOnLoad(go);
             go.SetActive(false);
@@ -87,7 +87,7 @@ namespace UntitledPoolGame.Core
             // Context chip: game type and number of players.
             MenuNode chip = view.Item("context");
             if (chip?.text != null)
-                TextFx.Set(chip.text, Format(cfg.contextFormat, GameSession.ModeName(GameSession.Mode, GameSession.Party),
+                TextFx.Set(chip.text, Format(cfg.contextFormat, GameSession.Setup.Describe(),
                     count == 1 ? cfg.onePlayerText : Format(cfg.playersFormat, count)));
 
             // The level's postcard.
@@ -294,7 +294,7 @@ namespace UntitledPoolGame.Core
             yield return new WaitForSecondsRealtime(Mathf.Max(0.2f, cfg.goDuration));
 
             PoolMatchRules rules = PoolMatchRules.Instance;
-            if (rules != null) rules.RequestStart(GameSession.Mode, GameSession.Party, GameSession.TargetScore);
+            if (rules != null) rules.RequestStart(GameSession.Setup);
             else Debug.LogWarning("[Loading] Pas de PoolMatchRules dans le niveau : la partie ne peut pas démarrer.");
             yield return null;
             yield return null;   // the match has started (applied in PoolMatchRules.Update)

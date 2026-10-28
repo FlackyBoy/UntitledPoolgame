@@ -698,19 +698,23 @@ namespace UntitledPoolGame.Pool
         private PoolBall nearbyCueBall;
 
         // Nearest cue ball at rest within interactRange that this player may
-        // shoot: the shared one, or in Speed Pool their own (either one when
-        // playing alone). Asked twice a frame (Update, WantsInteractThisFrame),
-        // so worked out once.
+        // shoot: the shared one, or their own when each has one (playing
+        // alone: either one in Speed Pool, the one whose turn it is in turns).
+        // Asked twice a frame (Update, WantsInteractThisFrame), so worked out
+        // once.
         private PoolBall FindNearbyCueBall()
         {
             if (nearbyCueBallFrame == Time.frameCount) return nearbyCueBall;
             nearbyCueBallFrame = Time.frameCount;
             nearbyCueBall = null;
             bool solo = PlayerInput.all.Count <= 1;
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            bool anyOwner = solo && (rules == null || rules.IsSimultaneous);
+            int owner = solo && rules != null ? rules.CurrentPlayer : playerInput.playerIndex;
             float bestSqr = float.MaxValue;
             foreach (PoolBall ball in PoolBall.Active)
             {
-                if (!ball.IsCueBall || (ball.CueOwner >= 0 && ball.CueOwner != playerInput.playerIndex && !solo)) continue;
+                if (!ball.IsCueBall || (ball.CueOwner >= 0 && ball.CueOwner != owner && !anyOwner)) continue;
                 // Parked (ball in hand, table hole): its collider is off, the
                 // overlap test never found it either.
                 if (ball.Rigidbody.isKinematic || ball.Rigidbody.linearVelocity.magnitude >= MaxSpeedToAim) continue;

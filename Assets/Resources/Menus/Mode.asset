@@ -94,7 +94,7 @@ MonoBehaviour:
   - id: classic
     kind: 0
     visible: 1
-    position: {x: 18, y: 44}
+    position: {x: 26, y: 57.5}
     size: {x: 110, y: 110}
     rotation: 0
     color: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
@@ -119,40 +119,6 @@ MonoBehaviour:
     focusScale: 0.18
     entrance: 1
     entranceDelay: 0
-    entranceDuration: 0.45
-    idle: 0
-    idleAmount: 1
-    idleSpeed: 1
-    feelOnFocus: {fileID: 0}
-    feelOnPress: {fileID: 0}
-  - id: powers
-    kind: 0
-    visible: 1
-    position: {x: 34, y: 44}
-    size: {x: 110, y: 110}
-    rotation: 0
-    color: {r: 0.41568628, g: 0.17254902, b: 0.5686275, a: 1}
-    stripe: 1
-    number: 12
-    image: {fileID: 0}
-    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
-    borderWidth: 0
-    cornerRadius: 14
-    text: Pouvoirs
-    subText: 
-    textSize: 44
-    subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
-    revealText: 0
-    action: 9
-    targetScreen: 
-    mode: 3
-    description: "Les r\xE8gles du 8-ball, plus des caisses et une bille \xE0 pouvoir sur la table."
-    focusScale: 0.18
-    entrance: 1
-    entranceDelay: 0.05
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -186,7 +152,7 @@ MonoBehaviour:
     description: Touche toujours la plus petite bille. Qui rentre la 9 gagne.
     focusScale: 0.18
     entrance: 1
-    entranceDelay: 0.1
+    entranceDelay: 0.25
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -220,41 +186,7 @@ MonoBehaviour:
     description: "Chaque bille rentr\xE9e rapporte 1 point."
     focusScale: 0.18
     entrance: 1
-    entranceDelay: 0.15
-    entranceDuration: 0.45
-    idle: 0
-    idleAmount: 1
-    idleSpeed: 1
-    feelOnFocus: {fileID: 0}
-    feelOnPress: {fileID: 0}
-  - id: speed-pool
-    kind: 0
-    visible: 1
-    position: {x: 26, y: 57.5}
-    size: {x: 110, y: 110}
-    rotation: 0
-    color: {r: 0.18431373, g: 0.4862745, b: 0.9647059, a: 1}
-    stripe: 1
-    number: 11
-    image: {fileID: 0}
-    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
-    borderWidth: 0
-    cornerRadius: 14
-    text: Speed Pool
-    subText: 
-    textSize: 44
-    subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
-    revealText: 0
-    action: 9
-    targetScreen: 
-    mode: 4
-    description: "Tout le monde tire en même temps, chacun sa blanche. Le premier qui vide son groupe gagne."
-    focusScale: 0.18
-    entrance: 1
-    entranceDelay: 0.2
+    entranceDelay: 0.3
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -264,7 +196,7 @@ MonoBehaviour:
   - id: catch-the-hole
     kind: 0
     visible: 1
-    position: {x: 42, y: 57.5}
+    position: {x: 18, y: 44}
     size: {x: 110, y: 110}
     rotation: 0
     color: {r: 0.9411765, g: 0.5411765, b: 0.10980392, a: 1}
@@ -288,7 +220,7 @@ MonoBehaviour:
     description: "Des trous vivants se baladent sur le tapis. Une bille qui roule dedans est rentrée, même la tienne... ou la blanche."
     focusScale: 0.18
     entrance: 1
-    entranceDelay: 0.25
+    entranceDelay: 0.05
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -298,7 +230,7 @@ MonoBehaviour:
   - id: hungry-hole
     kind: 0
     visible: 1
-    position: {x: 42, y: 44}
+    position: {x: 34, y: 44}
     size: {x: 110, y: 110}
     rotation: 0
     color: {r: 0.10980392, g: 0.10980392, b: 0.10980392, a: 1}
@@ -322,7 +254,7 @@ MonoBehaviour:
     description: "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8. Tout le monde joue en même temps."
     focusScale: 0.18
     entrance: 1
-    entranceDelay: 0.3
+    entranceDelay: 0.1
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -332,7 +264,7 @@ MonoBehaviour:
   - id: snake-pool
     kind: 0
     visible: 1
-    position: {x: 42, y: 71}
+    position: {x: 42, y: 57.5}
     size: {x: 110, y: 110}
     rotation: 0
     color: {r: 0.18039216, g: 0.61960787, b: 0.2901961, a: 1}
@@ -356,7 +288,7 @@ MonoBehaviour:
     description: "Touche tes billes avec ta blanche : elles te suivent en file. Ta blanche brise la file de l'autre. File complète ? Attrape la 8, annonce ta poche et plonge dedans : toute la file te suit !"
     focusScale: 0.18
     entrance: 1
-    entranceDelay: 0.3
+    entranceDelay: 0.15
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1

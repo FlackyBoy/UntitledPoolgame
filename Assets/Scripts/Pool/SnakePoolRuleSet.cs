@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Snake Pool, both players at once: Speed Pool (each their own cue ball,
-    // P1 solids, P2 stripes, no turns), but no ball leaves the table. Your
+    // Snake Pool: each player their own cue ball (SpeedPoolRuleSet: P1
+    // solids, P2 stripes, at once or in turns), but no ball leaves the table. Your
     // cue ball touching one of your balls, or one of your balls going in a
     // pocket, adds it to the chain trailing behind your cue ball (SnakeChain).
     // The opponent's cue ball hitting your chain cuts it there. Win: your
@@ -45,6 +45,7 @@ namespace UntitledPoolGame.Pool
 
         public void OnJoined(SnakeChain chain, PoolBall ball)
         {
+            MarkScored(chain.Owner);
             if (!snake.debugLogs) return;
             if (ball.Group == BallGroup.Eight)
                 Debug.Log($"[SnakePool] J{chain.Owner + 1} attrape la 8 : à lui d'annoncer sa poche.", ball);

@@ -1257,7 +1257,7 @@ namespace UntitledPoolGame.Core
                 endWhoBox.style.backgroundColor = w == 0 ? P1 : P2;
                 TextFx.Set(endWho, Format(cfg.playerTagFormat, w + 1));
                 TextFx.Reveal(endTitle, Format(cfg.winnerFormat, w + 1));
-                TextFx.Set(endSubtitle, rules.Mode == PoolGameMode.Party && rules.IsSimultaneous ? "Speed Pool + pouvoirs" : ModeName(rules.Mode));
+                TextFx.Set(endSubtitle, rules.Setup.Describe());
                 foreach (Half h in halves) h.plateKey = default;
             }
             float t = now - endShownAt;
@@ -1302,19 +1302,6 @@ namespace UntitledPoolGame.Core
             }
             return false;
         }
-
-        private static string ModeName(PoolGameMode mode) => mode switch
-        {
-            PoolGameMode.NineBall => "9-ball",
-            PoolGameMode.FourteenOne => "14.1",
-            PoolGameMode.Party => "Party",
-            PoolGameMode.SpeedPool => "Speed Pool",
-            PoolGameMode.CatchTheHole => "Catch the Hole",
-            PoolGameMode.HungryHole => "Hungry Hole",
-            PoolGameMode.SnakePool => "Snake Pool",
-            PoolGameMode.PowerWashPool => "Power Wash Pool",
-            _ => "8-ball",
-        };
 
         // ---------- Drawing ----------
 

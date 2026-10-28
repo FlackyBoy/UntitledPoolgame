@@ -2,13 +2,15 @@
 
 ## Menu principal
 
-Nouvelle partie · Charger · Just for fun (niveau puis type de partie) · Multijoueur (local : les joueurs rejoignent, puis niveau et type de partie ; en ligne : plus tard) · Réglages · Quitter.
+Nouvelle partie · Charger · Just for fun (niveau puis mode, type et pouvoirs) · Multijoueur (local : les joueurs rejoignent, puis niveau, mode, type et pouvoirs ; en ligne : plus tard) · Réglages · Quitter.
 
 | Clavier / souris | Manette | Action |
 |---|---|---|
 | Souris, flèches, Z Q S D | Stick gauche, croix | Viser une bille |
 | Clic, Entrée, Espace | A / ✕ | Tirer (valider) |
 | Échap, Retour arrière | B / ○ | Écran précédent |
+| Tab | Y / △ | Bille de mode visée : chacun son tour ou Speed Pool (pas pour 9-ball ni 14.1) |
+| P | X / □ | Avec ou sans pouvoirs (tous les modes) |
 | Molette, - / + | LB / RB | 14.1 : changer le score cible |
 
 ## Écran de chargement
@@ -53,8 +55,8 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Clic droit | En R&D seulement : **poing droit** |
 | F | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |
 | Ctrl gauche (maintenir) | En R&D seulement : **garde** |
-| Q | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, Q à nouveau pour l'annuler, E pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table · au mauvais moment (pas son tour, billes qui roulent…), la pastille du pouvoir tremble et dit pourquoi |
-| Molette de la souris | Mode Party, avec deux pouvoirs en stock : choisir celui que Q lance |
+| Q | Utiliser le pouvoir (partie avec pouvoirs) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, Q à nouveau pour l'annuler, E pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table · au mauvais moment (pas son tour, billes qui roulent…), la pastille du pouvoir tremble et dit pourquoi |
+| Molette de la souris | Avec deux pouvoirs en stock : choisir celui que Q lance |
 | C + P (maintenir) | Test : faire rejoindre un joueur de plus (avec une manette libre s'il y en a une ; sinon il prend le clavier et la souris, et l'autre joueur attend sans bouger), dans toute scène avec un PlayerInputManager |
 | Tab | Test, à plusieurs joueurs : passer le clavier et la souris au joueur suivant (celui qui les perd récupère la manette de l'autre, s'il en avait une). Aussi dans le menu debug, rubrique *Joueurs* |
 | C + W | Test : aller directement à la fin d'une partie de 8-ball |
@@ -68,8 +70,8 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Stick droit | Regarder · en visée : tourner autour de la bille · choix d'une poche (annonce de la 8, ou de la poche de la file en Snake Pool, pouvoir) : viser la poche avec le pointeur blanc |
 | Y / △ | Ramasser / poser · entrer / sortir de la visée (près de la blanche) · valider la bille ou la poche visée |
 | X / □ | Objet en main : maintenir puis relâcher pour **lancer** · queue en main : maintenir puis relâcher pour un **coup de queue** · en visée : maintenir puis relâcher pour **tirer** |
-| B / ○ | Utiliser le pouvoir (mode Party) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, B / ○ à nouveau pour l'annuler, Y / △ pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table · au mauvais moment, la pastille du pouvoir tremble et dit pourquoi |
-| D-pad gauche / droite | Mode Party, avec deux pouvoirs en stock : choisir celui que B / ○ lance |
+| B / ○ | Utiliser le pouvoir (partie avec pouvoirs) · pouvoir qui vise un trou (Aimant, Poche fermée) : ouvre le choix du trou, B / ○ à nouveau pour l'annuler, Y / △ pour valider le trou visé avec le pointeur blanc · pouvoir Trou : même chose, en visant un point de la table · au mauvais moment, la pastille du pouvoir tremble et dit pourquoi |
+| D-pad gauche / droite | Avec deux pouvoirs en stock : choisir celui que B / ○ lance |
 | LB / L1 | Mains vides : **coup de poing** (spammer pour enchaîner ; en R&D : **poing gauche**) |
 | RB / R1 | En R&D seulement : **poing droit** |
 | RT / R2 | **Coup de pied** · maintenir puis relâcher : coup de pied chargé (**spartiate** à 80 %) |

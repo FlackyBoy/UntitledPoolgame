@@ -1,18 +1,18 @@
 namespace UntitledPoolGame.Pool
 {
+    // The rules of a match. Whether it's played in turns or in Speed Pool,
+    // and with or without powers, is chosen apart (PoolMatchSetup). The
+    // values are serialized in menu assets and scenes: never reorder, add
+    // new ones last.
     public enum PoolGameMode
     {
+        // 8-ball (EightBallRuleSet; SpeedPoolRuleSet in Speed Pool).
         EightBall,
         NineBall,
         FourteenOne,
-        // Which PARTY variant is actually played is a separate choice, made
-        // on a second screen after picking this — see PoolPartyMode and
-        // PoolMatchRules.DrawPartySubmenuGUI/CreatePartyRuleSet. Only one
-        // sub-mode exists today (Classic: 8-ball rules + powers).
+        // Former mode, now 8-ball with the powers on (PoolMatchSetup.Normalized).
         Party,
-        // Both players shoot at the same time, each with their own cue ball
-        // (SpeedPoolRuleSet). Last on purpose: the value is serialized in
-        // menu assets and scenes.
+        // Former mode, now 8-ball in Speed Pool (PoolMatchSetup.Normalized).
         SpeedPool,
         // 8-ball with living holes wandering the felt (CatchTheHole).
         CatchTheHole,

@@ -120,15 +120,15 @@ namespace UntitledPoolGame.Core
             Cue(s, 50f, 84f, 70f);
             Context(s);
             Heading(s, "heading", m.modeHeading, 30f, 25f, 70f);
-            ModeBall(s, "classic", 18f, 44f, m.classicMode, PoolGameMode.EightBall, 0);
-            ModeBall(s, "powers", 34f, 44f, m.powersMode, PoolGameMode.Party, 1);
-            ModeBall(s, "nine-ball", 18f, 71f, m.nineBallMode, PoolGameMode.NineBall, 2);
-            ModeBall(s, "fourteen-one", 34f, 71f, m.fourteenOneMode, PoolGameMode.FourteenOne, 3);
-            ModeBall(s, "speed-pool", 26f, 57.5f, m.speedPoolMode, PoolGameMode.SpeedPool, 4);
-            ModeBall(s, "catch-the-hole", 42f, 57.5f, m.catchTheHoleMode, PoolGameMode.CatchTheHole, 5);
-            ModeBall(s, "hungry-hole", 42f, 44f, m.hungryHoleMode, PoolGameMode.HungryHole, 6);
-            ModeBall(s, "snake-pool", 42f, 71f, m.snakePoolMode, PoolGameMode.SnakePool, 7);
-            ModeBall(s, "power-wash-pool", 10f, 57.5f, m.powerWashPoolMode, PoolGameMode.PowerWashPool, 8);
+            // The modes only: the type (Y / Tab) and the powers (X / P) are
+            // picked on the aimed ball (SyntheseMenu.DescribeOptions).
+            ModeBall(s, "classic", 26f, 57.5f, m.classicMode, PoolGameMode.EightBall, 0);
+            ModeBall(s, "catch-the-hole", 18f, 44f, m.catchTheHoleMode, PoolGameMode.CatchTheHole, 1);
+            ModeBall(s, "hungry-hole", 34f, 44f, m.hungryHoleMode, PoolGameMode.HungryHole, 2);
+            ModeBall(s, "snake-pool", 42f, 57.5f, m.snakePoolMode, PoolGameMode.SnakePool, 3);
+            ModeBall(s, "power-wash-pool", 10f, 57.5f, m.powerWashPoolMode, PoolGameMode.PowerWashPool, 4);
+            ModeBall(s, "nine-ball", 18f, 71f, m.nineBallMode, PoolGameMode.NineBall, 5);
+            ModeBall(s, "fourteen-one", 34f, 71f, m.fourteenOneMode, PoolGameMode.FourteenOne, 6);
 
             MenuElement rules = Add(s, "rules", MenuElementKind.Panel, 67.5f, 47.5f, 634f, 300f);
             rules.color = K.Cube;
