@@ -11,13 +11,12 @@ namespace UntitledPoolGame.Core
     // button press": while it listens, Unity turns off a lone player's device
     // switching (PlayerInput.isSinglePlayer is false), so picking up a
     // gamepad didn't move P1 and its first button spawned P2.
-    // - A free gamepad's button joins one more player during the match (up
-    //   to Max Player Count, 2 when unlimited), even when P1 plays on the
-    //   keyboard: keyboard P1 + pad P2 is the usual couch setup. A player
-    //   left without a device (C+P cheat) gets it first.
-    // - A free gamepad that can't join (players at the maximum, devices
-    //   picked in the menu) goes to the first player without one, e.g. the
-    //   keyboard P1 next to a pad P2.
+    // - A free gamepad goes to the first player without one: picking up a
+    //   pad (stick or button) moves the keyboard P1, so one can play alone
+    //   on the pad. A player left without a device (C+P cheat) gets it first.
+    // - Start on a free gamepad joins one more player during the match (up
+    //   to Max Player Count, 2 when unlimited), even next to a keyboard P1:
+    //   the couch setup. Any button joins once everyone already has a pad.
     // - Alone, the player also takes the keyboard back when it's used.
     // - The menu and the loading screen hand out their own devices through
     //   Assign; nobody joins by button after that.
@@ -85,26 +84,41 @@ namespace UntitledPoolGame.Core
                 return;
             }
 
-            if (pressedPad != null)
+            Gamepad usedPad = pressedPad != null ? pressedPad : movedPad;
+            if (usedPad != null)
             {
                 PlayerInput idle = PlayerWithoutDevice();
-                if (idle != null) Give(idle, GamepadScheme, pressedPad);
-                else if (CanJoin(players.Count))
+                PlayerInput taker = idle != null ? idle : PlayerWithoutGamepad();
+                bool start = pressedPad != null && pressedPad.startButton.wasPressedThisFrame;
+                // Start asks to join; any button does once nobody can take it.
+                if (pressedPad != null && idle == null && (start || taker == null) && CanJoin(players.Count))
                 {
+                    claimedPad = pressedPad;
+                    claimedFrame = Time.frameCount;
                     PlayerInput joined = manager.JoinPlayer(-1, -1, GamepadScheme, pressedPad);
                     Debug.Log($"[Devices] {pressedPad.displayName} : arrivée de J{players.Count + 1} {(joined != null ? "réussie" : "REFUSÉE par le PlayerInputManager")}.");
                 }
-                else if (PlayerWithoutGamepad() is PlayerInput taker) Give(taker, GamepadScheme, pressedPad);
-                else Debug.Log($"[Devices] {pressedPad.displayName} ignorée : {JoinRefusal(players.Count)}, et tout le monde a déjà une manette.");
+                // A stick never steals a pad in use: only a player without one takes it.
+                else if (taker != null)
+                {
+                    if (start) { claimedPad = usedPad; claimedFrame = Time.frameCount; }
+                    Give(taker, GamepadScheme, usedPad);
+                }
+                else if (pressedPad != null)
+                    Debug.Log($"[Devices] {pressedPad.displayName} ignorée : {JoinRefusal(players.Count)}, et tout le monde a déjà une manette.");
                 return;
             }
 
-            // A stick only takes a pad for a player without one (it must not
-            // steal a pad in use), and only when that pad can't join instead.
-            if (movedPad != null && !CanJoin(players.Count) && PlayerWithoutGamepad() is PlayerInput mover)
-                Give(mover, GamepadScheme, movedPad);
-            else if (keyboardUsed && players.Count == 1) Give(players[0], KeyboardScheme, KeyboardAndMouse());
+            if (keyboardUsed && players.Count == 1) Give(players[0], KeyboardScheme, KeyboardAndMouse());
         }
+
+        private static Gamepad claimedPad;
+        private static int claimedFrame = -1;
+
+        // True for a pad whose Start, this frame, joined a player or handed it
+        // its pad: the pause must not open on that same press.
+        public static bool ClaimedThisFrame(InputDevice device) =>
+            device != null && device == claimedPad && claimedFrame == Time.frameCount;
 
         // Pairs the devices with the players in order (a gamepad alone, the
         // keyboard with the mouse): players already there are reused, missing
