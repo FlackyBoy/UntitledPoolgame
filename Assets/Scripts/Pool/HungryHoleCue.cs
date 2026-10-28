@@ -535,7 +535,7 @@ namespace UntitledPoolGame.Pool
             HungryHoleProp prop = collision.collider.GetComponentInParent<HungryHoleProp>();
             if (prop == null) return;
             if (collision.collider == prop.Body)
-                Debug.Log($"[HungryHole] Le trou de J{Owner + 1} ({Radius * 100f:0.0} cm) bute sur {prop.name} ({prop.Radius * 100f:0.0} cm) : trop gros pour lui.", prop);
+                Debug.Log($"[HungryHole] Le trou de J{Owner + 1} ({Radius * 100f:0.0} cm) bute sur {prop.name} ({prop.FitRadius * 100f:0.0} cm) : trop gros pour lui.", prop);
             else
                 Debug.Log($"[HungryHole] Le trou de J{Owner + 1} bute sur un collider resté sur {prop.name} : {collision.collider.name}.", collision.collider);
         }
@@ -571,7 +571,7 @@ namespace UntitledPoolGame.Pool
             {
                 HungryHoleProp prop = HungryHoleProp.All[i];
                 if (prop.IsEaten || prop.Body == null) continue;
-                bool fits = prop.Radius < Radius;
+                bool fits = prop.FitRadius < Radius;
                 Physics.IgnoreCollision(body, prop.Body, fits);
                 if (!fits || HorizontalDistance(center, prop.Center) >= Radius) continue;
                 rules?.OnPropEaten(this, prop);

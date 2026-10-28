@@ -4,6 +4,8 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-10-27
+- **Hungry Hole : les arbres passent dans le trou quand leur pied y entre** (compilé, non testé). La collision d'un objet était aussi large que son feuillage, mesuré avec tous ses niveaux de détail (les plus grossiers sont plus larges). Seul le premier niveau compte maintenant, et chaque objet a un réglage *Fit* : la part de sa largeur qui doit passer dans le trou, qui donne aussi la largeur de sa collision (0,4 pour les arbres, 1 pour le reste).
+- **Hungry Hole : une bille remise en jeu n'apparaît plus sur un trou** (compilé, non testé). Une bille replacée après une faute ou une 8 trop tôt évite maintenant les trous des joueurs, plus larges que leur blanche cachée ; avant, elle pouvait réapparaître dessous et être avalée tout de suite.
 - **Type de partie, mode et pouvoirs séparés** (compilé, non testé). Une partie se compose de trois choix : le **type** (chacun son tour ou Speed Pool, tout le monde en même temps), le **mode** (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool) et les **pouvoirs** (avec ou sans).
   - **tous les modes dans les deux types**, sauf 9-ball et 14.1 (chacun son tour pour l'instant). Classique en Speed Pool = l'ancien mode Speed Pool ; Catch the Hole marche aussi en Speed Pool ;
   - **Hungry Hole, Snake Pool et Power Wash Pool chacun son tour** : chacun garde sa blanche ; on rejoue si une de ses billes a marqué pendant le tir et que sa blanche est restée sur la table ; la blanche rentrée revient à la fin du tir ;

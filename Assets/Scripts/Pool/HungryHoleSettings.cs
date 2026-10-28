@@ -11,6 +11,8 @@ namespace UntitledPoolGame.Pool
         public GameObject prefab;
         [Tooltip("Largeur de l'objet sur la table : rayon de son emprise, en rayons de bille. Le trou le mange quand il est plus grand que ça.")]
         [Min(0.1f)] public float size = 1f;
+        [Tooltip("Part de sa largeur qui doit passer dans le trou, et largeur de sa collision (1 = tout l'objet ; 0,4 = le pied d'un arbre dont le feuillage déborde).")]
+        [Range(0.1f, 1f)] public float fit = 1f;
         [Tooltip("Chance relative de le tirer.")]
         [Min(0f)] public float weight = 1f;
     }

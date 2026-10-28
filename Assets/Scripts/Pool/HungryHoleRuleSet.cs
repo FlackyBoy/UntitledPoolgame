@@ -98,7 +98,7 @@ namespace UntitledPoolGame.Pool
             HungryHolePropEntry pick = Pick(settings.props, totalWeight);
             float reach = (pick.size + settings.propClearance) * unit;
             if (!TryFindPropSpot(surface, reach, out Vector3 spot)) return null;
-            return HungryHoleProp.Spawn(pick.prefab, spot, pick.size, settings.propMaxHeight, unit);
+            return HungryHoleProp.Spawn(pick.prefab, spot, pick.size, settings.propMaxHeight, unit, pick.fit);
         }
 
         private static HungryHolePropEntry Pick(HungryHolePropEntry[] entries, float totalWeight)
