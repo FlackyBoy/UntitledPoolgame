@@ -15,8 +15,11 @@ namespace UntitledPoolGame.Pool
         private static readonly List<HungryHoleProp> all = new List<HungryHoleProp>();
         public static IReadOnlyList<HungryHoleProp> All => all;
 
-        // Footprint radius, metres.
+        // Footprint radius, metres (room kept around it).
         public float Radius { get; private set; }
+        // What must fit in the hole, and the collision's radius: smaller than
+        // the footprint for a tree whose foliage spreads above its foot.
+        public float FitRadius { get; private set; }
         // Same, in normal-ball radii (what the growth is worked out from).
         public float Size { get; private set; }
         public Collider Body { get; private set; }
@@ -29,7 +32,7 @@ namespace UntitledPoolGame.Pool
         private void OnDisable() => all.Remove(this);
 
         // size and maxHeight in normal-ball radii (unit = that radius).
-        public static HungryHoleProp Spawn(GameObject prefab, Vector3 feltPoint, float size, float maxHeight, float unit)
+        public static HungryHoleProp Spawn(GameObject prefab, Vector3 feltPoint, float size, float maxHeight, float unit, float fit = 1f)
         {
             // Measured unturned: the bounds of a turned box are wider than it is.
             GameObject instance = Instantiate(prefab, feltPoint, Quaternion.identity);
@@ -58,6 +61,7 @@ namespace UntitledPoolGame.Pool
             var prop = instance.AddComponent<HungryHoleProp>();
             prop.Radius = Mathf.Max(bounds.extents.x, bounds.extents.z);
             prop.Size = prop.Radius / unit;
+            prop.FitRadius = prop.Radius * Mathf.Clamp(fit, 0.1f, 1f);
             // Turned at random about its own centre, now that it's measured.
             instance.transform.RotateAround(feltPoint, Vector3.up, Random.Range(0f, 360f));
             prop.pivotOffset = instance.transform.position - feltPoint;
@@ -70,8 +74,8 @@ namespace UntitledPoolGame.Pool
             bodyObject.transform.localScale = new Vector3(1f / lossy.x, 1f / lossy.y, 1f / lossy.z);
             var capsule = bodyObject.AddComponent<CapsuleCollider>();
             capsule.direction = 1;
-            capsule.radius = prop.Radius;
-            capsule.height = Mathf.Max(bounds.size.y, prop.Radius * 2f);
+            capsule.radius = prop.FitRadius;
+            capsule.height = Mathf.Max(bounds.size.y, prop.FitRadius * 2f);
             prop.Body = capsule;
             return prop;
         }
@@ -80,9 +84,22 @@ namespace UntitledPoolGame.Pool
         {
             bounds = default;
             bool any = false;
+            // The far LODs are all enabled too, and coarser (wider): only the
+            // first one counts.
+            var skipped = new HashSet<Renderer>();
+            foreach (LODGroup group in root.GetComponentsInChildren<LODGroup>())
+            {
+                LOD[] lods = group.GetLODs();
+                for (int i = 1; i < lods.Length; i++)
+                    foreach (Renderer r in lods[i].renderers)
+                        if (r != null) skipped.Add(r);
+                if (lods.Length > 0)
+                    foreach (Renderer r in lods[0].renderers)
+                        if (r != null) skipped.Remove(r);
+            }
             foreach (Renderer r in root.GetComponentsInChildren<Renderer>())
             {
-                if (!(r is MeshRenderer || r is SkinnedMeshRenderer)) continue;
+                if (!(r is MeshRenderer || r is SkinnedMeshRenderer) || skipped.Contains(r)) continue;
                 if (!any) { bounds = r.bounds; any = true; }
                 else bounds.Encapsulate(r.bounds);
             }
