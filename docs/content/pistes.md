@@ -53,6 +53,13 @@ Autres idées autour des pouvoirs :
       - **Un seul trou, au tour par tour** : les joueurs tirent chacun leur tour la même blanche-trou. Bille adverse avalée : elle compte pour l'adversaire et le tour passe, comme en 8-ball.
       - **Un trou chacun, en même temps (façon Speed Pool)** : bille adverse avalée, elle compte pour l'adversaire **et** ton trou rétrécit (pas de tour à passer). Option : le plus gros trou avale celui de l'autre.
   - **Variante asymétrique** : le tireur joue au billard pendant que l'adversaire déplace un trou pour avaler ses billes en route ; les rôles tournent à chaque tir. Proche du pouvoir *Pilote* de Catch the Hole.
+- **Snake Pool : limiter les coupures** (remarque du 27/10) : pouvoir briser la file de l'autre à chaque tir devient vite pénible. Idées de l'utilisateur : un **pouvoir** ou un **cooldown**. Pistes de Claude, à combiner ou non :
+  - **Cooldown** : après une coupure, la file coupée est protégée quelques secondes (ou l'attaquant ne peut plus couper pendant ce temps).
+  - **Coupure en pouvoir** : on ne coupe plus en touchant la file. Il faut un pouvoir « Ciseaux » ramassé dans une caisse, ou un nombre de coupures limité par partie (3, par exemple).
+  - **Bouclier** : un pouvoir de défense protège sa file pendant un temps (voir aussi les premiers pouvoirs de Défense, plus bas).
+  - **Coupure partielle** : un coup ne détache que les 2 ou 3 billes du bout, pas toute la fin de la file.
+  - **Coût pour l'attaquant** : couper fait perdre une bille à sa propre file.
+  - Réglage disponible tout de suite : *Min Break Speed* (`SnakePoolSettings`, 0,15 m/s) est très bas ; le monter fait qu'il faut un vrai tir pour couper, sans code.
 - **Power Wash Pool, le Kärcher** (27/10, remis à plus tard) : le joueur tient aussi un nettoyeur haute pression ; hors visée, le jet lave un peu le tapis et pousse les billes. Le mode existe sans (voir la TODO et le GDD).
 
 ### Structure « party game » (idée du 20/10)

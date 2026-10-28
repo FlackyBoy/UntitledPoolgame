@@ -20,8 +20,8 @@ MonoBehaviour:
   addHoleEveryPots: 5
   addHoleEverySeconds: 0
   openTime: 0.8
-  minRadius: 0.15
-  maxRadius: 0.5
+  minRadius: 0.05
+  maxRadius: 0.2
   sizeChangeRate: 0.12
   growPerBall: 0.15
   maxGrowth: 1.5
