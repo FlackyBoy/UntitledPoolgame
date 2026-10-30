@@ -6,7 +6,7 @@
 
 | Type de réglage | Où | Créé par | Pour quoi |
 |---|---|---|---|
-| **Fichiers de réglages partagés** | `Assets/Resources/*.asset` | *Tools > Pool > Ensure Config Assets Exist* | Physique des billes, sensations caméra, effets d'empochage, apparition des pouvoirs, HUD, niveaux du menu, menu et pause, écran de chargement, trous vivants (Catch the Hole) |
+| **Fichiers de réglages partagés** | `Assets/Resources/*.asset` | *Tools > Pool > Ensure Config Assets Exist* | Physique des billes, sensations caméra, effets d'empochage, apparition des pouvoirs, HUD, niveaux du menu, menu et pause, écran de chargement, Boogie Night, trous vivants (Catch the Hole) |
 | **Scène du menu** | `Assets/Scenes/MainMenu.unity` | *Tools > Pool > Create Main Menu Scene* | Le menu principal, première scène du jeu |
 | **Écrans des menus** | `Assets/Resources/Menus/*.asset` | *Ensure Config Assets Exist*, modifiés dans *Tools > Pool > Menu Studio* | Accueil, pages du menu, réglages, pause, chargement : éléments, positions, textes, effets, Feel |
 | **Séquences Feel** | `Assets/Feel/Sequences/*.prefab`, liées dans `Resources/GameFeelSettings` | *Tools > Pool > Text FX Studio* ou à la main | Son, vibration, texte du HUD, secousse… à un moment de la partie |
@@ -156,6 +156,66 @@ Dans ce mode, l'effet de base d'une bille rentrée (halo et aura de la poche, se
 | La 8 | *Mud Trail Width* : largeur de la boue qu'elle laisse en roulant (0 = elle ne salit pas) ; *Eight Splash Radius* : portée de l'éclaboussure (même forme) gagnée par le dernier à l'avoir touchée quand elle rentre, ce qui arrête la partie | 1,2, 0,6 |
 | Diagnostic | *Debug Logs* : lignes `[PowerWash]` (bille rentrée, la 8, fin de partie) | oui |
 
+### PlayAnywhereSettings — golf dans le décor (mode Play Anywhere)
+
+Chaque joueur rentre sa blanche dans un trou posé dans la salle, en le moins de coups possible (*Lancer sans le menu* : *Mode* = *PlayAnywhere*). Créé par *Ensure Config Assets Exist*. Le trou lui-même (départs, trou, par) est un objet de la scène, créé par *Tools > Pool > Play Anywhere > Créer un trou* (voir plus bas). La couleur des blanches vient de `SpeedPoolSettings`.
+
+| Groupe | Champs | Défauts |
+|---|---|---|
+| Tir | *Shot Power Multiplier* : force des tirs, multipliée parce que la salle est bien plus grande qu'une table | ×2 |
+| Surfaces | *Default Surface* : surface du sol et du décor qui n'ont pas de composant *Surface* (vide = frottement du tapis de billard ; le tapis de la table garde toujours le sien) | Parquet |
+| Trou | *Cup Catch Speed* : vitesse (m/s) au-dessous de laquelle une bille qui passe sur le trou tombe dedans ; *Cup Sink Time* : durée de la chute. Plus vite, la bille tape la lèvre (une fois par passage) : elle perd *Cup Lip Slowdown* de sa vitesse (assez ralentie, elle tombe quand même), saute un peu (*Cup Lip Hop*, m/s) et est déviée vers l'extérieur jusqu'à *Cup Lip Deflection* degrés, d'autant plus qu'elle passe près du bord | 2,2 m/s, 0,4 s, 40 %, 0,3 m/s, 30° |
+| Partie | *Courses* : nombre de parcours de la partie, les trous de la scène joués dans l'ordre de leur *Order* (0 = tous) ; *Scoreboard Time* : durée du tableau des scores après chaque parcours | 3, 6 s |
+| Manches | *Rounds* : manches sur chaque parcours (0 = jusqu'à ce que les deux aient rentré leur bille, comme au golf ; *Max Strokes* reste le plafond) ; *Strokes Per Round* : coups de chaque joueur par manche, avant la pose suivante ; *Unfinished Penalty* : coups ajoutés à qui n'a pas rentré sa bille après la dernière manche (seulement avec *Rounds* > 0) | 0, 2, +2 |
+| Objets (caisse et pose) | *Props* : objets que la caisse peut proposer (*Prefab*, *Weight* = chance relative, *Scale*, *Use Own Colliders* : garde les colliders du prefab au lieu d'une boîte à sa taille, il en faut un sur l'objet racine). *Ensure Config Assets Exist* y met les objets générés (bloc, rampe, cône, portail, tuyau, ventilateur, ressort, glue, verglas, avec leurs colliders) ; d'autres prefabs s'ajoutent à la main ; *Crate Choices* : objets posés dans la caisse à chaque manche (au moins un par joueur) ; *Crate Offers All* (pour tester) : la caisse propose tous les objets de *Props*, une fois chacun ; *Place Range* : distance de pose dans la direction du regard ; *Rotate Speed* (croix maintenue, °/s) et *Rotate Step* (par cran de molette) ; *No Build Radius* : rien ne se pose à moins de ça du trou, des départs et des billes ; *Max Place Slope* : pente maximale du sol ; *Build Time Limit* : temps pour prendre et poser (0 = sans limite ; passé ce temps, un objet pas posé est retiré) ; *Build Shout* : gros message sur chaque moitié d'écran au début de la phase de pose (« À la caisse ! », balises de Text FX Studio, vide = aucun) ; *Build Warn Time* / *Build Warn Shout* : message quand il reste ce temps de pose (10 s, « Plus que 10 s ! ») ; *Build Time Up Shout* : message quand le temps est écoulé (« Temps écoulé ! ») ; le temps restant s'affiche aussi sur la plaque du HUD ; *Ghost Valid Color* / *Ghost Invalid Color* : aperçu vert ou rouge | les 9 objets, 3, 5 m, 120 °/s / 15°, 0,5 m, 30°, 45 s |
+| Gadgets (objets à effet) | *Fan Acceleration* : poussée du ventilateur (m/s²) sur une bille juste devant lui, qui faiblit jusqu'à 0 au bout de sa zone de 2 m (une bille poussée moins fort que le frottement du sol s'arrête) ; *Spring Launch Speed* : vitesse à laquelle le ressort renvoie une bille devant lui, au moins ; *Spring Speed Gain* : une bille qui arrive vite repart à sa vitesse × ceci, si c'est plus ; *Pipe Min Exit Speed* : vitesse minimale à la sortie du tuyau ; *Pipe Max Length* : distance maximale entre le trou d'entrée et la sortie, à la pose ; *Destroy Radius* : rayon dans lequel le destructeur détruit les objets posés | 3 m/s², 3,5 m/s, ×1,3, 1 m/s, 6 m, 1,5 m |
+| Coups | *Max Strokes* : coups au plus sur le trou, le joueur a fini avec ce score (0 = pas de limite) ; *Out Of Bounds Penalty* : coups de pénalité hors limites ; *Out Of Bounds Depth* : une bille qui tombe plus bas que ça sous le départ ou le trou est hors limites | 10, 1, 2 m |
+| Diagnostic | *Debug Logs* : lignes `[PlayAnywhere]` (manches, objets pris et posés, coups, trou, lèvre, surface sous la bille, hors limites, fin) | oui |
+
+**Objets de la scène :**
+
+| Composant | Champs |
+|---|---|
+| *Play Anywhere / Trou* (`PlayAnywhereHole`) | Un parcours. *Order* : sa place dans la partie (l'outil numérote les trous à la suite) ; *Crate* : sa caisse (vide = la première de la scène) ; *Par* ; *Player 1 Tee* et *Player 2 Tee* : départs, la bille est posée dessus (J2 vide = à côté de J1) ; *Cup* : centre du trou, au sol ; *Cup Radius* (0,09 m ; le disc noir créé par l'outil suit ce rayon). Le bas de la bille doit être à moins de 5 cm du disc, au-dessus ou en dessous. *Flag* et *Flag Size* : le drapeau et sa taille (1 = 80 cm). **Parcours** (zone de jeu) : un couloir vert des départs au trou en passant par les *Path* points, chacun avec sa largeur ; une bille qui en sort, ou qui tombe plus bas que lui de *Path Fall Depth* (0,5 m), est hors limites (entre deux points, le parcours est à la hauteur du plus bas des deux : un saut d'un point en hauteur vers un point au sol reste en jeu) ; les cercles verts autour des points montrent la largeur du couloir à cet endroit (ses bouts sont arrondis, pour que les virages se rejoignent) ; pas de plafond (un saut par-dessus un mur qui retombe dans le couloir reste en jeu). *Path Width* (3 m) : largeur aux départs et au trou (0 = pas de zone). Tout se règle à la souris dans la Scene, trou sélectionné : voir *Outils*. Les objets posés sont retirés au parcours suivant. En jeu, seul le parcours en cours est affiché : les rendus et les colliders de ses enfants (départs, trou, drapeau, décor mis dessous, sa caisse si elle est rangée dessous) sont cachés tant que ce n'est pas son tour |
+| *Play Anywhere / Caisse* (`PlayAnywhereCrate`) | Les objets se posent en ligne sur le dessus de la boîte visible de la caisse (premier renderer de l'objet ou de ses enfants : déplacer la boîte seule suffit). *Spacing* : écart entre deux objets, le long de l'axe rouge de la boîte ; *Top Height* : hauteur de pose quand la caisse n'a pas de boîte visible. Sans caisse dans la scène, les manches n'ont pas de pose |
+| *Play Anywhere / Zone hors limites* (`PlayAnywhereOutOfBounds`) | Un collider (déclencheur) : une bille dont le centre y entre est hors limites. Seulement pour exclure un coin à l'intérieur du couloir d'un parcours : le reste est géré par le parcours |
+| *Play Anywhere / Surface* (`PlayAnywhereSurface`) | Pour les exceptions (la plupart des objets sont reconnus seuls, voir ci-dessous). *Type* : la surface de cet objet et des colliders de ses enfants (sauf ceux qui ont leur propre *Surface*). Se pose aussi par *Tools > Pool > Play Anywhere > Surface de la sélection* |
+| Objets à effet de la caisse (prefabs de `Assets/Prefabs/PlayAnywhere`) | Ils n'agissent qu'une fois posés, ou tout de suite s'ils viennent du menu de test (C + A) ou sont glissés directement dans la scène (même en jeu : le plus rapide pour en essayer un). Leurs zones sont des boîtes dans l'espace de l'objet (elles tournent et changent de taille avec lui), visibles dans la vue Scene quand l'objet est sélectionné. *Portail destructeur* (`PlayAnywherePortal`) : *Opening Center / Size*, l'ouverture ; une bille qui la traverse est hors limites. *Tuyau de raccourci* (`PlayAnywherePipe`) : deux parties posées l'une après l'autre, *Entry* (un trou au sol) puis *Exit* (le bout de tuyau, à *Pipe Max Length* au plus) ; une bille qui passe sur le trou (*Entry Radius*, jusqu'à *Entry Height* au-dessus) tombe dedans et ressort de la sortie, selon son axe Z, à *Exit Distance* devant elle, à sa vitesse. Pas de pénalité : c'est un raccourci. *Destructeur* (`PlayAnywhereDestroyer`) : dès qu'il est posé, détruit tous les objets posés à moins de *Destroy Radius*, lui compris ; son aperçu montre le rayon (cercle rouge). Il n'agit que posé depuis la caisse. *Ventilateur* (`PlayAnywhereFan`) : *Blow Center / Size*, la zone soufflée devant lui (2 m). *Ressort* (`PlayAnywhereSpring`) : *Pad Zone Center / Size*, la zone devant la plaque ; *Pad*, *Pad Pop*, *Pad Pop Time* : la plaque qui sort quand il se déclenche. La glue et le verglas sont des plaques avec un composant *Surface* (types *Glue* et *Verglas*) |
+
+**Types de surface** (`PlayAnywhereSurfaceType`, dans `Assets/Resources/PlayAnywhereSurfaces`, créés par *Ensure Config Assets Exist* ; un nouveau : *Create > Pool > Play Anywhere Surface*). *Rolling Friction* : ralentissement (m/s²) d'une bille qui roule ; *Slide Friction* : accroche d'une bille qui glisse encore (effet) ; *Bounciness* : rebond sur un mur ou en tombant (0 à 1 ; sous 0,3 m/s, Unity ne fait pas rebondir). **Reconnaissance automatique** : *Materials*, les matériaux de rendu qui ont cette surface (glissés une fois, valables dans toutes les scènes) ; *Keywords*, des mots cherchés dans le nom de l'objet et de son matériau (« rug », « carpet », « tile »…).
+
+Au début de la partie, chaque collider fixe du décor reçoit sa surface, dans cet ordre : composant *Surface* sur lui ou un parent ; la table de billard (garde le tapis) ; un matériau listé dans un type ; un mot-clé ; sinon *Default Surface*. Les objets qui ont un Rigidbody (joueurs, billes, objets à ramasser) ne sont pas touchés, ni pour le rebond les colliders qui ont déjà un matériau physique (sauf avec un composant *Surface*). La console écrit combien de colliders ont été traités. Le tapis du billard est à 0,5 / 2 (`PoolPhysicsSettings`). Pendant la partie, le rebond se règle en direct ; le frottement compte dès que la bille change de surface.
+
+| Type | Roulement | Glissement | Rebond |
+|---|---|---|---|
+| Parquet | 0,3 | 1,5 | 0,4 |
+| Carrelage | 0,4 | 1,5 | 0,5 |
+| Comptoir | 0,25 | 1,2 | 0,45 |
+| Tapis | 1 | 3 | 0,1 |
+| Moquette | 1,5 | 4 | 0,05 |
+| Glue (plaque de la caisse seulement) | 6 | 10 | 0 |
+| Verglas (plaque de la caisse seulement) | 0,03 | 0,3 | 0,3 |
+
+*Glue* et *Verglas* n'ont ni matériau ni mot-clé : le décor ne les prend jamais, seules les plaques de la caisse les portent.
+
+Hors limites (zone, poche de la table, chute) : pénalité, puis la bille revient là où elle était arrêtée avant de rouler.
+
+### PocketSizeSettings — le grand chasse le petit (mode Pocket Size)
+
+Un joueur rétréci sur la table, l'autre le chasse à la blanche, deux manches (*Lancer sans le menu* : *Mode* = *PocketSize*). Créé par *Ensure Config Assets Exist*, avec les six pouvoirs du mode.
+
+| Groupe | Champs | Défauts |
+|---|---|---|
+| Manches | *Round Duration* : temps à tenir pour le petit · *Hits To Lose* : touches qui le font perdre · *Countdown* : avant la chasse (le grand ne peut pas tirer) · *Round Over Time* : résultat affiché avant la manche suivante · *First Giant* : le grand de la 1re manche (0 = J1) | 120 s · 3 · 3 s · 4 s · 0 |
+| Le petit | *Tiny Scale* : sa taille (0,07 ≈ 12 cm) · *Tiny Blocks Balls* : collisions entre le petit et les billes (décoché : il les traverse) · *Tiny Jump Height* : hauteur du saut à taille normale, quand le personnage n'a pas le déplacement R&D (sinon c'est celle de MovementSettings), multipliée par la taille · *Tiny Near Clip* : plan proche de sa caméra | 0,07 · oui · 1,2 m · 0,005 m |
+| Touches | *Min Hit Speed* : vitesse minimale d'une bille (blanche ou de couleur, qui va vers le petit) · *Hit Margin* : marge du contact · *Invulnerable Time* : après une touche ou une chute · *Knock Transfer* : vitesse de projection pour 1 m/s de bille qui arrive sur lui (de face ; de biais, moins) · *Knock Max Speed* · *Knock Along Impact* : direction, de 0 (sens de la bille) à 1 (opposé du point d'impact) · *Knock Lift* : part vers le haut · *Knock Damping* : freinage · *Fall Depth* : sous le tapis, le petit est tombé (une touche, retour sur le tapis) | 0,25 m/s · 1,2 cm · 1,5 s · ×1,5 · 3 m/s · 0,6 · 0,35 · 3 · 6 cm |
+| Table | *Obstacle Balls* : billes de couleur éparpillées · *Obstacle Clearance* : distance à la blanche et au départ du petit · *Respot Delay* : une bille rentrée revient · *Giant Cue Color* | 6 · 0,2 m · 1,5 s · blanc |
+| Pouvoirs | *Giant Crate Color* / *Tiny Crate Color* : couleur des caisses de chaque rôle · *Tiny Crate Reach* : distance de ramassage pour le petit | rouge / bleu clair · 9 cm |
+| Textes | rôles (*GRAND*, *PETIT*), manche, compte à rebours, touches, manche gagnée / perdue, sur la plaque du HUD | |
+| Diagnostic | *Debug Logs* : lignes `[PocketSize]` | oui |
+
+Le petit est rétréci par `LocalPlayerShrink`, ajouté au joueur pendant la partie : rien à régler sur le prefab. Son ragdoll est coupé tant qu'il est petit. La blanche du grand revient après le délai de `SpeedPoolSettings` quand elle est rentrée.
+
 ### CatchTheHoleSettings — trous vivants (mode Catch the Hole)
 
 Les trous qui bougent, grandissent et rétrécissent sur le tapis, en mode **Catch the Hole** (menu Just for fun, ou *Lancer sans le menu* réglé sur *CatchTheHole*). Le menu debug (*Catch the Hole*) les lance aussi dans une autre partie.
@@ -214,17 +274,35 @@ Tout ce qu'affiche l'écran de chargement (variante « Le retour des billes ») 
 
 Le nom, l'image et le twist du niveau viennent de GameFlowSettings.
 
+### BoogieNightSettings — la Boogie Night
+
+La soirée de plusieurs parties (menu *Jouer > 2 joueurs > Mode de jeu > Boogie Night*), sa roue et ses textes :
+
+| Groupe | Ce qu'on règle |
+|---|---|
+| Soirée | Nombre de parties proposé (5), le plus petit et le plus grand (1 et 15), relances permises à chaque tirage (1) |
+| Roue | Les modes de la roue (une part chacun ; Classique, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size ; 9-ball et 14.1 retirés ; Play Anywhere n'apparaît sur la roue que si le niveau a un trou posé), la chance d'avoir les pouvoirs (50 %) et le Speed Pool pour un mode jouable des deux façons (50 %), le score du 14.1 tiré (25), durée du tour de roue (3,2 s) et nombre de tours (5) |
+| Page du menu | Titre, règles affichées, « {0} parties », l'aide des touches, « Lancer la soirée » |
+| Roue (textes) | Titre, « Partie {0} / {1} », « Ultime partie ! », avec / sans pouvoirs, les aides « jouer » et « relancer ({0}) » |
+| Fin de partie | « Tourner la roue », « Menu principal », « J{0} remporte la soirée ! », la ligne du score (`{0}`, `{1}` = points de J1, J2) |
+
+Le type tiré respecte les types permis du mode (`PoolModeSettings`) ; la couleur et le nom de chaque part viennent des billes de mode de MenuSettings.
+
 ### Menu Studio — les écrans des menus
 
 Chaque écran est un fichier `Assets/Resources/Menus/<écran>.asset`, créé avec la disposition d'origine par *Ensure Config Assets Exist* et modifié dans **Tools > Pool > Menu Studio** (mode d'emploi : [Outils > Menu Studio](outils.html#menu-studio)) :
 
 | Écran | Ce que c'est |
 |---|---|
-| Title | l'accueil (les six billes) |
-| NewGame, Load | les emplacements de sauvegarde |
+| Title | l'accueil (Jouer, Réglages, Quitter) |
+| Players | 1 joueur / 2 joueurs |
+| NewGame, Load | les emplacements de sauvegarde (plus atteints depuis l'accueil) |
 | Level | le choix du niveau (les cartes des niveaux viennent de GameFlowSettings) |
-| Mode | le type de partie et la carte des règles |
-| Multiplayer, Lobby | Local / En ligne, puis l'arrivée des joueurs |
+| GameChoice | 2 joueurs : Sélection ou Boogie Night |
+| Mode | le mode, son type, les pouvoirs et la carte des règles |
+| Boogie | le nombre de parties de la Boogie Night (texte `rounds`, écrit par le jeu) et « Lancer la soirée » |
+| Multiplayer | Local / En ligne (plus atteint depuis l'accueil) |
+| Lobby | l'arrivée des joueurs (2 joueurs) |
 | Settings | le cadre de *Réglages > Touches* (menu et pause) |
 | Pause, PauseConfirm | la pause et la confirmation du retour au menu |
 | Loading | l'écran de chargement |
@@ -238,10 +316,12 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 | Couleurs | Tapis, bois, texte clair et son ombre, bille crème, encre, fond des cartes, accents jaune et rouge, cube de craie (carte des règles), J1, J2 |
 | Polices | Texte courant et gros titres (vide = Titan One / Bowlby One) |
 | Fond du menu | Une image à la place du bar dessiné (recadrée pour remplir l'écran), les lumières floues du bar (oui / non), un logo à la place du titre écrit et sa hauteur |
-| Accueil | Les deux lignes du titre (« Untitled », « POOL GAME »), les six billes, « vise une bille, tire ! », les aides de touches en bas |
+| Accueil | Les deux lignes du titre (« Untitled », « POOL GAME »), la bille Jouer (et les anciennes billes, valeurs de départ des écrans plus utilisés), « vise une bille, tire ! », les aides de touches en bas |
+| Combien de joueurs ? | Titre, billes 1 joueur et 2 joueurs |
+| Mode de jeu | Titre, billes Sélection et Boogie Night |
 | Nouvelle partie / Charger | Titres, « Emplacement {0} », « Libre », « Vide », les notes du cube, les messages |
-| Choix du niveau | « On joue où ? », le tampon et le message « Bientôt », les étiquettes « Just for fun » et « Multijoueur · Local » |
-| Type de partie | « Quel type de partie ? », les billes de mode (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool) avec leurs règles, les lignes d'option sous les règles : type (*Turn Based Option*, *Speed Pool Option*, *Turn Based Only Option*), pouvoirs (*Powers On Option*, *Powers Off Option*), score du 14.1 (*Target Score Format*, « Premier à {0} ») |
+| Choix du niveau | « On joue où ? », le tampon et le message « Bientôt », les étiquettes « 1 joueur » et « 2 joueurs » |
+| Type de partie | « Quel type de partie ? », les billes de mode (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size) avec leurs règles, les lignes d'option sous les règles : type (*Turn Based Option*, *Speed Pool Option*, *Turn Based Only Option*), pouvoirs (*Powers On Option*, *Powers Off Option*), score du 14.1 (*Target Score Format*, « Premier à {0} ») |
 | Multijoueur et salon | Titres, billes Local et En ligne, « Qui joue ce soir ? », « C'est parti », « J{0} appuie ! », « {0} - prêt », noms des appareils, « Salut J2 ! » |
 | Pause | Titre, les trois pilules (Reprendre, Réglages, Menu principal), « J{0} a mis la partie en pause », la confirmation et ses deux pilules |
 | Réglages > Touches | Titre, onglets (le premier est actif, les autres reçoivent « · bientôt »), en-têtes de colonnes, boutons, et le nom de chaque action |
@@ -417,6 +497,14 @@ En solo (une seule manette ou un seul clavier pour les deux côtés), les deux r
 | Groupe identique | `IdenticalGroupsPower` | Look (*Colorless* : aspect uni · *Like Ball* : aspect d'une bille), Look Ball Number (8 : bille copiée, 1 à 15), Colorless Material (facultatif), Colorless Color (gris clair, si pas de matériau). *Requires Own Turn* décoché à la création (attaque) |
 | Bille destructrice | `BallBlastPower` | Explosion Prefab (*CFXR2 WW Explosion*), Explosion Scale (0,15), Explosion Lifetime (4 s), Spare Eight Ball (oui), Blast Speed (0,5 m/s, 0 = pas de souffle), Blast Radius (0,3 m) |
 | Aimant | `MagnetPower` | Capture Radius (0,4 m : distance du trou où la bille est captée), Min Capture Speed (0,05 m/s : une bille immobile n'est pas captée), Pull Acceleration (1,5 m/s² : force d'attraction), Steering (4/s : correction de trajectoire, 0 = aucune), Max Pull Duration (4 s : lâche une bille coincée) ; *VFX dans la poche* : Pocket Vfx Prefab (*CFXR Electrified 3*, vide = aucun), Pocket Vfx Scale (0,2), Pocket Vfx Height (0,02 m), Pocket Vfx Fade Out (1,5 s) |
+| Blanche au ralenti (Pocket Size, petit) | `SlowCueBallPower` | Duration (6 s), Max Speed (0,5 m/s : vitesse maximale des blanches du grand) |
+| Blanche à la poche (Pocket Size, petit) | `RepelCueBallPower` | Speed (2,5 m/s : vitesse donnée à chaque blanche du grand vers la poche ouverte la plus proche) |
+| Super vitesse (Pocket Size, petit) | `TinySprintPower` | Duration (6 s), Multiplier (×1,8) |
+| Tir rapide (Pocket Size, grand) | `RapidShotPower` | Duration (10 s), Multiplier (×1,8 : force de tous les tirs) |
+| Blanche ×2 (Pocket Size, grand) | `DoubleCueBallPower` | Duration (15 s : la deuxième blanche disparaît ensuite ; relancé pendant ce temps, il prolonge) |
+| Petit au ralenti (Pocket Size, grand) | `SlowTinyPower` | Duration (6 s), Multiplier (×0,5) |
+
+**Pouvoirs de Pocket Size** : ils ne sortent que dans ce mode, et ce mode ne donne qu'eux (pas besoin de *Only In Modes*). Chacun appartient à un rôle ; sa caisse est un cube à la couleur du rôle (PocketSizeSettings), et l'autre rôle qui passe dessus la détruit. Lancé par le mauvais rôle (cas qui ne devrait pas arriver : le stock est vidé à chaque manche), il est perdu sans effet.
 
 **Decal du Trou** : le contour brûlé est un decal URP. Il ne s'affiche que si le renderer utilisé a la fonction *Decal* : sélectionner `Assets/Settings/PC_Renderer` (et `Mobile_Renderer`), *Add Renderer Feature > Decal*. La technique *Automatic* convient ; elle a un petit coût de rendu, payé deux fois en écran partagé. Pour un autre aspect, mettre son propre matériau de decal dans *Scorch Decal*. La texture générée (`Assets/Textures/Decals/TableHoleScorch.png`) peut être régénérée par l'outil quand sa version change.
 
@@ -454,6 +542,9 @@ Sur `Assets/Prefabs/PlayerLocal/New.prefab`. Chaque champ a une infobulle dans l
 | Trajectory preview | Lignes de trajectoire (longueurs, couleurs) |
 | Held cue and body while aiming | Avancée des mains (*Max Hand Stretch* 0,75 m), penché du buste (*Max Body Lean* 0,45 m, *Body Lean Bend*), décalage et inclinaison de la queue, écart pointe-bille (*Aim Tip Gap*), diagnostics *Trace Aim Pose* / *Trace Aim Input* |
 | Stretched shot | Coup allongé : portée en plus (*Max Stretch Reach* 0,6 m), montée du bassin, flexion du buste, jambe levée, tremblement de la visée (1,5°), pieds tenus au sol ; bassin retenu au bord du tapis et au-dessus de la table, compensation par le buste, lissage |
+| Low ball (on the floor) | Bille plus basse que le tapis de la table (au sol, Play Anywhere) : le personnage s'accroupit de la différence, jusqu'à *Max Low Ball Crouch* (0,45 m), la queue descend avec lui, le buste se plie (*Low Ball Crouch Bend*, 25°) et la queue peut s'incliner de *Low Ball Extra Cue Tilt* (20°) en plus. *Standing Ball Height* (0,8 m, au-dessus des pieds) remplace le tapis dans une scène sans table et toujours en Play Anywhere, où la table n'est qu'un décor. Une bille sur le tapis ne fait jamais s'accroupir |
+| Stance (Play Anywhere) | En visée, *Crouch* (C / B ○) fait passer de debout à accroupi (*Stance Crouch Depth* : descente du bassin, le corps seul, la queue reste sur la bille). La posture descend seule quand un obstacle fixe (décor, objet posé) est au-dessus du corps : entre les hauteurs *Standing Torso Heights* → accroupi, aussi entre *Crouched Torso Heights* → allongé (demande le calque d'animation ajouté par *Tools > Pool > Play Anywhere > Ajouter la pose allongée au joueur* ; sans lui, accroupi). Une bille à moins de *Prone Max Ball Height* au-dessus des pieds (au sol) se vise toujours accroupi au moins ; allongé seulement pour une telle bille (plus haut, sur un comptoir : accroupi). Allongé : *Prone Shoulder Distance* (bille → milieu des épaules, dans l'axe), *Prone Cue Rise* (la queue monte vers le talon), *Prone Camera Height Scale* (caméra de visée plus basse), *Prone Blend Time* (se coucher / se relever) ; le corps est recalé à chaque image d'après la position mesurée des épaules et du bassin. *Stance Probe Radius* : rayon des volumes ; *Trace Stance* : lignes `[AimStance]` (posture, et allongé : écart des épaules, rotation du corps, correction) | C / B, 0,45 m, 1,05–1,7 m, 0,6–1,15 m, 0,3 m, 1,1 m, 4°, ×0,4, 0,25 s, 0,2 m, oui |
+| Walls (Play Anywhere) | En visée, un mur (ou tout obstacle fixe, pas les objets de la caisse) entre la bille et l'endroit où se tiendrait le joueur l'avance vers la bille au lieu de le laisser entrer dedans ou passer derrière, autant qu'il faut, jusqu'à *Min Wall Ball Gap* (0,4 m) de la bille ; en sortant de la visée, un corps resté de l'autre côté d'un mur ou au-dessus du vide est replacé du bon côté (vers l'endroit où il est entré en visée ; pas de réglage) ; la queue glisse d'autant dans ses mains, la pointe reste à la bille. Les mains montent de *Wall Cue Raise* quand le corps a avancé de *Max Wall Push* (0,6 m) ou plus et la queue peut pencher de *Wall Extra Cue Tilt* en plus, pour que son talon s'écarte du mur. *Wall Probe Heights* : hauteurs du volume testé (jambes et bassin ; les comptoirs au-dessus restent gérés par la posture). *Camera Avoids Walls* : la caméra de visée passe devant un mur entre elle et la bille. Rien de tout ça en posture allongée. Console : `[AimStance] … mur derrière` | 0,6 m, 0,25 m, 20°, 0,2 → 0,8 m, oui |
 | Out of reach | Main avant qui lâche la queue hors de portée, marge avant de lâcher (0,1 m), durée (0,25 s) |
 | Body positioning while aiming | Distance de la table au corps (*Table Clearance Margin* 0,5 m), orientation du corps |
 | Ball-in-hand placement | Hauteur de la vue du dessus, vitesse de déplacement de la bille, *Placement Clear Above* (rien n'est dessiné au-dessus de la table) |
@@ -725,7 +816,7 @@ Une scène qui contient une table de billard, lancée directement depuis l'édit
 | Paramètre | Ce qu'il fait | Défaut |
 |---|---|---|
 | Type | *ModeDefault* = le type d'origine du mode (Speed Pool pour Hungry Hole, Snake Pool et Power Wash Pool), *TurnBased* = chacun son tour, *SpeedPool* = les deux joueurs tirent en même temps, chacun sa blanche. 9-ball et 14.1 se jouent toujours chacun son tour | ModeDefault |
-| Mode | Règles de la partie démarrée toute seule (*EightBall* = classique, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`, *SnakePool* = les billes ramassées suivent la blanche en file, réglé dans `SnakePoolSettings`, *PowerWashPool* = les billes lavent le tapis crasseux, réglé dans `PowerWashPoolSettings`). *Party* et *SpeedPool* sont les anciens modes, gardés pour les scènes déjà réglées : *Party* = *EightBall* avec les pouvoirs, *SpeedPool* = *EightBall* en Speed Pool | EightBall |
+| Mode | Règles de la partie démarrée toute seule (*EightBall* = classique, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`, *SnakePool* = les billes ramassées suivent la blanche en file, réglé dans `SnakePoolSettings`, *PowerWashPool* = les billes lavent le tapis crasseux, réglé dans `PowerWashPoolSettings`, *PlayAnywhere* = golf dans le décor, réglé dans `PlayAnywhereSettings` et sur le trou de la scène). *Party* et *SpeedPool* sont les anciens modes, gardés pour les scènes déjà réglées : *Party* = *EightBall* avec les pouvoirs, *SpeedPool* = *EightBall* en Speed Pool | EightBall |
 | Powers | Caisses de pouvoirs et bille à pouvoir (la bille seulement chacun son tour) | non |
 | Target Score | Score à atteindre, si 14.1 | 150 |
 
