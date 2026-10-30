@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7418b4104476ca54d94cb7fff93ccaf8, type: 3}
+  m_Name: PlayAnywhereSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PlayAnywhereSettings
+  shotPowerMultiplier: 2
+  defaultSurface: {fileID: 11400000, guid: 7043fffa4bb988244aa27c1e8d53d2f0, type: 2}
+  cupCatchSpeed: 2.2
+  cupLipSlowdown: 0.4
+  cupLipDeflection: 30
+  cupLipHop: 0.3
+  cupSinkTime: 0.4
+  courses: 3
+  scoreboardTime: 6
+  rounds: 0
+  strokesPerRound: 2
+  unfinishedPenalty: 2
+  maxStrokes: 10
+  outOfBoundsPenalty: 1
+  outOfBoundsDepth: 2
+  props:
+  - prefab: {fileID: 8511656654336660993, guid: d18d50490aefabb45ada83e1cf718652, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 5608410145560658484, guid: 12b0199e28c052e42996a0fb5a1ef8fc, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 5303345263016837766, guid: 5beed7734a140ff4d8a2df4ad365717c, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 1779973649902672331, guid: 61282fe6f42eb8a4ba8a0a45923f048a, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 8195431570349035102, guid: 974ae9b5b25594642b5834b665c63423, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 7245319549962160756, guid: f35b5a4af2a323d4f9e16f10ce18ab91, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 3896436313643572966, guid: 49ffae1a20a582648864acb6902f2391, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 2276082989484191064, guid: 22ccdafc0673c264788259cc3e9833a4, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 5258883400719067329, guid: 6442bc06ca137814987ec128c859159d, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  - prefab: {fileID: 4925098322624790632, guid: 01fb104540932654f80613a6803a9128, type: 3}
+    weight: 1
+    scale: 1
+    useOwnColliders: 1
+  crateChoices: 3
+  crateOffersAll: 0
+  placeRange: 5
+  rotateSpeed: 120
+  rotateStep: 15
+  noBuildRadius: 0.5
+  maxPlaceSlope: 30
+  buildTimeLimit: 45
+  ghostValidColor: {r: 0.3, g: 1, b: 0.4, a: 0.45}
+  ghostInvalidColor: {r: 1, g: 0.25, b: 0.2, a: 0.45}
+  fanAcceleration: 3
+  springLaunchSpeed: 3.5
+  springSpeedGain: 1.3
+  pipeMinExitSpeed: 1
+  pipeMaxLength: 6
+  destroyRadius: 1.5
+  debugLogs: 1

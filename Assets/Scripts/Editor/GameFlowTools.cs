@@ -60,6 +60,13 @@ namespace UntitledPoolGame.PoolEditor
                 Debug.Log($"[GameFlow] Created {textFxPath} (animated text: effects, entrances, typewriter).");
             }
 
+            const string boogiePath = "Assets/Resources/BoogieNightSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<BoogieNightSettings>(boogiePath) == null)
+            {
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<BoogieNightSettings>(), boogiePath);
+                Debug.Log($"[GameFlow] Created {boogiePath} (Boogie Night: number of matches, wheel, texts).");
+            }
+
             // One file per menu screen, with the built-in layout (Menu Studio).
             if (!AssetDatabase.IsValidFolder("Assets/Resources/Menus")) AssetDatabase.CreateFolder("Assets/Resources", "Menus");
             foreach (string id in MenuLayouts.All)

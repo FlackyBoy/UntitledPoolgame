@@ -86,8 +86,8 @@ MonoBehaviour:
   levelHeading: "On joue o\xF9 ?"
   comingSoonStamp: "Bient\xF4t"
   comingSoonToast: "Bient\xF4t !"
-  justForFunContext: Just for fun
-  localContext: "Multijoueur \xB7 Local"
+  justForFunContext: 1 joueur
+  localContext: 2 joueurs
   modeHeading: Quel type de partie ?
   classicMode:
     ball:

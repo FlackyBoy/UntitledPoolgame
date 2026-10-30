@@ -22,19 +22,27 @@ namespace UntitledPoolGame.Pool
             bool ownOnly = entry != null && entry.ownPowersOnly;
             int count = 0;
             foreach (PoolPower power in availablePowers)
-                if (Allowed(power, mode, ownOnly)) count++;
+                if (Offered(power, mode, ownOnly)) count++;
             if (count == 0) return null;
             int pick = Random.Range(0, count);
             foreach (PoolPower power in availablePowers)
             {
-                if (!Allowed(power, mode, ownOnly)) continue;
+                if (!Offered(power, mode, ownOnly)) continue;
                 if (pick-- == 0) return power;
             }
             return null;
         }
 
-        private static bool Allowed(PoolPower power, PoolGameMode mode, bool ownOnly) =>
-            power != null && power.AvailableIn(mode) && (!ownOnly || power.OwnedBy(mode));
+        // Pocket Size has its own powers (one set per role), and the others
+        // only when Pocket Size is ticked in their Only In Modes: most are
+        // about pockets and groups it doesn't have. Its own powers come out
+        // nowhere else (PocketSizePower.AvailableIn). ownOnly: the mode has
+        // Own Powers Only in PoolModeSettings (Power Wash), only the powers
+        // that list it.
+        private static bool Offered(PoolPower power, PoolGameMode mode, bool ownOnly) =>
+            power != null && power.AvailableIn(mode)
+            && (!ownOnly || power.ListsMode(mode))
+            && (mode != PoolGameMode.PocketSize || power is PocketSizePower || power.ListsMode(mode));
 
         [Header("Color code")]
         public Color attackColor = new Color(0.9f, 0.2f, 0.2f);

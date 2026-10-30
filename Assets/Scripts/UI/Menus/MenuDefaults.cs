@@ -18,6 +18,9 @@ namespace UntitledPoolGame.Core
             switch (id)
             {
                 case MenuLayouts.Title: Title(s, m); break;
+                case MenuLayouts.Players: Players(s, m); break;
+                case MenuLayouts.GameChoice: GameChoice(s, m); break;
+                case MenuLayouts.Boogie: Boogie(s, m); break;
                 case MenuLayouts.NewGame: Slots(s, m, false); break;
                 case MenuLayouts.Load: Slots(s, m, true); break;
                 case MenuLayouts.Level: Level(s, m); break;
@@ -62,14 +65,80 @@ namespace UntitledPoolGame.Core
                 big.entrance = MenuEntrance.Drop;
                 big.entranceDelay = 0.08f;
             }
-            Ball(s, "new-game", 30f, 47f, m.newGameBall, MenuAction.OpenScreen, 0).targetScreen = MenuLayouts.NewGame;
-            Ball(s, "load", 50f, 47f, m.loadBall, MenuAction.OpenScreen, 1).targetScreen = MenuLayouts.Load;
-            Ball(s, "just-for-fun", 70f, 47f, m.justForFunBall, MenuAction.JustForFun, 2);
-            Ball(s, "multiplayer", 30f, 70f, m.multiplayerBall, MenuAction.OpenScreen, 3).targetScreen = MenuLayouts.Multiplayer;
-            Ball(s, "settings", 50f, 70f, m.settingsBall, MenuAction.OpenScreen, 4).targetScreen = MenuLayouts.Settings;
-            Ball(s, "quit", 70f, 70f, m.quitBall, MenuAction.Quit, 5);
+            MenuElement play = Ball(s, "play", 50f, 50f, m.playBall, MenuAction.OpenScreen, 0);
+            play.targetScreen = MenuLayouts.Players;
+            play.size = new Vector2(160f, 160f);
+            Ball(s, "settings", 38f, 73f, m.settingsBall, MenuAction.OpenScreen, 1).targetScreen = MenuLayouts.Settings;
+            Ball(s, "quit", 62f, 73f, m.quitBall, MenuAction.Quit, 2);
             AimHint(s, m);
             KeysHint(s, m.titleKeysHint);
+        }
+
+        // 1 player: level, then a mode (on their own until the AI comes).
+        // 2 players: the lobby first.
+        private static void Players(MenuScreen s, MenuSettings m)
+        {
+            s.backScreen = MenuLayouts.Title;
+            Cue(s, 50f, 85f, 64f);
+            Heading(s, "heading", m.playersHeading, 50f, 23f, 80f);
+            Ball(s, "one-player", 36f, 49f, m.onePlayerBall, MenuAction.JustForFun, 0).size = new Vector2(170f, 170f);
+            Ball(s, "two-players", 64f, 49f, m.twoPlayersBall, MenuAction.PlayLocal, 1).size = new Vector2(170f, 170f);
+            AimHint(s, m);
+            KeysHint(s, m.pageKeysHint);
+        }
+
+        // 2 players, after the level: one mode, or a Boogie Night.
+        private static void GameChoice(MenuScreen s, MenuSettings m)
+        {
+            s.backScreen = MenuLayouts.Level;
+            Cue(s, 50f, 85f, 64f);
+            Context(s);
+            Heading(s, "heading", m.gameChoiceHeading, 50f, 23f, 80f);
+            MenuElement selection = Ball(s, "selection", 36f, 49f, m.selectionBall, MenuAction.OpenScreen, 0);
+            selection.targetScreen = MenuLayouts.Mode;
+            selection.size = new Vector2(170f, 170f);
+            MenuElement boogie = Ball(s, "boogie-night", 64f, 49f, m.boogieBall, MenuAction.OpenScreen, 1);
+            boogie.targetScreen = MenuLayouts.Boogie;
+            boogie.size = new Vector2(170f, 170f);
+            AimHint(s, m);
+            KeysHint(s, m.pageKeysHint);
+        }
+
+        // The number of matches ("rounds", written by the menu), then go.
+        private static void Boogie(MenuScreen s, MenuSettings m)
+        {
+            BoogieNightSettings b = BoogieNightSettings.Instance;
+            s.backScreen = MenuLayouts.GameChoice;
+            Cue(s, 17f, 82f, 70f);
+            Context(s);
+            Heading(s, "heading", b.pageHeading, 50f, 23f, 80f);
+            MenuElement rounds = Heading(s, "rounds", "", 50f, 42f, 120f);
+            rounds.titleFont = true;
+            rounds.textColor = K.Yellow;
+            rounds.entrance = MenuEntrance.Pop;
+            MenuElement hint = Heading(s, "rounds-hint", b.roundsHint, 50f, 53f, 28f);
+            hint.entrance = MenuEntrance.Fade;
+            MenuElement rules = Add(s, "boogie-rules", MenuElementKind.Panel, 50f, 67f, 980f, 150f);
+            rules.color = K.Cube;
+            rules.rotation = -1f;
+            rules.text = b.pageRules;
+            rules.textSize = 28f;
+            rules.textColor = Color.white;
+            rules.textShadow = false;
+            rules.entrance = MenuEntrance.Rise;
+            MenuElement go = Add(s, "go", MenuElementKind.Pill, 50f, 86f, 520f, 88f);
+            go.color = K.Hex("#9b2fc9");
+            go.number = "7";
+            go.stripe = true;
+            go.text = b.goText;
+            go.titleFont = true;
+            go.textSize = 46f;
+            go.textColor = K.Chalk;
+            go.action = MenuAction.StartBoogie;
+            go.focusScale = 0.08f;
+            go.entrance = MenuEntrance.Rise;
+            AimHint(s, m);
+            KeysHint(s, m.pageKeysHint);
         }
 
         private static void Slots(MenuScreen s, MenuSettings m, bool loading)
@@ -127,8 +196,11 @@ namespace UntitledPoolGame.Core
             ModeBall(s, "hungry-hole", 34f, 44f, m.hungryHoleMode, PoolGameMode.HungryHole, 2);
             ModeBall(s, "snake-pool", 42f, 57.5f, m.snakePoolMode, PoolGameMode.SnakePool, 3);
             ModeBall(s, "power-wash-pool", 10f, 57.5f, m.powerWashPoolMode, PoolGameMode.PowerWashPool, 4);
-            ModeBall(s, "nine-ball", 18f, 71f, m.nineBallMode, PoolGameMode.NineBall, 5);
-            ModeBall(s, "fourteen-one", 34f, 71f, m.fourteenOneMode, PoolGameMode.FourteenOne, 6);
+            ModeBall(s, "play-anywhere", 26f, 71f, m.playAnywhereMode, PoolGameMode.PlayAnywhere, 5);
+            ModeBall(s, "pocket-size", 42f, 71f, m.pocketSizeMode, PoolGameMode.PocketSize, 6);
+            // Taken off the menu (30/10), kept to put back: tick Visible.
+            ModeBall(s, "nine-ball", 18f, 71f, m.nineBallMode, PoolGameMode.NineBall, 5).visible = false;
+            ModeBall(s, "fourteen-one", 34f, 71f, m.fourteenOneMode, PoolGameMode.FourteenOne, 6).visible = false;
 
             MenuElement rules = Add(s, "rules", MenuElementKind.Panel, 67.5f, 47.5f, 634f, 300f);
             rules.color = K.Cube;
@@ -156,7 +228,7 @@ namespace UntitledPoolGame.Core
 
         private static void Lobby(MenuScreen s, MenuSettings m)
         {
-            s.backScreen = MenuLayouts.Multiplayer;
+            s.backScreen = MenuLayouts.Players;
             Cue(s, 17f, 82f, 70f);
             Heading(s, "heading", m.lobbyHeading, 50f, 24f, 84f);
             for (int i = 0; i < 2; i++)
@@ -313,11 +385,12 @@ namespace UntitledPoolGame.Core
             return e;
         }
 
-        private static void ModeBall(MenuScreen s, string id, float x, float y, MenuModeBall b, PoolGameMode mode, int order)
+        private static MenuElement ModeBall(MenuScreen s, string id, float x, float y, MenuModeBall b, PoolGameMode mode, int order)
         {
             MenuElement e = Ball(s, id, x, y, b.ball, MenuAction.StartMode, order);
             e.mode = mode;
             e.description = b.rules;
+            return e;
         }
 
         private static MenuElement Pill(MenuScreen s, string id, float x, float y, MenuBall b, MenuAction action, float rotation, int order)

@@ -37,6 +37,7 @@ namespace UntitledPoolGame.Core
         AskMainMenu,     // pause → confirmation
         ConfirmStay,
         ConfirmQuit,
+        StartBoogie,     // launches a Boogie Night of the chosen number of matches
     }
 
     public enum MenuEntrance { None, Pop, Drop, Rise, SlideFromLeft, SlideFromRight, Fade, Spin }

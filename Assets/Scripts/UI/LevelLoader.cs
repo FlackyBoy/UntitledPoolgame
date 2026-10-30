@@ -87,7 +87,8 @@ namespace UntitledPoolGame.Core
             // Context chip: game type and number of players.
             MenuNode chip = view.Item("context");
             if (chip?.text != null)
-                TextFx.Set(chip.text, Format(cfg.contextFormat, GameSession.Setup.Describe(),
+                TextFx.Set(chip.text, Format(cfg.contextFormat,
+                    BoogieNight.Active ? BoogieNightSettings.Instance.wheelTitle : GameSession.Setup.Describe(),
                     count == 1 ? cfg.onePlayerText : Format(cfg.playersFormat, count)));
 
             // The level's postcard.
@@ -294,7 +295,9 @@ namespace UntitledPoolGame.Core
             yield return new WaitForSecondsRealtime(Mathf.Max(0.2f, cfg.goDuration));
 
             PoolMatchRules rules = PoolMatchRules.Instance;
-            if (rules != null) rules.RequestStart(GameSession.Setup);
+            // Boogie Night: the wheel draws the first match, and starts it.
+            if (rules != null && BoogieNight.Active) BoogieWheel.Open();
+            else if (rules != null) rules.RequestStart(GameSession.Setup);
             else Debug.LogWarning("[Loading] Pas de PoolMatchRules dans le niveau : la partie ne peut pas démarrer.");
             yield return null;
             yield return null;   // the match has started (applied in PoolMatchRules.Update)

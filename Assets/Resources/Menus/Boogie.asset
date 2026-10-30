@@ -1,0 +1,297 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd493537923373649a5a05c5718d0653, type: 3}
+  m_Name: Boogie
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.MenuScreen
+  backdrop: 0
+  backgroundColor: {r: 0.05, g: 0.03, b: 0.02, a: 0.62}
+  backgroundImage: {fileID: 0}
+  barLights: 1
+  table: 1
+  hasCue: 1
+  cuePosition: {x: 17, y: 82}
+  cueSize: 70
+  backScreen: GameChoice
+  feelOnOpen: {fileID: 0}
+  elements:
+  - id: context
+    kind: 4
+    visible: 1
+    position: {x: 22.9, y: 19.3}
+    size: {x: 420, y: 60}
+    rotation: -3
+    color: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 3
+    cornerRadius: 10
+    text: 
+    subText: 
+    textSize: 24
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 2
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: heading
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 23}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Boogie Night
+    subText: 
+    textSize: 80
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 2
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: rounds
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 42}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: 
+    subText: 
+    textSize: 120
+    subTextSize: 24
+    textColor: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+    titleFont: 1
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 1
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: rounds-hint
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 53}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: "< >  (fl\xE8ches, LB / RB, molette, - / +)"
+    subText: 
+    textSize: 28
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 6
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: boogie-rules
+    kind: 4
+    visible: 1
+    position: {x: 50, y: 67}
+    size: {x: 980, y: 150}
+    rotation: -1
+    color: {r: 0.23921569, g: 0.56078434, b: 0.8784314, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: "Une roue tire le mode avant chaque partie. Chaque partie gagn\xE9e rapporte un point : le premier qu'on ne peut plus rattraper remporte la soir\xE9e. \xC9galit\xE9 au bout ? Ultime partie !"
+    subText: 
+    textSize: 28
+    subTextSize: 24
+    textColor: {r: 1, g: 1, b: 1, a: 1}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 3
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: go
+    kind: 5
+    visible: 1
+    position: {x: 50, y: 86}
+    size: {x: 520, y: 88}
+    rotation: 0
+    color: {r: 0.60784316, g: 0.18431373, b: 0.7882353, a: 1}
+    stripe: 1
+    number: 7
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: "Lancer la soir\xE9e"
+    subText: 
+    textSize: 46
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 1
+    textShadow: 1
+    revealText: 0
+    action: 16
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.08
+    entrance: 3
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: aim-hint
+    kind: 2
+    visible: 1
+    position: {x: 84, y: 91}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: vise une bille, tire !
+    subText: 
+    textSize: 34
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 6
+    entranceDelay: 0.4
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: keys-hint
+    kind: 2
+    visible: 1
+    position: {x: 50, y: 97.5}
+    size: {x: 0, y: 0}
+    rotation: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: "Choisir : souris \xB7 fl\xE8ches \xB7 stick    Valider : clic \xB7 Entr\xE9e \xB7 A    Retour : \xC9chap \xB7 B"
+    subText: 
+    textSize: 20
+    subTextSize: 24
+    textColor: {r: 1, g: 1, b: 1, a: 0.6}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 6
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}

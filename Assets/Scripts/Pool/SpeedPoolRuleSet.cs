@@ -31,27 +31,11 @@ namespace UntitledPoolGame.Pool
         {
             settings = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
 
-            // Copy: deactivating a ball removes it from Active.
-            PoolBall sharedCue = null, secondCue = null;
-            foreach (PoolBall ball in new List<PoolBall>(PoolBall.Active))
-            {
-                if (ball.Group == BallGroup.Eight) { if (!KeepsEightBall) ball.gameObject.SetActive(false); }
-                else if (ball.IsCueBall && ball.CueOwner == 1) secondCue = ball;
-                else if (ball.IsCueBall && sharedCue == null) sharedCue = ball;
-            }
-            if (sharedCue == null)
-            {
-                Debug.LogWarning("[SpeedPool] Pas de bille blanche sur la table.");
-                return;
-            }
-
-            // The table has one cue ball: the second is a clone, kept by
-            // "Rejouer" (which resets it to its own spawn spot).
-            if (secondCue == null)
-            {
-                secondCue = Object.Instantiate(sharedCue, sharedCue.transform.parent);
-                secondCue.name = "CueBall_P2 (Speed Pool)";
-            }
+            if (!KeepsEightBall)
+                // Copy: deactivating a ball removes it from Active.
+                foreach (PoolBall ball in new List<PoolBall>(PoolBall.Active))
+                    if (ball.Group == BallGroup.Eight) ball.gameObject.SetActive(false);
+            if (!FindPlayerCueBalls(out PoolBall sharedCue, out PoolBall secondCue)) return;
 
             // Side by side on the head string, across the table's width.
             Vector3 spot = sharedCue.SpawnPosition;
@@ -66,6 +50,48 @@ namespace UntitledPoolGame.Pool
             if (match.TraceShots)
                 Debug.Log($"[SpeedPool] Départ : blanche J1 {sharedCue.transform.position}, J2 {secondCue.transform.position} ({secondCue.name}), " +
                           $"{CountGroup(BallGroup.Solid)} pleines, {CountGroup(BallGroup.Stripe)} rayées, {PoolBall.Active.Count} billes actives.");
+        }
+
+        // A match without a cue ball each comes next: the second player's
+        // cue ball and the extra balls go away (inactive first, or the next
+        // rule set's Setup, this same frame, would still count them), the
+        // first cue ball is the shared one again.
+        public static void Cleanup()
+        {
+            foreach (PoolBall ball in Object.FindObjectsByType<PoolBall>(FindObjectsInactive.Include))
+            {
+                if (ball.IsExtra || ball.CueOwner == 1)
+                {
+                    ball.gameObject.SetActive(false);
+                    Object.Destroy(ball.gameObject);
+                }
+                else if (ball.CueOwner == 0) ball.MakeSharedCueBall();
+            }
+        }
+
+        // The table's cue ball, and the second player's: a clone made on the
+        // first match, kept by "Rejouer" (which resets it to its own spawn
+        // spot). False if the table has no cue ball.
+        protected static bool FindPlayerCueBalls(out PoolBall first, out PoolBall second)
+        {
+            first = second = null;
+            foreach (PoolBall ball in PoolBall.Active)
+            {
+                if (!ball.IsCueBall) continue;
+                if (ball.CueOwner == 1) second = ball;
+                else if (first == null) first = ball;
+            }
+            if (first == null)
+            {
+                Debug.LogWarning("[SpeedPool] Pas de bille blanche sur la table.");
+                return false;
+            }
+            if (second == null)
+            {
+                second = Object.Instantiate(first, first.transform.parent);
+                second.name = "CueBall_P2 (Speed Pool)";
+            }
+            return true;
         }
 
         // Turn based only (Speed Pool never resolves a shot, see
@@ -83,7 +109,7 @@ namespace UntitledPoolGame.Pool
         }
 
         // Turn based only. cueBallPocketed: the shooter's own cue ball.
-        public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
+        public virtual void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
         {
             if (match.GameOver) return;
             int player = match.CurrentPlayer;

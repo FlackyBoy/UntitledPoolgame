@@ -77,6 +77,18 @@ namespace UntitledPoolGame.Pool
             // Not while the cue ball is being placed.
             if (rules.BallInHand) return;
 
+            // Pocket Size: the tiny player walks onto it too, and the wrong
+            // role only destroys it.
+            PocketSizeRuleSet pocketSize = PocketSizeRuleSet.Current;
+            if (pocketSize != null)
+            {
+                if (!pocketSize.TryTakeCrate(rules, transform.position, pickupRadius, power)) return;
+                collected = true;
+                gameObject.SetActive(false);
+                PoolPowerCrateManager.Instance?.NotifyCollected(this);
+                return;
+            }
+
             // Any cue ball: Speed Pool has one per player, and the power goes
             // to that ball's owner (the shooter otherwise).
             PoolBall cueBall = null;

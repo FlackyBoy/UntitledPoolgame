@@ -60,9 +60,48 @@ Autres idées autour des pouvoirs :
   - **Coupure partielle** : un coup ne détache que les 2 ou 3 billes du bout, pas toute la fin de la file.
   - **Coût pour l'attaquant** : couper fait perdre une bille à sa propre file.
   - Réglage disponible tout de suite : *Min Break Speed* (`SnakePoolSettings`, 0,15 m/s) est très bas ; le monter fait qu'il faut un vrai tir pour couper, sans code.
+- **Play Anywhere** (nom provisoire, idée du 28/10 ; ligne 📌 du GDD) : du billard façon golf dans le décor. On rentre sa bille dans un trou du bar en le moins de coups possible, sur un parcours que les joueurs modifient avec des objets du décor.
+  - **Décidé avec l'utilisateur (28/10)** :
+    - **Pose des objets façon Attrape-Souris / Ultimate Chicken Horse.** Un trou se joue en plusieurs manches. Chaque manche a un **choix** (une caisse du bar avec quelques objets tirés au hasard, chacun en prend un), une **pose** (les deux en même temps, chacun dans sa moitié d'écran), puis le **tir**. Les objets restent d'une manche à l'autre : le parcours se charge peu à peu. La limite vient du format : un objet par manche et par joueur.
+    - **Objets avant, pouvoirs pendant** : on ne pose d'objets que pendant la phase de pose. Les pouvoirs s'utilisent pendant le tir.
+    - **Pouvoirs, deux sources** : des caisses de pouvoir dans le décor, que la bille doit toucher pour les prendre, placées **à l'écart de la ligne directe** vers le trou (y aller coûte des coups : « je vise le pouvoir ou je continue mon parcours ? ») ; et, plus rarement, un pouvoir dans la caisse de choix, à prendre à la place d'un objet.
+    - **Le tir suit le type de partie** : chacun son tour ou Speed Pool (les deux en même temps).
+    - **Score de golf classique** : on compte ses coups, le total le plus bas gagne. Pas de points pour l'objet qui fait rater l'adversaire.
+    - **Trous** : essayer les deux, **dessinés à la main** (Level Maker) et **tirés au hasard** dans la salle, pour voir si l'aléatoire fonctionne.
+    - **Nombre de manches par trou et limite de coups par manche : paramétrables** (dans les réglages du mode).
+    - **En Speed Pool, un chrono** se lance quand le premier joueur rentre sa bille ; l'autre doit finir avant la fin. Durée paramétrable. Chrono expiré : **pénalité et fin de la manche** pour celui qui n'a pas fini.
+    - **Posture en visée (29/10)** : le joueur choisit sa posture (debout, accroupi) ; allongé seulement quand il le faut (un obstacle au-dessus empêche de viser autrement) ; en Play Anywhere seulement.
+    - **Partie et parcours (29/10)** : on suit la logique du golf : un parcours se joue jusqu'à ce que les deux aient rentré leur bille (pas de limite de manches, *Max Strokes* en plafond). Puis on enchaîne sur un autre parcours, avec le tableau des scores entre deux. Une partie a X parcours ; au bout des X, le total décide du vainqueur.
+    - **Manches (29/10)** : chaque joueur joue N coups par manche (réglable), puis on repasse au choix et à la pose. Pas fini après la dernière manche : ses coups plus une pénalité. Choix dans la caisse en même temps, premier servi. Pose avec le personnage, l'objet en main et un aperçu devant soi.
+  - **Objets à placer, idées de l'utilisateur (29/10)** : décidés et codés le 29/10 (portail destructeur, tuyau de raccourci — refait le 30/10 : un trou au sol qui ressort ailleurs, posé en deux temps —, ventilateur, glue, verglas, ressort qui renvoie devant lui), voir la TODO.
+  - **Encore ouvert** : rien pour l'instant (visée au sol et surfaces faites, voir la TODO).
+  - Suggestions de Claude (28/10) :
+    - **Objets** : obstacles (chaise, caisse de bouteilles), aides (planche en rampe, plateau qui sert de bande), et un objet qui **en retire un autre** (le balai), pour débloquer un parcours devenu impossible. Côté Attrape-Souris, des **mécanismes que la bille déclenche** (dominos de verres, bascule, ventilateur).
+    - **Parcours** : départ sur un « tee » (un sous-bock) ; trou = verre couché, seau, poche de la table ou `TableHole` percé dans le sol ou le comptoir ; un par par trou. Une bille hors limites coûte un coup et revient au dernier point (`PoolBall` sait déjà quand une bille tombe de la table).
+    - **Garde-fous** : une zone autour de la bille et du trou où l'on ne peut rien poser, pour ne jamais bloquer complètement ; un objet posé reste figé tant que la bille roule. Pour les trous aléatoires : vérifier qu'un chemin existe entre le tee et le trou.
+    - **Technique** : la visée suppose une table (`LocalPoolAimController`, `PoolTableSurface`) et il faudra une visée au sol ; frottement et rebond selon la surface ; `LocalGrabbable` sait ramasser et lancer, mais pas encore poser un objet à un endroit précis (aperçu, rotation).
+- **Cache-cache déguisé** (idée du 30/10) : un joueur se cache en se déguisant, l'autre le cherche. Rien n'est décidé. Pistes de Claude :
+  - **Façon Prop Hunt dans le bar** : celui qui se cache prend l'apparence d'un objet du bar (tabouret, bouteille, caisse). Celui qui cherche a un nombre de tirs limité : il tire des billes sur les objets suspects. Une erreur lui coûte un tir.
+  - **Caché sur la table** : celui qui se cache devient une bille parmi les autres et peut rouler un peu quand personne ne le regarde. Celui qui cherche doit rentrer la bonne bille. Rentrer une fausse bille est une faute.
+  - **Caché parmi les clients** (façon *Spy Party*) : celui qui se cache ressemble aux PNJ du bar et doit faire une action discrète (rentrer une bille, toucher une caisse) sans se faire repérer.
+  - À trancher : quel déguisement (objet, bille ou client), combien de temps dure une manche, et ce qui rapporte des points à chacun.
+- **Combat sur une mini table** (idée du 30/10, à rapprocher de la dimension « shooter miniature » du GDD) : les deux joueurs sont réduits sur la table et s'affrontent, à la queue (corps à corps) ou en tirant. Rien n'est décidé. Pistes de Claude :
+  - **Façon sumo** : tomber dans une poche fait perdre la manche. On gagne en poussant l'autre dans une poche, avec un coup de queue ou en lançant une bille sur lui.
+  - **Les billes comme danger** : de temps en temps, une queue géante frappe la blanche depuis le bord de la table, et des billes énormes traversent l'arène. Il faut les esquiver ou s'en servir comme projectiles.
+  - **Le décor** : la craie, les bandes et les poches deviennent des obstacles, des couvertures et des pièges.
+  - À trancher : mêlée seule ou tir aussi, une vie ou une jauge (celle d'encaissement existe déjà), et le nombre de manches.
 - **Power Wash Pool, le Kärcher** (27/10, remis à plus tard) : le joueur tient aussi un nettoyeur haute pression ; hors visée, le jet lave un peu le tapis et pousse les billes. Le mode existe sans (voir la TODO et le GDD).
 
+- **Pocket Size, suites possibles** (le mode existe, voir le GDD ; pistes de Claude, rien de décidé) :
+  - **Lisibilité** : un halo ou une ombre marquée sous le petit pour que le grand le repère de loin ; une flèche au bord de l'écran du grand quand le petit est hors champ.
+  - **Le petit riposte** : un coup de pied du petit qui pousse une bille de couleur, pour gêner la blanche ou la dévier.
+  - **Décor de table** : la craie, un verre ou un sous-bock posés sur le tapis comme abris en plus des billes.
+  - **Variante à quatre** : un grand et trois petits, le dernier petit debout gagne.
+  - **Points plutôt que manches** : en Boogie Night, une manche par joueur, et le score de chacun = temps tenu en petit.
+
 ### Structure « party game » (idée du 20/10)
+
+> **Décidé le 30/10, première version faite** : c'est la **Boogie Night** du menu 2 joueurs (voir le GDD, *Parcours des menus*) : nombre de parties au choix, mode, type et pouvoirs tirés à la roue, une relance par tirage, fin dès qu'un joueur ne peut plus être rattrapé, ultime partie en cas d'égalité. Le reste de cette piste (ardoise entre les manches, étoiles bonus, manche finale qui rapporte plus) reste à décider.
 
 L'utilisateur envisage un jeu construit comme *Mario Party*. Une **soirée** enchaîne plusieurs modes courts. Ceux qui ne veulent pas de soirée choisissent un mode à part. Les billards face à face seraient l'un de ces modes.
 

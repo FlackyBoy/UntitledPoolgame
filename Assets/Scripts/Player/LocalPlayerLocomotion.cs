@@ -89,6 +89,9 @@ namespace UntitledPoolGame.Player
 
         private bool hasJump, hasJumpLeg;
 
+        // Size and speed powers (LocalFpsPlayerController.MoveScale).
+        private float MoveScale => fps != null ? fps.MoveScale : 1f;
+
         private void Awake()
         {
             cfg = MovementSettings.Instance;
@@ -209,11 +212,14 @@ namespace UntitledPoolGame.Player
             // Guarding (R&D): slower, no sprint.
             bool blocking = unarmed != null && unarmed.IsBlocking;
             IsSprinting = !blocking && sprintAction != null && sprintAction.IsPressed() && input.y > 0.1f;
+            // Pocket Size: a shrunk body moves, jumps and falls at its own scale.
+            float size = fps != null ? fps.SizeScale : 1f;
+            float gravity = cfg.gravity * size;
 
             {
                 // Momentum: towards the wanted velocity at acceleration
                 // when speeding up, at deceleration when slowing or turning.
-                Vector3 wanted = (transform.right * input.x + transform.forward * input.y) * (IsSprinting ? cfg.sprintSpeed : cfg.walkSpeed);
+                Vector3 wanted = (transform.right * input.x + transform.forward * input.y) * (IsSprinting ? cfg.sprintSpeed : cfg.walkSpeed) * MoveScale;
                 if (blocking) wanted *= CombatSettings.Instance.blockMoveSpeed;
                 float dazed = Dazed;
                 if (dazed > 0f)
@@ -226,7 +232,7 @@ namespace UntitledPoolGame.Player
                     wanted += transform.right * (drift * combat.dazedStagger * dazed);
                 }
                 bool speedingUp = Vector3.Dot(wanted, horizontal) >= horizontal.sqrMagnitude * 0.99f && wanted.sqrMagnitude > 0.01f;
-                float rate = speedingUp ? cfg.acceleration : cfg.deceleration;
+                float rate = (speedingUp ? cfg.acceleration : cfg.deceleration) * MoveScale;
                 if (!IsGrounded) rate *= cfg.airControl;
                 horizontal = Vector3.MoveTowards(horizontal, wanted, rate * dt);
 
@@ -237,15 +243,15 @@ namespace UntitledPoolGame.Player
                     {
                         jumpPressedTime = -10f;
                         lastGroundedTime = -10f;
-                        verticalSpeed = Mathf.Sqrt(2f * cfg.jumpHeight * -cfg.gravity);
+                        verticalSpeed = Mathf.Sqrt(2f * cfg.jumpHeight * size * -gravity);
                         jumpLeg = -jumpLeg;
                         Trace("saut");
                     }
                 }
             }
 
-            if (IsGrounded && verticalSpeed < 0f) verticalSpeed = -2f;
-            else verticalSpeed += cfg.gravity * dt;
+            if (IsGrounded && verticalSpeed < 0f) verticalSpeed = -2f * size;
+            else verticalSpeed += gravity * dt;
 
             CollisionFlags flags = controller.Move((horizontal + Vector3.up * verticalSpeed) * dt);
             if ((flags & CollisionFlags.Above) != 0 && verticalSpeed > 0f) verticalSpeed = 0f;
@@ -456,7 +462,7 @@ namespace UntitledPoolGame.Player
             Vector3 offset = Vector3.zero;
             if (IsGrounded)
             {
-                float speed01 = Mathf.Clamp01(horizontal.magnitude / Mathf.Max(0.1f, cfg.walkSpeed));
+                float speed01 = Mathf.Clamp01(horizontal.magnitude / (Mathf.Max(0.1f, cfg.walkSpeed) * MoveScale));
                 bobPhase += dt * cfg.headBobFrequency * Mathf.PI * 2f * Mathf.Max(speed01, 0.001f) * (IsSprinting ? 1.3f : 1f);
                 offset.y += Mathf.Sin(bobPhase * 2f) * cfg.headBob * speed01;
                 offset.x += Mathf.Sin(bobPhase) * cfg.headBob * 0.5f * speed01;
@@ -468,7 +474,7 @@ namespace UntitledPoolGame.Player
 
             // Rolls into a strafe (on top of the pitch the FPS controller
             // writes every frame), and with a punch leaving.
-            float strafe = Vector3.Dot(horizontal, transform.right) / Mathf.Max(0.1f, cfg.sprintSpeed);
+            float strafe = Vector3.Dot(horizontal, transform.right) / (Mathf.Max(0.1f, cfg.sprintSpeed) * MoveScale);
             float roll = -strafe * cfg.strafeCameraRoll + kickRoll * kick;
             // Dazed: the view sways (roll, and a little pitch).
             float dazed = Dazed, swayPitch = 0f;

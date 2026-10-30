@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b25244f43db2ce4cba7760c5c4ee56d, type: 3}
+  m_Name: BoogieNightSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.BoogieNightSettings
+  defaultRounds: 5
+  minRounds: 1
+  maxRounds: 15
+  rerollsPerSpin: 1
+  modes: 0000000005000000060000000700000008000000090000000a000000
+  powersChance: 0.5
+  speedPoolChance: 0.5
+  fourteenOneTarget: 25
+  spinDuration: 3.2
+  spinTurns: 5
+  pageHeading: Boogie Night
+  pageRules: "Une roue tire le mode avant chaque partie. Chaque partie gagn\xE9e rapporte un point : le premier qu'on ne peut plus rattraper remporte la soir\xE9e. \xC9galit\xE9 au bout ? Ultime partie !"
+  roundsFormat: '{0} parties'
+  roundsHint: "< >  (fl\xE8ches, LB / RB, molette, - / +)"
+  goText: "Lancer la soir\xE9e"
+  wheelTitle: Boogie Night
+  roundFormat: Partie {0} / {1}
+  finalRoundText: Ultime partie !
+  powersOnText: Avec pouvoirs
+  powersOffText: Sans pouvoirs
+  playHint: "A / Entr\xE9e : on joue !"
+  rerollHintFormat: 'Y / R : relancer ({0})'
+  nextButton: Tourner la roue
+  menuButton: Menu principal
+  nightWinnerFormat: "J{0} remporte la soir\xE9e !"
+  scoreFormat: "Boogie Night \xB7 J1 {0} \u2013 {1} J2"

@@ -18,6 +18,8 @@ namespace UntitledPoolGame.Interaction
         // Carries a Cue: read every frame by the hands, the aim, the melee
         // and the animation, so looked up once (Awake).
         public bool IsCue { get; private set; }
+        // Takes over Attack/Interact while held (also read every frame).
+        public ILocalHeldOverride HeldOverride { get; private set; }
 
         // For the cue, whose attachment is done by PickUpCue: only keeps
         // IsHeld in sync (PickUp/Drop would fight the reach).
@@ -45,6 +47,7 @@ namespace UntitledPoolGame.Interaction
             rb = GetComponent<Rigidbody>();
             col = GetComponent<Collider>();
             IsCue = TryGetComponent(out Cue _);
+            HeldOverride = GetComponent<ILocalHeldOverride>();
         }
 
         public void PickUp(Transform holder)

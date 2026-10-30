@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3951856296748834ea1a8e2b9b8cf374, type: 3}
+  m_Name: RapidShotPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.RapidShotPower
+  powerName: Tir rapide
+  tokenPrefab: {fileID: 7188691522419608619, guid: 58d6b41f961f3194e852d6bca4a43d8c, type: 3}
+  hudIcon: {fileID: 2800000, guid: 56db621eeb613154793574d5621cdb3f, type: 3}
+  onlyInModes: 
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  duration: 10
+  multiplier: 1.8

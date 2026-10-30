@@ -18,9 +18,23 @@ namespace UntitledPoolGame.Pool
                 Debug.LogWarning("PoolPowerSpawnSettings asset not found in Assets/Resources — the power ball won't rotate. Run Tools > Pool > Ensure Config Assets Exist to create it.");
         }
 
+        private void OnEnable() => PoolMatchRules.MatchBegan += OnMatchBegan;
+        private void OnDisable() => PoolMatchRules.MatchBegan -= OnMatchBegan;
+
         private void Start()
         {
             if (settings == null || settings.availablePowers == null || settings.availablePowers.Length == 0) return;
+            StartCoroutine(RotationLoop());
+        }
+
+        // Each match may differ (Boogie Night: powers or not, in turns or
+        // Speed Pool): the power ball starts over with the new match.
+        private void OnMatchBegan()
+        {
+            if (settings == null || settings.availablePowers == null || settings.availablePowers.Length == 0) return;
+            StopAllCoroutines();
+            if (currentBall != null) currentBall.ClearGlow();
+            currentBall = null;
             StartCoroutine(RotationLoop());
         }
 

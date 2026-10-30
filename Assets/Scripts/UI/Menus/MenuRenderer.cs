@@ -449,10 +449,11 @@ namespace UntitledPoolGame.Core
     {
         public const string Title = "Title", NewGame = "NewGame", Load = "Load", Level = "Level", Mode = "Mode",
             Multiplayer = "Multiplayer", Lobby = "Lobby", Settings = "Settings", Pause = "Pause",
-            PauseConfirm = "PauseConfirm", Loading = "Loading";
+            PauseConfirm = "PauseConfirm", Loading = "Loading", Players = "Players", GameChoice = "GameChoice",
+            Boogie = "Boogie";
 
         public static readonly string[] All =
-            { Title, NewGame, Load, Level, Mode, Multiplayer, Lobby, Settings, Pause, PauseConfirm, Loading };
+            { Title, Players, NewGame, Load, Level, GameChoice, Mode, Boogie, Multiplayer, Lobby, Settings, Pause, PauseConfirm, Loading };
 
         private static readonly Dictionary<string, MenuScreen> fallbacks = new Dictionary<string, MenuScreen>();
 

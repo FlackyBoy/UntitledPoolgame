@@ -33,6 +33,7 @@ namespace UntitledPoolGame.Core
             Active = false;
             Level = null;
             Devices.Clear();
+            BoogieNight.End();
         }
 
         // Back to the main menu scene (from the pause); the current scene is

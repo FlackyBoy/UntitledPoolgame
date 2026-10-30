@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88fd72c92e5caca49a160e83b756385b, type: 3}
+  m_Name: SlowCueBallPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.SlowCueBallPower
+  powerName: Blanche au ralenti
+  tokenPrefab: {fileID: 1662634519326919690, guid: 860f9556400410f4581747294a9f26a1, type: 3}
+  hudIcon: {fileID: 2800000, guid: 6d45d170ef22d974c82e61b293a1cf48, type: 3}
+  onlyInModes: 0a000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  duration: 6
+  maxSpeed: 0.5

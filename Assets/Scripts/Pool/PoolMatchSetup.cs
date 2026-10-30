@@ -51,6 +51,8 @@ namespace UntitledPoolGame.Pool
         {
             mode = Current(mode);
             if (type == PoolMatchType.SpeedPool && (mode == PoolGameMode.NineBall || mode == PoolGameMode.FourteenOne)) return false;
+            // The hunter shoots whenever they like, the hunted runs: no turns.
+            if (type == PoolMatchType.TurnBased && mode == PoolGameMode.PocketSize) return false;
             PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(mode);
             return entry == null ? type == PoolMatchType.TurnBased : entry.Allows(type);
         }
@@ -83,6 +85,8 @@ namespace UntitledPoolGame.Pool
             PoolGameMode.HungryHole => "Hungry Hole",
             PoolGameMode.SnakePool => "Snake Pool",
             PoolGameMode.PowerWashPool => "Power Wash Pool",
+            PoolGameMode.PlayAnywhere => "Play Anywhere",
+            PoolGameMode.PocketSize => "Pocket Size",
             _ => "Classique",
         };
 
