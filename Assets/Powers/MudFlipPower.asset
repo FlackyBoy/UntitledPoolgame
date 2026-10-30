@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cba6a8390b34734a7065068ff2e7d3e, type: 3}
+  m_Name: MudFlipPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.MudFlipPower
+  powerName: "Boue retourn\xE9e"
+  tokenPrefab: {fileID: 6743945484651952243, guid: 32cc4bce74d1b114cae359054c1f12d4, type: 3}
+  hudIcon: {fileID: 2800000, guid: d6505bdc722b8b946b5b0211cb72b0a8, type: 3}
+  onlyInModes: 08000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  duration: 10
+  level2Duration: 15

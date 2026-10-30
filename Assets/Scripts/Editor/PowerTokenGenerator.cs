@@ -235,6 +235,49 @@ namespace UntitledPoolGame.PoolEditor
                     g.Cut(Glyph.Circle(-0.42f, -0.2f, 0.08f));
                     g.Cut(Glyph.Circle(-0.18f, -0.45f, 0.06f));
                     break;
+                case "MudBucket":     // a bucket tipping out a blob of mud
+                    g.Add(Glyph.Polygon((-0.5f, 0.35f), (0.3f, 0.35f), (0.18f, -0.45f), (-0.38f, -0.45f)));
+                    g.Arc(-0.1f, 0.35f, 0.38f, 0f, 180f, 0.08f);
+                    g.Add(Glyph.Circle(0.48f, 0.12f, 0.16f));
+                    g.Add(Glyph.Circle(0.58f, -0.22f, 0.12f));
+                    g.Add(Glyph.Circle(0.5f, -0.55f, 0.09f));
+                    g.Cut(Glyph.Box(-0.1f, 0.18f, 0.32f, 0.04f, 0f));
+                    break;
+                case "WaterBomb":     // a water balloon, its knot and two drops
+                    g.Add(Glyph.Circle(-0.08f, 0.08f, 0.5f));
+                    g.Add(Glyph.Polygon((-0.2f, -0.48f), (0.04f, -0.48f), (-0.08f, -0.36f)));
+                    g.Add(Glyph.Circle(0.58f, -0.45f, 0.1f));
+                    g.Add(Glyph.Polygon((0.5f, -0.4f), (0.66f, -0.4f), (0.58f, -0.18f)));
+                    g.Cut(Glyph.Circle(-0.28f, 0.28f, 0.1f));
+                    break;
+                case "BigRoller":     // a paint roller
+                    g.Add(Glyph.Box(0f, 0.38f, 0.62f, 0.2f, 0.08f));
+                    g.Add(Glyph.Segment(0.62f, 0.38f, 0.72f, 0.38f, 0.1f));
+                    g.Add(Glyph.Segment(0.72f, 0.38f, 0.72f, 0f, 0.1f));
+                    g.Add(Glyph.Segment(0.72f, 0f, 0f, -0.12f, 0.1f));
+                    g.Add(Glyph.Segment(0f, -0.12f, 0f, -0.75f, 0.18f));
+                    break;
+                case "Waterproof":    // an umbrella
+                    g.Add(Glyph.Polygon((-0.75f, 0.05f), (0f, 0.7f), (0.75f, 0.05f)));
+                    g.Arc(0f, 0.05f, 0.75f, 0f, 180f, 0.08f);
+                    g.Add(Glyph.Segment(0f, 0.05f, 0f, -0.55f, 0.1f));
+                    g.Arc(0.15f, -0.55f, 0.15f, 180f, 360f, 0.1f);
+                    g.Cut(Glyph.Circle(-0.375f, 0.05f, 0.14f));
+                    g.Cut(Glyph.Circle(0.375f, 0.05f, 0.14f));
+                    break;
+                case "MudFlip":       // the 8 ball and an arrow going round it
+                    g.Add(Glyph.Circle(0f, 0f, 0.42f));
+                    g.Cut(Glyph.Circle(0f, 0.04f, 0.18f));
+                    g.Arc(0f, 0f, 0.66f, 30f, 290f, 0.1f);
+                    g.Add(Glyph.Polygon((0.42f, 0.36f), (0.78f, 0.5f), (0.68f, 0.12f)));
+                    break;
+                case "Roomba":        // a robot vacuum seen from above, bumper at the front
+                    g.Add(Glyph.Circle(0f, 0f, 0.7f));
+                    g.Cut(Glyph.Circle(0f, 0f, 0.5f));
+                    g.Add(Glyph.Circle(0f, 0f, 0.36f));
+                    g.Cut(Glyph.Circle(0f, 0.16f, 0.1f));
+                    g.Add(Glyph.Box(0f, 0.58f, 0.42f, 0.07f, 0.03f));
+                    break;
                 case "Unknown":
                     g.Arc(0f, 0.3f, 0.32f, -60f, 200f, 0.15f);
                     g.Add(Glyph.Segment(0.16f, 0.02f, 0f, -0.18f, 0.15f));
@@ -451,6 +494,63 @@ namespace UntitledPoolGame.PoolEditor
                         Part(p, "Ball", Builtin("Sphere"), ball, at, Vector3.zero, Vector3.one * 0.045f);
                         Part(p, "Spot", Builtin("Sphere"), spot, at + new Vector3(0f, 0.0205f, 0f), Vector3.zero, new Vector3(0.02f, 0.006f, 0.02f));
                     }
+                    return true;
+                }
+                case "MudBucket":     // a tin bucket, mud spilling over its rim
+                {
+                    Material mud = Lit("Mud", new Color(0.36f, 0.25f, 0.13f), smoothness: 0.35f);
+                    Part(p, "Bucket", Builtin("Cylinder"), Steel, Vector3.zero, Vector3.zero, new Vector3(0.06f, 0.03f, 0.06f));
+                    Part(p, "Handle", Torus(0.03f, 0.003f, 180f), Steel, new Vector3(0f, 0.03f, 0f), Vertical, Vector3.one);
+                    Part(p, "Mud", Builtin("Sphere"), mud, new Vector3(0f, 0.028f, 0f), Vector3.zero, new Vector3(0.056f, 0.02f, 0.056f));
+                    Part(p, "Drip", Builtin("Sphere"), mud, new Vector3(0.03f, 0.012f, 0.012f), Vector3.zero, new Vector3(0.016f, 0.03f, 0.016f));
+                    Part(p, "Drip", Builtin("Sphere"), mud, new Vector3(-0.026f, 0.016f, -0.016f), Vector3.zero, new Vector3(0.012f, 0.022f, 0.012f));
+                    return true;
+                }
+                case "WaterBomb":     // a blue water balloon, knotted
+                {
+                    Material water = Lit("Balloon", new Color(0.2f, 0.62f, 0.98f), smoothness: 0.9f, emission: 0.08f);
+                    Part(p, "Balloon", Builtin("Sphere"), water, new Vector3(0f, 0.008f, 0f), Vector3.zero, new Vector3(0.07f, 0.08f, 0.07f));
+                    Part(p, "Knot", Cone(), water, new Vector3(0f, -0.036f, 0f), Vector3.zero, new Vector3(0.016f, 0.012f, 0.016f));
+                    Part(p, "Shine", Builtin("Sphere"), Glow("Shine", Color.white), new Vector3(-0.015f, 0.03f, 0.026f), Vector3.zero, new Vector3(0.014f, 0.01f, 0.006f), shadows: false);
+                    return true;
+                }
+                case "BigRoller":     // a paint roller
+                {
+                    Material paint = Lit("Paint", new Color(0.2f, 0.75f, 0.9f), smoothness: 0.3f);
+                    Part(p, "Roller", Builtin("Cylinder"), paint, new Vector3(0f, 0.025f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.03f, 0.04f, 0.03f));
+                    Part(p, "Arm", Builtin("Cylinder"), Steel, new Vector3(0.045f, 0.012f, 0f), Vector3.zero, new Vector3(0.006f, 0.014f, 0.006f));
+                    Part(p, "Arm", Builtin("Cylinder"), Steel, new Vector3(0.022f, -0.004f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.006f, 0.024f, 0.006f));
+                    Part(p, "Handle", Builtin("Cylinder"), Red, new Vector3(0f, -0.03f, 0f), Vector3.zero, new Vector3(0.014f, 0.024f, 0.014f));
+                    return true;
+                }
+                case "Waterproof":    // an open umbrella
+                {
+                    Part(p, "Canopy", Cone(), Lit("Umbrella", new Color(1f, 0.82f, 0.15f)), new Vector3(0f, 0.015f, 0f), Vector3.zero, new Vector3(0.09f, 0.035f, 0.09f));
+                    Part(p, "Stick", Builtin("Cylinder"), Steel, new Vector3(0f, -0.012f, 0f), Vector3.zero, new Vector3(0.005f, 0.03f, 0.005f));
+                    Part(p, "Crook", Torus(0.009f, 0.0035f, 180f), Steel, new Vector3(0.009f, -0.042f, 0f), Vertical, Vector3.one, rotateInPlane: 180f);
+                    return true;
+                }
+                case "MudFlip":       // the 8 ball, a yellow arrow going round it
+                {
+                    Material yellow = Lit("Yellow", new Color(1f, 0.82f, 0.15f));
+                    Part(p, "Eight", Builtin("Sphere"), Black, Vector3.zero, Vector3.zero, Vector3.one * 0.06f);
+                    Part(p, "Spot", Builtin("Sphere"), White, new Vector3(0f, 0f, 0.027f), Vector3.zero, new Vector3(0.026f, 0.026f, 0.008f));
+                    const float r = 0.045f, sweep = 260f;
+                    Part(p, "Arc", Torus(r, 0.006f, sweep), yellow, Vector3.zero, Vertical, Vector3.one, rotateInPlane: 30f);
+                    float end = (30f + sweep) * Mathf.Deg2Rad;
+                    Vector3 tip = new Vector3(Mathf.Cos(end), Mathf.Sin(end), 0f) * r;
+                    Vector3 tangent = new Vector3(-Mathf.Sin(end), Mathf.Cos(end), 0f);
+                    Part(p, "Head", Cone(), yellow, tip, Quaternion.FromToRotation(Vector3.up, tangent).eulerAngles, new Vector3(0.024f, 0.02f, 0.024f));
+                    return true;
+                }
+                case "Roomba":        // a robot vacuum, its band and button in blue
+                {
+                    Material band = Lit("RoombaBand", new Color(0.2f, 0.62f, 0.98f), emission: 0.1f);
+                    Part(p, "Body", Builtin("Cylinder"), Lit("RoombaBody", new Color(0.12f, 0.12f, 0.14f), smoothness: 0.7f), Vector3.zero, Vector3.zero, new Vector3(0.09f, 0.012f, 0.09f));
+                    Part(p, "Band", Builtin("Cylinder"), band, Vector3.zero, Vector3.zero, new Vector3(0.092f, 0.004f, 0.092f));
+                    Part(p, "Top", Builtin("Cylinder"), Steel, new Vector3(0f, 0.012f, 0f), Vector3.zero, new Vector3(0.07f, 0.002f, 0.07f));
+                    Part(p, "Button", Builtin("Cylinder"), band, new Vector3(0f, 0.014f, 0.018f), Vector3.zero, new Vector3(0.016f, 0.002f, 0.016f));
+                    Part(p, "Bumper", Builtin("Cube"), Lit("RoombaBumper", new Color(0.3f, 0.3f, 0.33f)), new Vector3(0f, 0f, 0.042f), Vector3.zero, new Vector3(0.06f, 0.014f, 0.008f));
                     return true;
                 }
                 case "TableHole":     // a meteor: a rock trailing balls of fire

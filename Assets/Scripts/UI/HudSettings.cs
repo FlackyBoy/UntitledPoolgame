@@ -56,7 +56,7 @@ namespace UntitledPoolGame.Core
         [Tooltip("Plaque pendant « Groupe identique » : remplace les billes restantes, qui trahiraient les groupes.")]
         public string groupsDisguisedText = "??? Billes brouillées";
         public string nextBallText = "Prochaine ";
-        [Tooltip("Power Wash Pool : affiché à la place du chrono quand le temps est écoulé à égalité.")]
+        [Tooltip("Power Wash Pool : affiché à la place du chrono (en haut au centre) quand le temps est écoulé à égalité.")]
         public string overtimeText = "Prolongation !";
         public string powerGaugeText = "Puissance";
         [Tooltip("Touche affichée sous le pouvoir en stock.")]
@@ -148,6 +148,18 @@ namespace UntitledPoolGame.Core
         [Tooltip("Placement de la blanche ou annonce de la 8 en cours.")]
         public string refusedPointerBusyText = "Termine d'abord ta visée";
         public float refusedDuration = 1.4f;
+
+        [Header("Chrono (Power Wash Pool), en haut au centre")]
+        [Tooltip("Taille du chrono.")]
+        public float clockFontSize = 64f;
+        [Tooltip("Les dernières secondes : le chrono passe au rouge, grossit à chaque seconde et fait un bond à chaque seconde.")]
+        [Min(0)] public int clockFinalSeconds = 10;
+        [Tooltip("Taille du chrono à la dernière seconde, en multiple de sa taille normale.")]
+        [Min(1f)] public float clockFinalScale = 2.2f;
+        [Tooltip("Bond à chaque seconde des dernières secondes (0,35 = 35 % plus gros au moment où la seconde change).")]
+        [Min(0f)] public float clockBump = 0.35f;
+        [Tooltip("Durée (secondes) du bond.")]
+        [Min(0.01f)] public float clockBumpTime = 0.3f;
 
         [Header("Fin de partie")]
         [Tooltip("{0} = numéro du gagnant.")]

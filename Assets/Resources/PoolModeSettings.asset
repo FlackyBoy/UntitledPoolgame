@@ -17,27 +17,34 @@ MonoBehaviour:
     turnBased: 1
     speedPool: 1
     defaultType: 0
+    ownPowersOnly: 0
   - mode: 1
     turnBased: 1
     speedPool: 0
     defaultType: 0
+    ownPowersOnly: 0
   - mode: 2
     turnBased: 1
     speedPool: 0
     defaultType: 0
+    ownPowersOnly: 0
   - mode: 5
     turnBased: 1
     speedPool: 1
     defaultType: 0
+    ownPowersOnly: 0
   - mode: 6
     turnBased: 1
     speedPool: 1
     defaultType: 1
+    ownPowersOnly: 0
   - mode: 7
     turnBased: 1
     speedPool: 1
     defaultType: 1
+    ownPowersOnly: 0
   - mode: 8
     turnBased: 1
     speedPool: 1
     defaultType: 1
+    ownPowersOnly: 1

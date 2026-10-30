@@ -137,8 +137,14 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Aimant** | Effet | La bille du joueur qui roule vers le trou choisi est captée et tirée dedans (la plus proche si plusieurs, une seule par tir). La 8 n'est attirée que vers la poche annoncée | Prochain tir |
 | **Groupe identique** | Attaque | Toutes les billes sauf la blanche prennent le même aspect (incolore, ou celui d'une bille choisie dans les réglages), la 8 comprise ; la plaque des billes restantes est masquée. Les règles ne changent pas | Tour de l'adversaire |
 | **Trou** ✅ | Attaque | Le joueur vise un point de la table. Lancé pendant son tour, l'endroit est marqué et la boule de feu tombe au début du tour de l'adversaire (pendant le tour adverse, en écran partagé : tout de suite). Elle s'écrase et creuse un trou, avec une secousse et une vibration des manettes pour les deux joueurs. Une bille qui passe dessus tombe et revient à sa place d'avant le tir à la fin du coup ; la blanche, elle, est une faute. Niveau 2 : un groupe de trous répartis au hasard autour du point visé, parfois au milieu | Réglable : tour de l'adversaire, prochain tir, toute la partie ou N tours |
+| **Seau de boue** (Power Wash) | Attaque | Le joueur vise un point du tapis : la boue resalit le tapis lavé par l'adversaire autour du point | Immédiat |
+| **Bombe à eau** (Power Wash) | Effet | Le joueur vise un point du tapis : éclaboussure à sa couleur tout autour, le tapis de l'autre compris | Immédiat |
+| **Gros rouleau** (Power Wash) | Effet | Ses traces sont deux fois plus larges | 15 s |
+| **Imperméable** (Power Wash) | Défense | Personne ne reprend sa peinture, ni les traces de l'autre ni la boue | 12 s |
+| **Boue retournée** (Power Wash) | Effet | Les billes de l'adversaire lavent à sa couleur (traces et éclaboussures de poche) | 10 s |
+| **Roomba** (Power Wash) | Effet | Le joueur vise un point du tapis : un robot aspirateur y lave à sa couleur, tourne aux bandes et pousse les billes | 20 s |
 
-Aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
+Les six pouvoirs de Power Wash Pool (🔄 compilés, pas encore testés) ne sortent que dans ce mode (*Only In Modes*). En dehors, aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 
 ## 8. Dimensions et environnements 📌
 

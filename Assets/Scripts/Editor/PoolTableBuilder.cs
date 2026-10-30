@@ -53,6 +53,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureHungryHoleSettingsAsset();
             EnsureSnakePoolSettingsAsset();
             EnsurePowerWashPoolSettingsAsset();
+            EnsurePowerWashPowerAssets();
             EnsurePlayAnywhereSettingsAsset();
             EnsurePocketSizeAssets();
             // The powers' tokens on the table, for those that have none yet.
@@ -233,6 +234,30 @@ namespace UntitledPoolGame.PoolEditor
             const string vfxPath = "Assets/Plugins/VFX/JMO Assets/Cartoon FX Remaster/CFXR Prefabs/Liquids/CFXR Water Splash (Smaller).prefab";
             settings.splashVfx = AssetDatabase.LoadAssetAtPath<GameObject>(vfxPath);
             EditorUtility.SetDirty(settings);
+        }
+
+        // Power Wash Pool's own powers, created for that mode only (Only In
+        // Modes = PowerWashPool; the user can widen it). Imperméable is a
+        // defence: usable off-turn.
+        private static void EnsurePowerWashPowerAssets()
+        {
+            EnsurePowerAsset<MudBucketPower>("MudBucketPower", "Seau de boue", OnlyInPowerWash);
+            EnsurePowerAsset<WaterBombPower>("WaterBombPower", "Bombe à eau", OnlyInPowerWash);
+            EnsurePowerAsset<BigRollerPower>("BigRollerPower", "Gros rouleau", OnlyInPowerWash);
+            EnsurePowerAsset<WaterproofPower>("WaterproofPower", "Imperméable", serialized =>
+            {
+                OnlyInPowerWash(serialized);
+                serialized.FindProperty("requiresOwnTurn").boolValue = false;
+            });
+            EnsurePowerAsset<MudFlipPower>("MudFlipPower", "Boue retournée", OnlyInPowerWash);
+            EnsurePowerAsset<RoombaPower>("RoombaPower", "Roomba", OnlyInPowerWash);
+        }
+
+        private static void OnlyInPowerWash(SerializedObject serialized)
+        {
+            SerializedProperty modes = serialized.FindProperty("onlyInModes");
+            modes.arraySize = 1;
+            modes.GetArrayElementAtIndex(0).intValue = (int)PoolGameMode.PowerWashPool;
         }
 
         // The "Aimant" power asset (MagnetPower), with Cartoon FX Remaster's

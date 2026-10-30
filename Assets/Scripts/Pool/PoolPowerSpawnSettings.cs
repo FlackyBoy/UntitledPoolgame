@@ -12,19 +12,22 @@ namespace UntitledPoolGame.Pool
         // Drawn from for the crates and the balls. Empty = nothing spawns.
         public PoolPower[] availablePowers;
 
-        // A random power of the pool allowed in this mode (PoolPower.AvailableIn);
-        // null if none is.
+        // A random power of the pool allowed in this mode (PoolPower.AvailableIn;
+        // only the mode's own with PoolModeSettings' Own Powers Only); null if
+        // none is.
         public PoolPower PickPower(PoolGameMode mode)
         {
             if (availablePowers == null) return null;
+            PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(mode);
+            bool ownOnly = entry != null && entry.ownPowersOnly;
             int count = 0;
             foreach (PoolPower power in availablePowers)
-                if (Offered(power, mode)) count++;
+                if (Offered(power, mode, ownOnly)) count++;
             if (count == 0) return null;
             int pick = Random.Range(0, count);
             foreach (PoolPower power in availablePowers)
             {
-                if (!Offered(power, mode)) continue;
+                if (!Offered(power, mode, ownOnly)) continue;
                 if (pick-- == 0) return power;
             }
             return null;
@@ -33,9 +36,12 @@ namespace UntitledPoolGame.Pool
         // Pocket Size has its own powers (one set per role), and the others
         // only when Pocket Size is ticked in their Only In Modes: most are
         // about pockets and groups it doesn't have. Its own powers come out
-        // nowhere else (PocketSizePower.AvailableIn).
-        private static bool Offered(PoolPower power, PoolGameMode mode) =>
+        // nowhere else (PocketSizePower.AvailableIn). ownOnly: the mode has
+        // Own Powers Only in PoolModeSettings (Power Wash), only the powers
+        // that list it.
+        private static bool Offered(PoolPower power, PoolGameMode mode, bool ownOnly) =>
             power != null && power.AvailableIn(mode)
+            && (!ownOnly || power.ListsMode(mode))
             && (mode != PoolGameMode.PocketSize || power is PocketSizePower || power.ListsMode(mode));
 
         [Header("Color code")]

@@ -32,7 +32,9 @@ namespace UntitledPoolGame.Pool
         public virtual bool AvailableIn(PoolGameMode mode) =>
             onlyInModes == null || onlyInModes.Length == 0 || System.Array.IndexOf(onlyInModes, mode) >= 0;
 
-        // The mode is ticked in Only In Modes (not just allowed by an empty list).
+        // The mode is ticked in Only In Modes (not just allowed by an empty
+        // list): a power made for it. PoolModeSettings' Own Powers Only keeps
+        // a mode to these.
         public bool ListsMode(PoolGameMode mode) =>
             onlyInModes != null && System.Array.IndexOf(onlyInModes, mode) >= 0;
 
