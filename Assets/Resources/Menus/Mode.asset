@@ -363,6 +363,40 @@ MonoBehaviour:
     idleSpeed: 1
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
+  - id: pocket-size
+    kind: 0
+    visible: 1
+    position: {x: 42, y: 71}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.9098039, g: 0.4627451, b: 0.10980392, a: 1}
+    stripe: 0
+    number: 5
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Pocket Size
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 10
+    description: "L'un de vous rétrécit sur la table, l'autre le chasse à la blanche. Trois touches et le petit a perdu, deux minutes de survie et il gagne. Puis on échange !"
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.3
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
   - id: rules
     kind: 4
     visible: 1

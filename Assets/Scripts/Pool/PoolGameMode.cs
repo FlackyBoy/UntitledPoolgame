@@ -29,5 +29,8 @@ namespace UntitledPoolGame.Pool
         // set somewhere in the room, in as few strokes as possible
         // (PlayAnywhereRuleSet, PlayAnywhereHole).
         PlayAnywhere,
+        // One player shrunk on the felt, the other hunts them with the cue
+        // ball; roles swap after the first round (PocketSizeRuleSet).
+        PocketSize,
     }
 }

@@ -54,6 +54,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureSnakePoolSettingsAsset();
             EnsurePowerWashPoolSettingsAsset();
             EnsurePlayAnywhereSettingsAsset();
+            EnsurePocketSizeAssets();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -121,6 +122,23 @@ namespace UntitledPoolGame.PoolEditor
             const string path = "Assets/Resources/HungryHoleSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<HungryHoleSettings>(path) != null) return;
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<HungryHoleSettings>(), path);
+        }
+
+        // Pocket Size: its settings, and its six powers (three per role),
+        // added to the powers handed out. The crates only offer them in
+        // Pocket Size, and only them there (PoolPowerSpawnSettings.PickPower).
+        private static void EnsurePocketSizeAssets()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/PocketSizeSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<PocketSizeSettings>(path) == null)
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<PocketSizeSettings>(), path);
+            EnsurePowerAsset<SlowCueBallPower>("SlowCueBallPower", "Blanche au ralenti", null);
+            EnsurePowerAsset<RepelCueBallPower>("RepelCueBallPower", "Blanche à la poche", null);
+            EnsurePowerAsset<TinySprintPower>("TinySprintPower", "Super vitesse", null);
+            EnsurePowerAsset<RapidShotPower>("RapidShotPower", "Tir rapide", null);
+            EnsurePowerAsset<DoubleCueBallPower>("DoubleCueBallPower", "Blanche ×2", null);
+            EnsurePowerAsset<SlowTinyPower>("SlowTinyPower", "Petit au ralenti", null);
         }
 
         // Snake Pool: the chains behind the cue balls.

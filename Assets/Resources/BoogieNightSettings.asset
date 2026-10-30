@@ -16,7 +16,7 @@ MonoBehaviour:
   minRounds: 1
   maxRounds: 15
   rerollsPerSpin: 1
-  modes: 000000000500000006000000070000000800000009000000
+  modes: 0000000005000000060000000700000008000000090000000a000000
   powersChance: 0.5
   speedPoolChance: 0.5
   fourteenOneTarget: 25

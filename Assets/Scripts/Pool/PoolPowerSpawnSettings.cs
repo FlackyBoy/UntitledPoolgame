@@ -19,16 +19,21 @@ namespace UntitledPoolGame.Pool
             if (availablePowers == null) return null;
             int count = 0;
             foreach (PoolPower power in availablePowers)
-                if (power != null && power.AvailableIn(mode)) count++;
+                if (Offered(power, mode)) count++;
             if (count == 0) return null;
             int pick = Random.Range(0, count);
             foreach (PoolPower power in availablePowers)
             {
-                if (power == null || !power.AvailableIn(mode)) continue;
+                if (!Offered(power, mode)) continue;
                 if (pick-- == 0) return power;
             }
             return null;
         }
+
+        // Pocket Size has its own powers only (one set per role): the others
+        // are about pockets and groups it doesn't have.
+        private static bool Offered(PoolPower power, PoolGameMode mode) =>
+            power != null && power.AvailableIn(mode) && (mode == PoolGameMode.PocketSize) == (power is PocketSizePower);
 
         [Header("Color code")]
         public Color attackColor = new Color(0.9f, 0.2f, 0.2f);

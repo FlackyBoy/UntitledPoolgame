@@ -29,7 +29,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Modes où ce pouvoir peut sortir (caisses, bille à pouvoir). Vide = tous les modes.")]
         [SerializeField] private PoolGameMode[] onlyInModes = new PoolGameMode[0];
 
-        public bool AvailableIn(PoolGameMode mode) =>
+        public virtual bool AvailableIn(PoolGameMode mode) =>
             onlyInModes == null || onlyInModes.Length == 0 || System.Array.IndexOf(onlyInModes, mode) >= 0;
 
         // Only on the holder's own turn (checked in PoolMatchRules.CheckPowerUse,

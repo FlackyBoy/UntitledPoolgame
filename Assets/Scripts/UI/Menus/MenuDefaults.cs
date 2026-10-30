@@ -197,6 +197,7 @@ namespace UntitledPoolGame.Core
             ModeBall(s, "snake-pool", 42f, 57.5f, m.snakePoolMode, PoolGameMode.SnakePool, 3);
             ModeBall(s, "power-wash-pool", 10f, 57.5f, m.powerWashPoolMode, PoolGameMode.PowerWashPool, 4);
             ModeBall(s, "play-anywhere", 26f, 71f, m.playAnywhereMode, PoolGameMode.PlayAnywhere, 5);
+            ModeBall(s, "pocket-size", 42f, 71f, m.pocketSizeMode, PoolGameMode.PocketSize, 6);
             // Taken off the menu (30/10), kept to put back: tick Visible.
             ModeBall(s, "nine-ball", 18f, 71f, m.nineBallMode, PoolGameMode.NineBall, 5).visible = false;
             ModeBall(s, "fourteen-one", 34f, 71f, m.fourteenOneMode, PoolGameMode.FourteenOne, 6).visible = false;

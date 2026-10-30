@@ -426,7 +426,9 @@ namespace UntitledPoolGame.Player
         private void CheckStuckRagdoll()
         {
             PuppetMaster puppet = behaviourPuppet != null ? behaviourPuppet.puppetMaster : null;
-            if (maxRagdollSeparation <= 0f || puppet == null || puppet.muscles.Length == 0 || behaviourPuppet.state != BehaviourPuppet.State.Puppet)
+            // Not while the ragdoll is switched off (Pocket Size's shrunk
+            // player): its muscles stay where they were left.
+            if (maxRagdollSeparation <= 0f || puppet == null || puppet.muscles.Length == 0 || !puppet.isActive || behaviourPuppet.state != BehaviourPuppet.State.Puppet)
             {
                 stuckTime = 0f;
                 return;

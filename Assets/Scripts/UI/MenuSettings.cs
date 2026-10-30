@@ -169,6 +169,8 @@ namespace UntitledPoolGame.Core
             rules = "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !" };
         public MenuModeBall playAnywhereMode = new MenuModeBall { ball = new MenuBall("Play Anywhere", "11", "#7cc242", true),
             rules = "Du golf dans toute la salle : rentre ta blanche dans le trou en un minimum de coups. À chaque manche, pose un objet sur le parcours pour t'aider... ou gêner l'autre !" };
+        public MenuModeBall pocketSizeMode = new MenuModeBall { ball = new MenuBall("Pocket Size", "5", "#e8761c"),
+            rules = "L'un de vous rétrécit sur la table, l'autre le chasse à la blanche. Trois touches et le petit a perdu, deux minutes de survie et il gagne. Puis on échange !" };
         [Tooltip("Type de la bille visée, changé avec Y / Tab. Chaque mode commence sur son type d'origine.")]
         public string turnBasedOption = "Chacun son tour   < >  (Y / Tab)";
         public string speedPoolOption = "Speed Pool : tout le monde en même temps   < >  (Y / Tab)";
@@ -272,6 +274,7 @@ namespace UntitledPoolGame.Core
             Pool.PoolGameMode.SnakePool => snakePoolMode,
             Pool.PoolGameMode.PowerWashPool => powerWashPoolMode,
             Pool.PoolGameMode.PlayAnywhere => playAnywhereMode,
+            Pool.PoolGameMode.PocketSize => pocketSizeMode,
             _ => classicMode,
         };
 

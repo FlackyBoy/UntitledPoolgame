@@ -20,6 +20,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6c5cef1506611b64583efac5c14837e6, type: 2}
   - {fileID: 11400000, guid: 269747528ad48034793f0f02716520b9, type: 2}
   - {fileID: 11400000, guid: 1a2021e254b74f6429da4c04290d41db, type: 2}
+  - {fileID: 11400000, guid: 2cf00d8357caf924f95bed2988b8a9eb, type: 2}
+  - {fileID: 11400000, guid: d8dd9d6294aa0d647903443241ed4191, type: 2}
+  - {fileID: 11400000, guid: cce286374f10a0c4b8b920051f2cbca6, type: 2}
+  - {fileID: 11400000, guid: 9d44988fdf4ee084f99de849c917e8a8, type: 2}
+  - {fileID: 11400000, guid: b8ea8752c0c849546ba5f5586a0ab7cf, type: 2}
+  - {fileID: 11400000, guid: 0b8d5e3f349df424d98a233f4e685546, type: 2}
   attackColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   defenseColor: {r: 0.25, g: 0.55, b: 1, a: 1}
   effectColor: {r: 0.3, g: 0.9, b: 0.4, a: 1}

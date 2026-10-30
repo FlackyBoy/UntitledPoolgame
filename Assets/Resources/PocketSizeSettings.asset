@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f049e0e9d012e94e80712a5152c94ef, type: 3}
+  m_Name: PocketSizeSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PocketSizeSettings
+  roundDuration: 120
+  hitsToLose: 3
+  countdown: 3
+  roundOverTime: 4
+  firstGiant: 0
+  tinyScale: 0.07
+  tinyBlocksBalls: 1
+  tinyJumpHeight: 1.2
+  tinyNearClip: 0.005
+  minHitSpeed: 0.25
+  hitMargin: 0.012
+  invulnerableTime: 1.5
+  knockSpeed: 0.9
+  knockLift: 0.5
+  knockDamping: 4
+  fallDepth: 0.06
+  obstacleBalls: 6
+  obstacleClearance: 0.2
+  respotDelay: 1.5
+  giantCueColor: {r: 1, g: 1, b: 1, a: 1}
+  giantCrateColor: {r: 0.95, g: 0.3, b: 0.2, a: 1}
+  tinyCrateColor: {r: 0.25, g: 0.8, b: 1, a: 1}
+  tinyCrateReach: 0.09
+  giantLabel: GRAND
+  tinyLabel: PETIT
+  roundFormat: Manche {0}/{1}
+  countdownFormat: "Pr\xEAt ? {0}"
+  hitsFormat: "touch\xE9 {0}/{1}"
+  roundWonText: "Manche gagn\xE9e !"
+  roundLostText: Manche perdue
+  debugLogs: 1

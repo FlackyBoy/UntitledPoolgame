@@ -125,9 +125,16 @@ namespace UntitledPoolGame.Pool
             }
             crate.transform.position = point.transform.position;
             crate.gameObject.SetActive(true);
-            // The power's own token (its icon) first, else its category's crate.
-            GameObject prefab = power.TokenPrefab != null ? power.TokenPrefab : settings.GetCratePrefab(power.Type);
-            crate.Initialize(power, prefab, settings.GetColor(power.Type));
+            // Pocket Size: a plain crate in the role's colour, so each player
+            // sees which are theirs to take and which to destroy.
+            if (power is PocketSizePower pocketPower)
+                crate.Initialize(power, null, PocketSizeRuleSet.CrateColor(pocketPower.Role));
+            else
+            {
+                // The power's own token (its icon) first, else its category's crate.
+                GameObject prefab = power.TokenPrefab != null ? power.TokenPrefab : settings.GetCratePrefab(power.Type);
+                crate.Initialize(power, prefab, settings.GetColor(power.Type));
+            }
             occupiedBy[crate] = point;
         }
 
