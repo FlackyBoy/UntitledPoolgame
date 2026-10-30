@@ -180,6 +180,7 @@ Assets/Scripts/
     ├── HungryHoleRuleSet.cs, HungryHoleCue.cs, HungryHoleProp.cs, HungryHoleSettings.cs   Hungry Hole : la blanche est un trou qui grandit, objets à manger
     ├── SnakePoolRuleSet.cs, SnakeChain.cs, SnakePoolSettings.cs   Snake Pool : les billes ramassées suivent la blanche en file
     ├── PowerWashPoolRuleSet.cs, PowerWashDirt.cs, PowerWashMudBall.cs, PowerWashPoolSettings.cs   Power Wash Pool : les billes lavent le tapis crasseux
+    ├── MudBucket/WaterBomb/BigRoller/Waterproof/MudFlip/RoombaPower.cs, PowerWashRoomba.cs   pouvoirs de Power Wash Pool (le robot du Roomba)
     ├── PoolPowerCrate.cs, PoolPowerCrateManager.cs, PoolPowerSpawnPoint.cs   caisses
     ├── PowerTokenFloat.cs          rotation et flottement des jetons de pouvoir (générés par Editor/PowerTokenGenerator.cs)
     ├── PowerBall.cs, PoolPowerBallRotator.cs   bille à pouvoir

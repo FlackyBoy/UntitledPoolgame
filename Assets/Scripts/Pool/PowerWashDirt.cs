@@ -53,6 +53,20 @@ namespace UntitledPoolGame.Pool
         // Splashes still spreading: the match isn't judged before they land.
         private int splashesInFlight;
 
+        // Power Wash powers, each until a Time.time (scaled: the pause stops
+        // them like the clock). Imperméable: nobody takes the player's paint.
+        private readonly float[] waterproofUntil = new float[2];
+        // Gros rouleau: the player's trails this much wider.
+        private readonly float[] rollerUntil = new float[2];
+        private readonly float[] rollerWidth = { 1f, 1f };
+        // Boue retournée: the 8 washes for this player instead of muddying.
+        private float mudFlipUntil;
+        private int mudFlipPlayer = -1;
+        // Only cells holding this value change (Seau de boue: the opponent's
+        // paint); 255 = any.
+        private byte onlyOver = AnyCell;
+        private const byte AnyCell = 255;
+
         public float TimeLeft { get; private set; }
         // Time is up with both players level: the next to lead wins.
         public bool Overtime { get; private set; }
@@ -210,21 +224,29 @@ namespace UntitledPoolGame.Pool
                 byte value;
                 if (ball.Group == BallGroup.Eight)
                 {
-                    if (settings.mudTrailWidth <= 0f) continue;
-                    width = settings.mudTrailWidth;
-                    value = Dirty;
+                    bool flipped = mudFlipPlayer >= 0 && Time.time < mudFlipUntil;
+                    if (!flipped && settings.mudTrailWidth <= 0f) continue;
+                    width = flipped ? TrailWidth(ball, mudFlipPlayer) : settings.mudTrailWidth;
+                    value = flipped ? (byte)(mudFlipPlayer + 1) : Dirty;
                 }
                 else
                 {
                     int owner = SpeedPoolRuleSet.OwnerOf(ball);
                     if (owner < 0) continue;
-                    width = Mathf.Lerp(settings.slowTrailWidth, settings.fastTrailWidth, ball.HorizontalSpeed / settings.fullSpeed);
+                    width = TrailWidth(ball, owner);
                     value = (byte)(owner + 1);
                 }
                 Stamp(ToCell(before), ToCell(now), width * ball.Radius / cellSize, value, force: false);
             }
 
             UpdateClock(match);
+        }
+
+        // In ball radii: wider the faster it goes, and with Gros rouleau.
+        private float TrailWidth(PoolBall ball, int player)
+        {
+            float width = Mathf.Lerp(settings.slowTrailWidth, settings.fastTrailWidth, ball.HorizontalSpeed / settings.fullSpeed);
+            return Time.time < rollerUntil[player] ? width * rollerWidth[player] : width;
         }
 
         private void UpdateClock(PoolMatchRules match)
@@ -270,20 +292,74 @@ namespace UntitledPoolGame.Pool
         // the moment the ball goes in, and drops flung around it on streaks
         // over Splash Duration. Fresh paint shines, then settles; a burst of
         // water at the pocket and a jolt of the player's screen.
-        public void Splash(Vector3 point, float radius, int player)
+        public void Splash(Vector3 point, float radius, int player) => Splash(point, radius, player, fromPocket: true);
+
+        // fromPocket: thrown towards the middle of the table in an arc;
+        // otherwise (Bombe à eau) centred on the point, drops all around.
+        public void Splash(Vector3 point, float radius, int player, bool fromPocket)
         {
             if (player < 0 || radius <= 0f) return;
             Splashed?.Invoke(player, point, radius);
-            float strength = Mathf.Clamp(radius / Mathf.Max(0.01f, settings.pocketSplashRadius), 0.5f, 2f);
-            PlayBurst(point, strength, playerColour[player]);
-            // Alone at the keyboard, the one screen plays it for either player.
-            int screen = UnityEngine.InputSystem.PlayerInput.all.Count <= 1 ? -1 : player;
-            LocalPoolPowerEffectReceiver.PlayImpact(screen, settings.shakeMagnitude * strength, settings.shakeDuration,
-                playerColour[player], settings.screenFlashAlpha * Mathf.Min(1f, strength), settings.screenFlashDuration);
-            StartCoroutine(Spread(ToCell(point), radius / cellSize, (byte)(player + 1)));
+            float strength = Strength(radius);
+            PlayBurst(point, strength, playerColour[player], settings.tintSplashVfx);
+            Jolt(player, strength, playerColour[player]);
+            StartCoroutine(Spread(ToCell(point), radius / cellSize, (byte)(player + 1), AnyCell, fromPocket));
         }
 
-        private void PlayBurst(Vector3 point, float strength, Color colour)
+        // Seau de boue: a splash of grime over the victim's paint only (the
+        // rest of the felt is left as it is), and a jolt of their screen.
+        public void MudSplash(Vector3 point, float radius, int victim)
+        {
+            if (victim < 0 || radius <= 0f) return;
+            float strength = Strength(radius);
+            PlayBurst(point, strength, settings.dirtColor, tint: true);
+            Jolt(victim, strength, settings.dirtColor);
+            StartCoroutine(Spread(ToCell(point), radius / cellSize, Dirty, (byte)(victim + 1), fromPocket: false));
+        }
+
+        public Color PlayerColour(int player) => playerColour[player];
+
+        // A strip washed for the player, like one of their balls' trails
+        // (the Roomba). radius in metres.
+        public void Wash(Vector3 from, Vector3 to, float radius, int player) =>
+            Stamp(ToCell(from), ToCell(to), radius / cellSize, (byte)(player + 1), force: false);
+
+        // Imperméable: the player's paint can't be taken (trails, splashes,
+        // mud, the 8) for this long.
+        public void Waterproof(int player, float seconds) => waterproofUntil[player] = Time.time + seconds;
+
+        // Gros rouleau: the player's trails widthMultiplier times wider.
+        public void BigRoller(int player, float widthMultiplier, float seconds)
+        {
+            rollerWidth[player] = widthMultiplier;
+            rollerUntil[player] = Time.time + seconds;
+        }
+
+        // Boue retournée: the 8 washes for the player while it rolls.
+        public void MudFlip(int player, float seconds)
+        {
+            mudFlipPlayer = player;
+            mudFlipUntil = Time.time + seconds;
+        }
+
+        // Seconds left of a power on the player (0 = off), for the HUD and logs.
+        public float WaterproofLeft(int player) => Mathf.Max(0f, waterproofUntil[player] - Time.time);
+        public float BigRollerLeft(int player) => Mathf.Max(0f, rollerUntil[player] - Time.time);
+        public float MudFlipLeft(int player) => mudFlipPlayer == player ? Mathf.Max(0f, mudFlipUntil - Time.time) : 0f;
+
+        // 1 for a ball's splash, more for a bigger one.
+        private float Strength(float radius) => Mathf.Clamp(radius / Mathf.Max(0.01f, settings.pocketSplashRadius), 0.5f, 2f);
+
+        // A shake and a flash of the player's screen (alone at the keyboard,
+        // the one screen plays it for either player).
+        private void Jolt(int player, float strength, Color colour)
+        {
+            int screen = UnityEngine.InputSystem.PlayerInput.all.Count <= 1 ? -1 : player;
+            LocalPoolPowerEffectReceiver.PlayImpact(screen, settings.shakeMagnitude * strength, settings.shakeDuration,
+                colour, settings.screenFlashAlpha * Mathf.Min(1f, strength), settings.screenFlashDuration);
+        }
+
+        private void PlayBurst(Vector3 point, float strength, Color colour, bool tint)
         {
             if (settings.splashVfx == null) return;
             point.y = surface.FeltTopY;
@@ -296,7 +372,7 @@ namespace UntitledPoolGame.Pool
             foreach (ParticleSystem system in systems)
             {
                 ParticleSystem.MainModule main = system.main;
-                if (settings.tintSplashVfx) main.startColor = colour;
+                if (tint) main.startColor = colour;
                 // Sub-emitters fire once per boosted particle: room for all.
                 main.maxParticles *= boost;
                 if (!IsBoosted(system.name)) continue;
@@ -337,13 +413,15 @@ namespace UntitledPoolGame.Pool
             return false;
         }
 
-        private IEnumerator Spread(Vector2 pocket, float reach, byte value)
+        // over: only cells holding that value change (AnyCell = all).
+        private IEnumerator Spread(Vector2 origin, float reach, byte value, byte over, bool fromPocket)
         {
             splashesInFlight++;
-            Vector2 inward = new Vector2(cellsX * 0.5f, cellsZ * 0.5f) - pocket;
+            Vector2 inward = new Vector2(cellsX * 0.5f, cellsZ * 0.5f) - origin;
             inward = inward.sqrMagnitude > 0f ? inward.normalized : Vector2.up;
             float puddle = reach * settings.splashPuddleShare;
-            Vector2 centre = pocket + inward * puddle * 0.5f;
+            Vector2 centre = fromPocket ? origin + inward * puddle * 0.5f : origin;
+            float spread = fromPocket ? settings.splashSpread : 360f;
             // Ragged edge: three waves around the rim, random phases.
             Vector3 phase = new Vector3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value) * Mathf.PI * 2f;
 
@@ -356,18 +434,19 @@ namespace UntitledPoolGame.Pool
             float inwardAngle = Mathf.Atan2(inward.y, inward.x);
             for (int i = 0; i < dropCount; i++)
             {
-                float angle = inwardAngle + UnityEngine.Random.Range(-0.5f, 0.5f) * settings.splashSpread * Mathf.Deg2Rad;
+                float angle = inwardAngle + UnityEngine.Random.Range(-0.5f, 0.5f) * spread * Mathf.Deg2Rad;
                 float distance = reach * UnityEngine.Random.Range(0.55f, 1f);
                 dropAt[i] = centre + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
                 dropSize[i] = reach * UnityEngine.Random.Range(0.04f, 0.11f);
             }
 
-            // Shine: the splash's own cells, a lighter take on the colour.
+            // Shine: the splash's own cells, a lighter take on the colour
+            // (not for mud).
             var fresh = new List<int>();
-            Color shineColour = Color.Lerp(playerColour[value - 1], Color.white, settings.freshPaintWhiten);
+            bool shines = settings.freshPaintTime > 0f && value != Dirty;
+            Color shineColour = shines ? Color.Lerp(playerColour[value - 1], Color.white, settings.freshPaintWhiten) : Color.clear;
             shineColour.a = 0.95f;
             Color32 shine = shineColour;
-            bool shines = settings.freshPaintTime > 0f;
 
             float duration = Mathf.Max(0.01f, settings.splashDuration);
             for (float t = 0f; ; t += Time.deltaTime)
@@ -375,6 +454,7 @@ namespace UntitledPoolGame.Pool
                 float k = Mathf.Clamp01(t / duration);
                 int before = fresh.Count;
                 collecting = fresh;
+                onlyOver = over;
                 // The puddle is there at once, full a few frames later.
                 StampPuddle(centre, puddle * Mathf.Lerp(0.8f, 1f, Mathf.Clamp01(k * 3f)), phase, value);
                 for (int i = 0; i < dropCount; i++)
@@ -386,6 +466,7 @@ namespace UntitledPoolGame.Pool
                     Stamp(dropAt[i], dropAt[i], dropSize[i], value, force: true);
                 }
                 collecting = null;
+                onlyOver = AnyCell;
                 if (shines)
                     for (int i = before; i < fresh.Count; i++) pixels[fresh[i]] = shine;
                 if (k >= 1f) break;
@@ -459,6 +540,8 @@ namespace UntitledPoolGame.Pool
             if (old == value) return;
             if (value == OutOfPlay) { cells[index] = OutOfPlay; return; }
             if (old == OutOfPlay) return;
+            if (onlyOver != AnyCell && old != onlyOver) return;
+            if (old != Dirty && Time.time < waterproofUntil[old - 1]) return;
             if (old != Dirty && value != Dirty && !force && !settings.stealWashed) return;
 
             if (old != Dirty) washedCount[old - 1]--;

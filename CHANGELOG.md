@@ -3,6 +3,9 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-10-30
+- **Power Wash Pool : six pouvoirs propres au mode** (branche `feature/power-wash-pouvoirs` ; compilé, non testé). *Seau de boue* (Attaque : viser un point, la boue resalit le tapis de l'adversaire seulement), *Bombe à eau* (viser un point, éclaboussure à sa couleur tout autour), *Gros rouleau* (traces 2 fois plus larges 15 s), *Imperméable* (Défense : personne ne reprend sa peinture 12 s, boue comprise), *Boue retournée* (la 8 lave pour soi 12 s), *Roomba* (viser un point : un robot aspirateur y lave à sa couleur pendant 20 s, tourne aux bandes et pousse les billes). Niveau 2 plus grand ou plus long. *Ensure Config Assets Exist* crée les six assets dans `Assets/Powers`, réservés au mode Power Wash (*Only In Modes*), avec leur jeton et leur icône.
+
 ## 2026-10-27
 - **Hungry Hole : les arbres passent dans le trou quand leur pied y entre** (compilé, non testé). La collision d'un objet était aussi large que son feuillage, mesuré avec tous ses niveaux de détail (les plus grossiers sont plus larges). Seul le premier niveau compte maintenant, et chaque objet a un réglage *Fit* : la part de sa largeur qui doit passer dans le trou, qui donne aussi la largeur de sa collision (0,4 pour les arbres, 1 pour le reste).
 - **Hungry Hole : une bille remise en jeu n'apparaît plus sur un trou** (compilé, non testé). Une bille replacée après une faute ou une 8 trop tôt évite maintenant les trous des joueurs, plus larges que leur blanche cachée ; avant, elle pouvait réapparaître dessous et être avalée tout de suite.
