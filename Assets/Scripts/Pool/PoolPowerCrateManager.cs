@@ -13,6 +13,8 @@ namespace UntitledPoolGame.Pool
         private PoolPowerSpawnSettings settings;
         private readonly List<PoolPowerSpawnPoint> spawnPoints = new List<PoolPowerSpawnPoint>();
         private readonly Dictionary<PoolPowerCrate, PoolPowerSpawnPoint> occupiedBy = new Dictionary<PoolPowerCrate, PoolPowerSpawnPoint>();
+        // Every crate made, spawned or waiting to respawn.
+        private readonly List<PoolPowerCrate> crates = new List<PoolPowerCrate>();
 
         private void Awake()
         {
@@ -33,22 +35,33 @@ namespace UntitledPoolGame.Pool
             if (Instance == this) Instance = null;
         }
 
+        private void OnEnable() => PoolMatchRules.MatchBegan += OnMatchBegan;
+        private void OnDisable() => PoolMatchRules.MatchBegan -= OnMatchBegan;
+
         private void Start()
         {
-            if (settings == null || settings.availablePowers == null || settings.availablePowers.Length == 0) return;
-            StartCoroutine(WaitForMatchThenSpawnInitialCrates());
+            // Already under way (started before this woke up).
+            if (PoolMatchRules.Instance != null && PoolMatchRules.Instance.MatchStarted) OnMatchBegan();
         }
 
-        // Powers on only, known once the match has started.
-        private IEnumerator WaitForMatchThenSpawnInitialCrates()
+        // Powers on only, known once the match has started. Each match may
+        // differ (Boogie Night chains modes, with or without powers): the
+        // crates are put away, then dealt again for this mode if it has powers.
+        private void OnMatchBegan()
         {
-            yield return new WaitUntil(() => PoolMatchRules.Instance != null && PoolMatchRules.Instance.MatchStarted);
-            if (!PoolMatchRules.Instance.PowersEnabled) yield break;
+            if (settings == null || settings.availablePowers == null || settings.availablePowers.Length == 0) return;
+            StopAllCoroutines();
+            foreach (PoolPowerCrate crate in crates) if (crate != null) crate.gameObject.SetActive(false);
+            occupiedBy.Clear();
+            if (PoolMatchRules.Instance.PowersEnabled) SpawnInitialCrates();
+        }
 
+        private void SpawnInitialCrates()
+        {
             if (spawnPoints.Count == 0)
             {
                 Debug.LogWarning("PoolPowerCrateManager: no PoolPowerSpawnPoint found in the scene — no crates to spawn.");
-                yield break;
+                return;
             }
 
             int count = Mathf.Min(settings.activeCrateCount, spawnPoints.Count);
@@ -56,7 +69,9 @@ namespace UntitledPoolGame.Pool
             for (int i = 0; i < count; i++)
             {
                 PoolPowerSpawnPoint point = TakeRandom(pool);
-                SpawnAt(CreateCrate(), point);
+                // The crates put away by a match without powers come back first.
+                PoolPowerCrate crate = i < crates.Count && crates[i] != null ? crates[i] : CreateCrate();
+                SpawnAt(crate, point);
             }
         }
 
@@ -93,7 +108,9 @@ namespace UntitledPoolGame.Pool
         {
             GameObject go = new GameObject("PoolPowerCrate");
             go.transform.SetParent(transform, worldPositionStays: false);
-            return go.AddComponent<PoolPowerCrate>();
+            PoolPowerCrate crate = go.AddComponent<PoolPowerCrate>();
+            crates.Add(crate);
+            return crate;
         }
 
         private void SpawnAt(PoolPowerCrate crate, PoolPowerSpawnPoint point)

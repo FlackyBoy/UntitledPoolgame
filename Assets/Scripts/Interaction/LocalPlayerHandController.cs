@@ -41,6 +41,9 @@ namespace UntitledPoolGame.Interaction
         private LocalGrabbable heldObject;
         private float chargedThrowPower;
         private bool throwArmed;   // Attack pressed since the object is in hand
+        // The press that placed an object (ReleaseInPlace) mustn't also pick
+        // the next one up.
+        private int releasedInPlaceFrame = -1;
 
         public LocalGrabbable HeldObject => heldObject;
 
@@ -108,6 +111,10 @@ namespace UntitledPoolGame.Interaction
         {
             if (poolAimController != null && poolAimController.WantsInteractThisFrame(heldObject))
                 return;
+            // The object handles its own release (Play Anywhere: placed).
+            if (heldObject != null && heldObject.HeldOverride != null && heldObject.HeldOverride.OverridesRelease)
+                return;
+            if (Time.frameCount == releasedInPlaceFrame) return;
 
             HandleThrow();
 
@@ -199,22 +206,38 @@ namespace UntitledPoolGame.Interaction
             else if (cuePickupTrigger != null && cuePickupTrigger.TryStartPickup())
                 return;
 
-            Collider[] hits = Physics.OverlapSphere(transform.position, pickupRange);
-            foreach (Collider hit in hits)
+            // The one looked at, not just any in range (objects side by side
+            // on the Play Anywhere crate): the one under the view first, else
+            // the one closest to the view's direction.
+            LocalGrabbable best = null;
+            if (cameraTransform != null
+                && Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit look, pickupRange + 1.5f, ~0, QueryTriggerInteraction.Ignore)
+                && look.collider.TryGetComponent(out LocalGrabbable looked) && CanPickUp(looked)
+                && (look.point - transform.position).sqrMagnitude <= pickupRange * pickupRange)
+                best = looked;
+            if (best == null)
             {
-                if (!hit.TryGetComponent(out LocalGrabbable grabbable) || grabbable.IsHeld)
-                    continue;
-
-                // The cue is handled exclusively by LocalCuePickupTrigger.
-                if (grabbable.IsCue)
-                    continue;
-
-                heldObject = grabbable;
-                if (!ObjectHandsActive || !objectHands.TryStartPickup(grabbable))
-                    grabbable.PickUp(transform);
-                return;
+                float bestAngle = float.MaxValue;
+                foreach (Collider hit in Physics.OverlapSphere(transform.position, pickupRange))
+                {
+                    if (!hit.TryGetComponent(out LocalGrabbable grabbable) || !CanPickUp(grabbable)) continue;
+                    float angle = cameraTransform != null ? Vector3.Angle(cameraTransform.forward, hit.bounds.center - cameraTransform.position) : 0f;
+                    if (angle >= bestAngle) continue;
+                    bestAngle = angle;
+                    best = grabbable;
+                }
             }
+            if (best == null) return;
+
+            heldObject = best;
+            if (!ObjectHandsActive || !objectHands.TryStartPickup(best))
+                best.PickUp(transform);
         }
+
+        // The cue is handled exclusively by LocalCuePickupTrigger.
+        private bool CanPickUp(LocalGrabbable grabbable) =>
+            !grabbable.IsHeld && !grabbable.IsCue
+            && (grabbable.HeldOverride == null || grabbable.HeldOverride.CanBePickedBy(playerInput.playerIndex));
 
         // Also used by LocalCuePickupTrigger.
         public bool CanUseCueNow()
@@ -238,6 +261,27 @@ namespace UntitledPoolGame.Interaction
                 heldObject.Drop();
 
             heldObject = null;
+        }
+
+        // Lets go of the held object without moving or pushing it: the
+        // caller sets it where it belongs (Play Anywhere's placed props).
+        public void ReleaseInPlace()
+        {
+            if (heldObject == null) return;
+            LocalGrabbable released = heldObject;
+            heldObject = null;
+            releasedInPlaceFrame = Time.frameCount;
+            if (ObjectHandsActive && objectHands.TryReleaseInPlace(released)) return;
+            if (released.IsHeld) released.Drop();
+        }
+
+        // The debug menu: puts an object in this player's hands as if picked
+        // up. The caller checks the hands are free (HeldObject, HandsMoving).
+        public void Give(LocalGrabbable grabbable)
+        {
+            heldObject = grabbable;
+            if (!ObjectHandsActive || !objectHands.TryStartPickup(grabbable))
+                grabbable.PickUp(transform);
         }
 
         // For the ragdoll: lets go of whatever is held.

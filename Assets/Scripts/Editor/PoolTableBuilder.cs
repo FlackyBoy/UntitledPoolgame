@@ -53,6 +53,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureHungryHoleSettingsAsset();
             EnsureSnakePoolSettingsAsset();
             EnsurePowerWashPoolSettingsAsset();
+            EnsurePlayAnywhereSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -129,6 +130,72 @@ namespace UntitledPoolGame.PoolEditor
             const string path = "Assets/Resources/SnakePoolSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<SnakePoolSettings>(path) != null) return;
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SnakePoolSettings>(), path);
+        }
+
+        // Play Anywhere: shot strength, cup, stroke limit, out of bounds.
+        internal static void EnsurePlayAnywhereSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/PlayAnywhereSettings.asset";
+            var settings = AssetDatabase.LoadAssetAtPath<PlayAnywhereSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<PlayAnywhereSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+
+            // The kinds of ground of the bar, to put on the décor through
+            // PlayAnywhereSurface. Existing ones keep their values.
+            const string folder = "Assets/Resources/PlayAnywhereSurfaces";
+            EnsureFolder(folder);
+            PlayAnywhereSurfaceType parquet = EnsureSurfaceType(folder, "Parquet", 0.3f, 1.5f, 0.4f, "parquet", "plank");
+            EnsureSurfaceType(folder, "Carrelage", 0.4f, 1.5f, 0.5f, "tile", "carrelage", "marble", "concrete");
+            EnsureSurfaceType(folder, "Comptoir", 0.25f, 1.2f, 0.45f, "counter", "comptoir");
+            EnsureSurfaceType(folder, "Tapis", 1f, 3f, 0.1f, "rug", "tapis");
+            EnsureSurfaceType(folder, "Moquette", 1.5f, 4f, 0.05f, "carpet", "moquette");
+            // The glue and ice plates of the crate, through their own
+            // PlayAnywhereSurface: no keyword, the décor never matches them.
+            EnsureSurfaceType(folder, "Glue", 6f, 10f, 0f);
+            EnsureSurfaceType(folder, "Verglas", 0.03f, 0.3f, 0.3f);
+            if (settings.defaultSurface == null)
+            {
+                settings.defaultSurface = parquet;
+                EditorUtility.SetDirty(settings);
+            }
+
+            // The crate's offer: the generated pieces (block, ramp, cone and
+            // the gadgets), added once each (their own colliders: the ramp
+            // keeps its slope, the portal its opening).
+            foreach (GameObject piece in PlayAnywhereTools.EnsurePropPrefabs())
+            {
+                if (piece == null || settings.props.Exists(c => c != null && c.prefab == piece)) continue;
+                settings.props.Insert(0, new PlayAnywherePropChoice { prefab = piece, useOwnColliders = true });
+                EditorUtility.SetDirty(settings);
+            }
+        }
+
+        // Existing ones keep their values; their keywords are filled only
+        // when they have none.
+        private static PlayAnywhereSurfaceType EnsureSurfaceType(string folder, string name, float rolling, float slide, float bounce, params string[] keywords)
+        {
+            string path = $"{folder}/{name}.asset";
+            var type = AssetDatabase.LoadAssetAtPath<PlayAnywhereSurfaceType>(path);
+            if (type != null)
+            {
+                if (type.keywords == null || type.keywords.Length == 0)
+                {
+                    type.keywords = keywords;
+                    EditorUtility.SetDirty(type);
+                }
+                return type;
+            }
+            type = ScriptableObject.CreateInstance<PlayAnywhereSurfaceType>();
+            type.rollingFriction = rolling;
+            type.slideFriction = slide;
+            type.bounciness = bounce;
+            type.keywords = keywords;
+            AssetDatabase.CreateAsset(type, path);
+            return type;
         }
 
         // Power Wash Pool: the grime on the felt and the match clock, with

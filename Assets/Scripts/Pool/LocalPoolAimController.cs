@@ -111,6 +111,108 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private float hipAdjustSharpness = 6f;
         private float smoothHeldBack, smoothRaise, smoothCompensation;
 
+        // A ball lower than a table's felt (on the floor, in Play Anywhere):
+        // the body crouches, the cue comes down with it and may tilt further.
+        [Header("Low ball (on the floor)")]
+        [Tooltip("Sans table dans la scène, et toujours en Play Anywhere : hauteur de la bille au-dessus des pieds (mètres) pour laquelle la pose de visée est réglée. Hors Play Anywhere avec une table, c'est la hauteur d'une bille sur son tapis. Une bille plus basse fait s'accroupir le personnage.")]
+        [SerializeField] private float standingBallHeight = 0.8f;
+        [Tooltip("Descente maximale du bassin (mètres) pour une bille basse ; la queue descend d'autant. 0 = jamais accroupi.")]
+        [SerializeField] private float maxLowBallCrouch = 0.45f;
+        [Tooltip("Flexion du buste (degrés) quand le personnage est accroupi au maximum.")]
+        [SerializeField] private float lowBallCrouchBend = 25f;
+        [Tooltip("Inclinaison de la queue en plus de Max Cue Tilt (degrés) quand le personnage est accroupi au maximum, pour que la pointe atteigne une bille au sol.")]
+        [SerializeField] private float lowBallExtraCueTilt = 20f;
+
+        // Hips lowered (m) for a low ball, eased in UpdateAim, applied in
+        // ApplyHandShift (cue) and ApplyLean (body).
+        private float lowBallCrouch;
+        private float LowBallCrouchFraction => maxLowBallCrouch > 0f ? Mathf.Clamp01(lowBallCrouch / maxLowBallCrouch) : 0f;
+
+        // Play Anywhere only: the player picks their stance while aiming
+        // (Crouch toggles standing / crouched), and the stance is forced
+        // down when something is in the way above the body: crouched under
+        // an overhang, lying down when even crouching doesn't fit. Lying: a
+        // full-body Animator layer (ProneLayerName, added by Tools > Pool > Play
+        // Anywhere > Ajouter la pose allongée au joueur) plays the floor pose,
+        // the cue lies along the aim at the ball's height, and the body is
+        // moved and turned, from where its shoulders and hips are measured,
+        // so the head points at the ball and the shoulders sit Prone Shoulder
+        // Distance behind it.
+        [Header("Stance (Play Anywhere)")]
+        [Tooltip("Action qui fait passer de debout à accroupi en visée (Play Anywhere seulement).")]
+        [SerializeField] private string crouchActionName = "Crouch";
+        [Tooltip("Descente du bassin (mètres) en posture accroupie choisie. Le personnage descend aussi seul pour une bille au sol (Max Low Ball Crouch).")]
+        [SerializeField] private float stanceCrouchDepth = 0.45f;
+        [Tooltip("Rayon (mètres) des volumes qui cherchent un obstacle au-dessus du corps en visée.")]
+        [SerializeField] private float stanceProbeRadius = 0.2f;
+        [Tooltip("Hauteurs (mètres, au-dessus des pieds) du buste debout : un obstacle entre les deux force la posture accroupie.")]
+        [SerializeField] private Vector2 standingTorsoHeights = new Vector2(1.05f, 1.7f);
+        [Tooltip("Hauteurs (mètres, au-dessus des pieds) du buste accroupi : un obstacle entre les deux demande de s'allonger.")]
+        [SerializeField] private Vector2 crouchedTorsoHeights = new Vector2(0.6f, 1.15f);
+        [Tooltip("Bille au sol : à moins de cette hauteur (mètres) au-dessus des pieds, le personnage vise toujours accroupi, et allongé si un obstacle l'empêche même de s'accroupir. Plus haut (sur un comptoir), il ne s'allonge pas.")]
+        [SerializeField] private float proneMaxBallHeight = 0.3f;
+        [Tooltip("Allongé : distance (mètres) entre la bille et le milieu des épaules, dans l'axe du tir.")]
+        [SerializeField] private float proneShoulderDistance = 1.1f;
+        [Tooltip("Allongé : la queue monte de la bille vers le talon de cet angle (degrés), au lieu d'être à plat.")]
+        [SerializeField] private float proneCueRise = 4f;
+        [Tooltip("Allongé : hauteur de la caméra de visée, en part de Orbit Height (elle passe sous l'obstacle).")]
+        [Range(0.1f, 1f)] [SerializeField] private float proneCameraHeightScale = 0.4f;
+        [Tooltip("Allongé : temps (secondes) pour se coucher ou se relever (poids du calque d'animation).")]
+        [SerializeField] private float proneBlendTime = 0.25f;
+        [Tooltip("Écrit dans la console chaque changement de posture ([AimStance]) et, allongé, où sont les épaules et le bassin.")]
+        [SerializeField] private bool traceStance = true;
+
+        // Play Anywhere only: a wall (or any solid) between the ball and the
+        // spot where the body would stand pushes it forward toward the ball
+        // instead of letting it sink in, or end up on the far side. The cue
+        // slides back through the hands by as much, so the tip stays at the
+        // ball, and the hands rise so the butt tilts up, off the wall. The
+        // aiming camera comes in front of a wall between it and the ball.
+        [Header("Walls (Play Anywhere)")]
+        [Tooltip("Avancée (mètres) du corps, poussé par un mur, à partir de laquelle la queue est levée et penchée au maximum (Wall Cue Raise, Wall Extra Cue Tilt). Le corps, lui, avance autant qu'il faut, jusqu'à Min Wall Ball Gap de la bille ; la queue glisse d'autant dans ses mains pour que la pointe reste à la bille.")]
+        [SerializeField] private float maxWallPush = 0.6f;
+        [Tooltip("Distance minimale (mètres) entre la bille et le centre du corps poussé par un mur. Bille plus près du mur que ça : le corps touche le mur, mais reste de ce côté.")]
+        [SerializeField] private float minWallBallGap = 0.4f;
+        [Tooltip("Hauteurs (mètres, au-dessus des pieds) du volume qui cherche un mur derrière le corps : jambes et bassin, pour que les comptoirs et plafonds au-dessus restent gérés par la posture.")]
+        [SerializeField] private Vector2 wallProbeHeights = new Vector2(0.2f, 0.8f);
+        [Tooltip("Mur au plus près (Max Wall Push) : les mains montent de cette hauteur (mètres), la queue penche vers la bille et son talon s'écarte du mur.")]
+        [SerializeField] private float wallCueRaise = 0.25f;
+        [Tooltip("Inclinaison de la queue permise en plus (degrés) quand un mur avance le joueur au maximum.")]
+        [SerializeField] private float wallExtraCueTilt = 20f;
+        [Tooltip("Rapproche la caméra de visée de la bille quand un mur est entre les deux.")]
+        [SerializeField] private bool cameraAvoidsWalls = true;
+
+        // How far a wall pushed the body forward this frame (m).
+        private float wallPush;
+        // Where the player stood on entering aim: walked to, so on the right
+        // side of any wall (the fallback of KeepOnRightSide).
+        private Vector3 aimEntryPosition;
+        private string wallBy;
+        private static readonly RaycastHit[] wallHits = new RaycastHit[16];
+        private float WallPushFraction => maxWallPush > 0f ? Mathf.Clamp01(wallPush / maxWallPush) : 0f;
+
+        // The Animator layer and its state, made by the editor tool.
+        public const string ProneLayerName = "Play Anywhere Allongé";
+        public const string ProneStateName = "Prone";
+        private Animator bodyAnimator;
+        private int proneLayer = -2;   // -2 = not looked up yet, -1 = missing
+        private float proneWeight;
+        // Correction of the body's position and yaw while lying, from the
+        // measured pose (ApplyLean), applied in UpdateAim.
+        private Vector3 proneRootOffset;
+        private float proneYawOffset;
+        private float proneTraceNext;
+
+        public enum AimStance { Standing, Crouched, Prone }
+        // What the player asked for (Crouch toggles it) and what they get.
+        private bool stanceCrouchChosen;
+        public AimStance Stance { get; private set; }
+        // Hips lowered (m) for the stance, eased; body only (the cue stays on
+        // the ball), applied in ApplyLean with the low-ball crouch.
+        private float stanceCrouch;
+        private InputAction crouchAction;
+        private static readonly Collider[] stanceHits = new Collider[16];
+
         // Out of reach even stretched: the front hand lets go and the body
         // straightens up until the shot is reachable again.
         [Header("Out of reach")]
@@ -161,7 +263,8 @@ namespace UntitledPoolGame.Pool
         }
 
         // How far CueChargeSlide slides the mesh: what the hands didn't cover.
-        public float AimMeshReach => IsOutOfReach ? 0f : Mathf.Max(0f, AimReachExtra - AimHandShift);
+        // Minus the wall push: the body came that much closer to the ball.
+        public float AimMeshReach => (IsOutOfReach ? 0f : Mathf.Max(0f, AimReachExtra - AimHandShift)) - wallPush;
 
         // Distance from the cue's origin to the ball at which the tip
         // touches it (measured from the mesh, else standDistance).
@@ -305,6 +408,7 @@ namespace UntitledPoolGame.Pool
             moveAction = map.FindAction(moveActionName, throwIfNotFound: true);
             interactAction = map.FindAction(interactActionName, throwIfNotFound: true);
             attackAction = map.FindAction(attackActionName, throwIfNotFound: true);
+            crouchAction = map.FindAction(crouchActionName, throwIfNotFound: false);
 
             ResolveMissingReferences();
 
@@ -391,7 +495,31 @@ namespace UntitledPoolGame.Pool
             if (isAiming) return true;
             if (IsMyTurnToPlaceBall()) return true;
             if (IsMyTurnToCallPocket()) return true;
-            return IsCue(heldObject) && FindNearbyCueBall() != null;
+            // Only when aiming is allowed: near the ball outside one's turn
+            // (Play Anywhere's build, strokes used up), Interact did nothing,
+            // neither aiming nor dropping the cue.
+            bool wants = IsCue(heldObject) && CanShootNow() && FindNearbyCueBall() != null;
+            // The hands drop the cue on this press: say why it's no aim
+            // (before, the hands had dropped it by the time Update looked).
+            if (!wants && traceAimInput && IsCue(heldObject) && InteractPressedThisFrame())
+                LogNoAim();
+            return wants;
+        }
+
+        private int noAimLoggedFrame = -1;
+
+        // Only next to a cue ball: elsewhere, Interact just drops the cue.
+        private void LogNoAim()
+        {
+            if (noAimLoggedFrame == Time.frameCount) return;
+            noAimLoggedFrame = Time.frameCount;
+            bool nearBall = false;
+            foreach (PoolBall ball in PoolBall.Active)
+            {
+                float reach = interactRange + ball.Radius;
+                if (ball.IsCueBall && (ball.transform.position - transform.position).sqrMagnitude <= reach * reach) nearBall = true;
+            }
+            if (nearBall) Debug.Log($"[AimInput] {name}: pas de visée — {WhyNoAim()}", this);
         }
 
         private static bool IsCue(LocalGrabbable heldObject)
@@ -635,12 +763,16 @@ namespace UntitledPoolGame.Pool
                     && (cueMelee == null || !cueMelee.IsSwinging) && (unarmedMelee == null || !unarmedMelee.IsAttacking)
                     && handController.CueSettled)
                     EnterAim();
+                else if (traceAimInput && IsCue(handController.HeldObject) && InteractPressedThisFrame())
+                    LogNoAim();
                 return;
             }
 
             // Parked: potted (Speed Pool, knocked in by the other player).
             if (currentCueBall == null || currentCueBall.Rigidbody.isKinematic || !IsCue(handController.HeldObject))
             {
+                if (traceAimInput)
+                    Debug.Log($"[AimInput] {name}: visée quittée d'elle-même — {(currentCueBall == null ? "plus de blanche" : currentCueBall.Rigidbody.isKinematic ? "blanche garée" : "plus de queue en main")}", this);
                 ExitAim();
                 return;
             }
@@ -693,6 +825,39 @@ namespace UntitledPoolGame.Pool
         }
 
         private const float MaxSpeedToAim = 0.05f;
+
+        // Diagnostics: Interact pressed with the cue, no aim. Each reason the
+        // Update test can fail, and for the ball, the nearest cue ball's
+        // distance and speed (a ball that never quite stops is one).
+        private string WhyNoAim()
+        {
+            var reasons = new System.Text.StringBuilder();
+            if (currentCueBall == null)
+            {
+                PoolBall nearest = null;
+                float bestSqr = float.MaxValue;
+                foreach (PoolBall ball in PoolBall.Active)
+                {
+                    if (!ball.IsCueBall) continue;
+                    float sqr = (ball.transform.position - transform.position).sqrMagnitude;
+                    if (sqr < bestSqr) { bestSqr = sqr; nearest = ball; }
+                }
+                PoolMatchRules turnRules = PoolMatchRules.Instance;
+                string turn = PlayerInput.all.Count <= 1 && turnRules != null && !turnRules.IsSimultaneous
+                    ? $"seul, on joue la bille de celui dont c'est le tour : J{turnRules.CurrentPlayer + 1} ; "
+                    : "";
+                reasons.Append(nearest == null
+                    ? "aucune blanche ; "
+                    : $"{turn}pas de blanche jouable (la plus proche, {nearest.name} de J{nearest.CueOwner + 1}, à {Mathf.Sqrt(bestSqr):0.00} m pour {interactRange + nearest.Radius:0.00} permis, vitesse {nearest.Rigidbody.linearVelocity.magnitude:0.000} m/s pour moins de {MaxSpeedToAim} permis, {(nearest.Rigidbody.isKinematic ? "garée" : "libre")}) ; ");
+            }
+            if (PlayAnywhereRuleSet.Current != null && PlayAnywhereRuleSet.Current.IsBuilding)
+                reasons.Append("phase de pose en cours : prendre un objet dans la caisse et le poser d'abord (seul, les deux objets) ; ");
+            else if (!CanShootNow()) reasons.Append("pas son tour de tirer (règles) ; ");
+            if (cueMelee != null && cueMelee.IsSwinging) reasons.Append("coup de queue en cours ; ");
+            if (unarmedMelee != null && unarmedMelee.IsAttacking) reasons.Append("coup de poing en cours ; ");
+            if (!handController.CueSettled) reasons.Append("la queue n'est pas encore en place dans les mains ; ");
+            return reasons.Length > 0 ? reasons.ToString() : "aucune raison trouvée";
+        }
 
         private int nearbyCueBallFrame = -1;
         private PoolBall nearbyCueBall;
@@ -774,6 +939,132 @@ namespace UntitledPoolGame.Pool
 
             position = ballPos + rootOffset - aimDirection * distance;
             position.y = transform.position.y;
+            UpdateWallPush(position, aimDirection, distance);
+            position += aimDirection * wallPush;
+        }
+
+        // Play Anywhere: how far forward something solid between the ball
+        // and the body pushes it. Searched from Min Wall Ball Gap off the
+        // ball back to where the body would stand, so a wall the body would
+        // end up behind is found too (searching only around the body missed
+        // it once the body was past the wall): a capsule as wide as the
+        // body, plus a ray along its middle at each probe height for a wall
+        // the capsule already touches where the search starts. Lying, the
+        // body is placed from its measured pose (MeasureProne) and the cue
+        // in world space: no push.
+        private void UpdateWallPush(Vector3 root, Vector3 aimDirection, float distance)
+        {
+            float push = 0f;
+            string by = null;
+            float span = distance - minWallBallGap;
+            if (PlayAnywhereRuleSet.Current != null && span > 0f && Stance != AimStance.Prone)
+            {
+                float radius = characterController.radius;
+                Vector3 start = root + aimDirection * span;
+                Vector3 bottom = start + Vector3.up * (wallProbeHeights.x + radius);
+                Vector3 top = start + Vector3.up * Mathf.Max(wallProbeHeights.x + radius, wallProbeHeights.y - radius);
+                // How far back from the start the body's centre may go.
+                float back = span;
+                int count = Physics.CapsuleCastNonAlloc(bottom, top, radius, -aimDirection, wallHits, span, ~0, QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < count; i++)
+                {
+                    RaycastHit hit = wallHits[i];
+                    // Distance 0: overlapping at the start, no usable contact.
+                    if (hit.distance <= 0f || hit.distance >= back || !IsSolidObstacle(hit.collider)) continue;
+                    back = hit.distance;
+                    by = hit.collider.name;
+                }
+                for (int h = 0; h < 2; h++)
+                {
+                    Vector3 from = start + Vector3.up * (h == 0 ? wallProbeHeights.x : wallProbeHeights.y);
+                    count = Physics.RaycastNonAlloc(from, -aimDirection, wallHits, span + radius, ~0, QueryTriggerInteraction.Ignore);
+                    for (int i = 0; i < count; i++)
+                    {
+                        RaycastHit hit = wallHits[i];
+                        if (hit.distance <= 0f || hit.distance - radius >= back || !IsSolidObstacle(hit.collider)) continue;
+                        back = hit.distance - radius;
+                        by = hit.collider.name;
+                    }
+                }
+                if (by != null) push = Mathf.Clamp(span - back + WallSkin, 0f, span);
+            }
+            if (traceStance && by != wallBy)
+                Debug.Log(by != null
+                    ? $"[AimStance] {name}: mur derrière ({by}) : le corps avance de {push:0.00} m vers la bille" + (push >= span ? $" (au plus près, Min Wall Ball Gap {minWallBallGap:0.00} m de la bille : le corps touche encore le mur)" : "")
+                    : $"[AimStance] {name}: plus de mur derrière", this);
+            wallBy = by;
+            wallPush = push;
+        }
+
+        private const float WallSkin = 0.02f;
+
+        // Play Anywhere, leaving aim: the aiming pose can still have put the
+        // body past a wall, or over nothing (a counter's edge), and walking
+        // control would then drop it. Past a wall: a wall both between
+        // where the player entered aim and the body, and between the ball
+        // and the body (one alone is a pillar the body went round, or the
+        // counter under the ball). Then the body goes back along the way
+        // from the entry spot, short of the wall, or to the entry spot if
+        // there's no floor there either.
+        private void KeepOnRightSide()
+        {
+            if (PlayAnywhereRuleSet.Current == null) return;
+            Vector3 body = transform.position;
+            bool hasFloor = HasFloorUnder(body);
+            string wall = null;
+            Vector3 safe = body;
+            if (BlockedBetween(aimEntryPosition, body, out float free, out string by)
+                && currentCueBall != null
+                && BlockedBetween(new Vector3(currentCueBall.Rigidbody.position.x, body.y, currentCueBall.Rigidbody.position.z), body, out _, out _))
+            {
+                wall = by;
+                Vector3 way = body - aimEntryPosition;
+                way.y = 0f;
+                safe = aimEntryPosition + (way.sqrMagnitude > 1e-6f ? way.normalized * free : Vector3.zero);
+            }
+            if (wall == null && hasFloor) return;
+            if (!HasFloorUnder(safe)) safe = aimEntryPosition;
+            safe.y = Mathf.Max(safe.y, aimEntryPosition.y);
+            if (traceStance)
+                Debug.Log($"[AimStance] {name}: en sortant de la visée, le corps est {(wall != null ? $"de l'autre côté de {wall}" : "au-dessus du vide")} ({body}) : replacé à {safe}.", this);
+            TeleportBody(safe, transform.eulerAngles.y);
+        }
+
+        // Something solid in the way of the player's capsule from one spot to
+        // the other (above step height); free is how far it gets.
+        private bool BlockedBetween(Vector3 from, Vector3 to, out float free, out string by)
+        {
+            Vector3 way = to - from;
+            way.y = 0f;
+            float length = way.magnitude;
+            free = length;
+            by = null;
+            if (length < 0.01f) return false;
+            float radius = characterController.radius;
+            Vector3 center = from + characterController.center;
+            float half = Mathf.Max(0f, characterController.height * 0.5f - radius);
+            Vector3 bottom = center - Vector3.up * half;
+            bottom.y = Mathf.Min(center.y, Mathf.Max(bottom.y, from.y + characterController.stepOffset + radius));
+            Vector3 top = center + Vector3.up * half;
+            int count = Physics.CapsuleCastNonAlloc(bottom, top, radius, way / length, wallHits, length, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit hit = wallHits[i];
+                if (hit.distance <= 0f || hit.distance >= free || !IsSolidObstacle(hit.collider)) continue;
+                free = Mathf.Max(0f, hit.distance - WallSkin);
+                by = hit.collider.name;
+            }
+            return by != null;
+        }
+
+        // Floor within a step and a half below the feet.
+        private bool HasFloorUnder(Vector3 feet)
+        {
+            float reach = characterController.stepOffset * 1.5f + 0.3f;
+            int count = Physics.RaycastNonAlloc(feet + Vector3.up * 0.3f, Vector3.down, wallHits, reach + 0.3f, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+                if (IsSolidObstacle(wallHits[i].collider)) return true;
+            return false;
         }
 
         private void EnterAim()
@@ -832,6 +1123,7 @@ namespace UntitledPoolGame.Pool
             Vector3 aimDirectionOnEnter = toBall.sqrMagnitude > 0.001f ? toBall.normalized : transform.forward;
             ComputeAimBodyPose(cueBallPosition, aimDirectionOnEnter, out Vector3 standPosition, out float standYaw);
 
+            aimEntryPosition = transform.position;
             TeleportBody(standPosition, standYaw);
         }
 
@@ -883,6 +1175,26 @@ namespace UntitledPoolGame.Pool
                 if (leftArmBendGoal != null) leftArmBendGoal.localPosition = leftArmBendGoalRestLocalPosition;
                 if (rightArmBendGoal != null) rightArmBendGoal.localPosition = rightArmBendGoalRestLocalPosition;
             }
+        }
+
+        // Lying: the cue along the aim, its tip just behind the strike point,
+        // the butt raised by Prone Cue Rise. Set in world space: the carry
+        // pose it normally hangs from is the standing one. The hands follow
+        // it (IK), the body is placed around them (MeasureProne).
+        private void PlaceProneCue(Transform held, Vector3 tipAxis)
+        {
+            Vector3 aim = Quaternion.Euler(0f, aimYaw, 0f) * Vector3.forward;
+            Vector3 along = Quaternion.AngleAxis(proneCueRise, Vector3.Cross(Vector3.up, aim)) * aim;
+            Vector3 strike = StrikePointWorld();
+            Quaternion rest = held.parent != null ? held.parent.rotation * cueRestLocalRotation : cueRestLocalRotation;
+            Quaternion rotation = Quaternion.FromToRotation(rest * tipAxis, along) * rest;
+            // aimBaseDistance: from the cue's origin to the ball's centre at
+            // the touching tip.
+            held.SetPositionAndRotation(strike - along * aimBaseDistance, rotation);
+            AimHandShift = 0f;
+            bodyLean = 0f;
+            reachLost = false;
+            cueTilt = Quaternion.identity;
         }
 
         // Where the tip touches the ball, strike point (spin) included.
@@ -939,10 +1251,21 @@ namespace UntitledPoolGame.Pool
             bodyLean = Mathf.Max(0f, AimHandShift - maxHandStretch);
             Transform held = cue.transform;
             Vector3 tipAxis = CueTipAxis(cue);
+            if (Stance == AimStance.Prone && currentCueBall != null)
+            {
+                PlaceProneCue(held, tipAxis);
+                return;
+            }
             Vector3 axisInParent = cueRestLocalRotation * tipAxis;
             Vector3 offsetInParent = held.parent != null
                 ? held.parent.InverseTransformVector(transform.TransformVector(aimCueOffset))
                 : aimCueOffset;
+            // Crouching for a low ball: the hands come down with the body. A
+            // wall behind: they rise, so the cue tilts down to the ball and
+            // its butt up, off the wall.
+            float handsDown = lowBallCrouch - wallCueRaise * WallPushFraction;
+            if (handsDown != 0f)
+                offsetInParent += held.parent != null ? held.parent.InverseTransformVector(Vector3.down * handsDown) : Vector3.down * handsDown;
             held.localPosition = cueRestLocalPosition + offsetInParent + axisInParent * AimHandShift;
 
             // From the carried pose (not last frame's, it would compound),
@@ -965,8 +1288,9 @@ namespace UntitledPoolGame.Pool
                     targetTilt = Quaternion.FromToRotation(restWorld * tipAxis, toBall.normalized);
                     targetTilt.ToAngleAxis(out float tiltAngle, out Vector3 tiltAxis);
                     if (tiltAngle > 180f) tiltAngle -= 360f;
-                    if (Mathf.Abs(tiltAngle) > maxCueTilt)
-                        targetTilt = Quaternion.AngleAxis(Mathf.Sign(tiltAngle) * maxCueTilt, tiltAxis);
+                    float tiltCap = maxCueTilt + lowBallExtraCueTilt * LowBallCrouchFraction + wallExtraCueTilt * WallPushFraction;
+                    if (Mathf.Abs(tiltAngle) > tiltCap)
+                        targetTilt = Quaternion.AngleAxis(Mathf.Sign(tiltAngle) * tiltCap, tiltAxis);
                 }
             }
             cueTilt = Quaternion.Slerp(cueTilt, targetTilt, 1f - Mathf.Exp(-12f * Time.deltaTime));
@@ -983,7 +1307,7 @@ namespace UntitledPoolGame.Pool
                 string slideInfo = held.TryGetComponent(out CueChargeSlide traceSlide)
                     ? $"charge {ChargeFraction:F2} | cue follows {(traceSlide.FollowedAimController == this ? "this player" : traceSlide.FollowedAimController != null ? traceSlide.FollowedAimController.name : "nobody")} | mesh offset {traceSlide.CurrentMeshOffset:F2} m | "
                     : "no CueChargeSlide on the held cue | ";
-                Debug.Log($"[AimTrace] {name}: {slideInfo}{(IsOutOfReach ? "OUT OF REACH" : "in reach")} | reach extra {AimReachExtra:F2} (normal max {MaxReach:F2}, stretched max {StretchedReach:F2}, Max Hand Shift {maxHandShift:F2}) | hand shift {AimHandShift:F2} | body lean {bodyLean:F2} | stretch {StretchFraction:F2} | front hand {(reachLost ? "LET GO" : "on cue")} ({frontHandRelease:F2}) | hips held back {lastHipHeldBack:F2} m, raised {lastHipRaise:F2} m, extra bend {lastCompensationBend:F0}° | mesh slide {AimMeshReach:F2} | cue tilt {traceTilt:F1}° " +
+                Debug.Log($"[AimTrace] {name}: {slideInfo}{(IsOutOfReach ? "OUT OF REACH" : "in reach")} | reach extra {AimReachExtra:F2} (normal max {MaxReach:F2}, stretched max {StretchedReach:F2}, Max Hand Shift {maxHandShift:F2}) | hand shift {AimHandShift:F2} | body lean {bodyLean:F2} | stretch {StretchFraction:F2} | front hand {(reachLost ? "LET GO" : "on cue")} ({frontHandRelease:F2}) | hips held back {lastHipHeldBack:F2} m, raised {lastHipRaise:F2} m, extra bend {lastCompensationBend:F0}° | mesh slide {AimMeshReach:F2} | low-ball crouch {lowBallCrouch:F2} m | cue tilt {traceTilt:F1}° " +
                           $"| cue local pos {held.localPosition} | body→ball {toBallFlat.magnitude:F2} m | root y {transform.position.y:F2} | hips y {(hips != null ? hips.position.y : float.NaN):F2}", this);
             }
         }
@@ -1004,7 +1328,15 @@ namespace UntitledPoolGame.Pool
         private void ApplyLean()
         {
             if (leanIK == null) return;
-            if (!isAiming || bodyLean <= 0f)
+            if (isAiming && Stance == AimStance.Prone)
+            {
+                MeasureProne();
+                ReleaseFeet();
+                return;
+            }
+            // The body goes as low as the ball or the stance asks.
+            float crouch = Mathf.Max(lowBallCrouch, stanceCrouch);
+            if (!isAiming || (bodyLean <= 0f && crouch <= 0f))
             {
                 ReleaseFeet();
                 return;
@@ -1021,7 +1353,7 @@ namespace UntitledPoolGame.Pool
             // Normal lean: forward and a little down. Stretched: the hips come
             // back up, onto the rail.
             float sink = Mathf.Min(bodyLean, maxBodyLean) * 0.3f;
-            Vector3 offset = forward * bodyLean + Vector3.up * (stretchHipRise * s - sink);
+            Vector3 offset = forward * bodyLean + Vector3.up * (stretchHipRise * s - sink - crouch);
 
             // The hips stop at the felt's edge and stay above what's under
             // them; the torso bends further to make up the difference.
@@ -1041,7 +1373,10 @@ namespace UntitledPoolGame.Pool
                             compensation = Mathf.Min(maxCompensationBend, Mathf.Asin(Mathf.Clamp01(heldBack / torso)) * Mathf.Rad2Deg);
                     }
                 }
-                float below = SurfaceHeightBelow(hips - forward * heldBack);
+                // Only what's under the hips as animated counts: a table top
+                // or a shelf above a crouched body (ball under it) isn't a
+                // seat, and would stand the body back up through it.
+                float below = SurfaceHeightBelow(hips - forward * heldBack, Mathf.Max(r.pelvis.position.y, hips.y));
                 if (!float.IsNegativeInfinity(below))
                     raise = Mathf.Max(0f, below + hipAboveTable - (hips.y));
             }
@@ -1054,7 +1389,8 @@ namespace UntitledPoolGame.Pool
             lastHipRaise = smoothRaise;
             lastCompensationBend = smoothCompensation;
 
-            float bend = bodyLeanBend * k + stretchBend * s + smoothCompensation;
+            float crouchFraction = maxLowBallCrouch > 0f ? Mathf.Clamp01(crouch / maxLowBallCrouch) : 0f;
+            float bend = bodyLeanBend * k + stretchBend * s + smoothCompensation + lowBallCrouchBend * crouchFraction;
             if (bend > 0f && r.spine != null && r.spine.Length > 0)
             {
                 Quaternion perBone = Quaternion.AngleAxis(bend / r.spine.Length, Vector3.Cross(Vector3.up, forward));
@@ -1081,7 +1417,7 @@ namespace UntitledPoolGame.Pool
             right.position = r.rightFoot.position + (leftSupports ? lift : Vector3.zero);
             // Faded in over the first few centimetres of lean, so starting to
             // lean doesn't snap the legs.
-            float w = Mathf.Clamp01(bodyLean / 0.1f);
+            float w = Mathf.Clamp01(Mathf.Max(bodyLean, crouch) / 0.1f);
             left.positionWeight = w;
             right.positionWeight = w;
             feetDriven = true;
@@ -1096,16 +1432,19 @@ namespace UntitledPoolGame.Pool
 
         private readonly RaycastHit[] surfaceHits = new RaycastHit[16];
         private int surfaceMask;   // built on first use (GetMask isn't allowed in a field initializer)
+        private const float SurfaceProbeMargin = 0.05f;
 
-        // Height of the highest solid surface under a point, ignoring this
-        // player, the held cue and the balls. -Infinity if none.
-        private float SurfaceHeightBelow(Vector3 point)
+        // Height of the highest solid surface under a point, below the given
+        // height, ignoring this player, the held cue and the balls.
+        // -Infinity if none.
+        private float SurfaceHeightBelow(Vector3 point, float fromHeight)
         {
+            point.y = fromHeight;
             Transform cue = handController != null && handController.HeldObject != null ? handController.HeldObject.transform : null;
             // Player layers excluded too: the ragdoll's own colliders sit
             // right under this ray and would push the hips up frame after frame.
             if (surfaceMask == 0) surfaceMask = ~LayerMask.GetMask("Ragdoll", "Player", "PlayerAnimated");
-            int count = Physics.RaycastNonAlloc(point + Vector3.up, Vector3.down, surfaceHits, 2.5f, surfaceMask, QueryTriggerInteraction.Ignore);
+            int count = Physics.RaycastNonAlloc(point + Vector3.up * SurfaceProbeMargin, Vector3.down, surfaceHits, 1.5f + SurfaceProbeMargin, surfaceMask, QueryTriggerInteraction.Ignore);
             float best = float.NegativeInfinity;
             for (int i = 0; i < count; i++)
             {
@@ -1158,10 +1497,22 @@ namespace UntitledPoolGame.Pool
                 if (cue != null) cue.transform.SetLocalPositionAndRotation(cueRestLocalPosition, cueRestLocalRotation);
             }
             AimHandShift = 0f;
+            lowBallCrouch = 0f;
+            stanceCrouch = 0f;
+            stanceCrouchChosen = false;
+            Stance = AimStance.Standing;
+            // Up at once: the walking pose is needed right away.
+            proneWeight = 0f;
+            if (ProneLayer >= 0) bodyAnimator.SetLayerWeight(proneLayer, 0f);
+            proneRootOffset = Vector3.zero;
+            proneYawOffset = 0f;
+            wallPush = 0f;
+            wallBy = null;
             cueTilt = Quaternion.identity;
             reachLost = false;
             frontHandRelease = 0f;
             if (cueHolder != null) cueHolder.FrontHandRelease = 0f;
+            KeepOnRightSide();
 
             isAiming = false;
             if (returnControlToPlayer) fpsController.enabled = true;
@@ -1231,15 +1582,32 @@ namespace UntitledPoolGame.Pool
             Vector3 aimDirection = Quaternion.Euler(0f, aimYaw + wobble, 0f) * Vector3.forward;
             Vector3 ballPos = currentCueBall.Rigidbody.position;
 
+            // Lower than the felt: crouch by the difference, up to the max. A
+            // ball on the table never crouches, whatever the table's height.
+            // Play Anywhere measures from the feet instead: the table is just
+            // décor there, and a ball on a floor above the felt (mezzanine,
+            // stairs) would otherwise be shot standing.
+            PoolTableSurface table = PlayAnywhereRuleSet.Current == null ? PoolTableSurface.Instance : null;
+            float feltBallHeight = table != null ? table.FeltTopY + currentCueBall.Radius - transform.position.y : standingBallHeight;
+            float targetCrouch = Mathf.Clamp(feltBallHeight - (ballPos.y - transform.position.y), 0f, maxLowBallCrouch);
+            lowBallCrouch = Mathf.MoveTowards(lowBallCrouch, targetCrouch, 1.5f * Time.deltaTime);
+
             // Small per-frame change: set directly, no teleport needed.
             ComputeAimBodyPose(ballPos, aimDirection, out Vector3 standPosition, out float standYaw);
+            UpdateStance(standPosition);
+            if (proneWeight > 0f)
+            {
+                standPosition += proneRootOffset * proneWeight;
+                standYaw += proneYawOffset * proneWeight;
+            }
             transform.SetPositionAndRotation(standPosition, Quaternion.Euler(0f, standYaw, 0f));
             ApplyHandShift();
 
             // Charging zoom toward the tip.
             float currentOrbitDistance = orbitDistance - juiceSettings.chargeZoomDistance * ChargeFraction;
-            cameraTransform.position = ballPos - aimDirection * currentOrbitDistance + Vector3.up * orbitHeight;
-            cameraTransform.LookAt(ballPos + Vector3.up * (orbitHeight * 0.3f));
+            float cameraHeight = orbitHeight * Mathf.Lerp(1f, proneCameraHeightScale, proneWeight);
+            cameraTransform.position = AimCameraPosition(ballPos + Vector3.up * cameraHeight, -aimDirection, currentOrbitDistance);
+            cameraTransform.LookAt(ballPos + Vector3.up * (cameraHeight * 0.3f));
 
             if (previewHidden)
             {
@@ -1274,6 +1642,153 @@ namespace UntitledPoolGame.Pool
                 Shoot(aimDirection);
             else if (!attackAction.IsPressed())
                 chargeArmed = false;
+        }
+
+        // The orbit camera, brought in front of a wall between it and the
+        // ball (Play Anywhere: the décor is all around).
+        private Vector3 AimCameraPosition(Vector3 aboveBall, Vector3 back, float distance)
+        {
+            if (cameraAvoidsWalls && PlayAnywhereRuleSet.Current != null)
+            {
+                int count = Physics.SphereCastNonAlloc(aboveBall, CameraWallRadius, back, wallHits, distance, ~0, QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < count; i++)
+                {
+                    RaycastHit hit = wallHits[i];
+                    if (hit.distance <= 0f || hit.distance >= distance || !IsSolidObstacle(hit.collider)) continue;
+                    distance = hit.distance;
+                }
+            }
+            return aboveBall + back * distance;
+        }
+
+        private const float CameraWallRadius = 0.1f;
+
+        // Play Anywhere: the stance asked for (Crouch toggles it), forced
+        // down by what's above the body where it stands.
+        private void UpdateStance(Vector3 feet)
+        {
+            if (PlayAnywhereRuleSet.Current == null)
+            {
+                stanceCrouch = 0f;
+                return;
+            }
+            if (crouchAction != null && crouchAction.WasPressedThisFrame())
+                stanceCrouchChosen = !stanceCrouchChosen;
+
+            bool standingBlocked = StanceBlocked(feet, standingTorsoHeights, out string standingBy);
+            bool crouchedBlocked = standingBlocked && StanceBlocked(feet, crouchedTorsoHeights, out _);
+            // A ball near the floor is always shot crouched at least: the
+            // low-ball crouch alone eases in and can be undone (see ApplyLean).
+            bool ballLow = currentCueBall != null && currentCueBall.Rigidbody.position.y - feet.y <= proneMaxBallHeight;
+            AimStance stance = crouchedBlocked ? AimStance.Prone
+                : standingBlocked || stanceCrouchChosen || ballLow ? AimStance.Crouched
+                : AimStance.Standing;
+            // Lying needs the pose's layer, and a ball near the floor (the
+            // body lies at the feet' level): otherwise, as low as crouched.
+            if (stance == AimStance.Prone && (ProneLayer < 0 || !ballLow)) stance = AimStance.Crouched;
+            if (stance != Stance && traceStance)
+                Debug.Log($"[AimStance] {name}: {StanceName(stance)}" +
+                          (crouchedBlocked && !ballLow ? $" — obstacle au-dessus même accroupi ({standingBy}), mais la bille est trop haute pour s'allonger (plus de {proneMaxBallHeight:0.00} m au-dessus des pieds)"
+                           : crouchedBlocked && ProneLayer < 0 ? $" — obstacle au-dessus même accroupi ({standingBy}) : il faudrait s'allonger, mais le calque « {ProneLayerName} » manque (Tools > Pool > Play Anywhere > Ajouter la pose allongée au joueur)"
+                           : stance == AimStance.Prone ? $" — obstacle au-dessus même accroupi ({standingBy})"
+                           : standingBlocked ? $" — obstacle au-dessus du buste debout ({standingBy})"
+                           : stanceCrouchChosen ? " — choisi (Crouch)"
+                           : ballLow ? $" — bille au sol (moins de {proneMaxBallHeight:0.00} m au-dessus des pieds)" : ""), this);
+            if (stance == AimStance.Prone && Stance != AimStance.Prone)
+            {
+                proneRootOffset = Vector3.zero;
+                proneYawOffset = 0f;
+                bodyAnimator.CrossFadeInFixedTime(ProneStateName, 0f, proneLayer);
+            }
+            Stance = stance;
+
+            float target = stance == AimStance.Crouched ? stanceCrouchDepth : 0f;
+            stanceCrouch = Mathf.MoveTowards(stanceCrouch, target, 1.5f * Time.deltaTime);
+            SetProneWeight(stance == AimStance.Prone);
+        }
+
+        // The pose layer's index, looked up once on the body's Animator.
+        private int ProneLayer
+        {
+            get
+            {
+                if (proneLayer != -2) return proneLayer;
+                proneLayer = -1;
+                foreach (Animator a in GetComponentsInChildren<Animator>(true))
+                {
+                    if (a.avatar == null || !a.avatar.isHuman || a.runtimeAnimatorController == null) continue;
+                    bodyAnimator = a;
+                    proneLayer = a.GetLayerIndex(ProneLayerName);
+                    break;
+                }
+                return proneLayer;
+            }
+        }
+
+        private void SetProneWeight(bool prone)
+        {
+            if (ProneLayer < 0) return;
+            proneWeight = Mathf.MoveTowards(proneWeight, prone ? 1f : 0f, Time.deltaTime / Mathf.Max(0.01f, proneBlendTime));
+            bodyAnimator.SetLayerWeight(proneLayer, proneWeight);
+        }
+
+        // Lying, after the animation (ApplyLean's pass): how far the
+        // shoulders are from where they should be, and how the body (hips
+        // to shoulders) is turned from the aim. Corrected a little each
+        // frame, whatever way the clip lays the body.
+        private void MeasureProne()
+        {
+            RootMotion.BipedReferences r = leanIK.references;
+            if (r.pelvis == null || r.leftUpperArm == null || r.rightUpperArm == null || currentCueBall == null) return;
+            Vector3 aim = Quaternion.Euler(0f, aimYaw, 0f) * Vector3.forward;
+            Vector3 shoulders = (r.leftUpperArm.position + r.rightUpperArm.position) * 0.5f;
+            Vector3 body = Vector3.ProjectOnPlane(shoulders - r.pelvis.position, Vector3.up);
+            Vector3 wanted = currentCueBall.Rigidbody.position - aim * proneShoulderDistance;
+            Vector3 error = Vector3.ProjectOnPlane(wanted - shoulders, Vector3.up);
+            float yawError = body.sqrMagnitude > 1e-4f ? Vector3.SignedAngle(body, aim, Vector3.up) : 0f;
+            // Only once fully down: half-blended, the pose is in between.
+            if (proneWeight >= 0.99f)
+            {
+                proneRootOffset += error * 0.2f;
+                proneYawOffset += yawError * 0.2f;
+            }
+            if (traceStance && Time.time >= proneTraceNext)
+            {
+                proneTraceNext = Time.time + 0.5f;
+                Debug.Log($"[AimStance] {name}: allongé — épaules à {error.magnitude:0.00} m de leur place, corps tourné de {yawError:0}° par rapport au tir ; correction {proneRootOffset.magnitude:0.00} m, {proneYawOffset:0}° ; épaules à {shoulders.y - transform.position.y:0.00} m du sol.", this);
+            }
+        }
+
+        private static string StanceName(AimStance stance) =>
+            stance == AimStance.Standing ? "debout" : stance == AimStance.Crouched ? "accroupi" : "allongé";
+
+        // Something solid (décor, a placed object) in the torso's volume
+        // between these heights above the feet. The player's own colliders,
+        // moving bodies (balls, ragdolls) and players don't count.
+        private bool StanceBlocked(Vector3 feet, Vector2 heights, out string by)
+        {
+            by = null;
+            Vector3 bottom = feet + Vector3.up * (heights.x + stanceProbeRadius);
+            Vector3 top = feet + Vector3.up * Mathf.Max(heights.x + stanceProbeRadius, heights.y - stanceProbeRadius);
+            int count = Physics.OverlapCapsuleNonAlloc(bottom, top, stanceProbeRadius, stanceHits, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                if (!IsSolidObstacle(stanceHits[i])) continue;
+                by = stanceHits[i].name;
+                return true;
+            }
+            return false;
+        }
+
+        // Décor: not the player's own colliders, not a moving body (balls,
+        // ragdolls), not a player, not a Play Anywhere object (players walk
+        // through those).
+        private bool IsSolidObstacle(Collider c)
+        {
+            if (c is CharacterController || c.transform.IsChildOf(transform)) return false;
+            Rigidbody body = c.attachedRigidbody;
+            if (body != null && PlayAnywhereRuleSet.Current != null && PlayAnywhereRuleSet.Current.IsPlacedProp(body)) return false;
+            return body == null || body.isKinematic;
         }
 
         private void UpdateAimIKTarget(Vector3 ballPos)
@@ -1326,7 +1841,7 @@ namespace UntitledPoolGame.Pool
             float power = Mathf.Max(chargedPower, minPower);
 
             PoolMatchRules rules = PoolMatchRules.Instance;
-            if (rules != null) power *= rules.ConsumeShotPowerMultiplier(playerInput.playerIndex);
+            if (rules != null) power *= rules.ConsumeShotPowerMultiplier(playerInput.playerIndex) * rules.ShotPowerScale;
 
             Vector3 impulse = direction * power;
 

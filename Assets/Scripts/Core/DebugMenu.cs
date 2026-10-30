@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UntitledPoolGame.Interaction;
 using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Core
@@ -13,7 +14,8 @@ namespace UntitledPoolGame.Core
     //   - jump to the "pot the 8" phase (like C+W);
     //   - trigger a foul, a pot of group 1 or 2, or a first contact with
     //     group 1 or 2, judged by the real rule set;
-    //   - start, add to or remove Catch the Hole's living holes.
+    //   - start, add to or remove Catch the Hole's living holes;
+    //   - Play Anywhere: put a crate object in a player's hands.
     // Inputs are off and the cursor free while open. Provisional OnGUI.
     // Created in any scene with a PoolMatchRules.
     public class DebugMenu : MonoBehaviour
@@ -154,6 +156,7 @@ namespace UntitledPoolGame.Core
             DrawMatch(rules, current);
             DrawErrors(rules, current);
             DrawCatchTheHole(rules);
+            DrawPlayAnywhere();
             GUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(status)) GUILayout.Label(status);
@@ -292,6 +295,29 @@ namespace UntitledPoolGame.Core
             if (GUILayout.Button("Retirer")) { holes.Clear(); status = "Trous vivants retirés."; }
             GUILayout.EndHorizontal();
             GUI.enabled = wasEnabled;
+        }
+
+        // Play Anywhere: a crate object straight into a player's hands, placed
+        // as usual but out of the round (any phase, doesn't count).
+        private void DrawPlayAnywhere()
+        {
+            PlayAnywhereRuleSet playAnywhere = PlayAnywhereRuleSet.Current;
+            if (playAnywhere == null) return;
+            Section("Play Anywhere : objet en main");
+            LocalPlayerHandController[] hands = playAnywhere.Hands;
+            List<PlayAnywherePropChoice> props = playAnywhere.Settings.props;
+            foreach (PlayAnywherePropChoice choice in props)
+            {
+                if (choice == null || choice.prefab == null) continue;
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(choice.prefab.name);
+                for (int p = 0; p < hands.Length; p++)
+                    if (hands[p] != null && GUILayout.Button($"J{p + 1}", GUILayout.Width(40f)))
+                        status = playAnywhere.GiveProp(choice, p);
+                GUILayout.EndHorizontal();
+            }
+            if (props.Count == 0) GUILayout.Label("Props est vide : Tools > Pool > Play Anywhere, générer les objets de la caisse.");
+            if (GUILayout.Button("Retirer les objets donnés")) status = $"{playAnywhere.RemoveFreeProps()} objet(s) donné(s) retiré(s).";
         }
 
         private void TriggerGroupError(PoolMatchRules rules, BallGroup group, int groupNumber)

@@ -44,6 +44,10 @@ namespace UntitledPoolGame.Pool
         // Pool, Power Wash Pool), in turns or not.
         public bool HasPlayerCueBalls => ruleSet is SpeedPoolRuleSet;
 
+        // Shot strength multiplier of the mode: Play Anywhere is played across
+        // the room, not on a table.
+        public float ShotPowerScale => ruleSet is PlayAnywhereRuleSet golf ? golf.ShotPowerScale : 1f;
+
         // Two powers in stock per player; the selected one is what the power
         // button launches (switched with the wheel / D-pad).
         public const int PowerSlots = 2;
@@ -74,6 +78,7 @@ namespace UntitledPoolGame.Pool
         private PoolMatchSetup? pendingSelection;
         private bool pendingStart;
         private bool pendingRestart;
+        private PoolMatchSetup? restartSetup;
 
         // Set by a menu drawn elsewhere (the Synthèse menu, UI Toolkit): the
         // provisional OnGUI mode select is then not drawn.
@@ -87,8 +92,27 @@ namespace UntitledPoolGame.Pool
         // deferred path as the OnGUI "Rejouer" button.
         public void RequestRestart()
         {
-            if (GameOver) pendingRestart = true;
+            if (!GameOver) return;
+            restartSetup = null;
+            pendingRestart = true;
         }
+
+        // Asked, applied in the next Update: the end card stays hidden meanwhile.
+        public bool RestartPending => pendingRestart;
+
+        // The next match with other choices (Boogie Night's wheel), through
+        // the same path: the table is reset, then set up for the new mode.
+        public void RequestRestart(PoolMatchSetup setup)
+        {
+            if (!GameOver) return;
+            restartSetup = setup;
+            pendingRestart = true;
+        }
+
+        // Raised once a match is set up (the first one, and each "Rejouer"),
+        // Setup already holds its choices: the crates and the power ball
+        // follow its powers.
+        public static event Action MatchBegan;
 
         // For the HUD: 8-ball group (Cue = undecided or not 8-ball), 14.1 score.
         public BallGroup GetGroup(int player) => ruleSet switch
@@ -100,6 +124,13 @@ namespace UntitledPoolGame.Pool
         public bool TryGetScore(int player, out int score, out int target)
         {
             score = target = 0;
+            // Play Anywhere: strokes over the hole's par.
+            if (ruleSet is PlayAnywhereRuleSet golf)
+            {
+                score = golf.StrokesOf(player);
+                target = golf.Par;
+                return true;
+            }
             if (!(ruleSet is FourteenOneRuleSet straight)) return false;
             score = straight.ScoreOf(player);
             target = straight.TargetScore;
@@ -163,7 +194,8 @@ namespace UntitledPoolGame.Pool
             {
                 // No slow motion: the other player is mid-shot.
                 if (GameOver || ownCueBalls == null) return;
-                if (ball.IsCueBall) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
+                // Play Anywhere brings its ball back itself (where it was struck from).
+                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
                 ownCueBalls.HandlePocketed(this, ball);
                 return;
             }
@@ -177,7 +209,8 @@ namespace UntitledPoolGame.Pool
             if (ownCueBalls != null)
             {
                 if (GameOver) return;
-                if (ball.IsCueBall) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
+                // Play Anywhere brings its ball back itself (where it was struck from).
+                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
                 ownCueBalls.HandlePocketed(this, ball);
                 // Sending the opponent's cue ball in costs them, not the shooter.
                 if (ball.IsCueBall && ball.CueOwner >= 0 && ball.CueOwner != CurrentPlayer) return;
@@ -744,8 +777,11 @@ namespace UntitledPoolGame.Pool
         // Whether this player may shoot (offline only for now). With at most
         // one active PlayerInput, always true: a solo player would otherwise
         // be locked out on player 2's turn.
+        // Play Anywhere also needs the shooting phase and a stroke left this
+        // round (for the player whose ball it is: alone, the current one).
         public bool CanPlayerShoot(int playerIndex) =>
-            MatchStarted && !GameOver && (IsSimultaneous || CurrentPlayer == playerIndex || PlayerInput.all.Count <= 1);
+            MatchStarted && !GameOver && (IsSimultaneous || CurrentPlayer == playerIndex || PlayerInput.all.Count <= 1)
+            && (!(ruleSet is PlayAnywhereRuleSet golf) || golf.CanShoot(IsSimultaneous || PlayerInput.all.Count > 1 ? playerIndex : CurrentPlayer));
 
         // Raised before SwitchTurn: CurrentPlayer is the one who fouled.
         public static event Action Fouled;
@@ -768,6 +804,9 @@ namespace UntitledPoolGame.Pool
         // ball struck (Speed Pool: tells whose shot it is).
         public void NotifyShotFired(PoolBall cueBall = null)
         {
+            // Every stroke counts, in turns or not.
+            if (ruleSet is PlayAnywhereRuleSet golf) golf.OnStroke(cueBall);
+
             // Speed Pool has no shot loop, only each player's own shot.
             if (IsSimultaneous)
             {
@@ -1317,6 +1356,8 @@ namespace UntitledPoolGame.Pool
             }
 
             if (!MatchStarted || GameOver) return;
+            // The cup and out of bounds, checked every frame.
+            if (ruleSet is PlayAnywhereRuleSet golfHole) golfHole.Tick(this);
             if (IsSimultaneous)
             {
                 UpdatePlayerShots();
@@ -1447,7 +1488,9 @@ namespace UntitledPoolGame.Pool
             GameOver = false;
             Winner = -1;
 
-            StartMatch(Setup);
+            PoolMatchSetup next = restartSetup ?? Setup;
+            restartSetup = null;
+            StartMatch(next);
         }
 
         private void StartMatch(PoolMatchSetup setup)
@@ -1460,6 +1503,10 @@ namespace UntitledPoolGame.Pool
             if (!(ruleSet is SnakePoolRuleSet)) SnakePoolRuleSet.Cleanup();
             // No grime left from a Power Wash match (Power Wash makes its own).
             if (!(ruleSet is PowerWashPoolRuleSet)) PowerWashPoolRuleSet.Cleanup();
+            // Table balls again after Play Anywhere.
+            if (!(ruleSet is PlayAnywhereRuleSet)) PlayAnywhereRuleSet.Cleanup();
+            // One shared cue ball again after a match with one each.
+            if (!(ruleSet is SpeedPoolRuleSet)) SpeedPoolRuleSet.Cleanup();
             ruleSet.Setup(this);
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).
@@ -1470,6 +1517,7 @@ namespace UntitledPoolGame.Pool
             // Hand cursor control back to normal FPS/aim look now that the menu is gone.
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+            MatchBegan?.Invoke();
         }
 
         // setup is normalized: a type the mode supports. The powers don't
@@ -1481,6 +1529,7 @@ namespace UntitledPoolGame.Pool
             PoolGameMode.HungryHole => new HungryHoleRuleSet(),
             PoolGameMode.SnakePool => new SnakePoolRuleSet(),
             PoolGameMode.PowerWashPool => new PowerWashPoolRuleSet(),
+            PoolGameMode.PlayAnywhere => new PlayAnywhereRuleSet(),
             // 8-ball, and Catch the Hole (8-ball plus the living holes).
             _ => setup.type == PoolMatchType.SpeedPool ? new SpeedPoolRuleSet() : new EightBallRuleSet(),
         };
@@ -1561,6 +1610,7 @@ namespace UntitledPoolGame.Pool
             DrawModeButton(PoolGameMode.HungryHole, "Hungry Hole (la blanche est un trou)");
             DrawModeButton(PoolGameMode.SnakePool, "Snake Pool (chaîne de billes)");
             DrawModeButton(PoolGameMode.PowerWashPool, "Power Wash Pool (laver le tapis)");
+            DrawModeButton(PoolGameMode.PlayAnywhere, "Play Anywhere (golf dans le décor)");
 
             bool powers = GUILayout.Toggle(selected.powers, "Pouvoirs");
             if (powers != selected.powers) Select((ref PoolMatchSetup s) => s.powers = powers);

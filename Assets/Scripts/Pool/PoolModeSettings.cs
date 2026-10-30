@@ -42,6 +42,7 @@ namespace UntitledPoolGame.Pool
             new ModeEntry(PoolGameMode.HungryHole, true, true, PoolMatchType.SpeedPool),
             new ModeEntry(PoolGameMode.SnakePool, true, true, PoolMatchType.SpeedPool),
             new ModeEntry(PoolGameMode.PowerWashPool, true, true, PoolMatchType.SpeedPool),
+            new ModeEntry(PoolGameMode.PlayAnywhere, true, true, PoolMatchType.TurnBased),
         };
 
         private static PoolModeSettings instance;

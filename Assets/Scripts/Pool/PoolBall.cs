@@ -88,12 +88,27 @@ namespace UntitledPoolGame.Pool
         // (and coming back after a scratch) at spawn.
         public void MakePlayerCueBall(int player, Vector3 spawn, Color tint)
         {
+            Renderer meshRenderer = GetComponentInChildren<Renderer>();
+            if (meshRenderer != null && CueOwner < 0) sharedCueColor = meshRenderer.material.color;
             CueOwner = player;
             spawnPosition = spawn;
             ResetToSpawn();
-            Renderer meshRenderer = GetComponentInChildren<Renderer>();
             if (meshRenderer != null) meshRenderer.material.color = tint;
         }
+
+        // Back to the shared cue ball of a match in turns, on the table's own
+        // spot and in its own colour (Boogie Night chains the modes).
+        public void MakeSharedCueBall()
+        {
+            if (CueOwner < 0) return;
+            CueOwner = -1;
+            spawnPosition = tableSpawnPosition;
+            ResetToSpawn();
+            Renderer meshRenderer = GetComponentInChildren<Renderer>();
+            if (meshRenderer != null && sharedCueColor.HasValue) meshRenderer.material.color = sharedCueColor.Value;
+        }
+
+        private Color? sharedCueColor;
 
         // Raised just before a potted ball goes away. The pocket is null when
         // it fell off the table.
@@ -244,6 +259,14 @@ namespace UntitledPoolGame.Pool
             bodyCollider.enabled = !rb.isKinematic;
         }
 
+        // Play Anywhere: played all over the room, so dropping below its spawn
+        // height isn't falling off the table (the mode judges out of bounds).
+        public bool FreeRoaming { get; set; }
+        // Off the table (Play Anywhere): the ground's friction in place of
+        // the felt's (PoolPhysicsSettings). Negative = the felt's.
+        public float RollingFrictionOverride { get; set; } = -1f;
+        public float SlideFrictionOverride { get; set; } = -1f;
+
         // Hungry Hole: slides like a puck at this constant deceleration (m/s²)
         // instead of rolling. 0 = a normal ball.
         public float PuckDeceleration { get; set; }
@@ -321,7 +344,7 @@ namespace UntitledPoolGame.Pool
             // Off the table after jumping a rail: treated as potted (for the
             // cue ball, a scratch). Real rules call it a foul for an object
             // ball; not modelled.
-            if (transform.position.y < spawnPosition.y - settings.offTableDropThreshold)
+            if (!FreeRoaming && transform.position.y < spawnPosition.y - settings.offTableDropThreshold)
             {
                 OnPocketed();
                 return;
@@ -360,7 +383,7 @@ namespace UntitledPoolGame.Pool
             // 3.5 dv. Clamping against the raw slip overshot and oscillated.
             const float SlipResponseFactor = 1f + 1f / SphereInertiaFactor; // 3.5
             float maxDeltaSpeed = slipVelocity.magnitude / SlipResponseFactor;
-            float deltaSpeed = Mathf.Min(settings.slideFriction * Time.fixedDeltaTime, maxDeltaSpeed);
+            float deltaSpeed = Mathf.Min((SlideFrictionOverride >= 0f ? SlideFrictionOverride : settings.slideFriction) * Time.fixedDeltaTime, maxDeltaSpeed);
             Vector3 deltaLinear = -slipVelocity.normalized * deltaSpeed;
 
             rb.linearVelocity += deltaLinear;
@@ -376,7 +399,7 @@ namespace UntitledPoolGame.Pool
 
             float speed = horizontal.magnitude;
             Vector3 dirHat = horizontal / speed;
-            float deltaSpeed = Mathf.Min(settings.friction * Time.fixedDeltaTime, speed);
+            float deltaSpeed = Mathf.Min((RollingFrictionOverride >= 0f ? RollingFrictionOverride : settings.friction) * Time.fixedDeltaTime, speed);
 
             rb.linearVelocity -= dirHat * deltaSpeed;
 

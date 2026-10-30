@@ -20,7 +20,7 @@ MonoBehaviour:
   hasCue: 1
   cuePosition: {x: 17, y: 82}
   cueSize: 70
-  backScreen: Multiplayer
+  backScreen: Players
   feelOnOpen: {fileID: 0}
   elements:
   - id: heading

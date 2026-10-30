@@ -127,7 +127,7 @@ MonoBehaviour:
     feelOnPress: {fileID: 0}
   - id: nine-ball
     kind: 0
-    visible: 1
+    visible: 0
     position: {x: 18, y: 71}
     size: {x: 110, y: 110}
     rotation: 0
@@ -161,7 +161,7 @@ MonoBehaviour:
     feelOnPress: {fileID: 0}
   - id: fourteen-one
     kind: 0
-    visible: 1
+    visible: 0
     position: {x: 34, y: 71}
     size: {x: 110, y: 110}
     rotation: 0
@@ -323,6 +323,40 @@ MonoBehaviour:
     focusScale: 0.18
     entrance: 1
     entranceDelay: 0.2
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: play-anywhere
+    kind: 0
+    visible: 1
+    position: {x: 26, y: 71}
+    size: {x: 110, y: 110}
+    rotation: 0
+    color: {r: 0.4862745, g: 0.7607843, b: 0.25882354, a: 1}
+    stripe: 1
+    number: 11
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Play Anywhere
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
+    titleFont: 0
+    textShadow: 1
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 9
+    description: "Du golf dans toute la salle : rentre ta blanche dans le trou en un minimum de coups. À chaque manche, pose un objet sur le parcours pour t'aider... ou gêner l'autre !"
+    focusScale: 0.18
+    entrance: 1
+    entranceDelay: 0.25
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
