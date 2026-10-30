@@ -30,10 +30,13 @@ namespace UntitledPoolGame.Pool
             return null;
         }
 
-        // Pocket Size has its own powers only (one set per role): the others
-        // are about pockets and groups it doesn't have.
+        // Pocket Size has its own powers (one set per role), and the others
+        // only when Pocket Size is ticked in their Only In Modes: most are
+        // about pockets and groups it doesn't have. Its own powers come out
+        // nowhere else (PocketSizePower.AvailableIn).
         private static bool Offered(PoolPower power, PoolGameMode mode) =>
-            power != null && power.AvailableIn(mode) && (mode == PoolGameMode.PocketSize) == (power is PocketSizePower);
+            power != null && power.AvailableIn(mode)
+            && (mode != PoolGameMode.PocketSize || power is PocketSizePower || power.ListsMode(mode));
 
         [Header("Color code")]
         public Color attackColor = new Color(0.9f, 0.2f, 0.2f);

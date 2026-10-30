@@ -532,8 +532,9 @@ namespace UntitledPoolGame.Pool
 
         // True when someone took the crate at position: the tiny one walking
         // onto it (Tiny Crate Reach) or one of the giant's cue balls rolling
-        // over it (cueReach, the crate's own pickup radius). The power goes
-        // to its role; the other role only destroys it.
+        // over it (cueReach, the crate's own pickup radius). A Pocket Size
+        // power goes to its role, the other role only destroys it; another
+        // mode's power goes to whoever takes it.
         public bool TryTakeCrate(PoolMatchRules match, Vector3 position, float cueReach, PoolPower power)
         {
             if (CurrentPhase != Phase.Hunt) return false;
@@ -554,7 +555,9 @@ namespace UntitledPoolGame.Pool
             }
             if (taker < 0) return false;
 
-            bool own = power is PocketSizePower pocketPower && pocketPower.Role == RoleOf(taker);
+            // Another mode's power (Pocket Size ticked in its Only In Modes)
+            // has no role: whoever takes it keeps it.
+            bool own = !(power is PocketSizePower pocketPower) || pocketPower.Role == RoleOf(taker);
             if (own) match.GrantPower(taker, power);
             if (Settings.debugLogs)
                 Debug.Log($"[PocketSize] Caisse « {power.PowerName} » {(own ? "ramassée" : "détruite")} par J{taker + 1} ({(taker == Giant ? "grand" : "petit")}).");
