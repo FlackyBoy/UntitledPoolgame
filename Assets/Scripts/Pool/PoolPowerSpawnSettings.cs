@@ -12,23 +12,29 @@ namespace UntitledPoolGame.Pool
         // Drawn from for the crates and the balls. Empty = nothing spawns.
         public PoolPower[] availablePowers;
 
-        // A random power of the pool allowed in this mode (PoolPower.AvailableIn);
-        // null if none is.
+        // A random power of the pool allowed in this mode (PoolPower.AvailableIn;
+        // only the mode's own with PoolModeSettings' Own Powers Only); null if
+        // none is.
         public PoolPower PickPower(PoolGameMode mode)
         {
             if (availablePowers == null) return null;
+            PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(mode);
+            bool ownOnly = entry != null && entry.ownPowersOnly;
             int count = 0;
             foreach (PoolPower power in availablePowers)
-                if (power != null && power.AvailableIn(mode)) count++;
+                if (Allowed(power, mode, ownOnly)) count++;
             if (count == 0) return null;
             int pick = Random.Range(0, count);
             foreach (PoolPower power in availablePowers)
             {
-                if (power == null || !power.AvailableIn(mode)) continue;
+                if (!Allowed(power, mode, ownOnly)) continue;
                 if (pick-- == 0) return power;
             }
             return null;
         }
+
+        private static bool Allowed(PoolPower power, PoolGameMode mode, bool ownOnly) =>
+            power != null && power.AvailableIn(mode) && (!ownOnly || power.OwnedBy(mode));
 
         [Header("Color code")]
         public Color attackColor = new Color(0.9f, 0.2f, 0.2f);

@@ -140,7 +140,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Bombe à eau** (Power Wash) | Effet | Le joueur vise un point du tapis : éclaboussure à sa couleur tout autour, le tapis de l'autre compris | Immédiat |
 | **Gros rouleau** (Power Wash) | Effet | Ses traces sont deux fois plus larges | 15 s |
 | **Imperméable** (Power Wash) | Défense | Personne ne reprend sa peinture, ni les traces de l'autre ni la boue | 12 s |
-| **Boue retournée** (Power Wash) | Effet | La 8 lave pour lui au lieu de salir | 12 s |
+| **Boue retournée** (Power Wash) | Effet | Les billes de l'adversaire lavent à sa couleur (traces et éclaboussures de poche) | 10 s |
 | **Roomba** (Power Wash) | Effet | Le joueur vise un point du tapis : un robot aspirateur y lave à sa couleur, tourne aux bandes et pousse les billes | 20 s |
 
 Les six pouvoirs de Power Wash Pool (🔄 compilés, pas encore testés) ne sortent que dans ce mode (*Only In Modes*). En dehors, aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).

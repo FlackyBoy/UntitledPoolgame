@@ -84,7 +84,7 @@ Pour chaque mode, une ligne dans *Modes* : s'il se joue **chacun son tour** (*Tu
 
 Si aucun des deux n'est coché, le mode se joue chacun son tour. Créé par *Tools > Pool > Ensure Config Assets Exist*.
 
-**Les pouvoirs de chaque mode** se règlent sur chaque pouvoir, dans `Assets/Powers` : champ *Only In Modes* (voir *Pouvoirs*).
+**Les pouvoirs de chaque mode** se règlent sur chaque pouvoir, dans `Assets/Powers` : champ *Only In Modes* (voir *Pouvoirs*). Sur la ligne d'un mode, **Own Powers Only** ne garde que ses pouvoirs propres (ceux qui listent ce mode dans leur *Only In Modes*) : les pouvoirs communs (*Only In Modes* vide) n'y sortent plus. Coché pour PowerWashPool, décoché pour les autres.
 
 ### SpeedPoolSettings — type Speed Pool, et les modes où chacun a sa blanche
 
@@ -377,6 +377,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Taille | Taille globale du HUD (1 = calé pour une moitié de 1920 × 1080), taille du bloc des pouvoirs en haut à droite (*Power Slot Scale*, 1,35 : anneaux, icônes, nom, touche, second pouvoir), taille des interjections, de « À toi ! », des bandeaux |
 | Couleurs | J1, J2, encre des contours, fond des cartes, mise en avant (jaune), danger (rouge), « BOUM ! », voile du joueur qui attend, jauge (début, milieu, fin) |
 | Textes : tour et plaque | « À toi ! », « Tour de J{0} », « J{0} », groupe à décider, « Prochaine », « Prolongation ! » (Power Wash Pool, à la place du chrono), « Puissance », touche du pouvoir |
+| Chrono (Power Wash Pool) | En haut au centre de l'écran de chaque joueur : taille (*Clock Font Size*, 64) ; les *Clock Final Seconds* dernières secondes (10), il passe au rouge, grossit à chaque seconde jusqu'à *Clock Final Scale* (×2,2) et fait un bond à chaque seconde (*Clock Bump*, +35 %, pendant *Clock Bump Time*, 0,3 s) |
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
 | Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
 | Bandeau du choix sur la table | *Pick Table Banner Format* (pouvoir Trou) |
@@ -403,7 +404,7 @@ Dans `Assets/Powers`. Champs communs, qui décident **quand le pouvoir peut êtr
 - **Requires Own Turn** : ne peut être lancé que pendant son propre tour (pouvoirs d'Effet).
 - **Allow During Own Turn** (coché par défaut) : pour un pouvoir utilisable hors de son tour (*Requires Own Turn* décoché). Coché, lancé pendant son propre tour, il attend le début du tour adverse. Décoché, il est refusé pendant son tour et ne part que pendant le tour de l'adversaire.
 - **Allow While Balls Moving** (coché par défaut) : peut être lancé pendant que les billes roulent. Décoché, il est refusé jusqu'à l'arrêt des billes.
-- **Only In Modes** (vide par défaut) : les modes auxquels ce pouvoir peut être donné (caisses et bille à pouvoir). Vide = tous les modes ; sinon, seulement ceux de la liste (+ pour ajouter un mode). Dans un mode où aucun pouvoir n'est autorisé, aucune caisse n'apparaît.
+- **Only In Modes** (vide par défaut) : les modes auxquels ce pouvoir peut être donné (caisses et bille à pouvoir). Vide = tous les modes, sauf ceux qui ont *Own Powers Only* dans `PoolModeSettings` ; sinon, seulement ceux de la liste (+ pour ajouter un mode). Dans un mode où aucun pouvoir n'est autorisé, aucune caisse n'apparaît.
 
 En solo (une seule manette ou un seul clavier pour les deux côtés), les deux règles de tour ne s'appliquent pas, sinon un pouvoir refusé pendant son tour ne pourrait jamais partir. Un appui refusé fait trembler la pastille du pouvoir avec la raison (textes dans HudSettings, *Pouvoir refusé*).
 
@@ -419,7 +420,7 @@ En solo (une seule manette ou un seul clavier pour les deux côtés), les deux r
 | Bombe à eau (Power Wash) | `WaterBombPower` | Radius (0,45 m : éclaboussure à sa couleur tout autour du point visé), Level 2 Radius (0,65 m) |
 | Gros rouleau (Power Wash) | `BigRollerPower` | Width Multiplier (×2 : largeur de ses traces), Duration (15 s), Level 2 Width Multiplier (×3), Level 2 Duration (20 s) |
 | Imperméable (Power Wash) | `WaterproofPower` | Duration (12 s : personne ne reprend sa peinture, boue comprise), Level 2 Duration (20 s) ; *Requires Own Turn* décoché |
-| Boue retournée (Power Wash) | `MudFlipPower` | Duration (12 s : la 8 lave pour lui au lieu de salir), Level 2 Duration (20 s) |
+| Boue retournée (Power Wash) | `MudFlipPower` | Duration (10 s : les billes de l'adversaire lavent à sa couleur, éclaboussures de poche comprises), Level 2 Duration (15 s) |
 | Roomba (Power Wash) | `RoombaPower` | Radius (6 cm : taille du robot), Speed (0,35 m/s), Turn Speed (240°/s : il tourne sur place devant une bande ou une poche), Wash Width (1 : largeur lavée en part de son diamètre), Duration (20 s), Level 2 Count (2 robots) |
 | Bille destructrice | `BallBlastPower` | Explosion Prefab (*CFXR2 WW Explosion*), Explosion Scale (0,15), Explosion Lifetime (4 s), Spare Eight Ball (oui), Blast Speed (0,5 m/s, 0 = pas de souffle), Blast Radius (0,3 m) |
 | Aimant | `MagnetPower` | Capture Radius (0,4 m : distance du trou où la bille est captée), Min Capture Speed (0,05 m/s : une bille immobile n'est pas captée), Pull Acceleration (1,5 m/s² : force d'attraction), Steering (4/s : correction de trajectoire, 0 = aucune), Max Pull Duration (4 s : lâche une bille coincée) ; *VFX dans la poche* : Pocket Vfx Prefab (*CFXR Electrified 3*, vide = aucun), Pocket Vfx Scale (0,2), Pocket Vfx Height (0,02 m), Pocket Vfx Fade Out (1,5 s) |

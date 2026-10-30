@@ -93,6 +93,11 @@ namespace UntitledPoolGame.Core
             public (Hint hint, PoolPower power, PoolPocket pocket) bannerKey = (Hint.Unset, null, null);
             public PoolPower shownPower;
             public float shake, tagBump;
+            // Power Wash Pool's clock, top centre: seconds shown (MinValue =
+            // hidden, -1 = overtime) and the bump of the last tick (1 → 0).
+            public Label clock;
+            public int shownClock = int.MinValue;
+            public float clockBump;
             public PowerType iconType;
             public readonly Lane shouts = new Lane(false), sponsors = new Lane(true), incoming = new Lane(true);
         }
@@ -356,6 +361,16 @@ namespace UntitledPoolGame.Core
             h.banner.style.display = DisplayStyle.None;
             h.bannerText = Text(h.banner, "", bodyFont, cfg.bannerFontSize, Ink);
 
+            // Power Wash Pool's clock, top centre (hidden in the other modes).
+            h.clock = Text(h.content, "", titleFont, cfg.clockFontSize, Color.white);
+            h.clock.style.position = Position.Absolute;
+            h.clock.style.left = Length.Percent(50);
+            h.clock.style.top = Length.Percent(3);
+            h.clock.style.translate = new Translate(Length.Percent(-50), 0);
+            h.clock.style.unityTextAlign = TextAnchor.UpperCenter;
+            h.clock.style.display = DisplayStyle.None;
+            InkShadow(h.clock, 5);
+
             // Interjections and cards go on top.
             h.fx = Box(h.content, "fx");
             Fill(h.fx);
@@ -527,6 +542,7 @@ namespace UntitledPoolGame.Core
                 TextFx.Set(h.whoText, Format(cfg.playerTagFormat, p + 1));
             }
             UpdatePlate(h, rules);
+            UpdateWashClock(h, rules, dt);
 
             // Turn tag: bobs on the player who plays, muted on the other.
             int tagState = myTurn ? -1 : rules.CurrentPlayer;
@@ -615,7 +631,7 @@ namespace UntitledPoolGame.Core
             (int kind, int a, int b) key =
                 rules.AreGroupsDisguised ? (1, 0, 0)
                 : hasScore ? (2, score, target)
-                : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft))
+                : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), 0)
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
                 : group == BallGroup.Solid || group == BallGroup.Stripe ? (4, (int)group, onTable)
                 : (5, 0, 0);
@@ -632,9 +648,22 @@ namespace UntitledPoolGame.Core
             }
             else if (wash != null)
             {
-                Text(h.plateBalls, $"{key.a} %", titleFont, 34, Ink);
-                string clock = key.b < 0 ? cfg.overtimeText : $"{key.b / 60}:{key.b % 60:00}";
-                Text(h.plateBalls, $"  ·  {clock}", bodyFont, 24, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+                // The balls that wash for this player (they always come back,
+                // so none is greyed out), then the score.
+                if (group == BallGroup.Solid || group == BallGroup.Stripe)
+                {
+                    int first = group == BallGroup.Solid ? 1 : 9;
+                    for (int n = first; n < first + 7; n++) MiniBall(h.plateBalls, 22, n).style.marginRight = 2;
+                    Text(h.plateBalls, "  ", bodyFont, 24, Ink);
+                }
+                // The score in a badge of the player's colour: on the cream
+                // card, next to the balls, plain ink got lost.
+                VisualElement badge = Box(h.plateBalls, "wash-score");
+                badge.style.backgroundColor = p == 0 ? P1 : P2;
+                Radius(badge, 12);
+                Border(badge, 3, Ink);
+                badge.style.paddingLeft = badge.style.paddingRight = 10;
+                InkShadow(Text(badge, $"{key.a} %", titleFont, 42, Color.white), 3);
             }
             else if (rules.Mode == PoolGameMode.NineBall)
             {
@@ -663,6 +692,39 @@ namespace UntitledPoolGame.Core
                 }
             }
             else Text(h.plateBalls, cfg.groupUndecidedText, bodyFont, 22, Ink);
+        }
+
+        // Power Wash Pool's clock, top centre of each half. The last Clock
+        // Final Seconds: red, a bit bigger each second, and a bump on each
+        // tick. Text and colour only change when the second does.
+        private void UpdateWashClock(Half h, PoolMatchRules rules, float dt)
+        {
+            PowerWashDirt wash = rules.Mode == PoolGameMode.PowerWashPool && !rules.GameOver ? PowerWashDirt.Instance : null;
+            if (wash == null)
+            {
+                if (h.shownClock == int.MinValue) return;
+                h.shownClock = int.MinValue;
+                h.clock.style.display = DisplayStyle.None;
+                return;
+            }
+
+            int seconds = wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft);
+            bool final = seconds >= 0 && seconds <= cfg.clockFinalSeconds;
+            if (seconds != h.shownClock)
+            {
+                if (h.shownClock == int.MinValue) h.clock.style.display = DisplayStyle.Flex;
+                h.shownClock = seconds;
+                // TextFx: the overtime text may carry tags, like the HUD's other texts.
+                TextFx.Set(h.clock, seconds < 0 ? cfg.overtimeText : $"{seconds / 60}:{seconds % 60:00}");
+                h.clock.style.color = final || seconds < 0 ? Red : Color.white;
+                if (final) h.clockBump = 1f;
+            }
+
+            // From 1 at Clock Final Seconds to Clock Final Scale at 0.
+            float grow = final ? Mathf.Lerp(cfg.clockFinalScale, 1f, seconds / (float)Mathf.Max(1, cfg.clockFinalSeconds)) : 1f;
+            h.clockBump = Mathf.Max(0f, h.clockBump - dt / Mathf.Max(0.01f, cfg.clockBumpTime));
+            float scale = grow * (1f + cfg.clockBump * h.clockBump * h.clockBump);
+            h.clock.style.scale = new Scale(new Vector3(scale, scale, 1f));
         }
 
         private static int LowestBallOnTable(int max)

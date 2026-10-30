@@ -59,7 +59,7 @@ namespace UntitledPoolGame.Pool
         // Gros rouleau: the player's trails this much wider.
         private readonly float[] rollerUntil = new float[2];
         private readonly float[] rollerWidth = { 1f, 1f };
-        // Boue retournée: the 8 washes for this player instead of muddying.
+        // Boue retournée: the opponent's balls wash for this player.
         private float mudFlipUntil;
         private int mudFlipPlayer = -1;
         // Only cells holding this value change (Seau de boue: the opponent's
@@ -224,17 +224,17 @@ namespace UntitledPoolGame.Pool
                 byte value;
                 if (ball.Group == BallGroup.Eight)
                 {
-                    bool flipped = mudFlipPlayer >= 0 && Time.time < mudFlipUntil;
-                    if (!flipped && settings.mudTrailWidth <= 0f) continue;
-                    width = flipped ? TrailWidth(ball, mudFlipPlayer) : settings.mudTrailWidth;
-                    value = flipped ? (byte)(mudFlipPlayer + 1) : Dirty;
+                    if (settings.mudTrailWidth <= 0f) continue;
+                    width = settings.mudTrailWidth;
+                    value = Dirty;
                 }
                 else
                 {
                     int owner = SpeedPoolRuleSet.OwnerOf(ball);
                     if (owner < 0) continue;
-                    width = TrailWidth(ball, owner);
-                    value = (byte)(owner + 1);
+                    int washer = WashesFor(owner);
+                    width = TrailWidth(ball, washer);
+                    value = (byte)(washer + 1);
                 }
                 Stamp(ToCell(before), ToCell(now), width * ball.Radius / cellSize, value, force: false);
             }
@@ -335,7 +335,7 @@ namespace UntitledPoolGame.Pool
             rollerUntil[player] = Time.time + seconds;
         }
 
-        // Boue retournée: the 8 washes for the player while it rolls.
+        // Boue retournée: the opponent's balls wash for the player.
         public void MudFlip(int player, float seconds)
         {
             mudFlipPlayer = player;
@@ -346,6 +346,11 @@ namespace UntitledPoolGame.Pool
         public float WaterproofLeft(int player) => Mathf.Max(0f, waterproofUntil[player] - Time.time);
         public float BigRollerLeft(int player) => Mathf.Max(0f, rollerUntil[player] - Time.time);
         public float MudFlipLeft(int player) => mudFlipPlayer == player ? Mathf.Max(0f, mudFlipUntil - Time.time) : 0f;
+
+        // Who a ball of this player's group washes for: its owner, or the
+        // opponent while they have Boue retournée going (trails and splashes).
+        public int WashesFor(int owner) =>
+            owner >= 0 && mudFlipPlayer == 1 - owner && Time.time < mudFlipUntil ? mudFlipPlayer : owner;
 
         // 1 for a ball's splash, more for a bigger one.
         private float Strength(float radius) => Mathf.Clamp(radius / Mathf.Max(0.01f, settings.pocketSplashRadius), 0.5f, 2f);

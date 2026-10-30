@@ -17,13 +17,16 @@ namespace UntitledPoolGame.Pool
             public bool speedPool = true;
             [Tooltip("Type sur lequel le mode démarre dans le menu (Y / Tab pour changer) et dans Lancer sans le menu (Type = ModeDefault). Ignoré s'il n'est pas coché au-dessus.")]
             public PoolMatchType defaultType = PoolMatchType.TurnBased;
+            [Tooltip("Partie avec pouvoirs : les caisses et la bille à pouvoir ne donnent que les pouvoirs propres à ce mode (ceux qui le listent dans leur Only In Modes). Décoché : aussi les pouvoirs communs (Only In Modes vide).")]
+            public bool ownPowersOnly;
 
-            public ModeEntry(PoolGameMode mode, bool turnBased, bool speedPool, PoolMatchType defaultType)
+            public ModeEntry(PoolGameMode mode, bool turnBased, bool speedPool, PoolMatchType defaultType, bool ownPowersOnly = false)
             {
                 this.mode = mode;
                 this.turnBased = turnBased;
                 this.speedPool = speedPool;
                 this.defaultType = defaultType;
+                this.ownPowersOnly = ownPowersOnly;
             }
 
             public bool Allows(PoolMatchType type) => type == PoolMatchType.SpeedPool ? speedPool : turnBased;
@@ -41,7 +44,7 @@ namespace UntitledPoolGame.Pool
             new ModeEntry(PoolGameMode.CatchTheHole, true, true, PoolMatchType.TurnBased),
             new ModeEntry(PoolGameMode.HungryHole, true, true, PoolMatchType.SpeedPool),
             new ModeEntry(PoolGameMode.SnakePool, true, true, PoolMatchType.SpeedPool),
-            new ModeEntry(PoolGameMode.PowerWashPool, true, true, PoolMatchType.SpeedPool),
+            new ModeEntry(PoolGameMode.PowerWashPool, true, true, PoolMatchType.SpeedPool, ownPowersOnly: true),
         };
 
         private static PoolModeSettings instance;

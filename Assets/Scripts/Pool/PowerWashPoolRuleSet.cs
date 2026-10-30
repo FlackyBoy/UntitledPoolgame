@@ -67,7 +67,8 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            int owner = OwnerOf(ball);
+            // Its owner's splash, or the opponent's under Boue retournée.
+            int owner = dirt.WashesFor(OwnerOf(ball));
             MarkScored(owner);
             dirt.Splash(point, wash.pocketSplashRadius, owner);
             if (wash.debugLogs)

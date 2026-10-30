@@ -32,6 +32,11 @@ namespace UntitledPoolGame.Pool
         public bool AvailableIn(PoolGameMode mode) =>
             onlyInModes == null || onlyInModes.Length == 0 || System.Array.IndexOf(onlyInModes, mode) >= 0;
 
+        // Made for this mode: listed in Only In Modes (a power for every mode
+        // isn't). PoolModeSettings' Own Powers Only keeps a mode to these.
+        public bool OwnedBy(PoolGameMode mode) =>
+            onlyInModes != null && System.Array.IndexOf(onlyInModes, mode) >= 0;
+
         // Only on the holder's own turn (checked in PoolMatchRules.CheckPowerUse,
         // split screen only). Set per power: the category doesn't tell
         // (a Defense reacting to the opponent's shot needs it off).
