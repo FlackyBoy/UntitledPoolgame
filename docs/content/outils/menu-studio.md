@@ -33,7 +33,7 @@ On travaille toujours sur une copie de l'écran. Rien ne change dans le jeu tant
 | Place | centre (en % de l'écran), taille (en pixels d'un écran 1080p), inclinaison, visible ou non |
 | Apparence | couleur (bille, fond de carte ou de panneau, teinte d'image), bille rayée, numéro, image, bordure, arrondi |
 | Texte | texte et petite ligne (balises de texte animé acceptées), tailles, couleur, police titre, ombre, lettres qui arrivent une à une |
-| Action | ce que fait le choix : ouvrir un écran, retour, emplacement de sauvegarde, Just for fun, Local, En ligne, C'est parti, lancer un type de partie (avec ses règles), réglages, quitter, et pour la pause : reprendre, menu principal, confirmer ; grossissement quand on vise |
+| Action | ce que fait le choix : ouvrir un écran, retour, emplacement de sauvegarde, Just for fun (1 joueur), Local (2 joueurs), En ligne, C'est parti, lancer un type de partie (avec ses règles), lancer la Boogie Night, réglages, quitter, et pour la pause : reprendre, menu principal, confirmer ; grossissement quand on vise |
 | Effets | arrivée (pop, chute, montée, glissé de gauche ou de droite, fondu, tour), son délai et sa durée ; mouvement permanent (flotte, pulse, se balance, gigote, tourne), force et vitesse |
 | Feel | séquence jouée quand l'élément est **visé**, et quand il est **choisi**. Le bouton crée une séquence vide dans `Assets/Feel/Sequences/` et la relie ; on la remplit dans l'Inspector de Feel (son, vibration…) |
 
@@ -50,7 +50,8 @@ Ils gardent leur nom ; on peut les déplacer, les redimensionner et changer leur
 
 | Nom | Écran | Contenu |
 |---|---|---|
-| `context` | Level, Mode, Loading | l'étiquette jaune (Just for fun · Le bar…) |
+| `context` | Level, GameChoice, Mode, Boogie, Loading | l'étiquette jaune (2 joueurs · Le bar…) |
+| `rounds` | Boogie | le nombre de parties de la Boogie Night |
 | `levels` | Level | la rangée de cartes des niveaux, centrée sur la zone |
 | `rules` | Mode | la carte des règles du type de partie visé |
 | `slot1`, `slot2` et `slot1-label`, `slot2-label` | Lobby | les ronds des joueurs et leur texte |

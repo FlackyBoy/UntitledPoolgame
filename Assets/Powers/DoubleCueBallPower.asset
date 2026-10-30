@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3203288bcbc155c44ace474b173cccd7, type: 3}
+  m_Name: DoubleCueBallPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.DoubleCueBallPower
+  powerName: "Blanche \xD72"
+  tokenPrefab: {fileID: 7306504337578804939, guid: 503c12efbb6ff5441bacf90a89f137f9, type: 3}
+  hudIcon: {fileID: 2800000, guid: f2e232110f1cbfa48bd60f22239a5d96, type: 3}
+  onlyInModes: 0a000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  duration: 15

@@ -25,5 +25,12 @@ namespace UntitledPoolGame.Pool
         // The felt is caked in grime, your balls wash it as they roll
         // (PowerWashPoolRuleSet).
         PowerWashPool,
+        // Golf in the décor: each player sinks their own cue ball in a hole
+        // set somewhere in the room, in as few strokes as possible
+        // (PlayAnywhereRuleSet, PlayAnywhereHole).
+        PlayAnywhere,
+        // One player shrunk on the felt, the other hunts them with the cue
+        // ball; roles swap after the first round (PocketSizeRuleSet).
+        PocketSize,
     }
 }

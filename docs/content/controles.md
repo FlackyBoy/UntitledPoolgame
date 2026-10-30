@@ -2,7 +2,7 @@
 
 ## Menu principal
 
-Nouvelle partie · Charger · Just for fun (niveau puis mode, type et pouvoirs) · Multijoueur (local : les joueurs rejoignent, puis niveau, mode, type et pouvoirs ; en ligne : plus tard) · Réglages · Quitter.
+Jouer (1 joueur : niveau puis mode ; 2 joueurs : J2 rejoint, niveau, puis Sélection d'un mode ou Boogie Night) · Réglages · Quitter.
 
 | Clavier / souris | Manette | Action |
 |---|---|---|
@@ -12,10 +12,20 @@ Nouvelle partie · Charger · Just for fun (niveau puis mode, type et pouvoirs) 
 | Tab | Y / △ | Bille de mode visée : chacun son tour ou Speed Pool (pas pour 9-ball ni 14.1) |
 | P | X / □ | Avec ou sans pouvoirs (tous les modes) |
 | Molette, - / + | LB / RB | 14.1 : changer le score cible |
+| Gauche / droite, molette, - / + | Gauche / droite, LB / RB | Boogie Night : nombre de parties |
+
+### Roue de la Boogie Night
+
+| Clavier / souris | Manette | Action |
+|---|---|---|
+| Entrée, Espace, clic | A / ✕ | Jouer la partie tirée (une fois la roue arrêtée) |
+| R | Y / △ | Relancer la roue (une fois par tirage) |
+
+En fin de partie, la carte du gagnant propose « Tourner la roue » (mêmes touches que « Revanche »), puis « Menu principal » quand la soirée est gagnée.
 
 ## Écran de chargement
 
-Quand le niveau est chargé, chaque joueur appuie sur **A / ✕** (manette) ou **Entrée / Espace / clic** (clavier) pour dire qu'il est prêt ; la partie démarre quand tout le monde l'est. Dans le menu, J1 est celui qui navigue ; en Multijoueur > Local, J2 rejoint en appuyant sur A / Start (ou Entrée si J1 joue à la manette).
+Quand le niveau est chargé, chaque joueur appuie sur **A / ✕** (manette) ou **Entrée / Espace / clic** (clavier) pour dire qu'il est prêt ; la partie démarre quand tout le monde l'est. Dans le menu, J1 est celui qui navigue ; en Jouer > 2 joueurs, J2 rejoint en appuyant sur A / Start (ou Entrée si J1 joue à la manette).
 
 ## Manettes et clavier en partie
 
@@ -60,7 +70,8 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | C + P (maintenir) | Test : faire rejoindre un joueur de plus (avec une manette libre s'il y en a une ; sinon il prend le clavier et la souris, et l'autre joueur attend sans bouger), dans toute scène avec un PlayerInputManager |
 | Tab | Test, à plusieurs joueurs : passer le clavier et la souris au joueur suivant (celui qui les perd récupère la manette de l'autre, s'il en avait une). Aussi dans le menu debug, rubrique *Joueurs* |
 | C + W | Test : aller directement à la fin d'une partie de 8-ball |
-| Clic gauche maintenu + 4 clics droits rapides | Test : ouvrir / fermer le **menu debug** (donner un pouvoir, victoire / défaite, phase « empocher la 8 », fautes et erreurs de groupe) |
+| C + A | Test, en Play Anywhere : ouvrir / fermer la liste des objets de la caisse. Un clic en pose un là où regarde le joueur au clavier (il marche tout de suite, sans caisse ni manche) ; *Tout retirer* les enlève ; Échap ferme. Pendant que la liste est ouverte, le joueur au clavier ne bouge plus. Éditeur et versions de développement seulement |
+| Clic gauche maintenu + 4 clics droits rapides | Test : ouvrir / fermer le **menu debug** (donner un pouvoir, victoire / défaite, phase « empocher la 8 », fautes et erreurs de groupe, Catch the Hole ; en Play Anywhere, rubrique *Objet en main* : un objet de la caisse directement dans les mains de J1 ou J2, à poser comme d'habitude, hors manche) |
 
 ## Manette
 
@@ -78,6 +89,31 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | LT / L2 (maintenir) | En R&D seulement : **garde** |
 
 > A / ✕ est libre (prévu pour un futur saut). B / ○ porte encore l'action « Crouch », lue par aucun script.
+
+## Play Anywhere : poser son objet
+
+Pendant la pose de chaque manche, en tenant un objet pris dans la caisse :
+
+| Clavier / souris | Manette | Action |
+|---|---|---|
+| E (près de la caisse) | Y / △ | Prendre un objet (un par manche ; celui que l'autre a pris n'est plus là) |
+| Molette | Croix gauche / droite (maintenir) | Tourner l'objet |
+| Clic gauche ou E | X / □ ou Y / △ | Poser l'objet là où est l'aperçu (vert ; rouge = trop près du trou, d'un départ ou d'une bille, dans un autre objet, ou sol trop en pente) |
+
+En visée, **C** (B / ○ à la manette) fait passer de debout à accroupi ; sous un obstacle (étagère, table), le personnage s'accroupit seul, ou s'allonge si même accroupi ça ne passe pas.
+
+Seul (un joueur qui joue les deux billes), on pose deux objets à la suite : celui de J1, puis celui de J2. L'objet ne se lance pas et ne se lâche pas. Pendant la pose, on ne peut pas tirer (la queue se ramasse quand même ; la lâcher avec E pour prendre un objet).
+
+## Pocket Size (le petit)
+
+Toujours à deux : lancé seul, le deuxième joueur rejoint tout de suite en écran partagé (manette libre, sinon le clavier ; Tab passe le clavier et la souris de l'un à l'autre). Le petit court comme d'habitude, à son échelle. Il ne peut rien ramasser.
+
+| Clavier / souris | Manette | Action |
+|---|---|---|
+| Espace | A / ✕ | Sauter (avec le joueur de R&D, c'est son saut habituel) |
+| Q | B | Lancer son pouvoir (ramassé en marchant sur une caisse bleue) |
+
+Le grand vise et tire comme d'habitude, avec sa blanche, dès la fin du compte à rebours.
 
 ## R&D déplacement (arène de test, variante du joueur)
 

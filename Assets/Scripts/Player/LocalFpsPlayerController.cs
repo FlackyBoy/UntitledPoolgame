@@ -23,11 +23,13 @@ namespace UntitledPoolGame.Player
         [SerializeField] private string actionMapName = "Player";
         [SerializeField] private string moveActionName = "Move";
         [SerializeField] private string lookActionName = "Look";
+        [SerializeField] private string jumpActionName = "Jump";
 
         private CharacterController controller;
         private PlayerInput playerInput;
         private InputAction moveAction;
         private InputAction lookAction;
+        private InputAction jumpAction;
         private float pitch;
         private float verticalVelocity;
 
@@ -41,6 +43,16 @@ namespace UntitledPoolGame.Player
         public float Pitch => pitch;
 
         public Transform CameraPivot => cameraPivot;
+
+        // Pocket Size (LocalPlayerShrink): the body is this size, so speeds,
+        // jump and gravity are scaled to match (1 = normal).
+        public float SizeScale { get; set; } = 1f;
+        // Speed powers on top of the size (1 = normal).
+        public float SpeedMultiplier { get; set; } = 1f;
+        public float MoveScale => SizeScale * SpeedMultiplier;
+        // Jump height at normal size, in metres. 0 = no jump: this simple
+        // controller only jumps when a mode asks (the R&D locomotion has its own).
+        public float JumpHeight { get; set; }
 
         // R&D movement (momentum, jump, dive, ledges): when present and
         // enabled it moves the body, and this controller only handles the look.
@@ -65,6 +77,7 @@ namespace UntitledPoolGame.Player
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             moveAction = map.FindAction(moveActionName, throwIfNotFound: true);
             lookAction = map.FindAction(lookActionName, throwIfNotFound: true);
+            jumpAction = map.FindAction(jumpActionName, throwIfNotFound: false);
 
             // Only one AudioListener at a time (player 0's), or Unity warns
             // every frame.
@@ -120,12 +133,15 @@ namespace UntitledPoolGame.Player
             Vector2 input = moveAction.ReadValue<Vector2>();
             Vector3 move = transform.right * input.x + transform.forward * input.y;
 
+            float size = SizeScale;
             if (controller.isGrounded && verticalVelocity < 0f)
-                verticalVelocity = -1f;
+                verticalVelocity = -1f * size;
             else
-                verticalVelocity += gravity * Time.deltaTime;
+                verticalVelocity += gravity * size * Time.deltaTime;
+            if (JumpHeight > 0f && controller.isGrounded && jumpAction != null && jumpAction.WasPressedThisFrame())
+                verticalVelocity = Mathf.Sqrt(2f * JumpHeight * size * -gravity * size);
 
-            Vector3 velocity = move * moveSpeed + Vector3.up * verticalVelocity;
+            Vector3 velocity = move * (moveSpeed * MoveScale) + Vector3.up * verticalVelocity;
             controller.Move(velocity * Time.deltaTime);
         }
     }

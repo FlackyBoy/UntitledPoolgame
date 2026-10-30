@@ -102,6 +102,8 @@ namespace UntitledPoolGame.Core
         [Header("Accueil")]
         public string titleSmall = "Untitled";
         public string titleBig = "POOL GAME";
+        public MenuBall playBall = new MenuBall("Jouer", "1", "#f4c20d");
+        [Tooltip("Anciennes billes de l'accueil (Nouvelle partie, Charger, Just for fun, Multijoueur) : leurs écrans existent encore, plus atteints depuis l'accueil.")]
         public MenuBall newGameBall = new MenuBall("Nouvelle partie", "1", "#f4c20d");
         public MenuBall loadBall = new MenuBall("Charger", "2", "#1f4fd1");
         public MenuBall justForFunBall = new MenuBall("Just for fun", "3", "#d8261c");
@@ -114,6 +116,16 @@ namespace UntitledPoolGame.Core
         public string titleKeysHint = "Viser : souris · flèches · stick    Tirer : clic · Entrée · A";
         [Tooltip("Aide des touches en bas des autres pages.")]
         public string pageKeysHint = "Choisir : souris · flèches · stick    Valider : clic · Entrée · A    Retour : Échap · B";
+
+        [Header("Combien de joueurs ?")]
+        public string playersHeading = "Combien de joueurs ?";
+        public MenuBall onePlayerBall = new MenuBall("1 joueur", "1", "#2f7cf6", false, "seul à la table · l'IA arrive");
+        public MenuBall twoPlayersBall = new MenuBall("2 joueurs", "2", "#ef4a3c", false, "écran partagé");
+
+        [Header("Mode de jeu (2 joueurs)")]
+        public string gameChoiceHeading = "Mode de jeu";
+        public MenuBall selectionBall = new MenuBall("Sélection", "8", "#111111", false, "un mode, une partie");
+        public MenuBall boogieBall = new MenuBall("Boogie Night", "7", "#9b2fc9", true, "la roue choisit, plusieurs parties");
 
         [Header("Nouvelle partie / Charger")]
         public string newGameHeading = "Nouvelle partie";
@@ -134,10 +146,10 @@ namespace UntitledPoolGame.Core
         [Tooltip("Tampon sur les niveaux pas encore jouables.")]
         public string comingSoonStamp = "Bientôt";
         public string comingSoonToast = "Bientôt !";
-        [Tooltip("Étiquette jaune quand on vient de Just for fun.")]
-        public string justForFunContext = "Just for fun";
-        [Tooltip("Étiquette jaune quand on vient de Multijoueur > Local.")]
-        public string localContext = "Multijoueur · Local";
+        [Tooltip("Étiquette jaune quand on vient de « 1 joueur ».")]
+        public string justForFunContext = "1 joueur";
+        [Tooltip("Étiquette jaune quand on vient de « 2 joueurs ».")]
+        public string localContext = "2 joueurs";
 
         [Header("Type de partie")]
         public string modeHeading = "Quel type de partie ?";
@@ -155,6 +167,10 @@ namespace UntitledPoolGame.Core
             rules = "Touche tes billes avec ta blanche : elles te suivent en file. Ta blanche brise la file de l'autre. File complète ? Attrape la 8, annonce ta poche et plonge dedans : toute la file te suit !" };
         public MenuModeBall powerWashPoolMode = new MenuModeBall { ball = new MenuBall("Power Wash Pool", "3", "#2bb3d9"),
             rules = "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !" };
+        public MenuModeBall playAnywhereMode = new MenuModeBall { ball = new MenuBall("Play Anywhere", "11", "#7cc242", true),
+            rules = "Du golf dans toute la salle : rentre ta blanche dans le trou en un minimum de coups. À chaque manche, pose un objet sur le parcours pour t'aider... ou gêner l'autre !" };
+        public MenuModeBall pocketSizeMode = new MenuModeBall { ball = new MenuBall("Pocket Size", "5", "#e8761c"),
+            rules = "L'un de vous rétrécit sur la table, l'autre le chasse à la blanche. Trois touches et le petit a perdu, deux minutes de survie et il gagne. Puis on échange !" };
         [Tooltip("Type de la bille visée, changé avec Y / Tab. Chaque mode commence sur son type d'origine.")]
         public string turnBasedOption = "Chacun son tour   < >  (Y / Tab)";
         public string speedPoolOption = "Speed Pool : tout le monde en même temps   < >  (Y / Tab)";
@@ -247,6 +263,20 @@ namespace UntitledPoolGame.Core
             instance != null ? instance : instance = Pool.PoolSettingsLoader.LoadOrDefault<MenuSettings>("MenuSettings");
 
         public KeyRowText KeyRow(string id) => keyRows.Find(r => r != null && r.id == id);
+
+        // The ball a mode is drawn with (mode page, Boogie Night's wheel).
+        public MenuModeBall ModeBall(Pool.PoolGameMode mode) => mode switch
+        {
+            Pool.PoolGameMode.NineBall => nineBallMode,
+            Pool.PoolGameMode.FourteenOne => fourteenOneMode,
+            Pool.PoolGameMode.CatchTheHole => catchTheHoleMode,
+            Pool.PoolGameMode.HungryHole => hungryHoleMode,
+            Pool.PoolGameMode.SnakePool => snakePoolMode,
+            Pool.PoolGameMode.PowerWashPool => powerWashPoolMode,
+            Pool.PoolGameMode.PlayAnywhere => playAnywhereMode,
+            Pool.PoolGameMode.PocketSize => pocketSizeMode,
+            _ => classicMode,
+        };
 
         public static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out Color c) ? c : Color.magenta;
     }

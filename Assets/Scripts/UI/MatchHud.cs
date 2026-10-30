@@ -131,7 +131,7 @@ namespace UntitledPoolGame.Core
 
         private UIDocument document;
         private VisualElement root, halvesLayer, endLayer, endRays, endCard, endButton;
-        private Label endTitle, endSubtitle, endWho;
+        private Label endTitle, endSubtitle, endWho, endButtonText;
         private VisualElement endWhoBox;
         private readonly List<VisualElement> confetti = new List<VisualElement>();
         private readonly Half[] halves = new Half[2];
@@ -140,6 +140,8 @@ namespace UntitledPoolGame.Core
         private Font bodyFont, titleFont;
         private PoolPowerSpawnSettings powerSettings;
         private float endShownAt = -1f;
+        // Boogie Night: the match whose winner was counted (MatchGeneration).
+        private int boogieRecorded = -1;
 
         private void OnEnable()
         {
@@ -426,7 +428,7 @@ namespace UntitledPoolGame.Core
             endButton.pickingMode = PickingMode.Position;
             VisualElement buttonBall = MiniBall(endButton, 56, 1);
             buttonBall.style.marginRight = 14;
-            Text(endButton, cfg.rematchText, titleFont, 44, Ink);
+            endButtonText = Text(endButton, cfg.rematchText, titleFont, 44, Ink);
             Label hint = Text(endLayer, cfg.rematchHint, bodyFont, 24, new Color(1f, 1f, 1f, 0.7f));
             hint.style.position = Position.Absolute;
             hint.style.left = Length.Percent(50);
@@ -603,9 +605,13 @@ namespace UntitledPoolGame.Core
             int p = h.player;
             BallGroup group = rules.GetGroup(p);
             bool hasScore = rules.TryGetScore(p, out int score, out int target);
+            // Play Anywhere: strokes, par and the round's step.
+            PlayAnywhereRuleSet golf = rules.Mode == PoolGameMode.PlayAnywhere ? PlayAnywhereRuleSet.Current : null;
             int nextNine = rules.Mode == PoolGameMode.NineBall ? LowestBallOnTable(9) : 0;
             // Power Wash Pool: felt washed and the clock (-1 = overtime).
             PowerWashDirt wash = rules.Mode == PoolGameMode.PowerWashPool ? PowerWashDirt.Instance : null;
+            // Pocket Size: the role, the round, the clock and the touches.
+            PocketSizeRuleSet pocketSize = rules.Mode == PoolGameMode.PocketSize ? PocketSizeRuleSet.Current : null;
             // Bit n set = ball n still on the table.
             int onTable = 0;
             foreach (PoolBall ball in PoolBall.Active)
@@ -614,6 +620,8 @@ namespace UntitledPoolGame.Core
             // Groupe identique: the balls left would tell the groups apart.
             (int kind, int a, int b) key =
                 rules.AreGroupsDisguised ? (1, 0, 0)
+                : golf != null ? (7, score, golf.RoundStateKey(p))
+                : pocketSize != null ? (8, pocketSize.PlateKey(p), 0)
                 : hasScore ? (2, score, target)
                 : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft))
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
@@ -625,6 +633,16 @@ namespace UntitledPoolGame.Core
             h.plateBalls.Clear();
             if (rules.AreGroupsDisguised)
                 Text(h.plateBalls, cfg.groupsDisguisedText, bodyFont, 22, Ink);
+            else if (golf != null)
+            {
+                Text(h.plateBalls, $"{score}", titleFont, 34, Ink);
+                Text(h.plateBalls, $" coup{(score > 1 ? "s" : "")} (par {target})  ·  {golf.DescribeRound(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (pocketSize != null)
+            {
+                Text(h.plateBalls, pocketSize.RoleLabel(p), titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {pocketSize.DescribeRound(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
             else if (hasScore)
             {
                 Text(h.plateBalls, $"{score}", titleFont, 34, Ink);
@@ -1241,7 +1259,8 @@ namespace UntitledPoolGame.Core
 
         private void UpdateEnd(PoolMatchRules rules, float dt)
         {
-            bool over = rules != null && rules.MatchStarted && rules.GameOver;
+            // Boogie Night's wheel takes the screen once the card is pressed.
+            bool over = rules != null && rules.MatchStarted && rules.GameOver && !rules.RestartPending && !BoogieWheel.IsOpen;
             endLayer.style.display = over ? DisplayStyle.Flex : DisplayStyle.None;
             if (!over)
             {
@@ -1254,10 +1273,32 @@ namespace UntitledPoolGame.Core
             {
                 endShownAt = now;
                 int w = Mathf.Max(0, rules.Winner);
+                string subtitle = rules.Setup.Describe();
+                string title = Format(cfg.winnerFormat, w + 1);
+                string button = cfg.rematchText;
+                if (BoogieNight.Active)
+                {
+                    if (boogieRecorded != rules.MatchGeneration)
+                    {
+                        boogieRecorded = rules.MatchGeneration;
+                        BoogieNight.Record(rules.Winner);
+                    }
+                    BoogieNightSettings boogie = BoogieNightSettings.Instance;
+                    subtitle += "\n" + Format(boogie.scoreFormat, BoogieNight.Wins(0), BoogieNight.Wins(1));
+                    button = boogie.nextButton;
+                    // The night is won: the card is the night's winner's.
+                    if (BoogieNight.Decided)
+                    {
+                        w = BoogieNight.Leader;
+                        title = Format(boogie.nightWinnerFormat, w + 1);
+                        button = boogie.menuButton;
+                    }
+                }
                 endWhoBox.style.backgroundColor = w == 0 ? P1 : P2;
                 TextFx.Set(endWho, Format(cfg.playerTagFormat, w + 1));
-                TextFx.Reveal(endTitle, Format(cfg.winnerFormat, w + 1));
-                TextFx.Set(endSubtitle, rules.Setup.Describe());
+                TextFx.Reveal(endTitle, title);
+                TextFx.Set(endSubtitle, subtitle);
+                TextFx.Set(endButtonText, button);
                 foreach (Half h in halves) h.plateKey = default;
             }
             float t = now - endShownAt;
@@ -1280,7 +1321,12 @@ namespace UntitledPoolGame.Core
             float pulse = 1f + 0.04f * Mathf.Sin(t * 5f);
             endButton.style.scale = new Scale(new Vector3(pulse, pulse, 1f));
 
-            if (t > 0.6f && RevanchePressed()) rules.RequestRestart();
+            if (t > 0.6f && RevanchePressed())
+            {
+                if (!BoogieNight.Active) rules.RequestRestart();
+                else if (!BoogieNight.Decided) BoogieWheel.Open();
+                else GameSession.LoadMainMenu();
+            }
         }
 
         private bool RevanchePressed()

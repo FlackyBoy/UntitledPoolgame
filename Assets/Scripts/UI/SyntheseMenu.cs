@@ -78,7 +78,7 @@ namespace UntitledPoolGame.Core
         private UIDocument document;
         private VisualElement root, stage, aimLine, cueStick, toast;
         private readonly Dictionary<string, Page> pages = new Dictionary<string, Page>();
-        private Page title, level, mode, lobby, settingsPage, current;
+        private Page title, players, level, gameChoice, mode, boogie, lobby, settingsPage, current;
         private KeyBindingsPanel settings;
         private Label ruleTitle, ruleText, ruleOption;
         private readonly VisualElement[] slots = new VisualElement[2];
@@ -100,6 +100,9 @@ namespace UntitledPoolGame.Core
         private readonly Dictionary<PoolGameMode, PoolMatchType> chosenTypes = new Dictionary<PoolGameMode, PoolMatchType>();
         // Powers on/off, the same for every mode (X / P).
         private bool powers;
+        // Boogie Night: number of matches (left / right, LB / RB, wheel, - / +).
+        private int boogieRounds = -1;
+        private Label roundsLabel;
 
         // Shot animation: pull back, thrust, the ball flies off, then the action.
         private Option shooting, lastFocused;
@@ -145,12 +148,17 @@ namespace UntitledPoolGame.Core
             stage = K.Box(root, "stage");
             K.Fill(stage);
 
-            foreach (string id in new[] { MenuLayouts.Title, MenuLayouts.NewGame, MenuLayouts.Load, MenuLayouts.Level,
-                                          MenuLayouts.Mode, MenuLayouts.Multiplayer, MenuLayouts.Lobby, MenuLayouts.Settings })
+            foreach (string id in new[] { MenuLayouts.Title, MenuLayouts.Players, MenuLayouts.NewGame, MenuLayouts.Load, MenuLayouts.Level,
+                                          MenuLayouts.GameChoice, MenuLayouts.Mode, MenuLayouts.Boogie, MenuLayouts.Multiplayer,
+                                          MenuLayouts.Lobby, MenuLayouts.Settings })
                 pages[id] = BuildPage(id);
             title = pages[MenuLayouts.Title];
+            players = pages[MenuLayouts.Players];
             level = pages[MenuLayouts.Level];
+            gameChoice = pages[MenuLayouts.GameChoice];
             mode = pages[MenuLayouts.Mode];
+            boogie = pages[MenuLayouts.Boogie];
+            roundsLabel = boogie.view.Item("rounds")?.text;
             lobby = pages[MenuLayouts.Lobby];
             settingsPage = pages[MenuLayouts.Settings];
 
@@ -277,7 +285,7 @@ namespace UntitledPoolGame.Core
             {
                 visual = card, pos = new Vector2(x, y), radius = 200f, card = true, focusScale = 0.06f, baseColor = K.Card,
                 shoot = locked ? (Action)(() => Toast(cfg.comingSoonToast))
-                               : () => { levelName = TextFx.Strip(entry.displayName); levelIndex = index; Show(mode); },
+                               : () => { levelName = TextFx.Strip(entry.displayName); levelIndex = index; Show(local ? gameChoice : mode); },
             });
         }
 
@@ -336,7 +344,16 @@ namespace UntitledPoolGame.Core
                 case MenuAction.PlayLocal: local = true; Show(lobby); break;
                 case MenuAction.PlayOnline: Toast(cfg.onlineToast); break;
                 case MenuAction.LobbyGo: Show(level); break;
-                case MenuAction.StartMode: Launch(SetupFor(e.mode)); break;
+                case MenuAction.StartMode:
+                    BoogieNight.End();
+                    Launch(SetupFor(e.mode));
+                    break;
+                case MenuAction.StartBoogie:
+                    // The wheel draws each match in the level; this setup only
+                    // fills the loading screen until then.
+                    BoogieNight.Begin(boogieRounds);
+                    Launch(new PoolMatchSetup(PoolGameMode.EightBall, PoolMatchType.TurnBased, false, targetScore));
+                    break;
                 case MenuAction.OpenSettings: Show(settingsPage); break;
                 case MenuAction.Quit: Quit(); break;
             }
@@ -344,7 +361,9 @@ namespace UntitledPoolGame.Core
 
         private void GoBack()
         {
-            if (current == level) { Show(local ? lobby : title); return; }
+            if (current == level) { Show(local ? lobby : players); return; }
+            // 2 players come to the modes through "Mode de jeu".
+            if (current == mode && local) { Show(gameChoice); return; }
             string back = current?.view.screen.backScreen;
             if (!string.IsNullOrEmpty(back) && pages.TryGetValue(back, out Page target)) Show(target);
         }
@@ -369,6 +388,7 @@ namespace UntitledPoolGame.Core
                 page.focused = Mathf.Max(0, classic);
             }
             if (page == lobby) { slotDevices[0] = menuDevice ?? slotDevices[0]; knownPlayers = -1; }
+            if (page == boogie) SetBoogieRounds(boogieRounds < 0 ? BoogieNightSettings.Instance.defaultRounds : boogieRounds);
             if (page == level)
             {
                 // Start on the first level that can be played (the cards come after the screen's own options).
@@ -381,7 +401,8 @@ namespace UntitledPoolGame.Core
 
             string context = local ? cfg.localContext : cfg.justForFunContext;
             if (level.context != null) TextFx.Set(level.context, context);
-            if (mode.context != null) TextFx.Set(mode.context, context + " · " + levelName);
+            foreach (Page p in new[] { gameChoice, mode, boogie })
+                if (p.context != null) TextFx.Set(p.context, context + " · " + levelName);
             if (page == settingsPage) settings.Open();
         }
 
@@ -409,7 +430,8 @@ namespace UntitledPoolGame.Core
                     // In place: the players get the lobby's devices here, as
                     // the loading screen would.
                     PlayerDeviceRouter.Assign(devices);
-                    matchRules.RequestStart(setup);
+                    if (BoogieNight.Active) BoogieWheel.Open();
+                    else matchRules.RequestStart(setup);
                 }
                 Hide();
                 return;
@@ -577,6 +599,13 @@ namespace UntitledPoolGame.Core
 
         private PoolMatchSetup SetupFor(PoolGameMode gameMode) => new PoolMatchSetup(gameMode, TypeFor(gameMode), powers, targetScore);
 
+        private void SetBoogieRounds(int rounds)
+        {
+            BoogieNightSettings b = BoogieNightSettings.Instance;
+            boogieRounds = Mathf.Clamp(rounds, b.minRounds, Mathf.Max(b.minRounds, b.maxRounds));
+            if (roundsLabel != null) TextFx.Set(roundsLabel, Format(b.roundsFormat, boogieRounds));
+        }
+
         // ---------- Input ----------
 
         private void ReadInput()
@@ -657,6 +686,12 @@ namespace UntitledPoolGame.Core
                     if (PoolMatchSetup.Supports(aimed.mode, other)) chosenTypes[aimed.mode] = other;
                 }
                 if (switchPowers) powers = !powers;
+            }
+            if (current == boogie)
+            {
+                // A single choice on the page: left / right count the matches.
+                if (nav.x != 0f) adjust = (int)Mathf.Sign(nav.x);
+                if (adjust != 0) SetBoogieRounds(boogieRounds + adjust);
             }
             if (nav != Vector2.zero && current.options.Count > 1) Step(nav);
             if (back) GoBack();

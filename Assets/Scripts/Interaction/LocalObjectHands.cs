@@ -208,6 +208,16 @@ namespace UntitledPoolGame.Interaction
             return true;
         }
 
+        // Let go without moving or pushing it (the caller sets it where it
+        // belongs); the arms ease back.
+        public bool TryReleaseInPlace(LocalGrabbable grabbable)
+        {
+            if (grabbable == null || grabbable != held || phase == Phase.Throwing) return false;
+            LetGo(Vector3.zero);
+            StartRecover();
+            return true;
+        }
+
         // Set every frame while Attack is held (0..1).
         public void SetCharge(float fraction)
         {
