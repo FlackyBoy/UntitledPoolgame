@@ -47,6 +47,9 @@ Tout ce qui est mergé sur `master` mais pas encore essayé en jeu. Les détails
 
 Le détail est plus bas, dans « Créateur de niveau » et les lignes des menus.
 
+- **Skills de Claude**
+  - ⬜ **Skills du projet** (demande du 05/11 ; pas encore dans Notion : espace plein ; branche `chore/skills-agents`) : `unity-check`, `nouveau-mode`, `nouveau-pouvoir`, `a-tester`, `github` et `refacto`, avec une page d'exemples sur le site (`outils.html#skills`). `unity-check` vérifié (projet compilé, erreur injectée détectée, csproj absent signalé) ; script de tri de `github` lancé sur le dépôt. Les autres recettes n'ont pas encore servi sur un vrai cas.
+    - **Comment tester** : à l'usage. `/unity-check` ; `/github etat` ; `/a-tester` ; `/refacto audit PoolMatchRules` ; `/nouveau-mode` au prochain mode, en vérifiant qu'il apparaît au menu et sur la roue sans retouche. Ouvrir `outils.html#skills` sur le site.
 - **Level Maker**
   - ⬜ Lot 6 : dimensions (ambiances et règles chargées sur une même salle), après le système de dimensions. <!-- notion:3fb166170a8181f49814fca5f75bd147 -->
   - ⬜ Garde-corps autour d'une trémie d'escalier ; outil pour tracer un vide de mezzanine à la main. <!-- notion:3fb166170a81817889a1d769f1e5e08f -->

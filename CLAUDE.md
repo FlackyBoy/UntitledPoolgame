@@ -16,6 +16,7 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
   - `docs/ui.html` — galerie des concepts d'UI ; `docs/ui/*.html` = un prototype interactif par concept (moteur commun `docs/ui/proto.js` + `proto.css`). L'utilisateur veut une UI pop, fun, originale (pas une copie de ses références). Il colle son récapitulatif de choix dans la conversation.
   - Vérifier un rendu : Chrome sans interface (`chrome.exe --headless=new --screenshot=… "file:///…/docs/ui/x.html#/ecran"`) puis lire l'image.
   - `docs/content/outils/level-maker.md` — outil de création de niveau (rubrique Outils, `outils.html#level-maker`).
+  - `docs/content/outils/skills.md` — les skills de Claude, avec des exemples d'utilisation (rubrique Outils, `outils.html#skills`).
   - `docs/content/prompts.md` — historique des prompts consolidés (rubrique Suivi).
 
 ## Conventions de code
@@ -31,6 +32,7 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 - Pas d'itération à l'aveugle sur des réglages visuels/IK : diagnostiquer (logs, lecture du code du plugin) avant de changer, et retirer tout de suite ce que l'utilisateur demande de retirer.
 - Ne pas toucher à `Assets/Scenes/BarSplitscreen.unity` sans demande explicite (configuration de l'utilisateur) et ne pas le commiter.
 - Je ne peux pas lancer Unity : le dire quand une modification n'est ni compilée ni testée.
+- Skills du projet (`.claude/skills/`, exemples sur le site : `docs/content/outils/skills.md`) : `unity-check` après chaque modification de `.cs`, `nouveau-mode` et `nouveau-pouvoir` pour ces ajouts, `a-tester` pour les sessions de test, `github` pour les branches, commits et PR, `refacto` pour un chantier de réorganisation. Un skill ajouté ou changé = sa section mise à jour sur le site.
 - Suivi Notion : skill `notion-todo` (`.claude/skills/notion-todo/SKILL.md`). `start` en commençant une tâche de la TODO, `pr` à la création d'une PR, `done` au merge. Le temps passé vient des hooks, jamais d'une estimation de tête.
   - **Chaque ligne ajoutée à la TODO est aussi créée dans Notion** (descriptif, « Comment tester », statut, rubrique, estimation) avec son commentaire `<!-- notion:… -->`.
   - **Chaque changement de statut dans la TODO est reporté dans Notion** (À faire, En cours, En revue, À tester, Fait).

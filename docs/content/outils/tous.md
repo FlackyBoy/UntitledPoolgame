@@ -1,6 +1,6 @@
 # Tous les outils
 
-> Les outils d'éditeur du projet, tous dans le menu **Tools > Pool** d'Unity. Ils sont rangés par familles, séparées par un trait. Les gros éditeurs ont leur propre section dans le menu à gauche.
+> Les outils d'éditeur du projet, tous dans le menu **Tools > Pool** d'Unity. Ils sont rangés par familles, séparées par un trait. Les gros éditeurs ont leur propre section dans le menu à gauche. Les recettes de Claude (compiler, ajouter un mode, Git…) sont dans [Skills](#skills).
 
 ## Éditeurs
 
