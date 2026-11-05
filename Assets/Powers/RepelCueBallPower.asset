@@ -19,4 +19,4 @@ MonoBehaviour:
   requiresOwnTurn: 1
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1
-  speed: 2.5
+  speed: 1.8

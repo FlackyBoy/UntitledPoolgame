@@ -38,9 +38,9 @@ namespace UntitledPoolGame.Pool
 
         [Header("Taille")]
         [Tooltip("Rayon le plus petit (mètres). Une bille fait ~3 cm de rayon : sous 3 cm, une bille ne tombe que si son centre passe dedans.")]
-        [Min(0.01f)] public float minRadius = 0.05f;
+        [Min(0.01f)] public float minRadius = 0.036f;
         [Tooltip("Rayon le plus grand (mètres).")]
-        [Min(0.01f)] public float maxRadius = 0.12f;
+        [Min(0.01f)] public float maxRadius = 0.0864f;
         [Tooltip("Vitesse à laquelle la taille change (variations par seconde, environ). 0 = taille fixe, au milieu des deux.")]
         [Min(0f)] public float sizeChangeRate = 0.12f;
 
@@ -58,13 +58,13 @@ namespace UntitledPoolGame.Pool
 
         [Header("Déplacement")]
         [Tooltip("Vitesse de croisière (mètres par seconde) au début de la partie.")]
-        [Min(0f)] public float baseSpeed = 0.1f;
+        [Min(0f)] public float baseSpeed = 0.072f;
         [Tooltip("Vitesse de croisière quand l'accélération est au bout.")]
-        [Min(0f)] public float maxSpeed = 0.35f;
+        [Min(0f)] public float maxSpeed = 0.252f;
         [Tooltip("Accélération (m/s²) : plus elle est faible, plus les virages sont larges et les départs doux. Mise à l'échelle avec la vitesse, pour qu'un trou rapide tourne aussi.")]
-        [Min(0.01f)] public float acceleration = 0.12f;
+        [Min(0.01f)] public float acceleration = 0.0864f;
         [Tooltip("Distance (mètres) à partir de laquelle le trou ralentit en approchant de sa cible.")]
-        [Min(0.01f)] public float arriveDistance = 0.15f;
+        [Min(0.01f)] public float arriveDistance = 0.108f;
         [Tooltip("Durée maximale (secondes) d'un trajet avant de choisir une autre cible (s'il n'arrive pas, coincé contre une poche).")]
         [Min(1f)] public float maxLegTime = 8f;
 
@@ -76,9 +76,9 @@ namespace UntitledPoolGame.Pool
 
         [Header("Écarts")]
         [Tooltip("Écart (mètres) gardé entre le bord du trou et les bandes, et entre le bord du trou et les poches.")]
-        [Min(0f)] public float edgeClearance = 0.03f;
+        [Min(0f)] public float edgeClearance = 0.0216f;
         [Tooltip("Écart (mètres) gardé entre deux trous, bord à bord.")]
-        [Min(0f)] public float holeGap = 0.08f;
+        [Min(0f)] public float holeGap = 0.0576f;
 
         [Header("Accélération au fil de la partie")]
         [Tooltip("Aucune : toujours Base Speed. Déroulé : selon la part des billes de couleur rentrées. Minuteur : selon le temps écoulé (Ramp Seconds). Les deux : le plus avancé des deux.")]

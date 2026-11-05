@@ -22,13 +22,13 @@ namespace UntitledPoolGame.Pool
     {
         [Header("Trous")]
         [Tooltip("Rayon d'un trou (mètres). Une bille dont le centre passe au-dessus tombe. Une poche fait ~6 cm, une bille ~3 cm.")]
-        [SerializeField] private float holeRadius = 0.075f;
+        [SerializeField] private float holeRadius = 0.054f;
         [Tooltip("Nombre de trous au niveau 1.")]
         [Min(1)] [SerializeField] private int level1Holes = 1;
         [Tooltip("Nombre de trous au niveau 2, répartis au hasard autour du point visé (voir les réglages ci-dessous).")]
         [Min(1)] [SerializeField] private int level2Holes = 3;
         [Tooltip("Niveau 2 : rayon (mètres) du cercle autour du point visé, sur lequel tombent la plupart des trous.")]
-        [SerializeField] private float level2Spread = 0.2f;
+        [SerializeField] private float level2Spread = 0.144f;
         [Tooltip("Niveau 2 : de combien la distance au point visé varie autour du cercle, en part de son rayon (0 = pile sur le cercle, 0,3 = entre 70 % et 130 %).")]
         [Range(0f, 1f)] [SerializeField] private float level2SpreadJitter = 0.3f;
         [Tooltip("Niveau 2 : chance qu'un trou tombe à l'intérieur du cercle plutôt que dessus (0 = jamais, 1 = toujours).")]
@@ -36,7 +36,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Niveau 2 : un des trous tombe toujours pile sur le point visé.")]
         [SerializeField] private bool level2CenterHole;
         [Tooltip("Niveau 2 : écart minimal (mètres) entre deux trous, bord à bord.")]
-        [SerializeField] private float level2MinGap = 0.02f;
+        [SerializeField] private float level2MinGap = 0.0144f;
 
         [Header("Durée")]
         [Tooltip("Tour de l'adversaire : jusqu'à la fin du tour de l'adversaire de celui qui lance le pouvoir. Prochain tir : jusqu'à la fin du prochain tir. Toute la partie. Tours : pendant Turns changements de tour.")]
@@ -48,11 +48,11 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Boule de feu qui tombe (un effet en boucle). Vide = une simple sphère orange. Par défaut : Cartoon FX Remaster > CFXR Fire.")]
         [SerializeField] private GameObject meteorPrefab;
         [Tooltip("Échelle de la boule de feu par rapport à son prefab.")]
-        [SerializeField] private float meteorScale = 0.25f;
+        [SerializeField] private float meteorScale = 0.18f;
         [Tooltip("Hauteur (mètres) d'où part le météore, au-dessus de la table.")]
-        [SerializeField] private float fallHeight = 2.5f;
+        [SerializeField] private float fallHeight = 1.8f;
         [Tooltip("Décalage horizontal (mètres) du point de départ : le météore arrive en diagonale.")]
-        [SerializeField] private float fallSideOffset = 1.5f;
+        [SerializeField] private float fallSideOffset = 1.08f;
         [Tooltip("Durée de la chute (secondes). Elle accélère jusqu'à l'impact.")]
         [SerializeField] private float fallTime = 0.55f;
         [Tooltip("Niveau 2 : délai (secondes) entre deux météores.")]
@@ -60,7 +60,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Effet joué à l'impact. Par défaut : CFXR3 Fire Explosion B.")]
         [SerializeField] private GameObject impactPrefab;
         [Tooltip("Échelle de l'effet d'impact par rapport à son prefab.")]
-        [SerializeField] private float impactScale = 0.25f;
+        [SerializeField] private float impactScale = 0.18f;
         [Tooltip("Durée (secondes) avant de supprimer l'effet d'impact.")]
         [SerializeField] private float impactLifetime = 3f;
 
@@ -88,7 +88,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Taille du decal, en multiple du diamètre du trou (2,2 avec la texture générée : les braises tombent alors autour du trou).")]
         [SerializeField] private float scorchScale = 2.2f;
         [Tooltip("Épaisseur (mètres) de la zone où le decal se projette, centrée sur le tapis. Petite, pour ne pas marquer les billes qui passent.")]
-        [SerializeField] private float scorchDepth = 0.02f;
+        [SerializeField] private float scorchDepth = 0.0144f;
         [Tooltip("Opacité du decal (0 à 1).")]
         [Range(0f, 1f)] [SerializeField] private float scorchOpacity = 1f;
         [Tooltip("Étirement au hasard du decal à chaque impact (0 = toujours rond ; 0,25 = jusqu'à 25 % plus long dans un sens que dans l'autre). Il est aussi tourné au hasard.")]
@@ -96,11 +96,11 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Couleur du cercle de bord, sans decal, et des cercles qui marquent l'endroit visé en attendant le tour de l'adversaire (0 d'opacité = pas de bord).")]
         [SerializeField] private Color rimColor = new Color(1f, 0.45f, 0.1f, 1f);
         [Tooltip("Épaisseur (mètres) de ces cercles.")]
-        [SerializeField] private float rimWidth = 0.012f;
+        [SerializeField] private float rimWidth = 0.00864f;
         [Tooltip("Fumée qui sort du trou tant qu'il est ouvert (effet en boucle, facultatif). Par défaut : CFXR Smoke Source 3D.")]
         [SerializeField] private GameObject smokePrefab;
         [Tooltip("Échelle de la fumée par rapport à son prefab.")]
-        [SerializeField] private float smokeScale = 0.3f;
+        [SerializeField] private float smokeScale = 0.216f;
         [Tooltip("Débit de la fumée : multiplie le nombre de particules émises par seconde par le prefab (1 = celui du prefab, 0,5 = moitié moins, 2 = double).")]
         [Min(0f)] [SerializeField] private float smokeRate = 1f;
         [Tooltip("Durée (secondes) pendant laquelle le trou fume, avant que la fumée s'éteigne en douceur. 0 = tant que le trou est ouvert.")]
@@ -112,9 +112,9 @@ namespace UntitledPoolGame.Pool
 
         [Header("Impact : souffle, secousse, vibration")]
         [Tooltip("Vitesse (m/s) donnée aux billes proches de l'impact, diminuant jusqu'à 0 au bord du rayon. Les billes sur le trou en sont sorties d'abord.")]
-        [SerializeField] private float blastSpeed = 0.6f;
+        [SerializeField] private float blastSpeed = 0.432f;
         [Tooltip("Rayon (mètres) du souffle.")]
-        [SerializeField] private float blastRadius = 0.3f;
+        [SerializeField] private float blastRadius = 0.216f;
         [Tooltip("Secousse de la vue des deux joueurs (mètres, 0 = aucune).")]
         [SerializeField] private float shakeMagnitude = 0.06f;
         [Tooltip("Durée de la secousse (secondes).")]

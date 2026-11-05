@@ -18,24 +18,24 @@ MonoBehaviour:
   requiresOwnTurn: 0
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1
-  holeRadius: 0.2
+  holeRadius: 0.144
   level1Holes: 1
   level2Holes: 3
-  level2Spread: 0.17
+  level2Spread: 0.1224
   level2SpreadJitter: 0.3
   level2InsideChance: 0.3
   level2CenterHole: 0
-  level2MinGap: 0.02
+  level2MinGap: 0.0144
   duration: 0
   turns: 1
   meteorPrefab: {fileID: 6294508013172393196, guid: 043176b6a68be2b43b073aaaa4782c7d, type: 3}
-  meteorScale: 0.25
-  fallHeight: 2.5
-  fallSideOffset: 1.5
+  meteorScale: 0.18
+  fallHeight: 1.8
+  fallSideOffset: 1.08
   fallTime: 0.55
   level2Stagger: 0.18
   impactPrefab: {fileID: 8194992990867289339, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
-  impactScale: 0.25
+  impactScale: 0.18
   impactLifetime: 3
   shapeRoughness: 0.35
   shapeSpikes: 5
@@ -48,19 +48,19 @@ MonoBehaviour:
   holeColor: {r: 0, g: 0, b: 0, a: 1}
   scorchDecal: {fileID: 2100000, guid: 1153115c1968c3841bcc53bf05bd1103, type: 2}
   scorchScale: 2.2
-  scorchDepth: 0.02
+  scorchDepth: 0.0144
   scorchOpacity: 1
   scorchStretch: 0.25
   rimColor: {r: 1, g: 0.45, b: 0.1, a: 1}
-  rimWidth: 0.012
+  rimWidth: 0.00864
   smokePrefab: {fileID: 8656522925564163052, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
-  smokeScale: 0.25
+  smokeScale: 0.18
   smokeRate: 0.5
   smokeDuration: 0
   sinkTime: 0.35
   closeTime: 0.3
-  blastSpeed: 0.6
-  blastRadius: 0.3
+  blastSpeed: 0.432
+  blastRadius: 0.216
   shakeMagnitude: 0.06
   shakeDuration: 0.4
   flashColor: {r: 1, g: 0.55, b: 0.15, a: 1}

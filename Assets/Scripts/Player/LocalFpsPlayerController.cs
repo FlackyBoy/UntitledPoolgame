@@ -94,7 +94,11 @@ namespace UntitledPoolGame.Player
             CinemachineBrain brain = GetComponentInChildren<CinemachineBrain>(true);
             if (brain != null) brain.ChannelMask = channel;
             foreach (CinemachineVirtualCameraBase vcam in GetComponentsInChildren<CinemachineVirtualCameraBase>(true))
+            {
                 vcam.OutputChannel = channel;
+                if (cameraPivot != null && vcam.transform.IsChildOf(cameraPivot))
+                    vcam.gameObject.AddComponent<LocalFpsCameraCollision>();
+            }
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;

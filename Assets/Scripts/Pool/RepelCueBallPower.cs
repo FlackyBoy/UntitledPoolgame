@@ -9,7 +9,7 @@ namespace UntitledPoolGame.Pool
     public class RepelCueBallPower : PocketSizePower
     {
         [Tooltip("Vitesse donnée à la blanche vers la poche, en m/s.")]
-        [SerializeField, Min(0.1f)] private float speed = 2.5f;
+        [SerializeField, Min(0.1f)] private float speed = 1.8f;
 
         public override PocketSizeRole Role => PocketSizeRole.Tiny;
         public override PowerType Type => PowerType.Defense;

@@ -272,13 +272,18 @@ namespace UntitledPoolGame.Player
 
         // ---------- Ledge climbing ----------
 
+        // The capsule's bottom above the root, in metres: not zero, the capsule
+        // is raised by the skin width so that the root and the model's feet sit
+        // on the ground.
+        private float CapsuleBottom => (controller.center.y - controller.height / 2f) * transform.lossyScale.y;
+
         // A ledge in front: a wall within reach, a flat top between Ledge Min
         // and Max Height above the feet, and room to stand on it.
         private bool TryFindLedge(out Vector3 top, out Vector3 wallNormal)
         {
             top = wallNormal = Vector3.zero;
             float radius = controller.radius;
-            Vector3 feet = transform.position + controller.center - Vector3.up * (controller.height / 2f);
+            Vector3 feet = transform.position + Vector3.up * CapsuleBottom;
             Vector3 forward = transform.forward;
             float reach = radius + cfg.ledgeReach;
 
@@ -321,7 +326,7 @@ namespace UntitledPoolGame.Player
         {
             climbTime = 0f;
             climbStart = transform.position;
-            Vector3 feetToRoot = transform.position - (transform.position + controller.center - Vector3.up * (controller.height / 2f));
+            Vector3 feetToRoot = -Vector3.up * CapsuleBottom;
             climbEnd = top - wallNormal * (controller.radius + 0.1f) + feetToRoot + Vector3.up * 0.02f;
             Vector3 side = Vector3.Cross(Vector3.up, wallNormal).normalized * 0.22f;
             Vector3 edge = top + wallNormal * 0.05f;
@@ -329,7 +334,7 @@ namespace UntitledPoolGame.Player
             climbHandRight = edge - side;
             horizontal = Vector3.zero;
             verticalSpeed = 0f;
-            Trace($"escalade d'un rebord de {top.y - (transform.position.y + controller.center.y - controller.height / 2f):0.00} m");
+            Trace($"escalade d'un rebord de {top.y - (transform.position.y + CapsuleBottom):0.00} m");
         }
 
         // Up first (hoisting on the hands), then over the edge.

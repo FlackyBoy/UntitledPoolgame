@@ -10,7 +10,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Durée, en secondes.")]
         [SerializeField, Min(0.5f)] private float duration = 6f;
         [Tooltip("Vitesse maximale des blanches du grand pendant ce temps, en m/s.")]
-        [SerializeField, Min(0.05f)] private float maxSpeed = 0.5f;
+        [SerializeField, Min(0.05f)] private float maxSpeed = 0.36f;
 
         public override PocketSizeRole Role => PocketSizeRole.Tiny;
         public override PowerType Type => PowerType.Attack;

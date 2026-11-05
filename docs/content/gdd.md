@@ -44,7 +44,7 @@ flowchart LR
   P -.-> G
 ```
 
-1. **Choix de la partie** dans le menu d'avant-partie, en visant et en tirant les billes : le **mode**, puis sur la bille visée le **type** (chacun son tour ou Speed Pool) et les **pouvoirs** (avec ou sans). ✅ (menu 2D 🔄)
+1. **Choix de la partie** dans le menu d'avant-partie, dans une liste : le **mode**, puis sur la ligne sélectionnée le **type** (chacun son tour ou Speed Pool) et les **pouvoirs** (avec ou sans). ✅ (menu 2D 🔄)
 2. Le joueur **prend une queue** : n'importe laquelle, à n'importe quel moment (les queues n'appartiennent à personne ; seul le tir est réservé au joueur dont c'est le tour). ✅
 3. Près de la bille blanche arrêtée, il **entre en visée** : le personnage se place derrière la queue, la caméra tourne autour de la bille. ✅
 4. Il **règle l'angle et le point de frappe** (effet), **charge** la puissance puis relâche. ✅
@@ -153,7 +153,6 @@ Les six pouvoirs de Power Wash Pool (🔄 compilés, pas encore testés) ne sort
 - Contenu prévu, pour valider le système :
   1. une **première dimension jouable** (salle + règles de base) ;
   2. une **deuxième dimension aux règles loufoques** ;
-  3. une dimension **« shooter miniature »** : le joueur est réduit sur la table, la queue devient une arme et les billes des ennemis.
 - **Chaque décor a son twist** (idées, à définir) :
 
   | Décor | Ambiance | Twist de gameplay |
@@ -161,7 +160,6 @@ Les six pouvoirs de Power Wash Pool (🔄 compilés, pas encore testés) ne sort
   | **Le bar** (décor de base) | Bar de quartier le soir, néons | Le billard « classique » : pouvoirs, objets du bar à lancer, bagarres, ragdolls |
   | **La prison hantée** | Cellules, néons qui grésillent, brouillard | La partie **bascule dans l'horreur** : lumières qui s'éteignent pendant un tir, **jump scares**, billes qui bougent seules ; un **Némésis** traque le joueur pour l'empêcher de jouer (géré par le jeu ou **incarné par l'autre joueur**, à trancher) |
   | **La base spatiale** | Station orbitale, alarmes | **Billes en apesanteur**, gravité qui change, sas qui aspire billes et joueurs |
-  | **Shooter miniature** | Le joueur rétréci sur la table | La queue devient une arme, les billes des ennemis |
 - La caméra de visée devra s'adapter à ces changements d'échelle et de vue.
 - **Salles et ambiances** 🔄 : les salles se construisent avec le **Level Maker** (outil d'éditeur : murs, portes, sols, étages, kits de décor interchangeables). Une même salle peut recevoir **plusieurs ambiances** (lumières, post-process, brouillard), chacune avec son éclairage précalculé, et en changer en cours de partie : c'est la base visuelle des dimensions. Détail dans [Outil de niveau](outils.html#level-maker).
 
@@ -207,7 +205,7 @@ Proposé le 05/10 dans le prototype [Parcours des menus](ui/parcours.html), int�
 - **Menu principal** (refait le 30/10 🔄, compilé, non testé) : **Jouer** · **Réglages** · **Quitter**.
   - **Jouer > 1 joueur** : niveau puis mode, seul à la table en attendant l'IA (qui n'est pas prête) ;
   - **Jouer > 2 joueurs** : J2 rejoint (écran partagé), niveau, puis **Mode de jeu** :
-    - **Sélection** : un mode (Classique, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size ; 9-ball et 14.1 retirés du menu et de la roue le 30/10, toujours jouables avec *Lancer sans le menu*), avec sur la bille visée le type (Y / Tab : chacun son tour ou Speed Pool) et les pouvoirs (X / P) ;
+    - **Sélection** : un mode (Classique, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size, Shooter miniature, Shooter Billard, Bowling Pool, Sumo Pool, Sumo Billard ; 9-ball et 14.1 retirés du menu et de la roue le 30/10, toujours jouables avec *Lancer sans le menu*), avec sur la ligne sélectionnée le type (Y / Tab : chacun son tour ou Speed Pool) et les pouvoirs (X / P) ;
     - **Boogie Night** : on choisit un nombre de parties (5 par défaut). Avant chaque partie, une **roue de la fortune** tire le mode, puis le type (chacun son tour ou Speed Pool) et les pouvoirs (avec ou sans), au hasard ; un mode peut sortir plusieurs fois ; Play Anywhere n'est sur la roue que si le niveau a un trou posé. Les joueurs peuvent **relancer la roue une fois** par tirage. Chaque partie gagnée rapporte un point ; la soirée s'arrête dès qu'un joueur ne peut plus être rattrapé. Égalité après la dernière partie : **ultime partie**, tirée elle aussi. Réglages dans `BoogieNightSettings`.
   - **Réglages** : pour l'instant les touches (clavier / souris et manette, réaffectables) ;
   - **Quitter** ;

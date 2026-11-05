@@ -19,8 +19,8 @@ MonoBehaviour:
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1
   explosionPrefab: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50, type: 3}
-  explosionScale: 0.15
+  explosionScale: 0.108
   explosionLifetime: 4
   spareEightBall: 1
-  blastSpeed: 0.5
-  blastRadius: 0.6
+  blastSpeed: 0.36
+  blastRadius: 0.432

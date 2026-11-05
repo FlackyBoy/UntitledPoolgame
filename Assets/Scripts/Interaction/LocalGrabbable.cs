@@ -54,7 +54,9 @@ namespace UntitledPoolGame.Interaction
         {
             if (IsHeld) return;
 
-            transform.SetParent(holder, worldPositionStays: false);
+            // Keeps its world size: the player prefab is scaled (0.72), and
+            // Drop keeps the world scale, so a shrunk cue would stay shrunk.
+            transform.SetParent(holder, worldPositionStays: true);
             transform.SetLocalPositionAndRotation(holdLocalPosition, Quaternion.Euler(holdLocalEulerAngles));
 
             rb.isKinematic = true;

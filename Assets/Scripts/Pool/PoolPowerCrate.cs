@@ -8,7 +8,7 @@ namespace UntitledPoolGame.Pool
     // ball can cross between two steps; also simpler to see (gizmo).
     public class PoolPowerCrate : MonoBehaviour
     {
-        [SerializeField] private float pickupRadius = 0.15f;
+        [SerializeField] private float pickupRadius = 0.108f;
 
         private PoolPower power;
         private bool collected;

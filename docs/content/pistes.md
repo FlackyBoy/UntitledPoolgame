@@ -85,7 +85,7 @@ Autres idées autour des pouvoirs :
   - **Caché sur la table** : celui qui se cache devient une bille parmi les autres et peut rouler un peu quand personne ne le regarde. Celui qui cherche doit rentrer la bonne bille. Rentrer une fausse bille est une faute.
   - **Caché parmi les clients** (façon *Spy Party*) : celui qui se cache ressemble aux PNJ du bar et doit faire une action discrète (rentrer une bille, toucher une caisse) sans se faire repérer.
   - À trancher : quel déguisement (objet, bille ou client), combien de temps dure une manche, et ce qui rapporte des points à chacun.
-- **Combat sur une mini table** (idée du 30/10, à rapprocher de la dimension « shooter miniature » du GDD) : les deux joueurs sont réduits sur la table et s'affrontent, à la queue (corps à corps) ou en tirant. Rien n'est décidé. Pistes de Claude :
+- **Combat sur une mini table** (idée du 30/10) : les deux joueurs sont réduits sur la table et s'affrontent. Le mode est retenu et cadré le 04/11 (voir *Mode Shooter miniature* dans la TODO) ; ce qui suit reste des idées en plus. Pistes de Claude :
   - **Façon sumo** : tomber dans une poche fait perdre la manche. On gagne en poussant l'autre dans une poche, avec un coup de queue ou en lançant une bille sur lui.
   - **Les billes comme danger** : de temps en temps, une queue géante frappe la blanche depuis le bord de la table, et des billes énormes traversent l'arène. Il faut les esquiver ou s'en servir comme projectiles.
   - **Le décor** : la craie, les bandes et les poches deviennent des obstacles, des couvertures et des pièges.
@@ -98,6 +98,36 @@ Autres idées autour des pouvoirs :
   - **Décor de table** : la craie, un verre ou un sous-bock posés sur le tapis comme abris en plus des billes.
   - **Variante à quatre** : un grand et trois petits, le dernier petit debout gagne.
   - **Points plutôt que manches** : en Boogie Night, une manche par joueur, et le score de chacun = temps tenu en petit.
+
+### Mode 4 joueurs en écran scindé (réflexion du 05/11, pas à développer pour l'instant)
+
+**Orientations données par l'utilisateur :**
+
+- **Formats** : Speed Pool et tour par tour, en chacun pour soi ou en 2 contre 2.
+- **Modes** : tous les modes sont envisagés à 4.
+- **Billes** : 7 par joueur, configurable. La forme du départ peut changer et ne plus être un triangle.
+- **Tour par tour, ceux qui attendent** : ils font ce qu'ils veulent.
+- **Attaques sur un joueur** (Vision brouillée, Commandes inversées) : on les envoie en tapant l'autre, au tour par tour et aussi en Speed Pool.
+- **Attaques sur la table** (Trou/météorite, Poche fermée, Groupe identique…) : pas de cible, elles touchent tout le monde sauf le lanceur. Au tour par tour, elles durent jusqu'au retour de son tour.
+- **Billes en 2 contre 2** : quatre groupes, chaque équipe en vide deux (14 billes par équipe, 28 sur la table).
+- **Groupes** : pleines, rayées, croix, carrés n'est qu'un exemple ; des couleurs par groupe sont possibles. La noire reste.
+- **Bille d'un autre rentrée** : même logique qu'à 2 (ça l'aide). Un peu de chaos est voulu.
+- **Pouvoirs** : des pouvoirs propres au 4 joueurs, façon carapace bleue, sont envisagés.
+- **Performances** : tester d'abord, et dégrader l'affichage si besoin.
+- **Scène de test** : R&D, pas `BarSplitscreen` (trop d'objets).
+
+**Questions ouvertes :**
+
+- **Durée d'une attaque sur un joueur, au tour par tour** : proposition de Claude, seulement le prochain tour de celui qu'on a tapé. À confirmer.
+- **Modes à repenser** : ceux qui reposent sur un duel ne se convertissent pas tels quels, comme Pocket Size (un grand contre un petit) ou Snake Pool (quelle file casser).
+
+**Pistes techniques :**
+
+- **Groupe identique en Speed Pool** : `BallDisguise` change l'aspect des billes pour toutes les caméras. Pour que le lanceur voie les vraies billes pendant que les autres sont gênés, il faudrait un rendu différent par caméra. Au tour par tour, il suffit de retirer l'effet avant son tour.
+- **Lisibilité** : à 2 m, une bille fait environ 12 pixels de haut dans un quart d'écran 1080p (24 à 2 joueurs). Des couleurs par groupe se liraient mieux que des motifs.
+- **Affichage dégradé à 4** : ombres réduites à 15-20 m et 2 cascades, SSAO coupé, ombres coupées pour les petites lumières, IK allégé pour les corps éloignés.
+- **Départ** : à voir selon le nombre de billes ; losange, grand hexagone ou plusieurs petits groupes.
+- **Premier test, sans code** : dans R&D, passer *Max Player Count* à 4 sur le `PlayerInputManager` (sans enregistrer la scène), ajouter les joueurs avec C+P et regarder le Profiler. La scène n'a que 2 points d'apparition : J3 et J4 arrivent sur J1 et J2.
 
 ### Structure « party game » (idée du 20/10)
 

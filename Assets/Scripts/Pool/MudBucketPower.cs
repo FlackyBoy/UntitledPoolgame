@@ -9,9 +9,9 @@ namespace UntitledPoolGame.Pool
     public class MudBucketPower : TablePointPower
     {
         [Tooltip("Portée de la boue (mètres) autour du point visé, au niveau 1. Seul le tapis lavé par l'adversaire est resali.")]
-        [Min(0.05f)] [SerializeField] private float radius = 0.35f;
+        [Min(0.05f)] [SerializeField] private float radius = 0.252f;
         [Tooltip("Portée au niveau 2 (pouvoir ramassé deux fois).")]
-        [Min(0.05f)] [SerializeField] private float level2Radius = 0.5f;
+        [Min(0.05f)] [SerializeField] private float level2Radius = 0.36f;
 
         public override PowerType Type => PowerType.Attack;
 

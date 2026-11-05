@@ -18,12 +18,12 @@ MonoBehaviour:
   requiresOwnTurn: 1
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1
-  captureRadius: 0.4
-  minCaptureSpeed: 0.05
-  pullAcceleration: 1.5
+  captureRadius: 0.288
+  minCaptureSpeed: 0.036
+  pullAcceleration: 1.08
   steering: 4
   maxPullDuration: 4
   pocketVfxPrefab: {fileID: 9027514048236820045, guid: effb650189dc5714e9e9801b1cfb3991, type: 3}
-  pocketVfxScale: 0.2
-  pocketVfxHeight: 0.02
+  pocketVfxScale: 0.144
+  pocketVfxHeight: 0.0144
   pocketVfxFadeOut: 1.5

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1030a16d94264ea9b94af4f654c150ad, type: 3}
+  m_Name: SnakePoolSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.SnakePoolSettings
+  linkGap: 0.15
+  joinTime: 0.25
+  pocketHop: 3
+  keepSpeedOnCollect: 1
+  minBreakSpeed: 0.108
+  breakKick: 0.7
+  releasedSpeed: 1
+  finaleSpeed: 0.864
+  scratchDropsChain: 1
+  debugLogs: 1
