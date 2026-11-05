@@ -27,6 +27,16 @@ namespace UntitledPoolGame.Pool
         private SphereCollider trigger;
         public float Radius => (trigger != null ? trigger : trigger = GetComponent<SphereCollider>()).radius * transform.lossyScale.x;
 
+        // Play Anywhere: the table is only décor, balls roll over its pockets.
+        public static void SetAllCatching(bool catching)
+        {
+            foreach (PoolPocket pocket in active)
+            {
+                if (pocket.trigger == null) pocket.trigger = pocket.GetComponent<SphereCollider>();
+                pocket.trigger.enabled = catching;
+            }
+        }
+
         // Pushes a placement spot out of every pocket. A cue ball placed
         // inside a pocket's trigger got potted again as its collider came
         // back, without a foul, and stayed frozen.

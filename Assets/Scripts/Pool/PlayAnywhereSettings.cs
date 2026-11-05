@@ -13,7 +13,7 @@ namespace UntitledPoolGame.Pool
     {
         [Header("Shot")]
         [Tooltip("Multiplie la force des tirs dans ce mode : la salle est bien plus grande qu'une table. 1 = force du billard.")]
-        [Min(0.1f)] public float shotPowerMultiplier = 2f;
+        [Min(0.1f)] public float shotPowerMultiplier = 2.3611f;
 
         [Header("Surfaces")]
         [Tooltip("Surface du sol et du décor qui n'ont pas de composant Play Anywhere Surface. Vide = frottement du tapis de billard. Le tapis de la table garde toujours le sien.")]
@@ -21,13 +21,13 @@ namespace UntitledPoolGame.Pool
 
         [Header("Hole")]
         [Tooltip("Vitesse (m/s) au-dessous de laquelle une bille qui passe sur le trou tombe dedans. Plus vite, elle passe par-dessus, comme au golf.")]
-        [Min(0.05f)] public float cupCatchSpeed = 2.2f;
+        [Min(0.05f)] public float cupCatchSpeed = 1.87f;
         [Tooltip("Part de la vitesse perdue (0 à 1) quand une bille trop rapide passe sur le trou et tape la lèvre. Assez ralentie, elle tombe quand même.")]
         [Range(0f, 1f)] public float cupLipSlowdown = 0.4f;
         [Tooltip("Déviation maximale (degrés) d'une bille qui tape la lèvre du trou, vers l'extérieur. Nulle au centre, maximale au bord.")]
         [Range(0f, 90f)] public float cupLipDeflection = 30f;
         [Tooltip("Petit saut (m/s vers le haut) d'une bille qui tape la lèvre du trou.")]
-        [Min(0f)] public float cupLipHop = 0.3f;
+        [Min(0f)] public float cupLipHop = 0.216f;
         [Tooltip("Durée (secondes) de la chute de la bille dans le trou.")]
         [Min(0.05f)] public float cupSinkTime = 0.4f;
 
@@ -48,16 +48,70 @@ namespace UntitledPoolGame.Pool
         [Header("Strokes")]
         [Tooltip("Nombre de coups au plus sur le trou. Arrivé là sans avoir rentré sa bille, le joueur a fini avec ce score. 0 = pas de limite.")]
         [Min(0)] public int maxStrokes = 10;
-        [Tooltip("Coups de pénalité quand la bille sort des limites (zone hors limites, poche de la table, chute sous le parcours). Elle revient là où elle s'était arrêtée en dernier.")]
+        [Tooltip("Coups de pénalité quand la bille sort des limites (zone hors limites, chute sous le parcours), pour son propriétaire, même si c'est l'autre bille qui l'a sortie. Elle revient là où elle s'était arrêtée en dernier.")]
         [Min(0)] public int outOfBoundsPenalty = 1;
+        [Tooltip("Message à l'écran du joueur dont la bille sort sur son propre tir. {0} = la pénalité. Vide = aucun.")]
+        public string outOfBoundsShout = "Hors limites ! +{0}";
+        [Tooltip("Message à l'écran du joueur dont la bille est sortie par l'autre. {0} = la pénalité, {1} = le numéro de l'autre joueur. Vide = aucun.")]
+        public string knockedOutShout = "Sorti par J{1} ! +{0}";
+        [Tooltip("Message à l'écran du joueur qui vient de sortir la bille de l'autre. Vide = aucun.")]
+        public string knockOutCheerShout = "Bien joué !";
         [Tooltip("Une bille qui tombe plus bas que ce nombre de mètres sous le départ du trou est hors limites (tombée derrière le décor).")]
         [Min(0.2f)] public float outOfBoundsDepth = 2f;
+
+        [Header("Speed Pool clock")]
+        [Tooltip("Speed Pool : secondes laissées à l'autre joueur quand le premier a rentré sa bille. Le chrono s'arrête pendant la pose. À la fin : Unfinished Penalty, sa bille revient là où elle était arrêtée, et la manche s'arrête ; le chrono repart à la manche suivante. 0 = pas de chrono.")]
+        [Min(0f)] public float finishClockTime = 30f;
+        [Tooltip("Message à l'écran de l'autre joueur quand le chrono part. {0} = ses secondes. Vide = aucun.")]
+        public string finishClockShout = "Plus que {0} s !";
+        [Tooltip("Message à son écran à la fin du chrono. {0} = la pénalité. Vide = aucun.")]
+        public string finishClockEndShout = "Trop tard ! +{0}";
+
+        [Header("Signs (panneaux du parcours)")]
+        [Tooltip("Modèle des panneaux d'orientation posés sur les côtés du parcours (composant Play Anywhere Sign). Vide = pas de panneaux. Le prefab Panneau est créé par Ensure Config Assets Exist.")]
+        public PlayAnywhereSign signPrefab;
+        [Tooltip("Distance (mètres) entre deux panneaux le long du parcours, un côté puis l'autre. 0 = pas de panneaux.")]
+        [Min(0f)] public float signSpacing = 4f;
+        [Tooltip("Écart (mètres) entre le bord du couloir et le panneau.")]
+        [Min(0f)] public float signSideMargin = 0.4f;
+        [Tooltip("Taille des panneaux (1 = 1,4 m de haut, planche de 90 cm).")]
+        [Min(0.1f)] public float signSize = 1f;
+        [Tooltip("Angle (degrés) dont les panneaux le long du parcours se tournent vers le joueur qui arrive. 0 = parallèles au parcours, 90 = face à lui.")]
+        [Range(0f, 90f)] public float signFacingAngle = 25f;
+        [Tooltip("Un point où le parcours tourne d'au moins cet angle (degrés) reçoit un panneau de virage, à l'extérieur, face au joueur qui arrive.")]
+        [Range(1f, 180f)] public float signTurnAngle = 30f;
+
+        [Header("Flag Marker (flèches néon au-dessus du drapeau et de la caisse)")]
+        [Tooltip("Modèle d'une flèche flottante : elle pointe le long de son +X, et ses matériaux émissifs s'allument chacun leur tour (couleurs réglées sur les matériaux Neon_*). Vide = pas de flèches. Le prefab Repere est créé par Ensure Config Assets Exist. Nombre, taille et position : sur chaque trou.")]
+        public GameObject flagMarkerPrefab;
+        [Tooltip("Modèle d'une flèche au-dessus de la caisse, pendant la pose : même principe, autre forme et autres couleurs, pour ne pas la confondre avec celle du drapeau (matériaux Neon_Caisse_*). Vide = pas de flèches. Le prefab RepereCaisse est créé par Ensure Config Assets Exist. Nombre, taille et position : sur la caisse.")]
+        public GameObject crateMarkerPrefab;
+        [Tooltip("Hauteur (mètres) des rebonds, le long de la flèche.")]
+        [Min(0f)] public float flagMarkerBounceHeight = 0.15f;
+        [Tooltip("Rebonds par seconde de chaque panneau.")]
+        [Min(0f)] public float flagMarkerBounceRate = 1.5f;
+        [Tooltip("Clignotements par seconde. 0 = pas de clignotement.")]
+        [Min(0f)] public float flagMarkerBlinkRate = 1.5f;
+
+        [Header("Course Wall (mur de lumière)")]
+        [Tooltip("Matériau du mur de lumière sur les bords de la zone de jeu : couleur, transparence et faisceaux se règlent dessus. Vide = pas de mur. Créé par Ensure Config Assets Exist.")]
+        public Material courseWallMaterial;
+        [Tooltip("Hauteur (mètres) du mur de lumière. 0 = pas de mur.")]
+        [Min(0f)] public float courseWallHeight = 1.2f;
 
         [Header("Objects (crate and placement)")]
         [Tooltip("Objets que la caisse peut proposer (prefab, chance relative, échelle). Remplie par Ensure Config Assets Exist avec des objets du pack Forest Bar.")]
         public List<PlayAnywherePropChoice> props = new List<PlayAnywherePropChoice>();
         [Tooltip("Objets posés dans la caisse à chaque manche, tirés au hasard (un par joueur au moins ; celui que l'autre prend n'est plus là).")]
         [Min(1)] public int crateChoices = 3;
+        [Tooltip("Plus grande largeur (mètres) d'un objet sur la caisse et dans les mains : les plus grands y sont réduits, et retrouvent leur vraie taille une fois posés (l'aperçu la montre). 0 = toujours leur vraie taille.")]
+        [Min(0f)] public float crateItemMaxSize = 0.55f;
+        [Tooltip("Largeur maximale d'un objet posé, en part de la largeur de la zone de jeu là où il est posé : 0,2 = un cinquième (6 m de large : 1,2 m ; 1 m de large : 20 cm ; 50 cm de large : 10 cm). Les objets ne sont jamais agrandis, ni réduits sous Item Min Size. 0 = pas d'adaptation.")]
+        [Range(0f, 1f)] public float itemCourseShare = 0.2f;
+        [Tooltip("Largeur (mètres) sous laquelle Item Course Share ne réduit plus un objet posé. La bille fait environ 6 cm de large.")]
+        [Min(0.01f)] public float itemMinSize = 0.08f;
+        [Tooltip("Hauteur maximale (mètres) d'un objet, partout : les plus hauts sont réduits en entier, sans changer de forme (cône, portail, ventilateur). Les plaques, plates, n'en dépendent pas. 0 = pas de limite.")]
+        [Min(0f)] public float itemMaxHeight = 0.2f;
         [Tooltip("Pour tester : la caisse propose tous les objets de Props (une fois chacun) à chaque manche, au lieu de Crate Choices tirés au hasard. Plus rapide encore : glisser le prefab d'un objet à effet dans la scène, il marche sans passer par la caisse.")]
         public bool crateOffersAll;
         [Tooltip("Distance (mètres) jusqu'où l'on peut poser son objet, dans la direction du regard.")]

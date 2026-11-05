@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aee39909fc2ca3946bfa1e2920ed2ae6, type: 3}
   m_Name: Moquette
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PlayAnywhereSurfaceType
-  rollingFriction: 1.5
-  slideFriction: 4
+  rollingFriction: 1.08
+  slideFriction: 2.88
   bounciness: 0.05
   materials: []
   keywords:

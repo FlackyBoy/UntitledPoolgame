@@ -9,14 +9,14 @@ namespace UntitledPoolGame.PoolEditor
 {
     // Tools > Pool > Play Anywhere > Ajouter la pose allongée au joueur: adds
     // to the player's Animator Controller a full-body layer (weight 0,
-    // driven from code by LocalPoolAimController) whose "Prone" state loops
-    // EverydayMotionPack's male_idle_on_floor: the lying stance while
-    // aiming. Empty is the default state and writes nothing, so at weight 0
+    // driven from code by LocalPoolAimController) whose "Prone" state plays
+    // EverydayMotionPack's male_act_lie_face_down: the lying stance while
+    // aiming, on the belly to shoot. Empty is the default state and writes nothing, so at weight 0
     // nothing changes. Run again to rebuild.
     public static class PlayAnywherePoseTools
     {
         private const string PlayerPrefab = "Assets/Prefabs/PlayerLocal/New.prefab";
-        private const string ProneClipFile = "@male_idle_on_floor.FBX";
+        private const string ProneClipFile = "@male_act_lie_face_down.FBX";
 
         [MenuItem("Tools/Pool/Play Anywhere/Ajouter la pose allongée au joueur", priority = 70)]
         private static void AddProneLayer()

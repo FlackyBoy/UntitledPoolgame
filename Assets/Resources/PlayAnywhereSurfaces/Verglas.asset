@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aee39909fc2ca3946bfa1e2920ed2ae6, type: 3}
   m_Name: Verglas
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PlayAnywhereSurfaceType
-  rollingFriction: 0.03
-  slideFriction: 0.3
+  rollingFriction: 0.0216
+  slideFriction: 0.216
   bounciness: 0.3
   materials: []
   keywords: []

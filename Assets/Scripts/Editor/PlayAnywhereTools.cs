@@ -15,7 +15,9 @@ namespace UntitledPoolGame.PoolEditor
     // - Tools > Pool > Play Anywhere > Créer la caisse: the crate the
     //   players take their object from at each round (PlayAnywhereCrate).
     // - Tools > Pool > Play Anywhere > Générer les objets de la caisse: the
-//   crate's prefabs (block, ramp, cone, gadgets), added to Props.
+//   crate's prefabs (block, ramp, cone, gadgets), added to Props, and the
+//   course's sign (Sign Prefab), the signs floating above the flag (Flag
+//   Marker Prefab) and the material of its wall of light.
 // - Tools > Pool > Play Anywhere > Surface de la sélection > ...: the
     //   selected décor objects roll and bounce like parquet, carpet...
     // Both undoable. The scene still needs a "Lancer sans le menu" set to
@@ -111,7 +113,10 @@ namespace UntitledPoolGame.PoolEditor
             Debug.Log($"[PlayAnywhere] Objets dans {PropFolder} : {made.Length}, ajoutés à Props de PlayAnywhereSettings.");
         }
 
-        private static readonly string[] PropNames = { "Bloc", "Rampe", "Cone", "Portail", "Tuyau", "Ventilateur", "Ressort", "Glue", "Verglas", "Destructeur" };
+        private static readonly string[] PropNames = { "Bloc", "Rampe", "Cone", "Portail", "Tuyau", "Ventilateur", "Ressort", "Glue", "Verglas", "Destructeur", SignName, FlagMarkerName, CrateMarkerName };
+        private const string SignName = "Panneau";
+        private const string FlagMarkerName = "Repere";
+        private const string CrateMarkerName = "RepereCaisse";
 
         // A prefab made by an older version of this tool, rebuilt in place
         // (same file, so Props keeps pointing at it): the one-piece pipe.
@@ -127,13 +132,19 @@ namespace UntitledPoolGame.PoolEditor
             EditorApplication.playModeStateChanged += state =>
             {
                 if (state != PlayModeStateChange.ExitingEditMode) return;
+                if (AssetDatabase.LoadAssetAtPath<Material>(CourseWallMaterialPath) == null)
+                {
+                    PoolTableBuilder.EnsurePlayAnywhereSettingsAsset();
+                    AssetDatabase.SaveAssets();
+                    Debug.Log($"[PlayAnywhere] Matériau du mur de lumière manquant : créé ({CourseWallMaterialPath}) et ajouté à PlayAnywhereSettings.");
+                }
                 foreach (string name in PropNames)
                 {
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PropFolder}/{name}.prefab");
                     if (prefab != null && !IsOutdated(prefab)) continue;
                     PoolTableBuilder.EnsurePlayAnywhereSettingsAsset();
                     AssetDatabase.SaveAssets();
-                    Debug.Log($"[PlayAnywhere] Objets de la caisse manquants ou d'une ancienne version ({name}…) : créés dans {PropFolder} et ajoutés à Props.");
+                    Debug.Log($"[PlayAnywhere] Objets manquants ou d'une ancienne version ({name}…) : créés dans {PropFolder} et ajoutés à PlayAnywhereSettings.");
                     return;
                 }
             };
@@ -157,6 +168,51 @@ namespace UntitledPoolGame.PoolEditor
                 EnsureBuiltPrefab("Verglas", (root, parts) => BuildPlate(root, parts, "Verglas", 1.2f, new Color(0.65f, 0.9f, 1f))),
                 EnsureBuiltPrefab("Destructeur", BuildDestroyer),
             };
+        }
+
+        private const string CourseWallMaterialPath = MaterialFolder + "/Parcours_Mur.mat";
+
+        // The wall of light's material, kept when it exists (its beams and
+        // colour are tuned on it).
+        internal static Material EnsureCourseWallMaterial()
+        {
+            var m = AssetDatabase.LoadAssetAtPath<Material>(CourseWallMaterialPath);
+            if (m != null) return m;
+            Shader shader = Shader.Find("UntitledPool/PlayAnywhereCourseWall");
+            if (shader == null)
+            {
+                Debug.LogWarning("[PlayAnywhere] Shader UntitledPool/PlayAnywhereCourseWall introuvable : pas de mur de lumière. Regarde s'il a une erreur dans la console.");
+                return null;
+            }
+            if (!AssetDatabase.IsValidFolder(MaterialFolder)) AssetDatabase.CreateFolder("Assets/Materials", "PlayAnywhere");
+            m = new Material(shader) { name = "Parcours_Mur" };
+            AssetDatabase.CreateAsset(m, CourseWallMaterialPath);
+            return m;
+        }
+
+        // The course's sign, kept when it exists. Not in the crate: made apart
+        // from the pieces.
+        internal static PlayAnywhereSign EnsureSignPrefab()
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
+            if (!AssetDatabase.IsValidFolder(PropFolder)) AssetDatabase.CreateFolder("Assets/Prefabs", "PlayAnywhere");
+            return EnsureBuiltPrefab(SignName, BuildSign).GetComponent<PlayAnywhereSign>();
+        }
+
+        // The neon arrow floating above the flag, kept when it exists.
+        internal static GameObject EnsureFlagMarkerPrefab()
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
+            if (!AssetDatabase.IsValidFolder(PropFolder)) AssetDatabase.CreateFolder("Assets/Prefabs", "PlayAnywhere");
+            return EnsureBuiltPrefab(FlagMarkerName, BuildFlagMarker);
+        }
+
+        // The neon arrow floating above the crate, kept when it exists.
+        internal static GameObject EnsureCrateMarkerPrefab()
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
+            if (!AssetDatabase.IsValidFolder(PropFolder)) AssetDatabase.CreateFolder("Assets/Prefabs", "PlayAnywhere");
+            return EnsureBuiltPrefab(CrateMarkerName, BuildCrateMarker);
         }
 
         // A prefab of several parts (children with their own mesh and
@@ -303,6 +359,64 @@ namespace UntitledPoolGame.PoolEditor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        // A wooden post and a battered board, white with a black frame and
+        // five chevrons along +X (PlayAnywhereSign turns the board when they
+        // must point the other way). No collider: only décor.
+        private static void BuildSign(GameObject root, PartMaker parts)
+        {
+            Material wood = Colour("Panneau_Bois", new Color(0.85f, 0.5f, 0.18f));
+            Transform post = parts.Add("Poteau", BoxMesh(new Vector3(0.12f, 1.4f, 0.08f)), wood, new Vector3(0f, 0f, -0.055f));
+            parts.Add("Veines", SignGrainMesh(0.04f), Colour("Panneau_Veines", new Color(0.3f, 0.17f, 0.07f)), Vector3.zero, post);
+
+            var board = new GameObject("Planche").transform;
+            board.SetParent(root.transform, false);
+            board.localPosition = new Vector3(0f, 1.1f, 0f);
+            parts.Add("Bois", SignBoardMesh(), wood, Vector3.zero, board);
+            Transform face = parts.Add("Face", SignFaceMesh(), Colour("Panneau_Blanc", new Color(0.95f, 0.95f, 0.93f)), Vector3.zero, board);
+            Transform marks = parts.Add("Marquage", SignMarksMesh(), Colour("Panneau_Noir", new Color(0.02f, 0.02f, 0.02f)), Vector3.zero, board);
+            // Paint on the board: their shadows would only flicker on it.
+            face.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            marks.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            var sign = root.AddComponent<PlayAnywhereSign>();
+            var so = new SerializedObject(sign);
+            so.FindProperty("board").objectReferenceValue = board;
+            so.FindProperty("post").objectReferenceValue = post;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // A neon arrow along +X, its root at the centre: a dark plate crossed by
+        // the tubes, so it reads from both sides. Each tube has its own material:
+        // PlayAnywhereArrowRing lights them in this order, tail to tip.
+        private static void BuildFlagMarker(GameObject root, PartMaker parts)
+        {
+            parts.Add("Fond", NeonPlateMesh(), Colour("Panneau_Noir", new Color(0.02f, 0.02f, 0.02f)), Vector3.zero);
+            AddNeon(parts, "Neon_", "Contour", NeonOutline, true, new Color(4f, 0.25f, 0.15f));
+            AddNeon(parts, "Neon_", "Interieur", NeonInline, true, new Color(1.6f, 3.5f, 0.3f));
+            AddNeon(parts, "Neon_", "Chevron 1", NeonChevronBack, false, new Color(4f, 0.7f, 0.1f));
+            AddNeon(parts, "Neon_", "Chevron 2", NeonChevronFront, false, new Color(0.8f, 4f, 0.4f));
+        }
+
+        // The crate's arrow, not to be taken for the flag's: no shaft, a notched
+        // tail, and cool colours where the flag's are warm. Same tubes, same order.
+        private static void BuildCrateMarker(GameObject root, PartMaker parts)
+        {
+            parts.Add("Fond", NeonNotchedPlateMesh(), Colour("Panneau_Noir", new Color(0.02f, 0.02f, 0.02f)), Vector3.zero);
+            AddNeon(parts, "Neon_Caisse_", "Contour", CrateNeonOutline, true, new Color(0.2f, 2.5f, 4f));
+            AddNeon(parts, "Neon_Caisse_", "Interieur", CrateNeonInline, true, new Color(4f, 0.3f, 3f));
+            AddNeon(parts, "Neon_Caisse_", "Chevron 1", CrateNeonChevronBack, false, new Color(0.5f, 1f, 4f));
+            AddNeon(parts, "Neon_Caisse_", "Chevron 2", CrateNeonChevronFront, false, new Color(4f, 1.5f, 3f));
+        }
+
+        // Off, a tube is a dim version of its colour, like an unlit neon.
+        private static void AddNeon(PartMaker parts, string materialPrefix, string name, Vector2[] points, bool closed, Color glow)
+        {
+            Color unlit = new Color(glow.r * 0.06f, glow.g * 0.06f, glow.b * 0.06f);
+            Material material = EmissiveColour(materialPrefix + name.Replace(" ", ""), unlit, glow);
+            Transform tube = parts.Add(name, NeonTubeMesh(points, closed), material, Vector3.zero);
+            tube.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
         // A thin square plate with bevelled edges (the ball rolls onto it),
         // marked as its surface: glue brakes, ice glides.
         private static void BuildPlate(GameObject root, PartMaker parts, string surfaceName, float size, Color colour)
@@ -364,7 +478,7 @@ namespace UntitledPoolGame.PoolEditor
         {
             private readonly System.Collections.Generic.List<Vector3> vertices = new System.Collections.Generic.List<Vector3>();
             private readonly System.Collections.Generic.List<int> triangles = new System.Collections.Generic.List<int>();
-            private readonly Vector3 centre;
+            private Vector3 centre;
 
             public MeshBuilder(Vector3 centre) { this.centre = centre; }
 
@@ -382,6 +496,25 @@ namespace UntitledPoolGame.PoolEditor
             {
                 Tri(a, b, c);
                 Tri(a, c, d);
+            }
+
+            // A square bar from a to b in the XY plane, long enough at both ends
+            // for bars that meet to close their corner.
+            public void Bar(Vector3 a, Vector3 b, float thickness)
+            {
+                Vector3 along = (b - a).normalized * (thickness * 0.5f);
+                Vector3 side = Vector3.Cross(Vector3.forward, along);
+                Vector3 depth = Vector3.forward * (thickness * 0.5f);
+                Vector3 start = a - along, end = b + along;
+                centre = (a + b) * 0.5f;
+                Vector3 s0 = start - side - depth, s1 = start + side - depth, s2 = start + side + depth, s3 = start - side + depth;
+                Vector3 e0 = end - side - depth, e1 = end + side - depth, e2 = end + side + depth, e3 = end - side + depth;
+                Quad(s0, s1, s2, s3);
+                Quad(e0, e1, e2, e3);
+                Quad(s0, s1, e1, e0);
+                Quad(s1, s2, e2, e1);
+                Quad(s2, s3, e3, e2);
+                Quad(s3, s0, e0, e3);
             }
 
             public Mesh Build()
@@ -472,6 +605,165 @@ namespace UntitledPoolGame.PoolEditor
                 b.Tri(p0, p1, apex);
                 b.Tri(p0, p1, Vector3.zero);
             }
+            return b.Build();
+        }
+
+        private const float SignBoardWidth = 0.9f;
+        private const float SignBoardThickness = 0.03f;
+        private const float SignPaintLift = 0.005f;
+
+        // The board's battered outline, going round its centre (each point
+        // seen from it after the last, so a fan fills it), for a width of 1.
+        private static readonly Vector2[] SignOutline =
+        {
+            new Vector2(-0.5f, 0.145f), new Vector2(-0.03f, 0.19f), new Vector2(0.44f, 0.283f),
+            new Vector2(0.44f, 0.17f), new Vector2(0.46f, 0.14f), new Vector2(0.445f, 0f),
+            new Vector2(0.457f, -0.043f), new Vector2(0.5f, -0.223f), new Vector2(0.085f, -0.228f),
+            new Vector2(-0.43f, -0.287f), new Vector2(-0.46f, -0.096f), new Vector2(-0.45f, -0.04f),
+        };
+
+        private static Vector3 OutlinePoint(int index, float scale, float z)
+        {
+            Vector2 p = SignOutline[index % SignOutline.Length] * (SignBoardWidth * scale);
+            return new Vector3(p.x, p.y, z);
+        }
+
+        // Both faces and the edge. The centre is the middle of its thickness:
+        // MeshBuilder turns each triangle away from it.
+        private static Mesh SignBoardMesh()
+        {
+            float z = SignBoardThickness * 0.5f;
+            var b = new MeshBuilder(Vector3.zero);
+            for (int i = 0; i < SignOutline.Length; i++)
+            {
+                b.Tri(new Vector3(0f, 0f, z), OutlinePoint(i, 1f, z), OutlinePoint(i + 1, 1f, z));
+                b.Tri(new Vector3(0f, 0f, -z), OutlinePoint(i, 1f, -z), OutlinePoint(i + 1, 1f, -z));
+                b.Quad(OutlinePoint(i, 1f, -z), OutlinePoint(i + 1, 1f, -z), OutlinePoint(i + 1, 1f, z), OutlinePoint(i, 1f, z));
+            }
+            return b.Build();
+        }
+
+        // White paint, a little inside the outline: the wood shows around it.
+        private static Mesh SignFaceMesh()
+        {
+            float z = SignBoardThickness * 0.5f + SignPaintLift;
+            var b = new MeshBuilder(Vector3.zero);
+            for (int i = 0; i < SignOutline.Length; i++)
+                b.Tri(new Vector3(0f, 0f, z), OutlinePoint(i, 0.97f, z), OutlinePoint(i + 1, 0.97f, z));
+            return b.Build();
+        }
+
+        // The black frame and chevrons on the paint, tilted like the board.
+        private static Mesh SignMarksMesh()
+        {
+            float z = SignBoardThickness * 0.5f + SignPaintLift * 2f;
+            Quaternion tilt = Quaternion.Euler(0f, 0f, 6f);
+            Vector3 middle = new Vector3(0f, -0.02f, 0f) * SignBoardWidth;
+            Vector3 P(float x, float y) => middle + tilt * (new Vector3(x, y, 0f) * SignBoardWidth) + Vector3.forward * z;
+            var b = new MeshBuilder(Vector3.zero);
+
+            const float OuterX = 0.425f, OuterY = 0.15f, InnerX = 0.37f, InnerY = 0.095f;
+            b.Quad(P(-OuterX, InnerY), P(OuterX, InnerY), P(OuterX, OuterY), P(-OuterX, OuterY));
+            b.Quad(P(-OuterX, -OuterY), P(OuterX, -OuterY), P(OuterX, -InnerY), P(-OuterX, -InnerY));
+            b.Quad(P(-OuterX, -InnerY), P(-InnerX, -InnerY), P(-InnerX, InnerY), P(-OuterX, InnerY));
+            b.Quad(P(InnerX, -InnerY), P(OuterX, -InnerY), P(OuterX, InnerY), P(InnerX, InnerY));
+
+            const float Pitch = 0.14f, Height = 0.07f, Band = 0.055f, Tip = 0.05f;
+            for (int i = 0; i < 5; i++)
+            {
+                float x = -0.3325f + i * Pitch;
+                b.Quad(P(x, Height), P(x + Band, Height), P(x + Band + Tip, 0f), P(x + Tip, 0f));
+                b.Quad(P(x, -Height), P(x + Band, -Height), P(x + Band + Tip, 0f), P(x + Tip, 0f));
+            }
+            return b.Build();
+        }
+
+        // The neon arrow's lines, for a length of 1.
+        private static readonly Vector2[] NeonOutline =
+        {
+            new Vector2(-0.5f, 0.16f), new Vector2(0.08f, 0.16f), new Vector2(0.08f, 0.36f), new Vector2(0.5f, 0f),
+            new Vector2(0.08f, -0.36f), new Vector2(0.08f, -0.16f), new Vector2(-0.5f, -0.16f),
+        };
+        private static readonly Vector2[] NeonInline =
+        {
+            new Vector2(-0.43f, 0.09f), new Vector2(0.15f, 0.09f), new Vector2(0.15f, 0.2f), new Vector2(0.37f, 0f),
+            new Vector2(0.15f, -0.2f), new Vector2(0.15f, -0.09f), new Vector2(-0.43f, -0.09f),
+        };
+        private static readonly Vector2[] NeonChevronBack = { new Vector2(-0.1f, 0.055f), new Vector2(-0.03f, 0f), new Vector2(-0.1f, -0.055f) };
+        private static readonly Vector2[] NeonChevronFront = { new Vector2(0.03f, 0.055f), new Vector2(0.1f, 0f), new Vector2(0.03f, -0.055f) };
+
+        // The crate's arrow.
+        private static readonly Vector2[] CrateNeonOutline =
+        {
+            new Vector2(-0.42f, 0.34f), new Vector2(0f, 0.34f), new Vector2(0.5f, 0f), new Vector2(0f, -0.34f),
+            new Vector2(-0.42f, -0.34f), new Vector2(-0.08f, 0f),
+        };
+        private static readonly Vector2[] CrateNeonInline =
+        {
+            new Vector2(-0.25f, 0.22f), new Vector2(-0.03f, 0.22f), new Vector2(0.3f, 0f), new Vector2(-0.03f, -0.22f),
+            new Vector2(-0.25f, -0.22f), new Vector2(0.03f, 0f),
+        };
+        private static readonly Vector2[] CrateNeonChevronBack = { new Vector2(0.06f, 0.07f), new Vector2(0.13f, 0f), new Vector2(0.06f, -0.07f) };
+        private static readonly Vector2[] CrateNeonChevronFront = { new Vector2(0.14f, 0.07f), new Vector2(0.21f, 0f), new Vector2(0.14f, -0.07f) };
+
+        private const float NeonTubeThickness = 0.028f;
+        private const float NeonPlateThickness = 0.008f;
+
+        private static Vector3 NeonPoint(Vector2 point) => new Vector3(point.x, point.y, 0f) * SignBoardWidth;
+
+        private static Mesh NeonTubeMesh(Vector2[] points, bool closed)
+        {
+            var b = new MeshBuilder(Vector3.zero);
+            int segments = closed ? points.Length : points.Length - 1;
+            for (int i = 0; i < segments; i++)
+                b.Bar(NeonPoint(points[i]), NeonPoint(points[(i + 1) % points.Length]), NeonTubeThickness * SignBoardWidth);
+            return b.Build();
+        }
+
+        // The outline filled, both faces: the shaft, then the head.
+        private static Mesh NeonPlateMesh()
+        {
+            Vector2[] o = NeonOutline;
+            var b = new MeshBuilder(Vector3.zero);
+            foreach (float side in new[] { 1f, -1f })
+            {
+                Vector3 z = Vector3.forward * (NeonPlateThickness * 0.5f * side);
+                b.Quad(NeonPoint(o[0]) + z, NeonPoint(o[1]) + z, NeonPoint(o[5]) + z, NeonPoint(o[6]) + z);
+                b.Tri(NeonPoint(o[2]) + z, NeonPoint(o[3]) + z, NeonPoint(o[4]) + z);
+            }
+            return b.Build();
+        }
+
+        // The crate's outline filled, both faces: a fan from a point every edge
+        // can be seen from, the notch included.
+        private static Mesh NeonNotchedPlateMesh()
+        {
+            Vector2[] o = CrateNeonOutline;
+            var b = new MeshBuilder(Vector3.zero);
+            foreach (float side in new[] { 1f, -1f })
+            {
+                Vector3 z = Vector3.forward * (NeonPlateThickness * 0.5f * side);
+                Vector3 apex = NeonPoint(new Vector2(0.1f, 0f)) + z;
+                for (int i = 0; i < o.Length; i++)
+                    b.Tri(apex, NeonPoint(o[i]) + z, NeonPoint(o[(i + 1) % o.Length]) + z);
+            }
+            return b.Build();
+        }
+
+        // Two dark streaks of grain down the post, front and back, a hair off
+        // its faces.
+        private static Mesh SignGrainMesh(float halfDepth)
+        {
+            float z = halfDepth + 0.002f;
+            var b = new MeshBuilder(new Vector3(0f, 0.7f, 0f));
+            void Streak(float xLow, float xHigh, float yLow, float yHigh, float width)
+            {
+                foreach (float s in new[] { 1f, -1f })
+                    b.Quad(new Vector3(xLow, yLow, z * s), new Vector3(xLow + width, yLow, z * s),
+                           new Vector3(xHigh + width, yHigh, z * s), new Vector3(xHigh, yHigh, z * s));
+            }
+            Streak(-0.04f, -0.015f, 0.03f, 0.82f, 0.02f);
+            Streak(0.03f, 0.01f, 0.12f, 0.7f, 0.015f);
             return b.Build();
         }
 
@@ -586,6 +878,21 @@ namespace UntitledPoolGame.PoolEditor
             m = new Material(shader) { name = name };
             m.SetColor("_BaseColor", colour);
             AssetDatabase.CreateAsset(m, path);
+            return m;
+        }
+
+        // The same, opaque, glowing with its own light.
+        private static Material EmissiveColour(string name, Color colour, Color emission)
+        {
+            string path = $"{MaterialFolder}/{name}.mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m != null) return m;
+            m = Colour(name, colour);
+            if (m == null) return null;
+            m.EnableKeyword("_EMISSION");
+            m.SetColor("_EmissionColor", emission);
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            EditorUtility.SetDirty(m);
             return m;
         }
 
