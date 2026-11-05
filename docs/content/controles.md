@@ -128,6 +128,8 @@ Le grand vise et tire comme d'habitude, avec sa blanche, dès la fin du compte �
 
 Courir : action *Sprint* (Maj), en avançant. Pas de visée de billard, de coups de poing ni de garde dans ce mode. Les touches sont celles réglées dans *Réglages > Touches*.
 
+## Sumo Pool et Sumo Billard
+
 | Action | Clavier / souris | Manette |
 |---|---|---|
 | Rouler (par rapport à la vue) | action *Move* | action *Move* |

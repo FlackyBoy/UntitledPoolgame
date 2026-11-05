@@ -59,6 +59,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureShooterMiniSettingsAsset();
             EnsureShooterPowerAssets();
             EnsureBowlingPoolSettingsAsset();
+            EnsureSumoPoolSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -216,6 +217,15 @@ namespace UntitledPoolGame.PoolEditor
             const string path = "Assets/Resources/BowlingPoolSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<BowlingPoolSettings>(path) != null) return;
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<BowlingPoolSettings>(), path);
+        }
+
+        // Sumo Pool: the rounds, the square table, the balls and their camera.
+        private static void EnsureSumoPoolSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/SumoPoolSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<SumoPoolSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SumoPoolSettings>(), path);
         }
 
         // Snake Pool: the chains behind the cue balls.

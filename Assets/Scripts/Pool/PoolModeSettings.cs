@@ -50,6 +50,8 @@ namespace UntitledPoolGame.Pool
             new ModeEntry(PoolGameMode.ShooterMini, false, true, PoolMatchType.SpeedPool, true),
             new ModeEntry(PoolGameMode.ShooterPool, false, true, PoolMatchType.SpeedPool, true),
             new ModeEntry(PoolGameMode.BowlingPool, true, false, PoolMatchType.TurnBased),
+            new ModeEntry(PoolGameMode.SumoPool, false, true, PoolMatchType.SpeedPool),
+            new ModeEntry(PoolGameMode.SumoBilliard, false, true, PoolMatchType.SpeedPool),
         };
 
         private static PoolModeSettings instance;
