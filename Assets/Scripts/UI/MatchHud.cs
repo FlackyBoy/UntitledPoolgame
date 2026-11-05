@@ -630,6 +630,8 @@ namespace UntitledPoolGame.Core
             PocketSizeRuleSet pocketSize = rules.Mode == PoolGameMode.PocketSize ? PocketSizeRuleSet.Current : null;
             // Shooter miniature: health and eliminations. Shooter Billard: group and balls left.
             ShooterMiniRuleSet shooter = ShooterMiniRuleSet.Current;
+            // Bowling Pool: the score, the frame and the throws so far.
+            BowlingPoolRuleSet bowling = rules.Mode == PoolGameMode.BowlingPool ? BowlingPoolRuleSet.Current : null;
             // Bit n set = ball n still on the table.
             int onTable = 0;
             foreach (PoolBall ball in PoolBall.Active)
@@ -641,6 +643,7 @@ namespace UntitledPoolGame.Core
                 : golf != null ? (7, score, golf.RoundStateKey(p))
                 : pocketSize != null ? (8, pocketSize.PlateKey(p), 0)
                 : shooter != null ? (9, shooter.PlateKey(p), 0)
+                : bowling != null ? (10, bowling.PlateKey(p), 0)
                 : hasScore ? (2, score, target)
                 : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), 0)
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
@@ -666,6 +669,11 @@ namespace UntitledPoolGame.Core
             {
                 Text(h.plateBalls, shooter.HealthLabel(p), titleFont, 34, Ink);
                 Text(h.plateBalls, $"  ·  {shooter.DescribeScore(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (bowling != null)
+            {
+                Text(h.plateBalls, $"{bowling.TotalOf(p)}", titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {bowling.DescribeProgress(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
             }
             else if (hasScore)
             {

@@ -38,5 +38,8 @@ namespace UntitledPoolGame.Pool
         // The same fight, but the first to pot their group wins; a hit only
         // costs time (ShooterPoolRuleSet).
         ShooterPool,
+        // Ten real pins at the far end of the table, frames scored as in
+        // bowling (BowlingPoolRuleSet).
+        BowlingPool,
     }
 }
