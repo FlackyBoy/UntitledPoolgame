@@ -58,6 +58,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePocketSizeAssets();
             EnsureShooterMiniSettingsAsset();
             EnsureShooterPowerAssets();
+            EnsureBowlingPoolSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -206,6 +207,15 @@ namespace UntitledPoolGame.PoolEditor
             modes.arraySize = 2;
             modes.GetArrayElementAtIndex(0).intValue = (int)PoolGameMode.ShooterMini;
             modes.GetArrayElementAtIndex(1).intValue = (int)PoolGameMode.ShooterPool;
+        }
+
+        // Bowling Pool: frames, the pins' size and physics.
+        private static void EnsureBowlingPoolSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/BowlingPoolSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<BowlingPoolSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<BowlingPoolSettings>(), path);
         }
 
         // Snake Pool: the chains behind the cue balls.

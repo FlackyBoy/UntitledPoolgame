@@ -4,6 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-11-05
+- **Bowling Pool, nouveau mode** (compilé, physique non testée) : dix vraies quilles au fond de la table, la blanche pour les faire tomber. Chacun son tour, cinq frames de deux lancers, avec les vrais strikes et spares. Les bandes sont permises, et une quille dans une poche compte. En cas d'égalité, mort subite. Réglages dans `BowlingPoolSettings`.
 - **Shooter : huit pouvoirs** (compilé, non testé) : des caisses sur le tapis, ramassées en marchant dessus, et le bouton de pouvoir habituel pour les lancer. Grosse bille, tir de glace, mine, fusil à pompe, tête chercheuse, aimant à billes, poche fermée et grappin, chacun avec son jeton et son icône. Un joueur gelé ne peut plus rien faire pendant 2 s, une bille gelée devient un mur. Chaque pouvoir choisit ses modes dans son fichier (*Only In Modes*).
 - **Shooter : les pouvoirs partent au tir** (compilé, non testé) : le bouton de pouvoir active le pouvoir, et il se déclenche au tir suivant, à la place de ce tir. Le viseur grandit, change de couleur et affiche le nom du pouvoir en attente. La grosse bille va plus vite (1,3 m/s).
 - **Shooter : la mine projette les joueurs** (compilé, non testé) : l'explosion les envoie en l'air et vers l'extérieur, plus fort à bout portant. Elle se déclenche d'un peu plus loin (0,05 m), et une mine que personne ne déclenche explose toute seule au bout de 15 s.

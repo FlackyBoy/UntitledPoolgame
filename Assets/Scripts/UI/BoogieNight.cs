@@ -74,7 +74,7 @@ namespace UntitledPoolGame.Core
             PoolMatchType type = turns && speedPool
                 ? (Random.value < s.speedPoolChance ? PoolMatchType.SpeedPool : PoolMatchType.TurnBased)
                 : speedPool ? PoolMatchType.SpeedPool : PoolMatchType.TurnBased;
-            return new PoolMatchSetup(mode, type, Random.value < s.powersChance, s.fourteenOneTarget);
+            return new PoolMatchSetup(mode, type, PoolMatchSetup.HasPowers(mode) && Random.value < s.powersChance, s.fourteenOneTarget);
         }
     }
 }

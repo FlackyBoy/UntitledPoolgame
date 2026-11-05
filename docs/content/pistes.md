@@ -207,6 +207,9 @@ Proposées sans retour pour l'instant : frapper le tireur pendant sa charge fait
 - **Ralenti ou revoir le dernier coup** sur les beaux tirs et les fautes spectaculaires. *Pourquoi :* ce sont les moments qu'on partage dans un « friend slop ».
 - **Emotes et provocations** (déjà prévues dans les animations) liées aux événements : faute adverse, bille empochée. *Pourquoi :* peu de travail et beaucoup de réactions entre joueurs.
 - **Défis de trick-shots en solo** — positions de billes imposées, un seul tir. *Pourquoi :* donne du contenu à jouer seul et sert de tutoriel pour la visée et l'effet.
+- **Bowling Pool, placer sa blanche** le long de la ligne de lancer avant chaque tir (aujourd'hui, toujours du même point). *Pourquoi :* c'est le geste du bowling, et ça rend les spares plus intéressants.
+- **Bowling Pool, un râteau** qui balaie les quilles tombées et une feuille de score façon écran de bowling en fin de partie. *Pourquoi :* c'est ce qui fait reconnaître le bowling, et les quilles disparaissent d'un coup pour l'instant.
+- **Bowling Pool, une piste au sol** dans les niveaux, à la façon de Play Anywhere, avec des bandes en gouttières. *Pourquoi :* le spectacle d'une grosse boule et de grandes quilles.
 
 ### Expérience joueur
 

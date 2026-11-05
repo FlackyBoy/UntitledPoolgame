@@ -501,6 +501,9 @@ namespace UntitledPoolGame.Pool
             if (isAiming) return true;
             if (IsMyTurnToPlaceBall()) return true;
             if (IsMyTurnToCallPocket()) return true;
+            // Bowling Pool: pressing to aim again while the pins fall does
+            // nothing yet, but shouldn't drop the cue.
+            if (IsCue(heldObject) && BowlingPoolRuleSet.Current != null && !BowlingPoolRuleSet.Current.CanShoot) return true;
             // Only when aiming is allowed: near the ball outside one's turn
             // (Play Anywhere's build, strokes used up), Interact did nothing,
             // neither aiming nor dropping the cue.
