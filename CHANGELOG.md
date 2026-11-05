@@ -4,6 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-11-05
+- **Cache-cache, nouveau mode** (compilé, non testé) : pendant que le chercheur ferme les yeux, l'autre, tout petit sur la table, prend la place d'une bille. Il la fait rouler en vue du dessus parmi des billes qui roulent toutes seules de la même façon, et la table tremble de temps en temps. Il peut changer de bille et lancer de fausses pistes. Le chercheur a 5 tirs et 90 s : sa blanche doit toucher la bonne bille en premier. Rôles inversés à chaque manche, premier à 3 points. Le mode est dans la liste de sélection et sur la roue de Boogie Night. Après un changement de bille, le chercheur est prévenu 1 à 3 s plus tard.
 - **Sumo Billard, nouveau mode** (compilé, non testé) : toujours dans la peau d'une bille sur la petite table carrée, mais il faut rentrer les siennes : les pleines pour J1, les rayées pour J2, le premier qui a vidé son groupe gagne. Qui tombe revient après un instant et une de ses billes ressort. Aussi sur la roue de Boogie Night.
 - **Sumo Pool : une glisse qui finit en douceur** (compilé, non testé) : la bille ralentit de moins en moins vite en fin de course au lieu de s'arrêter net, y compris après un dash ou un choc.
 - **Sumo Pool : dash chargé, billes moins glissantes** (compilé, non testé) : un appui bref donne un dash léger, maintenir le bouton un dash puissant. La bille va maintenant où on la pousse et s'arrête vite quand on lâche ; seuls un dash ou un choc l'envoient encore loin.

@@ -635,6 +635,8 @@ namespace UntitledPoolGame.Core
             // Sumo Pool: the score and the countdown. Sumo Billard: its group and
             // the countdown, then the balls left as in any mode with groups.
             SumoPoolRuleSet sumo = SumoPoolRuleSet.Current != null && SumoPoolRuleSet.Current.ShowsPlate ? SumoPoolRuleSet.Current : null;
+            // Hide and seek: the role, the score, the clock and what's left.
+            HideAndSeekRuleSet hideAndSeek = rules.Mode == PoolGameMode.HideAndSeek ? HideAndSeekRuleSet.Current : null;
             // Bit n set = ball n still on the table.
             int onTable = 0;
             foreach (PoolBall ball in PoolBall.Active)
@@ -648,6 +650,7 @@ namespace UntitledPoolGame.Core
                 : shooter != null ? (9, shooter.PlateKey(p), 0)
                 : bowling != null ? (10, bowling.PlateKey(p), 0)
                 : sumo != null ? (11, sumo.PlateKey(p), 0)
+                : hideAndSeek != null ? (12, hideAndSeek.PlateKey(p), 0)
                 : hasScore ? (2, score, target)
                 : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), 0)
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
@@ -678,6 +681,11 @@ namespace UntitledPoolGame.Core
             {
                 Text(h.plateBalls, $"{bowling.TotalOf(p)}", titleFont, 34, Ink);
                 Text(h.plateBalls, $"  ·  {bowling.DescribeProgress(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (hideAndSeek != null)
+            {
+                Text(h.plateBalls, hideAndSeek.RoleLabel(p), titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {hideAndSeek.DescribeRound(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
             }
             else if (sumo != null)
             {

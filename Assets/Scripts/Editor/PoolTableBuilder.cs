@@ -60,6 +60,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsureShooterPowerAssets();
             EnsureBowlingPoolSettingsAsset();
             EnsureSumoPoolSettingsAsset();
+            EnsureHideAndSeekSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -226,6 +227,15 @@ namespace UntitledPoolGame.PoolEditor
             const string path = "Assets/Resources/SumoPoolSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<SumoPoolSettings>(path) != null) return;
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SumoPoolSettings>(), path);
+        }
+
+        // Hide and seek: the rounds, the decoys, the hider's tricks.
+        private static void EnsureHideAndSeekSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/HideAndSeekSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<HideAndSeekSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<HideAndSeekSettings>(), path);
         }
 
         // Snake Pool: the chains behind the cue balls.

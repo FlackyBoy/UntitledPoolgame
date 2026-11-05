@@ -82,7 +82,9 @@ Autres idées autour des pouvoirs :
     - **Technique** : la visée suppose une table (`LocalPoolAimController`, `PoolTableSurface`) et il faudra une visée au sol ; frottement et rebond selon la surface ; `LocalGrabbable` sait ramasser et lancer, mais pas encore poser un objet à un endroit précis (aperçu, rotation).
 - **Cache-cache déguisé** (idée du 30/10) : un joueur se cache en se déguisant, l'autre le cherche. Rien n'est décidé. Pistes de Claude :
   - **Façon Prop Hunt dans le bar** : celui qui se cache prend l'apparence d'un objet du bar (tabouret, bouteille, caisse). Celui qui cherche a un nombre de tirs limité : il tire des billes sur les objets suspects. Une erreur lui coûte un tir.
-  - **Caché sur la table** : celui qui se cache devient une bille parmi les autres et peut rouler un peu quand personne ne le regarde. Celui qui cherche doit rentrer la bonne bille. Rentrer une fausse bille est une faute.
+  - **Caché sur la table** : retenu le 04/11, voir *Mode Cache-cache* dans la TODO. Idées en plus pour ce mode (05/11, rien de décidé) :
+    - **Démangeaison** (à voir, 05/11) : un cacheur immobile trop longtemps tressaute tout seul, pour éviter qu'il attende le minuteur sans bouger.
+    - **Chaud / froid** : après un tir raté, le chercheur apprend s'il était près du cacheur.
   - **Caché parmi les clients** (façon *Spy Party*) : celui qui se cache ressemble aux PNJ du bar et doit faire une action discrète (rentrer une bille, toucher une caisse) sans se faire repérer.
   - À trancher : quel déguisement (objet, bille ou client), combien de temps dure une manche, et ce qui rapporte des points à chacun.
 - **Combat sur une mini table** (idée du 30/10) : les deux joueurs sont réduits sur la table et s'affrontent. Le mode est retenu et cadré le 04/11 (voir *Mode Shooter miniature* dans la TODO) ; ce qui suit reste des idées en plus. Pistes de Claude :
