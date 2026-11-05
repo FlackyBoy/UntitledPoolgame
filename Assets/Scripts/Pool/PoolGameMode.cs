@@ -32,5 +32,11 @@ namespace UntitledPoolGame.Pool
         // One player shrunk on the felt, the other hunts them with the cue
         // ball; roles swap after the first round (PocketSizeRuleSet).
         PocketSize,
+        // Both players shrunk on the felt, shooting at each other
+        // (ShooterMiniRuleSet).
+        ShooterMini,
+        // The same fight, but the first to pot their group wins; a hit only
+        // costs time (ShooterPoolRuleSet).
+        ShooterPool,
     }
 }

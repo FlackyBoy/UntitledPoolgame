@@ -628,6 +628,8 @@ namespace UntitledPoolGame.Core
             PowerWashDirt wash = rules.Mode == PoolGameMode.PowerWashPool ? PowerWashDirt.Instance : null;
             // Pocket Size: the role, the round, the clock and the touches.
             PocketSizeRuleSet pocketSize = rules.Mode == PoolGameMode.PocketSize ? PocketSizeRuleSet.Current : null;
+            // Shooter miniature: health and eliminations. Shooter Billard: group and balls left.
+            ShooterMiniRuleSet shooter = ShooterMiniRuleSet.Current;
             // Bit n set = ball n still on the table.
             int onTable = 0;
             foreach (PoolBall ball in PoolBall.Active)
@@ -638,6 +640,7 @@ namespace UntitledPoolGame.Core
                 rules.AreGroupsDisguised ? (1, 0, 0)
                 : golf != null ? (7, score, golf.RoundStateKey(p))
                 : pocketSize != null ? (8, pocketSize.PlateKey(p), 0)
+                : shooter != null ? (9, shooter.PlateKey(p), 0)
                 : hasScore ? (2, score, target)
                 : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), 0)
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
@@ -658,6 +661,11 @@ namespace UntitledPoolGame.Core
             {
                 Text(h.plateBalls, pocketSize.RoleLabel(p), titleFont, 34, Ink);
                 Text(h.plateBalls, $"  ·  {pocketSize.DescribeRound(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (shooter != null)
+            {
+                Text(h.plateBalls, shooter.HealthLabel(p), titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {shooter.DescribeScore(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
             }
             else if (hasScore)
             {
@@ -999,6 +1007,7 @@ namespace UntitledPoolGame.Core
                 PowerRefusal.OpponentTurnOnly => cfg.refusedOpponentTurnOnlyText,
                 PowerRefusal.BallsMoving => cfg.refusedBallsMovingText,
                 PowerRefusal.PointerBusy => cfg.refusedPointerBusyText,
+                PowerRefusal.CannotAct => cfg.refusedCannotActText,
                 _ => cfg.refusedNoPowerText,
             };
             if (string.IsNullOrEmpty(text)) return;

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d22410f822063a842b1f09d0a36fc5ff, type: 3}
+  m_Name: ShooterFreezeShotPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ShooterFreezeShotPower
+  powerName: Tir de glace
+  tokenPrefab: {fileID: 6238435204443046041, guid: d338745928aec214587854272efdb40b, type: 3}
+  hudIcon: {fileID: 2800000, guid: 30981ca2529bb734fb8705327e993219, type: 3}
+  onlyInModes: 0b0000000c000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  playerTime: 2
+  level2PlayerTime: 3.5
+  ballTime: 8

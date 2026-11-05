@@ -47,6 +47,8 @@ namespace UntitledPoolGame.Pool
             new ModeEntry(PoolGameMode.PowerWashPool, true, true, PoolMatchType.SpeedPool, ownPowersOnly: true),
             new ModeEntry(PoolGameMode.PlayAnywhere, true, true, PoolMatchType.TurnBased),
             new ModeEntry(PoolGameMode.PocketSize, false, true, PoolMatchType.SpeedPool),
+            new ModeEntry(PoolGameMode.ShooterMini, false, true, PoolMatchType.SpeedPool, true),
+            new ModeEntry(PoolGameMode.ShooterPool, false, true, PoolMatchType.SpeedPool, true),
         };
 
         private static PoolModeSettings instance;

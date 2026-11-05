@@ -89,6 +89,17 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
+            // The Shooter: no cue balls, the players walk onto it.
+            ShooterMiniRuleSet shooter = ShooterMiniRuleSet.Current;
+            if (shooter != null)
+            {
+                if (!shooter.TryTakeCrate(rules, transform.position, power)) return;
+                collected = true;
+                gameObject.SetActive(false);
+                PoolPowerCrateManager.Instance?.NotifyCollected(this);
+                return;
+            }
+
             // Any cue ball: Speed Pool has one per player, and the power goes
             // to that ball's owner (the shooter otherwise).
             PoolBall cueBall = null;

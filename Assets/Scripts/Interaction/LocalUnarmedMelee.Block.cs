@@ -85,7 +85,7 @@ namespace UntitledPoolGame.Interaction
         private void UpdateBlock(float dt)
         {
             CombatSettings cfg = CombatSettings.Instance;
-            bool want = Boxing && cfg.blockEnabled && blockAction != null && blockAction.IsPressed();
+            bool want = Boxing && !kickOnly && cfg.blockEnabled && blockAction != null && blockAction.IsPressed();
             bool allowed = !IsGuardBroken && phase == Phase.Idle && !animPunching && HandsFreeForFists();
             bool was = IsBlocking;
             IsBlocking = want && allowed;

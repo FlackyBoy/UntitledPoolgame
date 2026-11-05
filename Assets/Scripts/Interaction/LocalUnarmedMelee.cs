@@ -216,6 +216,15 @@ namespace UntitledPoolGame.Interaction
         private InputAction kickAction;
         private PlayerInput playerInput;
         private LocalPlayerLocomotion locomotion;   // R&D: view kick when a punch leaves
+        private LocalFpsPlayerController fps;
+
+        // Shooter miniature: the hands hold a weapon, only the kick is left,
+        // and it sends the balls it meets flying.
+        private bool kickOnly;
+        private float ballKickSpeed, spartanBallKickSpeed;
+        private float launchScale = 1f;
+        private int ballLayers;
+        private readonly HashSet<PoolBall> ballsThisBlow = new HashSet<PoolBall>();
 
         private bool Boxing => boxingPunches && punchRightAction != null;
 
@@ -319,6 +328,7 @@ namespace UntitledPoolGame.Interaction
 
             playerInput = GetComponent<PlayerInput>();
             locomotion = GetComponent<LocalPlayerLocomotion>();
+            fps = GetComponent<LocalFpsPlayerController>();
             LocalCharacterAnimationController animControl = GetComponent<LocalCharacterAnimationController>();
             bodyAnimator = animControl != null && animControl.Animator != null ? animControl.Animator : GetComponentInChildren<Animator>(true);
             InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
@@ -330,6 +340,15 @@ namespace UntitledPoolGame.Interaction
                 Debug.LogWarning($"[UnarmedMelee] {name} : action « {punchRightActionName} » introuvable, poings de boxe désactivés.", this);
 
             if (muscleLayers.value == 0) muscleLayers = LayerMask.GetMask("Ragdoll");
+        }
+
+        public void SetKickOnly(float ballSpeed, float spartanBallSpeed, float spartanLaunchScale)
+        {
+            kickOnly = true;
+            launchScale = spartanLaunchScale;
+            ballKickSpeed = ballSpeed;
+            spartanBallKickSpeed = spartanBallSpeed;
+            ballLayers = LayerMask.GetMask("Poolball");
         }
 
         private Transform CreateGoal(string goalName)
@@ -448,6 +467,7 @@ namespace UntitledPoolGame.Interaction
             // the feet and drives the hands.
             if (handController.HandsMoving) return false;
             if (!HasStamina(m)) return false;   // R&D: too tired
+            if (m == Move.Punch && kickOnly) return false;
             if (m == Move.Punch)
             {
                 // Fists only with empty hands (with the cue, the click is
@@ -459,6 +479,10 @@ namespace UntitledPoolGame.Interaction
         }
 
         private bool IsDown() => ragdoll != null && ragdoll.IsRagdollCameraActive;
+
+        // Steps, leans and reaches are in metres at normal size: a Spartan
+        // kick's 0.55 m step took a 12 cm body four times its height (04/11).
+        private float BodySize => fps != null ? fps.SizeScale : 1f;
 
         // Up, hands empty and not busy with the cue or aiming: what the R&D
         // guard (after punching, or held) needs.
@@ -490,6 +514,7 @@ namespace UntitledPoolGame.Interaction
             bufferedPunch = false;
             limbLogged = false;
             hitThisBlow.Clear();
+            ballsThisBlow.Clear();
             StartCounterIfAny();
             SpendStamina(m);
 
@@ -624,7 +649,7 @@ namespace UntitledPoolGame.Interaction
                 // A step into the kick: reaches further, and sells the push.
                 float lunge = charged ? Mathf.Lerp(kickLunge, spartanLunge, charge) : kickLunge;
                 if (characterController != null && characterController.enabled)
-                    characterController.Move(FlatForward() * ((reach - previousReach) * lunge));
+                    characterController.Move(FlatForward() * ((reach - previousReach) * lunge * BodySize));
             }
 
             if (t >= 1f)
@@ -784,7 +809,7 @@ namespace UntitledPoolGame.Interaction
                     if (bone != null) bone.rotation = perBone * bone.rotation;
             }
 
-            fullBodyIK.solver.bodyEffector.positionOffset += flatForward * lean;
+            fullBodyIK.solver.bodyEffector.positionOffset += flatForward * (lean * BodySize);
 
             Vector3 target;
             if (move == Move.Punch)
@@ -1095,7 +1120,8 @@ namespace UntitledPoolGame.Interaction
 
         private void DetectHits(Vector3 from, Vector3 to, Vector3 flatForward)
         {
-            float radius = move == Move.Punch ? fistRadius : footRadius;
+            // In metres at normal size: a shrunk body's fist is as small as it is.
+            float radius = (move == Move.Punch ? fistRadius : footRadius) * BodySize;
             int steps = Mathf.Max(1, subSteps);
             Vector3 previous = from;
             for (int s = 1; s <= steps; s++)
@@ -1103,7 +1129,24 @@ namespace UntitledPoolGame.Interaction
                 Vector3 point = Vector3.Lerp(from, to, s / (float)steps);
                 int count = Physics.OverlapCapsuleNonAlloc(previous, point, radius, overlapBuffer, muscleLayers, QueryTriggerInteraction.Ignore);
                 for (int i = 0; i < count; i++) TryHit(overlapBuffer[i], point, to - from, flatForward);
+                if (kickOnly && move == Move.Kick) KickBalls(previous, point, radius, flatForward);
                 previous = point;
+            }
+        }
+
+        // Where the player looks, faster the more the kick was charged. The
+        // velocity is set, not a force: a kick is the same on a ball of any mass.
+        private void KickBalls(Vector3 from, Vector3 to, float radius, Vector3 flatForward)
+        {
+            int count = Physics.OverlapCapsuleNonAlloc(from, to, radius, overlapBuffer, ballLayers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                if (!overlapBuffer[i].TryGetComponent(out PoolBall ball) || ball.Rigidbody.isKinematic || !ballsThisBlow.Add(ball)) continue;
+                float speed = charged ? Mathf.Lerp(ballKickSpeed, spartanBallKickSpeed, charge) : ballKickSpeed;
+                ball.Rigidbody.linearVelocity = flatForward * speed;
+                ball.MarkHitBy(OwnIndex());
+                hitSomething = true;
+                if (debugLogs) Debug.Log($"[UnarmedMelee] {name} frappe la bille {ball.Number} à {speed:0.0} m/s ({Describe()}).", this);
             }
         }
 
@@ -1174,7 +1217,7 @@ namespace UntitledPoolGame.Interaction
                 lastGaugeTime = Time.time;
             }
 
-            broadcaster.Hit(unpin, forceDirection * force, point);
+            broadcaster.Hit(unpin, forceDirection * (force * LocalPlayerRagdollController.ScaleOf(target)), point);
             if (spartan && gauge == null) puppet.SetState(BehaviourPuppet.State.Unpinned);
 
             if (debugLogs)
@@ -1223,6 +1266,7 @@ namespace UntitledPoolGame.Interaction
         {
             yield return new WaitForFixedUpdate();
             if (target == null) yield break;
+            velocity *= LocalPlayerRagdollController.ScaleOf(target) * launchScale;
             foreach (Muscle muscle in target.muscles)
                 if (muscle.rigidbody != null) muscle.rigidbody.AddForce(velocity, ForceMode.VelocityChange);
             if (debugLogs) Debug.Log($"[UnarmedMelee] → {target.name} launched at {velocity.magnitude:F1} m/s", this);

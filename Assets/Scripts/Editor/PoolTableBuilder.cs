@@ -56,6 +56,8 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePowerWashPowerAssets();
             EnsurePlayAnywhereSettingsAsset();
             EnsurePocketSizeAssets();
+            EnsureShooterMiniSettingsAsset();
+            EnsureShooterPowerAssets();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -149,6 +151,61 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePowerAsset<RapidShotPower>("RapidShotPower", "Tir rapide", null);
             EnsurePowerAsset<DoubleCueBallPower>("DoubleCueBallPower", "Blanche ×2", null);
             EnsurePowerAsset<SlowTinyPower>("SlowTinyPower", "Petit au ralenti", null);
+        }
+
+        // Shooter miniature: health, the rifle, the balls.
+        internal static void EnsureShooterMiniSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/ShooterMiniSettings.asset";
+            ShooterMiniSettings settings = AssetDatabase.LoadAssetAtPath<ShooterMiniSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<ShooterMiniSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+            if (settings.cuePrefab == null)
+            {
+                settings.cuePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Cue/Cue.prefab");
+                EditorUtility.SetDirty(settings);
+            }
+            string problem = ShooterAnimationTools.Build();
+            if (problem != null) Debug.LogWarning($"[Shooter] {problem}");
+        }
+
+        // The two Shooter modes' powers, ticked for both (their Only In Modes
+        // chooses). The explosion and the magnet's effect are the ones the
+        // other powers already use.
+        internal static void EnsureShooterPowerAssets()
+        {
+            EnsurePowerAsset<ShooterBigBallPower>("ShooterBigBallPower", "Grosse bille", OnlyInShooter);
+            EnsurePowerAsset<ShooterFreezeShotPower>("ShooterFreezeShotPower", "Tir de glace", OnlyInShooter);
+            EnsurePowerAsset<ShooterMinePower>("ShooterMinePower", "Mine", serialized =>
+            {
+                OnlyInShooter(serialized);
+                var blast = AssetDatabase.LoadAssetAtPath<BallBlastPower>("Assets/Powers/BallBlastPower.asset");
+                if (blast != null)
+                    serialized.FindProperty("explosionPrefab").objectReferenceValue = new SerializedObject(blast).FindProperty("explosionPrefab").objectReferenceValue;
+            });
+            EnsurePowerAsset<ShooterShotgunPower>("ShooterShotgunPower", "Fusil à pompe", OnlyInShooter);
+            EnsurePowerAsset<ShooterHomingBallPower>("ShooterHomingBallPower", "Tête chercheuse", OnlyInShooter);
+            EnsurePowerAsset<ShooterMagnetPower>("ShooterMagnetPower", "Aimant à billes", serialized =>
+            {
+                OnlyInShooter(serialized);
+                var magnet = AssetDatabase.LoadAssetAtPath<MagnetPower>("Assets/Powers/MagnetPower.asset");
+                if (magnet != null)
+                    serialized.FindProperty("vfxPrefab").objectReferenceValue = new SerializedObject(magnet).FindProperty("pocketVfxPrefab").objectReferenceValue;
+            });
+            EnsurePowerAsset<ShooterClosePocketPower>("ShooterClosePocketPower", "Poche fermée", OnlyInShooter);
+            EnsurePowerAsset<ShooterGrapplePower>("ShooterGrapplePower", "Grappin", OnlyInShooter);
+        }
+
+        private static void OnlyInShooter(SerializedObject serialized)
+        {
+            SerializedProperty modes = serialized.FindProperty("onlyInModes");
+            modes.arraySize = 2;
+            modes.GetArrayElementAtIndex(0).intValue = (int)PoolGameMode.ShooterMini;
+            modes.GetArrayElementAtIndex(1).intValue = (int)PoolGameMode.ShooterPool;
         }
 
         // Snake Pool: the chains behind the cue balls.

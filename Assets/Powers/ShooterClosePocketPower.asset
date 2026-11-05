@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a402b0056aa8f664dba7902bc6b82b16, type: 3}
+  m_Name: ShooterClosePocketPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ShooterClosePocketPower
+  powerName: "Poche ferm\xE9e"
+  tokenPrefab: {fileID: 3978501357951973575, guid: c1614c56d1abfe84288fcffed814f9c3, type: 3}
+  hudIcon: {fileID: 2800000, guid: b678b3e7c41f8eb42a4f818ebc49afc3, type: 3}
+  onlyInModes: 0b0000000c000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  duration: 10
+  level2Duration: 18

@@ -53,6 +53,8 @@ namespace UntitledPoolGame.Pool
             if (type == PoolMatchType.SpeedPool && (mode == PoolGameMode.NineBall || mode == PoolGameMode.FourteenOne)) return false;
             // The hunter shoots whenever they like, the hunted runs: no turns.
             if (type == PoolMatchType.TurnBased && mode == PoolGameMode.PocketSize) return false;
+            // Everyone fires at once.
+            if (type == PoolMatchType.TurnBased && (mode == PoolGameMode.ShooterMini || mode == PoolGameMode.ShooterPool)) return false;
             PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(mode);
             return entry == null ? type == PoolMatchType.TurnBased : entry.Allows(type);
         }
@@ -87,6 +89,8 @@ namespace UntitledPoolGame.Pool
             PoolGameMode.PowerWashPool => "Power Wash Pool",
             PoolGameMode.PlayAnywhere => "Play Anywhere",
             PoolGameMode.PocketSize => "Pocket Size",
+            PoolGameMode.ShooterMini => "Shooter miniature",
+            PoolGameMode.ShooterPool => "Shooter Billard",
             _ => "Classique",
         };
 

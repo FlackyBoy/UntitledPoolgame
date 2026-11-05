@@ -393,6 +393,7 @@ namespace UntitledPoolGame.Pool
         {
             PoolPower power = GetHeldPower(player);
             if (power == null) return PowerRefusal.NoPower;
+            if (ShooterMiniRuleSet.Current != null && !ShooterMiniRuleSet.Current.CanArm(player)) return PowerRefusal.CannotAct;
             if (IsSimultaneous) return PowerRefusal.None;
             if (PlayerInput.all.Count > 1)
             {
@@ -796,10 +797,12 @@ namespace UntitledPoolGame.Pool
         // Play Anywhere also needs the shooting phase and a stroke left this
         // round (for the player whose ball it is: alone, the current one).
         // Pocket Size: only the giant, only while hunting.
+        // Shooter miniature: nobody, the shots are the rifle's.
         public bool CanPlayerShoot(int playerIndex) =>
             MatchStarted && !GameOver && (IsSimultaneous || CurrentPlayer == playerIndex || PlayerInput.all.Count <= 1)
             && (!(ruleSet is PlayAnywhereRuleSet golf) || golf.CanShoot(IsSimultaneous || PlayerInput.all.Count > 1 ? playerIndex : CurrentPlayer))
-            && (!(ruleSet is PocketSizeRuleSet pocketSize) || pocketSize.CanShoot(playerIndex));
+            && (!(ruleSet is PocketSizeRuleSet pocketSize) || pocketSize.CanShoot(playerIndex))
+            && !(ruleSet is ShooterMiniRuleSet);
 
         // Raised before SwitchTurn: CurrentPlayer is the one who fouled.
         public static event Action Fouled;
@@ -1378,6 +1381,8 @@ namespace UntitledPoolGame.Pool
             if (ruleSet is PlayAnywhereRuleSet golfHole) golfHole.Tick(this);
             // Rounds, touches and falls of Pocket Size.
             else if (ruleSet is PocketSizeRuleSet pocketSizeRounds) pocketSizeRounds.Tick(this);
+            // Health, hits and eliminations of the Shooter miniature.
+            else if (ruleSet is ShooterMiniRuleSet shooterMini) shooterMini.Tick(this);
             if (IsSimultaneous)
             {
                 UpdatePlayerShots();
@@ -1523,6 +1528,8 @@ namespace UntitledPoolGame.Pool
             if (!(ruleSet is PlayAnywhereRuleSet)) PlayAnywhereRuleSet.Cleanup();
             // Full-size players and one cue ball after Pocket Size.
             if (!(ruleSet is PocketSizeRuleSet)) PocketSizeRuleSet.Cleanup();
+            // Full-size players and the cue ball back after the Shooter miniature.
+            if (!(ruleSet is ShooterMiniRuleSet)) ShooterMiniRuleSet.Cleanup();
             // One shared cue ball again after a match with one each.
             if (!(ruleSet is SpeedPoolRuleSet)) SpeedPoolRuleSet.Cleanup();
             ruleSet.Setup(this);
@@ -1549,6 +1556,8 @@ namespace UntitledPoolGame.Pool
             PoolGameMode.PowerWashPool => new PowerWashPoolRuleSet(),
             PoolGameMode.PlayAnywhere => new PlayAnywhereRuleSet(),
             PoolGameMode.PocketSize => new PocketSizeRuleSet(),
+            PoolGameMode.ShooterMini => new ShooterMiniRuleSet(),
+            PoolGameMode.ShooterPool => new ShooterPoolRuleSet(),
             // 8-ball, and Catch the Hole (8-ball plus the living holes).
             _ => setup.type == PoolMatchType.SpeedPool ? new SpeedPoolRuleSet() : new EightBallRuleSet(),
         };
@@ -1631,6 +1640,8 @@ namespace UntitledPoolGame.Pool
             DrawModeButton(PoolGameMode.PowerWashPool, "Power Wash Pool (laver le tapis)");
             DrawModeButton(PoolGameMode.PlayAnywhere, "Play Anywhere (golf dans le décor)");
             DrawModeButton(PoolGameMode.PocketSize, "Pocket Size (le grand chasse le petit)");
+            DrawModeButton(PoolGameMode.ShooterMini, "Shooter miniature (on se tire dessus sur la table)");
+            DrawModeButton(PoolGameMode.ShooterPool, "Shooter Billard (vider son groupe en se tirant dessus)");
 
             bool powers = GUILayout.Toggle(selected.powers, "Pouvoirs");
             if (powers != selected.powers) Select((ref PoolMatchSetup s) => s.powers = powers);

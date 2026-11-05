@@ -198,6 +198,7 @@ namespace UntitledPoolGame.PoolEditor
                     g.Arc(0f, 0f, 0.55f, 200f, 340f, 0.13f);
                     g.Add(Glyph.Polygon((0.78f, -0.12f), (0.32f, -0.12f), (0.55f, 0.18f)));
                     break;
+                case "ShooterClosePocket":
                 case "ClosePocket":   // a padlock
                     g.Add(Glyph.Box(0f, -0.25f, 0.48f, 0.38f, 0.1f));
                     g.Arc(0f, 0.13f, 0.3f, 0f, 180f, 0.13f);
@@ -213,6 +214,7 @@ namespace UntitledPoolGame.PoolEditor
                     g.Add(Glyph.Star(0.13f, 0.72f, 0.22f, 0.09f, 6, 0f));
                     g.Cut(Glyph.Circle(-0.3f, -0.02f, 0.09f));
                     break;
+                case "ShooterMagnet":
                 case "Magnet":        // a horseshoe magnet
                     g.Arc(0f, -0.05f, 0.45f, 180f, 360f, 0.2f);
                     g.Add(Glyph.Segment(-0.45f, -0.05f, -0.45f, 0.45f, 0.2f));
@@ -277,6 +279,53 @@ namespace UntitledPoolGame.PoolEditor
                     g.Add(Glyph.Circle(0f, 0f, 0.36f));
                     g.Cut(Glyph.Circle(0f, 0.16f, 0.1f));
                     g.Add(Glyph.Box(0f, 0.58f, 0.42f, 0.07f, 0.03f));
+                    break;
+                case "ShooterBigBall":   // a big ball, speed lines behind it
+                    g.Add(Glyph.Circle(0.18f, 0f, 0.6f));
+                    g.Cut(Glyph.Circle(0.18f, 0f, 0.22f));
+                    g.Add(Glyph.Segment(-0.82f, 0.35f, -0.52f, 0.35f, 0.1f));
+                    g.Add(Glyph.Segment(-0.88f, 0f, -0.52f, 0f, 0.1f));
+                    g.Add(Glyph.Segment(-0.82f, -0.35f, -0.52f, -0.35f, 0.1f));
+                    break;
+                case "ShooterFreezeShot":   // a snowflake
+                    foreach (float a in new[] { 90f, 30f, 150f })
+                    {
+                        float c = Mathf.Cos(a * Mathf.Deg2Rad) * 0.75f, s = Mathf.Sin(a * Mathf.Deg2Rad) * 0.75f;
+                        g.Add(Glyph.Segment(-c, -s, c, s, 0.12f));
+                        foreach (float end in new[] { 1f, -1f })
+                            foreach (float side in new[] { 35f, -35f })
+                            {
+                                float barb = (a + side + (end < 0f ? 180f : 0f)) * Mathf.Deg2Rad;
+                                float mx = c * end * 0.7f, my = s * end * 0.7f;
+                                g.Add(Glyph.Segment(mx, my, mx + Mathf.Cos(barb) * 0.25f, my + Mathf.Sin(barb) * 0.25f, 0.09f));
+                            }
+                    }
+                    break;
+                case "ShooterMine":   // a spiked mine
+                    g.Add(Glyph.Star(0f, 0f, 0.8f, 0.45f, 8, 22.5f));
+                    g.Add(Glyph.Circle(0f, 0f, 0.5f));
+                    g.Cut(Glyph.Circle(0f, 0f, 0.17f));
+                    break;
+                case "ShooterShotgun":   // a barrel and its fan of shots
+                    g.Add(Glyph.Box(-0.6f, -0.45f, 0.2f, 0.14f, 0.03f));
+                    foreach (var (x, y) in new[] { (0.55f, -0.62f), (0.62f, -0.15f), (0.4f, 0.25f), (0f, 0.42f), (-0.25f, 0.58f) })
+                        g.Add(Glyph.Circle(x, y, 0.13f));
+                    break;
+                case "ShooterHomingBall":   // a target
+                    g.Arc(0f, 0f, 0.58f, 0f, 360f, 0.12f);
+                    g.Add(Glyph.Circle(0f, 0f, 0.2f));
+                    g.Add(Glyph.Segment(0f, 0.42f, 0f, 0.85f, 0.12f));
+                    g.Add(Glyph.Segment(0f, -0.42f, 0f, -0.85f, 0.12f));
+                    g.Add(Glyph.Segment(0.42f, 0f, 0.85f, 0f, 0.12f));
+                    g.Add(Glyph.Segment(-0.42f, 0f, -0.85f, 0f, 0.12f));
+                    break;
+                case "ShooterGrapple":   // a hook on its line
+                    g.Add(Glyph.Segment(0f, 0.2f, 0f, 0.82f, 0.13f));
+                    g.Add(Glyph.Circle(0f, 0.82f, 0.09f));
+                    g.Arc(0f, -0.1f, 0.45f, 180f, 360f, 0.14f);
+                    g.Add(Glyph.Segment(0f, 0.2f, 0f, -0.55f, 0.14f));
+                    g.Add(Glyph.Polygon((-0.56f, -0.02f), (-0.34f, -0.02f), (-0.45f, 0.3f)));
+                    g.Add(Glyph.Polygon((0.56f, -0.02f), (0.34f, -0.02f), (0.45f, 0.3f)));
                     break;
                 case "Unknown":
                     g.Arc(0f, 0.3f, 0.32f, -60f, 200f, 0.15f);
@@ -408,6 +457,67 @@ namespace UntitledPoolGame.PoolEditor
         {
             switch (key)
             {
+                case "ShooterBigBall":   // a big glossy ball, a band around it
+                {
+                    Part(p, "Ball", Builtin("Sphere"), Lit("Purple", new Color(0.45f, 0.15f, 0.75f), smoothness: 0.85f), Vector3.zero, Vector3.zero, Vector3.one * 0.075f);
+                    Part(p, "Band", Torus(0.0375f, 0.006f, 360f), White, Vector3.zero, new Vector3(0f, 0f, 20f), Vector3.one);
+                    return true;
+                }
+                case "ShooterFreezeShot":   // a snowflake
+                {
+                    Material ice = Lit("Ice", new Color(0.55f, 0.85f, 1f), smoothness: 0.9f);
+                    foreach (float a in new[] { 0f, 60f, 120f })
+                    {
+                        Part(p, "Branch", Builtin("Cylinder"), ice, Vector3.zero, new Vector3(0f, 0f, a), new Vector3(0.012f, 0.04f, 0.012f));
+                        foreach (float end in new[] { 1f, -1f })
+                        {
+                            Vector3 along = Quaternion.Euler(0f, 0f, a) * Vector3.up * (0.026f * end);
+                            foreach (float side in new[] { 45f, -45f })
+                            {
+                                Quaternion tilt = Quaternion.Euler(0f, 0f, a + side + (end < 0f ? 180f : 0f));
+                                Part(p, "Barb", Builtin("Cylinder"), ice, along + tilt * Vector3.up * 0.01f, tilt.eulerAngles, new Vector3(0.008f, 0.012f, 0.008f));
+                            }
+                        }
+                    }
+                    return true;
+                }
+                case "ShooterMine":   // a spiked mine, its lamp on
+                {
+                    Material dark = Lit("Bomb", new Color(0.14f, 0.15f, 0.19f), smoothness: 0.65f);
+                    Part(p, "Body", Builtin("Sphere"), dark, Vector3.zero, Vector3.zero, Vector3.one * 0.055f);
+                    foreach (Vector3 d in new[] { Vector3.right, Vector3.left, Vector3.forward, Vector3.back, Vector3.down, (Vector3.right + Vector3.up).normalized, (Vector3.left + Vector3.up).normalized })
+                        Part(p, "Spike", Cone(), Steel, d * 0.03f, Quaternion.FromToRotation(Vector3.up, d).eulerAngles, Vector3.one * 0.016f);
+                    Part(p, "Lamp", Builtin("Sphere"), Glow("Lamp", new Color(1f, 0.12f, 0.06f)), Vector3.up * 0.027f, Vector3.zero, Vector3.one * 0.016f, shadows: false);
+                    return true;
+                }
+                case "ShooterShotgun":   // two barrels and a stock
+                {
+                    Material wood = Lit("Wood", new Color(0.5f, 0.28f, 0.12f));
+                    Part(p, "Barrel", Builtin("Cylinder"), Steel, new Vector3(0.012f, 0.008f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.016f, 0.04f, 0.016f));
+                    Part(p, "Barrel", Builtin("Cylinder"), Steel, new Vector3(0.012f, -0.008f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.016f, 0.04f, 0.016f));
+                    Part(p, "Stock", Builtin("Cube"), wood, new Vector3(-0.043f, -0.012f, 0f), new Vector3(0f, 0f, -15f), new Vector3(0.04f, 0.022f, 0.016f));
+                    return true;
+                }
+                case "ShooterHomingBall":   // a red ball inside a target
+                {
+                    Part(p, "Ball", Builtin("Sphere"), Red, Vector3.zero, Vector3.zero, Vector3.one * 0.04f);
+                    Part(p, "Ring", Torus(0.04f, 0.004f, 360f), White, Vector3.zero, Vertical, Vector3.one);
+                    foreach (float a in new[] { 0f, 90f, 180f, 270f })
+                    {
+                        Quaternion turn = Quaternion.Euler(0f, 0f, a);
+                        Part(p, "Tick", Builtin("Cube"), White, turn * Vector3.up * 0.042f, turn.eulerAngles, new Vector3(0.006f, 0.018f, 0.006f));
+                    }
+                    return true;
+                }
+                case "ShooterGrapple":   // a hook on its shaft
+                {
+                    Part(p, "Shaft", Builtin("Cylinder"), Steel, new Vector3(0f, 0.02f, 0f), Vector3.zero, new Vector3(0.012f, 0.028f, 0.012f));
+                    Part(p, "Eye", Torus(0.009f, 0.003f, 360f), Steel, new Vector3(0f, 0.056f, 0f), Vertical, Vector3.one);
+                    Part(p, "Hook", Torus(0.024f, 0.006f, 180f), Steel, new Vector3(0f, -0.008f, 0f), Vertical, Vector3.one, rotateInPlane: 180f);
+                    Part(p, "Point", Cone(), Steel, new Vector3(-0.024f, -0.002f, 0f), Vector3.zero, Vector3.one * 0.016f);
+                    Part(p, "Point", Cone(), Steel, new Vector3(0.024f, -0.002f, 0f), Vector3.zero, Vector3.one * 0.016f);
+                    return true;
+                }
                 case "BoostedShot":   // a rocket
                 {
                     Material red = Red;
@@ -448,6 +558,7 @@ namespace UntitledPoolGame.PoolEditor
                     }
                     return true;
                 }
+                case "ShooterClosePocket":
                 case "ClosePocket":   // a padlock
                 {
                     Material gold = Lit("Gold", new Color(1f, 0.75f, 0.2f), smoothness: 0.8f, metallic: 0.8f);
@@ -473,6 +584,7 @@ namespace UntitledPoolGame.PoolEditor
                         Part(p, "Ray", Builtin("Cube"), Spark, sparkAt, new Vector3(0f, 0f, i * 45f), new Vector3(0.046f, 0.007f, 0.007f), shadows: false);
                     return true;
                 }
+                case "ShooterMagnet":
                 case "Magnet":        // a horseshoe magnet
                 {
                     Material red = Red;

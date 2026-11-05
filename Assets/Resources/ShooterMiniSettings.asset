@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c55201b9437a2b8418c8961360741b3d, type: 3}
+  m_Name: ShooterMiniSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ShooterMiniSettings
+  eliminationsToWin: 5
+  countdown: 3
+  endDelay: 2
+  maxHealth: 100
+  shotDamage: 20
+  ballDamage: 40
+  fallDamage: 30
+  kickDamage: 60
+  respawnDelay: 3
+  respawnSafeTime: 1.5
+  respawnClearance: 0.5
+  fallDepth: 0.0432
+  fireInterval: 0.25
+  shotSpeed: 3
+  shotRadius: 0.006
+  shotMass: 0.03
+  shotBounciness: 0.8
+  shotBounces: 3
+  shotLifetime: 2
+  shotHitMargin: 0.004
+  cuePrefab: {fileID: 3048719208018241057, guid: ed161a2a38f571a4da13761822612bf9, type: 3}
+  aimSpineWeight: 0.25
+  aimArmWeight: 0.6
+  cueHandSpan: 0.25
+  cueHandOffset: {x: 0.25, y: 0, z: 0.1}
+  cueButtMargin: 0.06
+  cameraForward: 0.12
+  cuePalmOffset: 0.03
+  cueAimDistance: 3
+  playerColors:
+  - {r: 0.25, g: 0.55, b: 1, a: 1}
+  - {r: 1, g: 0.3, b: 0.25, a: 1}
+  shotPin: 0.55
+  shotImpactSpeed: 5
+  shotReactionTime: 0.7
+  shotKnockSpeed: 0.35
+  animationFade: 0.15
+  readyTime: 1
+  shootHold: 0.15
+  ballKickSpeed: 0.8
+  spartanBallKickSpeed: 1.6
+  spartanLaunchScale: 1
+  coverBalls: 8
+  coverBallScale: 3
+  coverBallMassExponent: 2
+  coverClearance: 0.144
+  respotDelay: 1.5
+  minBallHitSpeed: 0.18
+  ballHitMargin: 0.00864
+  ballSafeTime: 1.5
+  knockTransfer: 0.4
+  knockMaxSpeed: 0.46
+  knockLift: 0.35
+  hitSlowTime: 2.5
+  hitSlowMultiplier: 0.6
+  hitsToFall: 4
+  hitWindow: 3
+  healthFormat: Vie {0}
+  countdownFormat: "Pr\xEAt ? {0}"
+  scoreFormat: "{0} - {1}  \xB7  premier \xE0 {2}"
+  eliminatedText: "\xC9limin\xE9 !"
+  solidsLabel: Pleines
+  stripesLabel: "Ray\xE9es"
+  ballsLeftFormat: "{0} \xE0 rentrer  \xB7  l'autre : {1}"
+  debugLogs: 1
