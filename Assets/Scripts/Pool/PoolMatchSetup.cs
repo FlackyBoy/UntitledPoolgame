@@ -54,6 +54,8 @@ namespace UntitledPoolGame.Pool
             if (type == PoolMatchType.SpeedPool && (mode == PoolGameMode.NineBall || mode == PoolGameMode.FourteenOne)) return false;
             // One rack of pins: each player's frame needs the table to themselves.
             if (type == PoolMatchType.SpeedPool && mode == PoolGameMode.BowlingPool) return false;
+            // Both roll at once.
+            if (type == PoolMatchType.TurnBased && (mode == PoolGameMode.SumoPool || mode == PoolGameMode.SumoBilliard)) return false;
             // The hunter shoots whenever they like, the hunted runs: no turns.
             if (type == PoolMatchType.TurnBased && mode == PoolGameMode.PocketSize) return false;
             // Everyone fires at once.
@@ -62,9 +64,10 @@ namespace UntitledPoolGame.Pool
             return entry == null ? type == PoolMatchType.TurnBased : entry.Allows(type);
         }
 
-        // Bowling Pool: no balls on the table for the powers to work on.
+        // Bowling Pool: no balls on the table for the powers to work on. Sumo modes:
+        // the players are the balls, nothing to shoot a power with.
         public static bool HasPowers(PoolGameMode mode) =>
-            mode != PoolGameMode.BowlingPool;
+            mode != PoolGameMode.BowlingPool && mode != PoolGameMode.SumoPool && mode != PoolGameMode.SumoBilliard;
 
         // The type a mode starts on in the menus (PoolModeSettings' Default
         // Type, or the other one if that one isn't allowed).
@@ -99,6 +102,8 @@ namespace UntitledPoolGame.Pool
             PoolGameMode.ShooterMini => "Shooter miniature",
             PoolGameMode.ShooterPool => "Shooter Billard",
             PoolGameMode.BowlingPool => "Bowling Pool",
+            PoolGameMode.SumoPool => "Sumo Pool",
+            PoolGameMode.SumoBilliard => "Sumo Billard",
             _ => "Classique",
         };
 

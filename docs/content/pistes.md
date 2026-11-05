@@ -199,6 +199,8 @@ Proposées sans retour pour l'instant : frapper le tireur pendant sa charge fait
 
 > Propositions faites en relisant la TODO et le code. Chacune indique pourquoi elle est proposée.
 
+- **Sumo Pool : variantes** (05/11) : des billes neutres comme obstacles, une table qui rétrécit, plus de deux joueurs.
+
 ### Game design
 
 - **Pouvoirs de rattrapage** — le joueur mené au score tire plus souvent des pouvoirs forts (comme les objets de Mario Kart, déjà la référence du slot unique). *Pourquoi :* les party games restent drôles quand la partie reste ouverte jusqu'au bout.

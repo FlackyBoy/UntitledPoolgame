@@ -41,5 +41,11 @@ namespace UntitledPoolGame.Pool
         // Ten real pins at the far end of the table, frames scored as in
         // bowling (BowlingPoolRuleSet).
         BowlingPool,
+        // Each player is a ball on a small square table, pushing the other into
+        // the pockets (SumoPoolRuleSet).
+        SumoPool,
+        // Sumo Pool's table and balls, but the first to pot their group wins
+        // (SumoBilliardRuleSet).
+        SumoBilliard,
     }
 }
