@@ -33,6 +33,13 @@ namespace UntitledPoolGame.Pool
             return null;
         }
 
+        // Could this mode's crates hand it out?
+        public bool Offers(PoolPower power, PoolGameMode mode)
+        {
+            PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(mode);
+            return Offered(power, mode, entry != null && entry.ownPowersOnly);
+        }
+
         // Pocket Size has its own powers (one set per role), and the others
         // only when Pocket Size is ticked in their Only In Modes: most are
         // about pockets and groups it doesn't have. Its own powers come out
@@ -85,7 +92,7 @@ namespace UntitledPoolGame.Pool
         public float ballRotationMaxInterval = 40f;
         // Depends on URP Physical Light Units, like the pot halo.
         public float ballGlowIntensity = 4f;
-        public float ballGlowRange = 0.3f;
+        public float ballGlowRange = 0.216f;
 
         [Header("Power ball visuals — optional, one material per PowerType")]
         // Optional material for the ball while it carries a power of that

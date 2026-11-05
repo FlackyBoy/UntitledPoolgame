@@ -6,7 +6,7 @@ namespace UntitledPoolGame.Core
 {
     // A level's picture in the menu card and on the loading postcard: the
     // image set in GameFlowSettings (cropped to fill), or, until there is
-    // one, a small drawing (bar, prison, space station by position in the
+    // one, a small drawing (bar, prison, R&D blueprint by position in the
     // list).
     public static class LevelPictures
     {
@@ -22,7 +22,7 @@ namespace UntitledPoolGame.Core
             switch (index % 3)
             {
                 case 1: Prison(pic); break;
-                case 2: Space(pic); break;
+                case 2: RnD(pic); break;
                 default: Bar(pic); break;
             }
         }
@@ -59,16 +59,32 @@ namespace UntitledPoolGame.Core
             }
         }
 
-        private static void Space(VisualElement pic)
+        private static void RnD(VisualElement pic)
         {
-            pic.style.backgroundImage = K.Radial(K.Hex("#281450"), K.Hex("#0b1640"), 0.3f, 0.8f, 1.1f);
+            pic.style.backgroundImage = K.Radial(K.Hex("#2a6f97"), K.Hex("#0f2f4a"), 0.5f, 0.5f, 1.1f);
             K.Stretch(pic);
-            foreach (var (x, y) in new[] { (12f, 18f), (34f, 70f), (58f, 12f), (88f, 78f), (8f, 60f), (70f, 50f) })
-                K.Disc(pic, x, y, 5, Color.white);
-            K.Disc(pic, 74f, 34f, 90, K.Hex("#ffb36b"));
-            K.Disc(pic, 22f, 52f, 34, K.Hex("#f4c20d"));
-            K.Disc(pic, 38f, 40f, 28, K.P1);
-            K.Disc(pic, 52f, 62f, 24, K.P2);
+            Color line = new Color(1f, 1f, 1f, 0.2f);
+            for (int i = 1; i < 8; i++)
+            {
+                VisualElement column = K.Box(pic, "grid");
+                column.style.position = Position.Absolute;
+                column.style.left = Length.Percent(i * 12.5f);
+                column.style.top = 0; column.style.bottom = 0;
+                column.style.width = 2;
+                column.style.backgroundColor = line;
+            }
+            for (int i = 1; i < 5; i++)
+            {
+                VisualElement row = K.Box(pic, "grid");
+                row.style.position = Position.Absolute;
+                row.style.top = Length.Percent(i * 20f);
+                row.style.left = 0; row.style.right = 0;
+                row.style.height = 2;
+                row.style.backgroundColor = line;
+            }
+            K.Disc(pic, 28f, 62f, 44, K.Hex("#f4c20d"));
+            K.Disc(pic, 52f, 38f, 36, K.P1);
+            K.Disc(pic, 74f, 66f, 30, K.P2);
         }
     }
 }

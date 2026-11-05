@@ -199,8 +199,9 @@ namespace UntitledPoolGame.Pool
             {
                 // No slow motion: the other player is mid-shot.
                 if (GameOver || ownCueBalls == null) return;
-                // Play Anywhere brings its ball back itself (where it was struck from).
-                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
+                // Play Anywhere brings its ball back itself (where it was struck from),
+                // Sumo Pool with the next round.
+                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet || ownCueBalls is SumoPoolRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
                 ownCueBalls.HandlePocketed(this, ball);
                 return;
             }
@@ -214,8 +215,9 @@ namespace UntitledPoolGame.Pool
             if (ownCueBalls != null)
             {
                 if (GameOver) return;
-                // Play Anywhere brings its ball back itself (where it was struck from).
-                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
+                // Play Anywhere brings its ball back itself (where it was struck from),
+                // Sumo Pool with the next round.
+                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet || ownCueBalls is SumoPoolRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
                 ownCueBalls.HandlePocketed(this, ball);
                 // Sending the opponent's cue ball in costs them, not the shooter.
                 if (ball.IsCueBall && ball.CueOwner >= 0 && ball.CueOwner != CurrentPlayer) return;
@@ -393,6 +395,7 @@ namespace UntitledPoolGame.Pool
         {
             PoolPower power = GetHeldPower(player);
             if (power == null) return PowerRefusal.NoPower;
+            if (ShooterMiniRuleSet.Current != null && !ShooterMiniRuleSet.Current.CanArm(player)) return PowerRefusal.CannotAct;
             if (IsSimultaneous) return PowerRefusal.None;
             if (PlayerInput.all.Count > 1)
             {
@@ -796,10 +799,16 @@ namespace UntitledPoolGame.Pool
         // Play Anywhere also needs the shooting phase and a stroke left this
         // round (for the player whose ball it is: alone, the current one).
         // Pocket Size: only the giant, only while hunting.
+        // Hide and seek: only the seeker, while they have shots left.
+        // Shooter miniature: nobody, the shots are the rifle's.
+        // Bowling Pool: between throws, not while the pins fall.
         public bool CanPlayerShoot(int playerIndex) =>
             MatchStarted && !GameOver && (IsSimultaneous || CurrentPlayer == playerIndex || PlayerInput.all.Count <= 1)
             && (!(ruleSet is PlayAnywhereRuleSet golf) || golf.CanShoot(IsSimultaneous || PlayerInput.all.Count > 1 ? playerIndex : CurrentPlayer))
-            && (!(ruleSet is PocketSizeRuleSet pocketSize) || pocketSize.CanShoot(playerIndex));
+            && (!(ruleSet is PocketSizeRuleSet pocketSize) || pocketSize.CanShoot(playerIndex))
+            && (!(ruleSet is HideAndSeekRuleSet hideAndSeek) || hideAndSeek.CanShoot(playerIndex))
+            && !(ruleSet is ShooterMiniRuleSet) && !(ruleSet is SumoPoolRuleSet)
+            && (!(ruleSet is BowlingPoolRuleSet bowling) || bowling.CanShoot);
 
         // Raised before SwitchTurn: CurrentPlayer is the one who fouled.
         public static event Action Fouled;
@@ -824,6 +833,8 @@ namespace UntitledPoolGame.Pool
         {
             // Every stroke counts, in turns or not.
             if (ruleSet is PlayAnywhereRuleSet golf) golf.OnStroke(cueBall);
+            if (ruleSet is BowlingPoolRuleSet bowling) bowling.OnThrow();
+            if (ruleSet is HideAndSeekRuleSet hideAndSeek) hideAndSeek.OnShot();
 
             // Speed Pool has no shot loop, only each player's own shot.
             if (IsSimultaneous)
@@ -1378,6 +1389,14 @@ namespace UntitledPoolGame.Pool
             if (ruleSet is PlayAnywhereRuleSet golfHole) golfHole.Tick(this);
             // Rounds, touches and falls of Pocket Size.
             else if (ruleSet is PocketSizeRuleSet pocketSizeRounds) pocketSizeRounds.Tick(this);
+            // Health, hits and eliminations of the Shooter miniature.
+            else if (ruleSet is ShooterMiniRuleSet shooterMini) shooterMini.Tick(this);
+            // Pins off the table, and the sweep after each throw.
+            else if (ruleSet is BowlingPoolRuleSet bowlingPins) bowlingPins.Tick(this);
+            // Rounds and falls of Sumo Pool.
+            else if (ruleSet is SumoPoolRuleSet sumo) sumo.Tick(this);
+            // Hiding, the search, the decoys and the rounds of Hide and seek.
+            else if (ruleSet is HideAndSeekRuleSet hideAndSeek) hideAndSeek.Tick(this);
             if (IsSimultaneous)
             {
                 UpdatePlayerShots();
@@ -1386,7 +1405,8 @@ namespace UntitledPoolGame.Pool
 
             // A ball still sinking into a table hole counts as moving: the shot
             // is judged once it's gone, not halfway down.
-            bool moving = PoolBall.AnyMoving() || AnyBallSinking();
+            // So does a pin still falling.
+            bool moving = PoolBall.AnyMoving() || AnyBallSinking() || (ruleSet is BowlingPoolRuleSet bowling && bowling.PinsMoving);
 
             if (shotInProgress && !moving && wasMoving)
             {
@@ -1523,6 +1543,14 @@ namespace UntitledPoolGame.Pool
             if (!(ruleSet is PlayAnywhereRuleSet)) PlayAnywhereRuleSet.Cleanup();
             // Full-size players and one cue ball after Pocket Size.
             if (!(ruleSet is PocketSizeRuleSet)) PocketSizeRuleSet.Cleanup();
+            // Full-size players and the cue ball back after the Shooter miniature.
+            if (!(ruleSet is ShooterMiniRuleSet)) ShooterMiniRuleSet.Cleanup();
+            // No pins left after Bowling Pool (Bowling Pool clears its own).
+            if (!(ruleSet is BowlingPoolRuleSet)) BowlingPoolRuleSet.Cleanup();
+            // The real table and the players' bodies back after Sumo Pool.
+            if (!(ruleSet is SumoPoolRuleSet)) SumoPoolRuleSet.Cleanup();
+            // Full-size players and one cue ball after Hide and seek.
+            if (!(ruleSet is HideAndSeekRuleSet)) HideAndSeekRuleSet.Cleanup();
             // One shared cue ball again after a match with one each.
             if (!(ruleSet is SpeedPoolRuleSet)) SpeedPoolRuleSet.Cleanup();
             ruleSet.Setup(this);
@@ -1549,6 +1577,12 @@ namespace UntitledPoolGame.Pool
             PoolGameMode.PowerWashPool => new PowerWashPoolRuleSet(),
             PoolGameMode.PlayAnywhere => new PlayAnywhereRuleSet(),
             PoolGameMode.PocketSize => new PocketSizeRuleSet(),
+            PoolGameMode.ShooterMini => new ShooterMiniRuleSet(),
+            PoolGameMode.ShooterPool => new ShooterPoolRuleSet(),
+            PoolGameMode.BowlingPool => new BowlingPoolRuleSet(),
+            PoolGameMode.SumoPool => new SumoPoolRuleSet(),
+            PoolGameMode.SumoBilliard => new SumoBilliardRuleSet(),
+            PoolGameMode.HideAndSeek => new HideAndSeekRuleSet(),
             // 8-ball, and Catch the Hole (8-ball plus the living holes).
             _ => setup.type == PoolMatchType.SpeedPool ? new SpeedPoolRuleSet() : new EightBallRuleSet(),
         };
@@ -1631,6 +1665,12 @@ namespace UntitledPoolGame.Pool
             DrawModeButton(PoolGameMode.PowerWashPool, "Power Wash Pool (laver le tapis)");
             DrawModeButton(PoolGameMode.PlayAnywhere, "Play Anywhere (golf dans le décor)");
             DrawModeButton(PoolGameMode.PocketSize, "Pocket Size (le grand chasse le petit)");
+            DrawModeButton(PoolGameMode.ShooterMini, "Shooter miniature (on se tire dessus sur la table)");
+            DrawModeButton(PoolGameMode.ShooterPool, "Shooter Billard (vider son groupe en se tirant dessus)");
+            DrawModeButton(PoolGameMode.BowlingPool, "Bowling Pool (des quilles sur la table)");
+            DrawModeButton(PoolGameMode.SumoPool, "Sumo Pool (se pousser dans les trous)");
+            DrawModeButton(PoolGameMode.SumoBilliard, "Sumo Billard (vider son groupe en étant une bille)");
+            DrawModeButton(PoolGameMode.HideAndSeek, "Cache-cache (se cacher dans une bille)");
 
             bool powers = GUILayout.Toggle(selected.powers, "Pouvoirs");
             if (powers != selected.powers) Select((ref PoolMatchSetup s) => s.powers = powers);

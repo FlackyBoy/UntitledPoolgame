@@ -56,6 +56,11 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePowerWashPowerAssets();
             EnsurePlayAnywhereSettingsAsset();
             EnsurePocketSizeAssets();
+            EnsureShooterMiniSettingsAsset();
+            EnsureShooterPowerAssets();
+            EnsureBowlingPoolSettingsAsset();
+            EnsureSumoPoolSettingsAsset();
+            EnsureHideAndSeekSettingsAsset();
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
@@ -132,14 +137,105 @@ namespace UntitledPoolGame.PoolEditor
         {
             EnsureFolder("Assets/Resources");
             const string path = "Assets/Resources/PocketSizeSettings.asset";
-            if (AssetDatabase.LoadAssetAtPath<PocketSizeSettings>(path) == null)
-                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<PocketSizeSettings>(), path);
+            PocketSizeSettings settings = AssetDatabase.LoadAssetAtPath<PocketSizeSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<PocketSizeSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+            if (settings.tinyPrefab == null)
+            {
+                settings.tinyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/PlayerLocal/New_PlayerVariantMini.prefab");
+                EditorUtility.SetDirty(settings);
+            }
             EnsurePowerAsset<SlowCueBallPower>("SlowCueBallPower", "Blanche au ralenti", null);
             EnsurePowerAsset<RepelCueBallPower>("RepelCueBallPower", "Blanche à la poche", null);
             EnsurePowerAsset<TinySprintPower>("TinySprintPower", "Super vitesse", null);
             EnsurePowerAsset<RapidShotPower>("RapidShotPower", "Tir rapide", null);
             EnsurePowerAsset<DoubleCueBallPower>("DoubleCueBallPower", "Blanche ×2", null);
             EnsurePowerAsset<SlowTinyPower>("SlowTinyPower", "Petit au ralenti", null);
+        }
+
+        // Shooter miniature: health, the rifle, the balls.
+        internal static void EnsureShooterMiniSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/ShooterMiniSettings.asset";
+            ShooterMiniSettings settings = AssetDatabase.LoadAssetAtPath<ShooterMiniSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<ShooterMiniSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+            if (settings.cuePrefab == null)
+            {
+                settings.cuePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Cue/Cue.prefab");
+                EditorUtility.SetDirty(settings);
+            }
+            string problem = ShooterAnimationTools.Build();
+            if (problem != null) Debug.LogWarning($"[Shooter] {problem}");
+        }
+
+        // The two Shooter modes' powers, ticked for both (their Only In Modes
+        // chooses). The explosion and the magnet's effect are the ones the
+        // other powers already use.
+        internal static void EnsureShooterPowerAssets()
+        {
+            EnsurePowerAsset<ShooterBigBallPower>("ShooterBigBallPower", "Grosse bille", OnlyInShooter);
+            EnsurePowerAsset<ShooterFreezeShotPower>("ShooterFreezeShotPower", "Tir de glace", OnlyInShooter);
+            EnsurePowerAsset<ShooterMinePower>("ShooterMinePower", "Mine", serialized =>
+            {
+                OnlyInShooter(serialized);
+                var blast = AssetDatabase.LoadAssetAtPath<BallBlastPower>("Assets/Powers/BallBlastPower.asset");
+                if (blast != null)
+                    serialized.FindProperty("explosionPrefab").objectReferenceValue = new SerializedObject(blast).FindProperty("explosionPrefab").objectReferenceValue;
+            });
+            EnsurePowerAsset<ShooterShotgunPower>("ShooterShotgunPower", "Fusil à pompe", OnlyInShooter);
+            EnsurePowerAsset<ShooterHomingBallPower>("ShooterHomingBallPower", "Tête chercheuse", OnlyInShooter);
+            EnsurePowerAsset<ShooterMagnetPower>("ShooterMagnetPower", "Aimant à billes", serialized =>
+            {
+                OnlyInShooter(serialized);
+                var magnet = AssetDatabase.LoadAssetAtPath<MagnetPower>("Assets/Powers/MagnetPower.asset");
+                if (magnet != null)
+                    serialized.FindProperty("vfxPrefab").objectReferenceValue = new SerializedObject(magnet).FindProperty("pocketVfxPrefab").objectReferenceValue;
+            });
+            EnsurePowerAsset<ShooterClosePocketPower>("ShooterClosePocketPower", "Poche fermée", OnlyInShooter);
+            EnsurePowerAsset<ShooterGrapplePower>("ShooterGrapplePower", "Grappin", OnlyInShooter);
+        }
+
+        private static void OnlyInShooter(SerializedObject serialized)
+        {
+            SerializedProperty modes = serialized.FindProperty("onlyInModes");
+            modes.arraySize = 2;
+            modes.GetArrayElementAtIndex(0).intValue = (int)PoolGameMode.ShooterMini;
+            modes.GetArrayElementAtIndex(1).intValue = (int)PoolGameMode.ShooterPool;
+        }
+
+        // Bowling Pool: frames, the pins' size and physics.
+        private static void EnsureBowlingPoolSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/BowlingPoolSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<BowlingPoolSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<BowlingPoolSettings>(), path);
+        }
+
+        // Sumo Pool: the rounds, the square table, the balls and their camera.
+        private static void EnsureSumoPoolSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/SumoPoolSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<SumoPoolSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SumoPoolSettings>(), path);
+        }
+
+        // Hide and seek: the rounds, the decoys, the hider's tricks.
+        private static void EnsureHideAndSeekSettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/HideAndSeekSettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<HideAndSeekSettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<HideAndSeekSettings>(), path);
         }
 
         // Snake Pool: the chains behind the cue balls.
@@ -189,6 +285,38 @@ namespace UntitledPoolGame.PoolEditor
             {
                 if (piece == null || settings.props.Exists(c => c != null && c.prefab == piece)) continue;
                 settings.props.Insert(0, new PlayAnywherePropChoice { prefab = piece, useOwnColliders = true });
+                EditorUtility.SetDirty(settings);
+            }
+
+            // The direction signs along the courses.
+            PlayAnywhereSign sign = PlayAnywhereTools.EnsureSignPrefab();
+            if (settings.signPrefab == null)
+            {
+                settings.signPrefab = sign;
+                EditorUtility.SetDirty(settings);
+            }
+
+            // The signs floating above the flags.
+            GameObject flagMarker = PlayAnywhereTools.EnsureFlagMarkerPrefab();
+            if (settings.flagMarkerPrefab == null)
+            {
+                settings.flagMarkerPrefab = flagMarker;
+                EditorUtility.SetDirty(settings);
+            }
+
+            // And above the crates, not to be mistaken for them.
+            GameObject crateMarker = PlayAnywhereTools.EnsureCrateMarkerPrefab();
+            if (settings.crateMarkerPrefab == null)
+            {
+                settings.crateMarkerPrefab = crateMarker;
+                EditorUtility.SetDirty(settings);
+            }
+
+            // The wall of light on the edge of the courses.
+            Material courseWall = PlayAnywhereTools.EnsureCourseWallMaterial();
+            if (settings.courseWallMaterial == null && courseWall != null)
+            {
+                settings.courseWallMaterial = courseWall;
                 EditorUtility.SetDirty(settings);
             }
         }

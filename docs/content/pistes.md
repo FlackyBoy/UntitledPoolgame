@@ -82,10 +82,12 @@ Autres idées autour des pouvoirs :
     - **Technique** : la visée suppose une table (`LocalPoolAimController`, `PoolTableSurface`) et il faudra une visée au sol ; frottement et rebond selon la surface ; `LocalGrabbable` sait ramasser et lancer, mais pas encore poser un objet à un endroit précis (aperçu, rotation).
 - **Cache-cache déguisé** (idée du 30/10) : un joueur se cache en se déguisant, l'autre le cherche. Rien n'est décidé. Pistes de Claude :
   - **Façon Prop Hunt dans le bar** : celui qui se cache prend l'apparence d'un objet du bar (tabouret, bouteille, caisse). Celui qui cherche a un nombre de tirs limité : il tire des billes sur les objets suspects. Une erreur lui coûte un tir.
-  - **Caché sur la table** : celui qui se cache devient une bille parmi les autres et peut rouler un peu quand personne ne le regarde. Celui qui cherche doit rentrer la bonne bille. Rentrer une fausse bille est une faute.
+  - **Caché sur la table** : retenu le 04/11, voir *Mode Cache-cache* dans la TODO. Idées en plus pour ce mode (05/11, rien de décidé) :
+    - **Démangeaison** (à voir, 05/11) : un cacheur immobile trop longtemps tressaute tout seul, pour éviter qu'il attende le minuteur sans bouger.
+    - **Chaud / froid** : après un tir raté, le chercheur apprend s'il était près du cacheur.
   - **Caché parmi les clients** (façon *Spy Party*) : celui qui se cache ressemble aux PNJ du bar et doit faire une action discrète (rentrer une bille, toucher une caisse) sans se faire repérer.
   - À trancher : quel déguisement (objet, bille ou client), combien de temps dure une manche, et ce qui rapporte des points à chacun.
-- **Combat sur une mini table** (idée du 30/10, à rapprocher de la dimension « shooter miniature » du GDD) : les deux joueurs sont réduits sur la table et s'affrontent, à la queue (corps à corps) ou en tirant. Rien n'est décidé. Pistes de Claude :
+- **Combat sur une mini table** (idée du 30/10) : les deux joueurs sont réduits sur la table et s'affrontent. Le mode est retenu et cadré le 04/11 (voir *Mode Shooter miniature* dans la TODO) ; ce qui suit reste des idées en plus. Pistes de Claude :
   - **Façon sumo** : tomber dans une poche fait perdre la manche. On gagne en poussant l'autre dans une poche, avec un coup de queue ou en lançant une bille sur lui.
   - **Les billes comme danger** : de temps en temps, une queue géante frappe la blanche depuis le bord de la table, et des billes énormes traversent l'arène. Il faut les esquiver ou s'en servir comme projectiles.
   - **Le décor** : la craie, les bandes et les poches deviennent des obstacles, des couvertures et des pièges.
@@ -98,6 +100,36 @@ Autres idées autour des pouvoirs :
   - **Décor de table** : la craie, un verre ou un sous-bock posés sur le tapis comme abris en plus des billes.
   - **Variante à quatre** : un grand et trois petits, le dernier petit debout gagne.
   - **Points plutôt que manches** : en Boogie Night, une manche par joueur, et le score de chacun = temps tenu en petit.
+
+### Mode 4 joueurs en écran scindé (réflexion du 05/11, pas à développer pour l'instant)
+
+**Orientations données par l'utilisateur :**
+
+- **Formats** : Speed Pool et tour par tour, en chacun pour soi ou en 2 contre 2.
+- **Modes** : tous les modes sont envisagés à 4.
+- **Billes** : 7 par joueur, configurable. La forme du départ peut changer et ne plus être un triangle.
+- **Tour par tour, ceux qui attendent** : ils font ce qu'ils veulent.
+- **Attaques sur un joueur** (Vision brouillée, Commandes inversées) : on les envoie en tapant l'autre, au tour par tour et aussi en Speed Pool.
+- **Attaques sur la table** (Trou/météorite, Poche fermée, Groupe identique…) : pas de cible, elles touchent tout le monde sauf le lanceur. Au tour par tour, elles durent jusqu'au retour de son tour.
+- **Billes en 2 contre 2** : quatre groupes, chaque équipe en vide deux (14 billes par équipe, 28 sur la table).
+- **Groupes** : pleines, rayées, croix, carrés n'est qu'un exemple ; des couleurs par groupe sont possibles. La noire reste.
+- **Bille d'un autre rentrée** : même logique qu'à 2 (ça l'aide). Un peu de chaos est voulu.
+- **Pouvoirs** : des pouvoirs propres au 4 joueurs, façon carapace bleue, sont envisagés.
+- **Performances** : tester d'abord, et dégrader l'affichage si besoin.
+- **Scène de test** : R&D, pas `BarSplitscreen` (trop d'objets).
+
+**Questions ouvertes :**
+
+- **Durée d'une attaque sur un joueur, au tour par tour** : proposition de Claude, seulement le prochain tour de celui qu'on a tapé. À confirmer.
+- **Modes à repenser** : ceux qui reposent sur un duel ne se convertissent pas tels quels, comme Pocket Size (un grand contre un petit) ou Snake Pool (quelle file casser).
+
+**Pistes techniques :**
+
+- **Groupe identique en Speed Pool** : `BallDisguise` change l'aspect des billes pour toutes les caméras. Pour que le lanceur voie les vraies billes pendant que les autres sont gênés, il faudrait un rendu différent par caméra. Au tour par tour, il suffit de retirer l'effet avant son tour.
+- **Lisibilité** : à 2 m, une bille fait environ 12 pixels de haut dans un quart d'écran 1080p (24 à 2 joueurs). Des couleurs par groupe se liraient mieux que des motifs.
+- **Affichage dégradé à 4** : ombres réduites à 15-20 m et 2 cascades, SSAO coupé, ombres coupées pour les petites lumières, IK allégé pour les corps éloignés.
+- **Départ** : à voir selon le nombre de billes ; losange, grand hexagone ou plusieurs petits groupes.
+- **Premier test, sans code** : dans R&D, passer *Max Player Count* à 4 sur le `PlayerInputManager` (sans enregistrer la scène), ajouter les joueurs avec C+P et regarder le Profiler. La scène n'a que 2 points d'apparition : J3 et J4 arrivent sur J1 et J2.
 
 ### Structure « party game » (idée du 20/10)
 
@@ -169,6 +201,8 @@ Proposées sans retour pour l'instant : frapper le tireur pendant sa charge fait
 
 > Propositions faites en relisant la TODO et le code. Chacune indique pourquoi elle est proposée.
 
+- **Sumo Pool : variantes** (05/11) : des billes neutres comme obstacles, une table qui rétrécit, plus de deux joueurs.
+
 ### Game design
 
 - **Pouvoirs de rattrapage** — le joueur mené au score tire plus souvent des pouvoirs forts (comme les objets de Mario Kart, déjà la référence du slot unique). *Pourquoi :* les party games restent drôles quand la partie reste ouverte jusqu'au bout.
@@ -177,6 +211,9 @@ Proposées sans retour pour l'instant : frapper le tireur pendant sa charge fait
 - **Ralenti ou revoir le dernier coup** sur les beaux tirs et les fautes spectaculaires. *Pourquoi :* ce sont les moments qu'on partage dans un « friend slop ».
 - **Emotes et provocations** (déjà prévues dans les animations) liées aux événements : faute adverse, bille empochée. *Pourquoi :* peu de travail et beaucoup de réactions entre joueurs.
 - **Défis de trick-shots en solo** — positions de billes imposées, un seul tir. *Pourquoi :* donne du contenu à jouer seul et sert de tutoriel pour la visée et l'effet.
+- **Bowling Pool, placer sa blanche** le long de la ligne de lancer avant chaque tir (aujourd'hui, toujours du même point). *Pourquoi :* c'est le geste du bowling, et ça rend les spares plus intéressants.
+- **Bowling Pool, un râteau** qui balaie les quilles tombées et une feuille de score façon écran de bowling en fin de partie. *Pourquoi :* c'est ce qui fait reconnaître le bowling, et les quilles disparaissent d'un coup pour l'instant.
+- **Bowling Pool, une piste au sol** dans les niveaux, à la façon de Play Anywhere, avec des bandes en gouttières. *Pourquoi :* le spectacle d'une grosse boule et de grandes quilles.
 
 ### Expérience joueur
 

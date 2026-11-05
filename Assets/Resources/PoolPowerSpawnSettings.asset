@@ -32,6 +32,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: daa96e264b66b0f4498ce737ccbbaee8, type: 2}
   - {fileID: 11400000, guid: e5b0620495bef1448a51c3b0acc875b3, type: 2}
   - {fileID: 11400000, guid: 61a9cec105fc6c9438699883eef70870, type: 2}
+  - {fileID: 11400000, guid: b343b64b40551014a8a1b19c25d11d8f, type: 2}
+  - {fileID: 11400000, guid: 6d59cafe56b63ea4f8ed5d77232a552f, type: 2}
+  - {fileID: 11400000, guid: f855402ae459ac54a91dd8481d63d7a2, type: 2}
+  - {fileID: 11400000, guid: de99788620001544a9a3004e3252b7a1, type: 2}
+  - {fileID: 11400000, guid: f1522dc757aebba4a864452bc0ae84d4, type: 2}
+  - {fileID: 11400000, guid: 362135c3515a0644189a06d2ce4cfac5, type: 2}
+  - {fileID: 11400000, guid: 5f22cc8fe0c38774abed42d9ac6eca0f, type: 2}
+  - {fileID: 11400000, guid: 2c0bb1b2bec69e34bbcfd3f28c5553ec, type: 2}
   attackColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   defenseColor: {r: 0.25, g: 0.55, b: 1, a: 1}
   effectColor: {r: 0.3, g: 0.9, b: 0.4, a: 1}
@@ -44,7 +52,7 @@ MonoBehaviour:
   ballRotationMinInterval: 20
   ballRotationMaxInterval: 40
   ballGlowIntensity: 4
-  ballGlowRange: 0.3
+  ballGlowRange: 0.216
   attackBallMaterial: {fileID: 0}
   defenseBallMaterial: {fileID: 0}
   effectBallMaterial: {fileID: 0}

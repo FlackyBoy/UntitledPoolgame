@@ -147,6 +147,7 @@ namespace UntitledPoolGame.Core
         public string refusedBallsMovingText = "Attends que les billes s'arrêtent";
         [Tooltip("Placement de la blanche ou annonce de la 8 en cours.")]
         public string refusedPointerBusyText = "Termine d'abord ta visée";
+        public string refusedCannotActText = "Pas maintenant !";
         public float refusedDuration = 1.4f;
 
         [Header("Chrono (Power Wash Pool), en haut au centre")]

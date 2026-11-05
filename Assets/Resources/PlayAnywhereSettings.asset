@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7418b4104476ca54d94cb7fff93ccaf8, type: 3}
   m_Name: PlayAnywhereSettings
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PlayAnywhereSettings
-  shotPowerMultiplier: 2
+  shotPowerMultiplier: 2.3611
   defaultSurface: {fileID: 11400000, guid: 7043fffa4bb988244aa27c1e8d53d2f0, type: 2}
-  cupCatchSpeed: 2.2
+  cupCatchSpeed: 1.87
   cupLipSlowdown: 0.4
   cupLipDeflection: 30
-  cupLipHop: 0.3
+  cupLipHop: 0.216
   cupSinkTime: 0.4
   courses: 3
   scoreboardTime: 6
@@ -27,6 +27,19 @@ MonoBehaviour:
   maxStrokes: 10
   outOfBoundsPenalty: 1
   outOfBoundsDepth: 2
+  signPrefab: {fileID: 8354426676201745921, guid: 38d840cae75a45a4a802f67cf3a2884c, type: 3}
+  signSpacing: 4
+  signSideMargin: 0.4
+  signSize: 1
+  signFacingAngle: 25
+  signTurnAngle: 30
+  flagMarkerPrefab: {fileID: 768441980817360522, guid: ba57b1dd7b6f3654182b6e2bae50669d, type: 3}
+  crateMarkerPrefab: {fileID: 6130212767213161474, guid: b61ed8d43ee54a04b8ba853863cdee5f, type: 3}
+  flagMarkerBounceHeight: 0.15
+  flagMarkerBounceRate: 1.5
+  flagMarkerBlinkRate: 1.5
+  courseWallMaterial: {fileID: 2100000, guid: 189e4e0b5eb31ab489b181cf8f0582ba, type: 2}
+  courseWallHeight: 1.2
   props:
   - prefab: {fileID: 8511656654336660993, guid: d18d50490aefabb45ada83e1cf718652, type: 3}
     weight: 1
@@ -76,6 +89,10 @@ MonoBehaviour:
   noBuildRadius: 0.5
   maxPlaceSlope: 30
   buildTimeLimit: 45
+  buildShout: "\xC0 la caisse !"
+  buildWarnTime: 10
+  buildWarnShout: Plus que 10 s !
+  buildTimeUpShout: "Temps \xE9coul\xE9 !"
   ghostValidColor: {r: 0.3, g: 1, b: 0.4, a: 0.45}
   ghostInvalidColor: {r: 1, g: 0.25, b: 0.2, a: 0.45}
   fanAcceleration: 3

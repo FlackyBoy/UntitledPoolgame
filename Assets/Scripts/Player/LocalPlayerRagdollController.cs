@@ -90,6 +90,12 @@ namespace UntitledPoolGame.Player
 
         // Others that move the camera leave it alone while this is on.
         public bool IsRagdollCameraActive => isRagdollCameraActive;
+        // The fall view holds the camera, until it is back in the eyes.
+        public bool IsCameraDetached => cameraDetached;
+
+        // Pocket Size (LocalPlayerShrink): the body is this size, so the
+        // distances here, in metres at normal size, follow it (1 = normal).
+        public float SizeScale { get; set; } = 1f;
 
         // Called by RagdollHitRelay on a strong enough hit. BehaviourPuppet
         // only knocks the puppet down once SetHasCollided was called since it
@@ -281,7 +287,7 @@ namespace UntitledPoolGame.Player
                 float bodyYaw = fullRootRotation.eulerAngles.y;
                 float viewYaw = fpsVirtualCamera != null ? ragdollCameraYaw : bodyYaw;
                 Quaternion newRootRotation = Quaternion.Euler(0f, viewYaw, 0f);
-                Vector3 newRootPosition = currentModelWorldPosition - newRootRotation * modelFollow.LocalRestPosition;
+                Vector3 newRootPosition = currentModelWorldPosition - newRootRotation * ScaledInRoot(modelFollow.LocalRestPosition);
 
                 if (traceCameraReturn)
                     Debug.Log($"[CamReturn] {name} recovery: root {transform.position:F2} → {newRootPosition:F2}, model {currentModelWorldPosition:F2}, " +
@@ -358,6 +364,14 @@ namespace UntitledPoolGame.Player
         {
             if (lostRagdollBlockers.value == 0)
                 lostRagdollBlockers = ~LayerMask.GetMask("Ragdoll", "Player", "PlayerAnimated");
+            // A ragdoll goes through balls by design (PhysicsLayerSetup; the
+            // Mini's doesn't, LocalPlayerShrink): crossing one isn't being
+            // lost, and teleported it stopped dead.
+            lostRagdollBlockers &= ~LayerMask.GetMask("Poolball");
+
+            FixJointAnchors();
+            ApplyBodyScale();
+            StartCoroutine(TraceGroundGap());
 
             // Continuous collision, or a fast ragdoll goes through thin walls.
             int continuous = 0;
@@ -372,6 +386,90 @@ namespace UntitledPoolGame.Player
                     }
             Debug.Log($"[Ragdoll] {name}: {continuous} muscles set to continuous collision" +
                       (behaviourPuppet == null ? " — no Behaviour Puppet assigned, the lost-ragdoll checks can't run" : ""), this);
+        }
+
+        // PuppetMaster (Muscle.UpdateAnchor, Unity 6 branch) divides the anchors
+        // by a scale left at 1 until a muscle is Reset, so Unity's own scaling
+        // of the anchor makes each bone the body's scale too short: 72 % on the
+        // normal body, and on the Mini the unpinned ragdoll pulled itself into
+        // a ball (log of 03/11, limbs 0.4 cm from the pelvis against 5.4 cm in
+        // the animation). Set here from the rest pose, which the muscles are
+        // still in, and left alone: the plugin would overwrite them on every
+        // read.
+        private void FixJointAnchors()
+        {
+            PuppetMaster puppet = behaviourPuppet != null ? behaviourPuppet.puppetMaster : null;
+            if (puppet == null) return;
+            puppet.updateJointAnchors = false;
+            foreach (Muscle muscle in puppet.muscles)
+            {
+                ConfigurableJoint joint = muscle.joint;
+                if (joint == null || joint.connectedBody == null) continue;
+                joint.connectedAnchor = joint.connectedBody.transform.InverseTransformPoint(joint.transform.TransformPoint(joint.anchor));
+            }
+        }
+
+        // The ragdoll was tuned at scale 1 and physics doesn't scale: masses and
+        // springs unchanged on shorter limbs, the same gravity and blows, read
+        // as a light, floppy body that moves too fast (at 0.05, an instant
+        // fall). For one that moves as it did at scale 1, at this size:
+        // accelerations and speeds x scale (gravity in FixedUpdate, blows
+        // through ScaleOf), springs x scale squared (inertia, masses unchanged).
+        private void ApplyBodyScale()
+        {
+            float s = transform.lossyScale.y;
+            if (behaviourPuppet == null || Mathf.Approximately(s, 1f)) return;
+            PuppetMaster puppet = behaviourPuppet.puppetMaster;
+            puppet.muscleSpring *= s * s;
+            puppet.pinDistanceFalloff /= s * s;
+            behaviourPuppet.maxRigidbodyVelocity *= s;
+            // Floored: at the Mini's scale, the last jitter of a body at rest
+            // would keep it from ever getting up.
+            behaviourPuppet.maxGetUpVelocity = Mathf.Max(behaviourPuppet.maxGetUpVelocity * s, 0.05f);
+            foreach (BehaviourBase behaviour in puppet.behaviours)
+                if (behaviour is BehaviourFall fall) fall.maxEndVelocity = Mathf.Max(fall.maxEndVelocity * s, 0.05f);
+            foreach (Muscle muscle in puppet.muscles)
+            {
+                if (muscle.rigidbody == null) continue;
+                // In energy per kilo: unscaled, it fell asleep mid-air.
+                muscle.rigidbody.sleepThreshold *= s * s;
+                foreach (Collider part in muscle.colliders)
+                    if (part != null) part.contactOffset = Mathf.Max(part.contactOffset * s, 0.0001f);
+            }
+        }
+
+        // The size of a body, for the blows it takes (ApplyBodyScale).
+        public static float ScaleOf(PuppetMaster puppet)
+        {
+            LocalPlayerRagdollController owner = puppet != null ? puppet.GetComponentInParent<LocalPlayerRagdollController>() : null;
+            return owner != null ? owner.transform.lossyScale.y : 1f;
+        }
+
+        // Diagnostic of how high the body stands, once on the ground: the
+        // root, the capsule's bottom and the soles against the floor below.
+        private System.Collections.IEnumerator TraceGroundGap()
+        {
+            yield return new WaitForSeconds(2f);
+            for (int attempt = 0; attempt < 20 && !(characterController.enabled && characterController.isGrounded); attempt++)
+                yield return new WaitForSeconds(0.5f);
+            float s = transform.lossyScale.y;
+            Vector3 above = transform.position + Vector3.up * characterController.height * s * 0.5f;
+            float floor = float.NegativeInfinity;
+            string floorName = "?";
+            foreach (RaycastHit hit in Physics.RaycastAll(above, Vector3.down, 50f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.transform.IsChildOf(transform) || hit.point.y <= floor) continue;
+                floor = hit.point.y;
+                floorName = hit.collider.name;
+            }
+            float soles = float.PositiveInfinity;
+            if (behaviourPuppet != null)
+                foreach (Muscle muscle in behaviourPuppet.puppetMaster.muscles)
+                    if (muscle.props.group == Muscle.Group.Foot)
+                        foreach (Collider part in muscle.colliders)
+                            if (part != null) soles = Mathf.Min(soles, part.bounds.min.y);
+            Vector3 capsule = transform.TransformPoint(characterController.center) - Vector3.up * characterController.height * s * 0.5f;
+            Debug.Log($"[Sol] {name} sur '{floorName}', au-dessus du sol en cm : racine {(transform.position.y - floor) * 100f:0.00}, bas de la capsule {(capsule.y - floor) * 100f:0.00}, semelles {(soles - floor) * 100f:0.00} (corps de {characterController.height * s * 100f:0.0} cm, peau {characterController.skinWidth * 100f:0.00} cm).", this);
         }
 
         private void CheckLostRagdoll()
@@ -402,7 +500,7 @@ namespace UntitledPoolGame.Player
             bool through = hasLastPelvis && Physics.Linecast(lastPelvis, pelvis, out crossed, lostRagdollBlockers, QueryTriggerInteraction.Ignore);
             lastPelvis = pelvis;
             hasLastPelvis = true;
-            bool below = pelvis.y < transform.position.y - lostBelowDistance;
+            bool below = pelvis.y < transform.position.y - lostBelowDistance * SizeScale;
             bool tooLong = maxDownTime > 0f && downTime > maxDownTime;
 
             if (!through && !below && !tooLong) return;
@@ -426,8 +524,6 @@ namespace UntitledPoolGame.Player
         private void CheckStuckRagdoll()
         {
             PuppetMaster puppet = behaviourPuppet != null ? behaviourPuppet.puppetMaster : null;
-            // Not while the ragdoll is switched off (Pocket Size's shrunk
-            // player): its muscles stay where they were left.
             if (maxRagdollSeparation <= 0f || puppet == null || puppet.muscles.Length == 0 || !puppet.isActive || behaviourPuppet.state != BehaviourPuppet.State.Puppet)
             {
                 stuckTime = 0f;
@@ -437,7 +533,7 @@ namespace UntitledPoolGame.Player
             if (pelvis.rigidbody == null || pelvis.target == null) return;
 
             float gap = Vector3.Distance(pelvis.rigidbody.position, pelvis.target.position);
-            stuckTime = gap > maxRagdollSeparation ? stuckTime + Time.deltaTime : 0f;
+            stuckTime = gap > maxRagdollSeparation * SizeScale ?stuckTime + Time.deltaTime : 0f;
             if (stuckTime < stuckRagdollTime) return;
 
             stuckTime = 0f;
@@ -446,6 +542,25 @@ namespace UntitledPoolGame.Player
             bool wall = Physics.Linecast(pelvis.target.position, pelvis.rigidbody.position, out RaycastHit hit, lostRagdollBlockers, QueryTriggerInteraction.Ignore);
             Debug.LogWarning($"[Ragdoll] {name}: standing ragdoll stuck {gap:F2} m from its animated body{(wall ? $" (behind '{hit.collider.name}')" : "")} — snapped back onto it", this);
             puppet.Teleport(animatedRoot.position, animatedRoot.rotation, true);
+        }
+
+        // Gravity while down, as a share of the physics' own. Below 0: this
+        // body's size. Set for the Mini, which shares a table with full-speed
+        // balls: at its size's 0.05 it drifts through the air, stiff.
+        public float FallGravityOverride { get; set; } = -1f;
+
+        // Gravity at this body's size (ApplyBodyScale), down only: the pins
+        // compensate for the physics' own while it's standing.
+        private void FixedUpdate()
+        {
+            if (behaviourPuppet == null || behaviourPuppet.state != BehaviourPuppet.State.Unpinned) return;
+            PuppetMaster puppet = behaviourPuppet.puppetMaster;
+            if (puppet == null || !puppet.isActive) return;
+            float share = FallGravityOverride >= 0f ? FallGravityOverride : CombatSettings.Instance.ragdollGravityScale * transform.lossyScale.y;
+            Vector3 extra = Physics.gravity * (share - 1f);
+            foreach (Muscle muscle in puppet.muscles)
+                if (muscle.rigidbody != null && !muscle.state.isDisconnected)
+                    muscle.rigidbody.AddForce(extra, ForceMode.Acceleration);
         }
 
         private void Update()
@@ -505,7 +620,7 @@ namespace UntitledPoolGame.Player
             if (isRagdollCameraActive)
             {
                 PredictedRoot(out Vector3 rootPosition, out Quaternion rootRotation);
-                eyePosition = rootPosition + rootRotation * eyePositionInRoot;
+                eyePosition = rootPosition + rootRotation * ScaledInRoot(eyePositionInRoot);
                 eyeRotation = rootRotation * eyeRotationInRoot;
             }
             else
@@ -519,16 +634,21 @@ namespace UntitledPoolGame.Player
             // hip), looking where the player was looking.
             Vector3 fallPosition = eyePosition;
             Quaternion fallRotation = eyeRotation;
+            Vector3 anchor = eyePosition;
             PuppetMaster puppet = behaviourPuppet != null ? behaviourPuppet.puppetMaster : null;
             if (puppet != null && puppet.muscles.Length > 0 && puppet.muscles[0].rigidbody != null)
             {
                 Vector3 pelvis = puppet.muscles[0].rigidbody.position;
-                fallPosition = pelvis + Quaternion.Euler(0f, ragdollCameraYaw, 0f) * new Vector3(0f, ragdollCameraHeight, -ragdollCameraDistance);
-                fallRotation = Quaternion.LookRotation(pelvis + Vector3.up * 0.3f - fallPosition);
+                anchor = pelvis;
+                fallPosition = pelvis + Quaternion.Euler(0f, ragdollCameraYaw, 0f) * new Vector3(0f, ragdollCameraHeight, -ragdollCameraDistance) * SizeScale;
+                fallRotation = Quaternion.LookRotation(pelvis + Vector3.up * (0.3f * SizeScale) - fallPosition);
             }
 
             float w = Mathf.SmoothStep(0f, 1f, cameraPull);
-            cam.SetPositionAndRotation(Vector3.Lerp(eyePosition, fallPosition, w), Quaternion.Slerp(eyeRotation, fallRotation, w));
+            // On the body's side of the walls it fell against.
+            Vector3 viewPosition = CameraObstacles.Reach(anchor, Vector3.Lerp(eyePosition, fallPosition, w),
+                MovementSettings.Instance.cameraCollisionRadius * SizeScale, transform);
+            cam.SetPositionAndRotation(viewPosition, Quaternion.Slerp(eyeRotation, fallRotation, w));
         }
 
         // Where OnRecovered will put the root: on the animated body, facing
@@ -537,8 +657,13 @@ namespace UntitledPoolGame.Player
         {
             rotation = Quaternion.Euler(0f, ragdollCameraYaw, 0f);
             position = modelTransform != null && modelFollow != null
-                ? modelTransform.position - rotation * modelFollow.LocalRestPosition
+                ? modelTransform.position - rotation * ScaledInRoot(modelFollow.LocalRestPosition)
                 : transform.position;
         }
+
+        // A point in the root's space as a world offset, rotation left out. At
+        // the Mini's size, unscaled, the eyes were a full-size player's height
+        // above the body: the view rose as it pulled back, and came down again.
+        private Vector3 ScaledInRoot(Vector3 local) => Vector3.Scale(local, transform.lossyScale);
     }
 }

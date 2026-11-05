@@ -25,6 +25,8 @@ namespace UntitledPoolGame.Core
         {
             PoolGameMode.EightBall, PoolGameMode.CatchTheHole, PoolGameMode.HungryHole, PoolGameMode.SnakePool,
             PoolGameMode.PowerWashPool, PoolGameMode.PlayAnywhere, PoolGameMode.PocketSize,
+            PoolGameMode.ShooterMini, PoolGameMode.ShooterPool, PoolGameMode.BowlingPool, PoolGameMode.SumoPool, PoolGameMode.SumoBilliard,
+            PoolGameMode.HideAndSeek,
         };
         [Tooltip("Chance que la partie tirée soit avec pouvoirs (0 = jamais, 1 = toujours).")]
         [Range(0f, 1f)] public float powersChance = 0.5f;

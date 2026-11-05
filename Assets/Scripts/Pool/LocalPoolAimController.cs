@@ -115,9 +115,9 @@ namespace UntitledPoolGame.Pool
         // the body crouches, the cue comes down with it and may tilt further.
         [Header("Low ball (on the floor)")]
         [Tooltip("Sans table dans la scène, et toujours en Play Anywhere : hauteur de la bille au-dessus des pieds (mètres) pour laquelle la pose de visée est réglée. Hors Play Anywhere avec une table, c'est la hauteur d'une bille sur son tapis. Une bille plus basse fait s'accroupir le personnage.")]
-        [SerializeField] private float standingBallHeight = 0.8f;
+        [SerializeField] private float standingBallHeight = 0.576f;
         [Tooltip("Descente maximale du bassin (mètres) pour une bille basse ; la queue descend d'autant. 0 = jamais accroupi.")]
-        [SerializeField] private float maxLowBallCrouch = 0.45f;
+        [SerializeField] private float maxLowBallCrouch = 0.324f;
         [Tooltip("Flexion du buste (degrés) quand le personnage est accroupi au maximum.")]
         [SerializeField] private float lowBallCrouchBend = 25f;
         [Tooltip("Inclinaison de la queue en plus de Max Cue Tilt (degrés) quand le personnage est accroupi au maximum, pour que la pointe atteigne une bille au sol.")]
@@ -142,17 +142,17 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Action qui fait passer de debout à accroupi en visée (Play Anywhere seulement).")]
         [SerializeField] private string crouchActionName = "Crouch";
         [Tooltip("Descente du bassin (mètres) en posture accroupie choisie. Le personnage descend aussi seul pour une bille au sol (Max Low Ball Crouch).")]
-        [SerializeField] private float stanceCrouchDepth = 0.45f;
+        [SerializeField] private float stanceCrouchDepth = 0.324f;
         [Tooltip("Rayon (mètres) des volumes qui cherchent un obstacle au-dessus du corps en visée.")]
-        [SerializeField] private float stanceProbeRadius = 0.2f;
+        [SerializeField] private float stanceProbeRadius = 0.144f;
         [Tooltip("Hauteurs (mètres, au-dessus des pieds) du buste debout : un obstacle entre les deux force la posture accroupie.")]
-        [SerializeField] private Vector2 standingTorsoHeights = new Vector2(1.05f, 1.7f);
+        [SerializeField] private Vector2 standingTorsoHeights = new Vector2(0.756f, 1.224f);
         [Tooltip("Hauteurs (mètres, au-dessus des pieds) du buste accroupi : un obstacle entre les deux demande de s'allonger.")]
-        [SerializeField] private Vector2 crouchedTorsoHeights = new Vector2(0.6f, 1.15f);
+        [SerializeField] private Vector2 crouchedTorsoHeights = new Vector2(0.432f, 0.828f);
         [Tooltip("Bille au sol : à moins de cette hauteur (mètres) au-dessus des pieds, le personnage vise toujours accroupi, et allongé si un obstacle l'empêche même de s'accroupir. Plus haut (sur un comptoir), il ne s'allonge pas.")]
-        [SerializeField] private float proneMaxBallHeight = 0.3f;
+        [SerializeField] private float proneMaxBallHeight = 0.216f;
         [Tooltip("Allongé : distance (mètres) entre la bille et le milieu des épaules, dans l'axe du tir.")]
-        [SerializeField] private float proneShoulderDistance = 1.1f;
+        [SerializeField] private float proneShoulderDistance = 0.792f;
         [Tooltip("Allongé : la queue monte de la bille vers le talon de cet angle (degrés), au lieu d'être à plat.")]
         [SerializeField] private float proneCueRise = 4f;
         [Tooltip("Allongé : hauteur de la caméra de visée, en part de Orbit Height (elle passe sous l'obstacle).")]
@@ -170,17 +170,21 @@ namespace UntitledPoolGame.Pool
         // aiming camera comes in front of a wall between it and the ball.
         [Header("Walls (Play Anywhere)")]
         [Tooltip("Avancée (mètres) du corps, poussé par un mur, à partir de laquelle la queue est levée et penchée au maximum (Wall Cue Raise, Wall Extra Cue Tilt). Le corps, lui, avance autant qu'il faut, jusqu'à Min Wall Ball Gap de la bille ; la queue glisse d'autant dans ses mains pour que la pointe reste à la bille.")]
-        [SerializeField] private float maxWallPush = 0.6f;
+        [SerializeField] private float maxWallPush = 0.432f;
         [Tooltip("Distance minimale (mètres) entre la bille et le centre du corps poussé par un mur. Bille plus près du mur que ça : le corps touche le mur, mais reste de ce côté.")]
-        [SerializeField] private float minWallBallGap = 0.4f;
+        [SerializeField] private float minWallBallGap = 0.288f;
         [Tooltip("Hauteurs (mètres, au-dessus des pieds) du volume qui cherche un mur derrière le corps : jambes et bassin, pour que les comptoirs et plafonds au-dessus restent gérés par la posture.")]
-        [SerializeField] private Vector2 wallProbeHeights = new Vector2(0.2f, 0.8f);
+        [SerializeField] private Vector2 wallProbeHeights = new Vector2(0.144f, 0.576f);
         [Tooltip("Mur au plus près (Max Wall Push) : les mains montent de cette hauteur (mètres), la queue penche vers la bille et son talon s'écarte du mur.")]
-        [SerializeField] private float wallCueRaise = 0.25f;
+        [SerializeField] private float wallCueRaise = 0.18f;
         [Tooltip("Inclinaison de la queue permise en plus (degrés) quand un mur avance le joueur au maximum.")]
         [SerializeField] private float wallExtraCueTilt = 20f;
         [Tooltip("Rapproche la caméra de visée de la bille quand un mur est entre les deux.")]
         [SerializeField] private bool cameraAvoidsWalls = true;
+        [Tooltip("Mur derrière la bille : la caméra monte de cette part de ce que le mur lui fait perdre en recul (1 = autant), pour garder le tir à l'écran.")]
+        [SerializeField] private float cameraWallLift = 1f;
+        [Tooltip("Mur derrière la bille : la vue se relève vers l'avant du tir, en descendant la bille à l'écran. 0 = la bille reste au centre (vue plongeante), 1 = tout en bas de l'écran.")]
+        [Range(0f, 1f)] [SerializeField] private float cameraWallBallLow = 0.85f;
 
         // How far a wall pushed the body forward this frame (m).
         private float wallPush;
@@ -201,6 +205,8 @@ namespace UntitledPoolGame.Pool
         // measured pose (ApplyLean), applied in UpdateAim.
         private Vector3 proneRootOffset;
         private float proneYawOffset;
+        // How far a wall pushed the body when it lay down.
+        private float pronePush;
         private float proneTraceNext;
 
         public enum AimStance { Standing, Crouched, Prone }
@@ -211,7 +217,6 @@ namespace UntitledPoolGame.Pool
         // the ball), applied in ApplyLean with the low-ball crouch.
         private float stanceCrouch;
         private InputAction crouchAction;
-        private static readonly Collider[] stanceHits = new Collider[16];
 
         // Out of reach even stretched: the front hand lets go and the body
         // straightens up until the shot is reachable again.
@@ -358,6 +363,7 @@ namespace UntitledPoolGame.Pool
         // The Brain rewrites the camera every LateUpdate, which would undo
         // the aim orbit: it's turned off while aiming.
         private CinemachineBrain cinemachineBrain;
+        private Camera aimCamera;
         private InputAction lookAction;
         private InputAction moveAction;
         private InputAction interactAction;
@@ -495,6 +501,9 @@ namespace UntitledPoolGame.Pool
             if (isAiming) return true;
             if (IsMyTurnToPlaceBall()) return true;
             if (IsMyTurnToCallPocket()) return true;
+            // Bowling Pool: pressing to aim again while the pins fall does
+            // nothing yet, but shouldn't drop the cue.
+            if (IsCue(heldObject) && BowlingPoolRuleSet.Current != null && !BowlingPoolRuleSet.Current.CanShoot) return true;
             // Only when aiming is allowed: near the ball outside one's turn
             // (Play Anywhere's build, strokes used up), Interact did nothing,
             // neither aiming nor dropping the cue.
@@ -773,6 +782,13 @@ namespace UntitledPoolGame.Pool
             {
                 if (traceAimInput)
                     Debug.Log($"[AimInput] {name}: visée quittée d'elle-même — {(currentCueBall == null ? "plus de blanche" : currentCueBall.Rigidbody.isKinematic ? "blanche garée" : "plus de queue en main")}", this);
+                ExitAim();
+                return;
+            }
+
+            // Play Anywhere: the clock ended the round under the player's aim.
+            if (PlayAnywhereRuleSet.Current != null && PoolMatchRules.Instance != null && !PoolMatchRules.Instance.CanPlayerShoot(playerInput.playerIndex))
+            {
                 ExitAim();
                 return;
             }
@@ -1111,6 +1127,8 @@ namespace UntitledPoolGame.Pool
 
             cameraRestLocalPosition = cameraTransform.localPosition;
             cameraRestLocalRotation = cameraTransform.localRotation;
+            aimCameraPull = 0f;
+            aimCamera = cameraTransform.GetComponent<Camera>();
 
             Vector3 cueBallPosition = currentCueBall.Rigidbody.position;
             Vector3 toBall = cueBallPosition - transform.position;
@@ -1266,7 +1284,9 @@ namespace UntitledPoolGame.Pool
             float handsDown = lowBallCrouch - wallCueRaise * WallPushFraction;
             if (handsDown != 0f)
                 offsetInParent += held.parent != null ? held.parent.InverseTransformVector(Vector3.down * handsDown) : Vector3.down * handsDown;
-            held.localPosition = cueRestLocalPosition + offsetInParent + axisInParent * AimHandShift;
+            // AimHandShift is in metres, the parent may be scaled.
+            float parentScale = held.parent != null ? held.parent.lossyScale.x : 1f;
+            held.localPosition = cueRestLocalPosition + offsetInParent + axisInParent * (AimHandShift / parentScale);
 
             // From the carried pose (not last frame's, it would compound),
             // smoothed so the reach limit doesn't snap it.
@@ -1605,9 +1625,11 @@ namespace UntitledPoolGame.Pool
 
             // Charging zoom toward the tip.
             float currentOrbitDistance = orbitDistance - juiceSettings.chargeZoomDistance * ChargeFraction;
-            float cameraHeight = orbitHeight * Mathf.Lerp(1f, proneCameraHeightScale, proneWeight);
-            cameraTransform.position = AimCameraPosition(ballPos + Vector3.up * cameraHeight, -aimDirection, currentOrbitDistance);
-            cameraTransform.LookAt(ballPos + Vector3.up * (cameraHeight * 0.3f));
+            float usualCameraHeight = orbitHeight * Mathf.Lerp(1f, proneCameraHeightScale, proneWeight);
+            float cameraHeight = usualCameraHeight;
+            cameraTransform.position = AimCameraPosition(ballPos, -aimDirection, currentOrbitDistance, ref cameraHeight);
+            // Euler: right above the ball, "up" on screen is the way the shot goes.
+            cameraTransform.rotation = Quaternion.Euler(AimCameraPitch(ballPos, aimDirection, currentOrbitDistance, usualCameraHeight, cameraHeight), aimYaw + wobble, 0f);
 
             if (previewHidden)
             {
@@ -1644,24 +1666,53 @@ namespace UntitledPoolGame.Pool
                 chargeArmed = false;
         }
 
-        // The orbit camera, brought in front of a wall between it and the
-        // ball (Play Anywhere: the décor is all around).
-        private Vector3 AimCameraPosition(Vector3 aboveBall, Vector3 back, float distance)
+        // The orbit camera, kept on the ball's side of what's around it (Play
+        // Anywhere: the décor is all around, placed crate objects included).
+        // Each leg of the way from the ball is checked: up (a table above the
+        // ball lowers it), back (a wall brings it in, and lifts it so the
+        // shot stays in view), then the line of sight to the ball.
+        private Vector3 AimCameraPosition(Vector3 ballPos, Vector3 back, float distance, ref float height)
         {
-            if (cameraAvoidsWalls && PlayAnywhereRuleSet.Current != null)
-            {
-                int count = Physics.SphereCastNonAlloc(aboveBall, CameraWallRadius, back, wallHits, distance, ~0, QueryTriggerInteraction.Ignore);
-                for (int i = 0; i < count; i++)
-                {
-                    RaycastHit hit = wallHits[i];
-                    if (hit.distance <= 0f || hit.distance >= distance || !IsSolidObstacle(hit.collider)) continue;
-                    distance = hit.distance;
-                }
-            }
-            return aboveBall + back * distance;
+            if (!cameraAvoidsWalls || PlayAnywhereRuleSet.Current == null)
+                return ballPos + Vector3.up * height + back * distance;
+
+            height = CameraObstacles.FreeDistance(ballPos, Vector3.up, height, CameraWallRadius, transform);
+            Vector3 position = ballPos + Vector3.up * height;
+
+            // In at once, back out smoothly: aiming along a wall's edge would
+            // otherwise make the view jump.
+            float pull = distance - CameraObstacles.FreeDistance(position, back, distance, CameraWallRadius, transform);
+            aimCameraPull = pull >= aimCameraPull ? pull : Mathf.MoveTowards(aimCameraPull, pull, CameraPullRecoverSpeed * Time.deltaTime);
+            position += back * Mathf.Max(0f, distance - aimCameraPull);
+            position += Vector3.up * CameraObstacles.FreeDistance(position, Vector3.up, aimCameraPull * cameraWallLift, CameraWallRadius, transform);
+
+            return CameraObstacles.Reach(ballPos, position, CameraSightRadius, transform);
+        }
+
+        // How far down the camera looks (the camera is always in the aim's
+        // vertical plane): just above the ball. Brought in and lifted by a wall,
+        // that's nearly straight down, and the shot leaves the screen within a
+        // metre: the view keeps its usual tilt as far as the ball stays on
+        // screen, low in it (Camera Wall Ball Low).
+        private float AimCameraPitch(Vector3 ballPos, Vector3 aimDirection, float distance, float usualHeight, float height)
+        {
+            float look = PitchTowards(ballPos + Vector3.up * (height * 0.3f), aimDirection);
+            float usual = Mathf.Atan2(usualHeight * 0.7f, distance) * Mathf.Rad2Deg;
+            if (look <= usual || aimCamera == null) return look;
+            float ballLowest = PitchTowards(ballPos, aimDirection) - aimCamera.fieldOfView * 0.5f * cameraWallBallLow;
+            return Mathf.Min(look, Mathf.Max(usual, ballLowest));
+        }
+
+        private float PitchTowards(Vector3 point, Vector3 aimDirection)
+        {
+            Vector3 to = point - cameraTransform.position;
+            return Mathf.Atan2(-to.y, Vector3.Dot(to, aimDirection)) * Mathf.Rad2Deg;
         }
 
         private const float CameraWallRadius = 0.1f;
+        private const float CameraSightRadius = 0.02f;
+        private const float CameraPullRecoverSpeed = 1.5f;
+        private float aimCameraPull;
 
         // Play Anywhere: the stance asked for (Crouch toggles it), forced
         // down by what's above the body where it stands.
@@ -1674,6 +1725,10 @@ namespace UntitledPoolGame.Pool
             }
             if (crouchAction != null && crouchAction.WasPressedThisFrame())
                 stanceCrouchChosen = !stanceCrouchChosen;
+
+            // Lying, no wall pushes the body: checked where it stood when it
+            // lay down, or it would get up here and lie down there every frame.
+            if (Stance == AimStance.Prone) feet += Quaternion.Euler(0f, aimYaw, 0f) * Vector3.forward * pronePush;
 
             bool standingBlocked = StanceBlocked(feet, standingTorsoHeights, out string standingBy);
             bool crouchedBlocked = standingBlocked && StanceBlocked(feet, crouchedTorsoHeights, out _);
@@ -1698,6 +1753,7 @@ namespace UntitledPoolGame.Pool
             {
                 proneRootOffset = Vector3.zero;
                 proneYawOffset = 0f;
+                pronePush = wallPush;
                 bodyAnimator.CrossFadeInFixedTime(ProneStateName, 0f, proneLayer);
             }
             Stance = stance;
@@ -1762,23 +1818,28 @@ namespace UntitledPoolGame.Pool
         private static string StanceName(AimStance stance) =>
             stance == AimStance.Standing ? "debout" : stance == AimStance.Crouched ? "accroupi" : "allongé";
 
-        // Something solid (décor, a placed object) in the torso's volume
-        // between these heights above the feet. The player's own colliders,
-        // moving bodies (balls, ragdolls) and players don't count.
+        // Something solid (décor, a placed object) above the feet, reaching
+        // between these heights. Going up from the feet: a wall the body only
+        // touches overlaps the start (distance 0) and isn't above it, and the
+        // body can't get any lower for it. The player's own colliders, moving
+        // bodies (balls, ragdolls) and players don't count.
         private bool StanceBlocked(Vector3 feet, Vector2 heights, out string by)
         {
             by = null;
-            Vector3 bottom = feet + Vector3.up * (heights.x + stanceProbeRadius);
-            Vector3 top = feet + Vector3.up * Mathf.Max(heights.x + stanceProbeRadius, heights.y - stanceProbeRadius);
-            int count = Physics.OverlapCapsuleNonAlloc(bottom, top, stanceProbeRadius, stanceHits, ~0, QueryTriggerInteraction.Ignore);
+            Vector3 start = feet + Vector3.up * (StanceSweepStart + stanceProbeRadius);
+            float reach = Mathf.Max(0f, heights.y - StanceSweepStart - 2f * stanceProbeRadius);
+            int count = Physics.SphereCastNonAlloc(start, stanceProbeRadius, Vector3.up, wallHits, reach, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < count; i++)
             {
-                if (!IsSolidObstacle(stanceHits[i])) continue;
-                by = stanceHits[i].name;
+                RaycastHit hit = wallHits[i];
+                if (hit.distance <= 0f || hit.collider.bounds.max.y - feet.y < heights.x || !IsSolidObstacle(hit.collider)) continue;
+                by = hit.collider.name;
                 return true;
             }
             return false;
         }
+
+        private const float StanceSweepStart = 0.1f;
 
         // Décor: not the player's own colliders, not a moving body (balls,
         // ragdolls), not a player, not a Play Anywhere object (players walk

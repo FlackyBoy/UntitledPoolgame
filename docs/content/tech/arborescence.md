@@ -72,6 +72,7 @@ Assets/Scripts/
 │   ├── EightBallEndgameCheat.cs    C+W : fin de partie 8-ball directe
 │   ├── DebugMenu.cs                menu debug en jeu (clic gauche maintenu + 4 clics droits)
 │   ├── RagdollDummySpawner.cs      G : mannequin de test pour le ragdoll
+│   ├── InertDummy.cs               rend inerte un joueur posé à la main dans une scène
 │   ├── ScenePlayerSpawner.cs       point d'apparition du joueur dans la scène
 │   ├── Level/                      données du Level Maker posées dans les scènes
 │   │   ├── PrefabPalette.cs        kit de construction (mur, porte, fenêtre, dalles, props)
@@ -79,6 +80,7 @@ Assets/Scripts/
 │   │   ├── RoomModule.cs           marqueur des pièces posées
 │   │   ├── AmbiencePreset.cs       ambiance : ciel, lumières, post-process, brouillard, teinte du décor
 │   │   ├── AmbienceController.cs   applique une ambiance (éditeur et jeu) et son scénario d'éclairage APV
+│   │   ├── NeonLight.cs            néon : couleur du tube et de sa lumière
 │   │   └── AmbienceLight.cs        couleur et intensité d'origine d'une lampe du décor
 │   ├── NetworkBootstrap.cs         F1/F2/F3 : Host / Client / Server (online)
 │   └── LocalClientRig.cs           ancien câblage Nappin (online, figé)
@@ -167,6 +169,11 @@ Assets/Scripts/
     ├── PoolMatchRules.cs           partie : tours, fautes, main libre, pouvoirs, HUD
     ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOne/SpeedPoolRuleSet.cs   règles par mode
     ├── PoolGameMode.cs, PoolMatchType.cs, PoolMatchSetup.cs, PoolModeSettings.cs   mode, type (tour par tour / Speed Pool) et pouvoirs d'une partie ; types autorisés par mode
+    ├── ShooterPower.cs + Shooter*Power.cs (pouvoirs), ShooterRollingBall.cs, ShooterMine.cs, ShooterMagnet.cs, ShooterPowerFx.cs, ShooterMiniRuleSet.cs + .Powers.cs, ShooterPoolRuleSet.cs, ShooterMiniSettings.cs, LocalShooterWeapon.cs + .Animation.cs, ShooterMiniProjectile.cs   mode Shooter miniature : règles, réglages, queue-fusil et ses animations, tirs
+    ├── BowlingPoolRuleSet.cs, BowlingScoreSheet.cs, BowlingPin.cs, BowlingPoolSettings.cs   Bowling Pool : règles, score, quilles générées, réglages
+    ├── SumoPoolRuleSet.cs, SumoPoolBall.cs, SumoPoolTable.cs, SumoPoolSettings.cs   Sumo Pool : règles, bille pilotée et sa caméra, table générée, réglages
+    ├── SumoBilliardRuleSet.cs   Sumo Billard : Sumo Pool, mais il faut rentrer son groupe
+    ├── HideAndSeekRuleSet.cs, HideAndSeekBall.cs, HideAndSeekSettings.cs   Cache-cache : règles, bille pilotée (cacheur et leurres), réglages
     ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre), annonce de la 8
     ├── LocalPocketPointer.cs       choix d'une poche ou d'un point de la table en le visant (pouvoirs, annonce de la 8)
     ├── RingLine.cs                 cercle tracé au LineRenderer (poche visée, aperçu sur la table, bord d'un trou)

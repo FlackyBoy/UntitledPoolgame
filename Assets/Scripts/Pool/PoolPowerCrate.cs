@@ -8,7 +8,7 @@ namespace UntitledPoolGame.Pool
     // ball can cross between two steps; also simpler to see (gizmo).
     public class PoolPowerCrate : MonoBehaviour
     {
-        [SerializeField] private float pickupRadius = 0.15f;
+        [SerializeField] private float pickupRadius = 0.108f;
 
         private PoolPower power;
         private bool collected;
@@ -83,6 +83,17 @@ namespace UntitledPoolGame.Pool
             if (pocketSize != null)
             {
                 if (!pocketSize.TryTakeCrate(rules, transform.position, pickupRadius, power)) return;
+                collected = true;
+                gameObject.SetActive(false);
+                PoolPowerCrateManager.Instance?.NotifyCollected(this);
+                return;
+            }
+
+            // The Shooter: no cue balls, the players walk onto it.
+            ShooterMiniRuleSet shooter = ShooterMiniRuleSet.Current;
+            if (shooter != null)
+            {
+                if (!shooter.TryTakeCrate(rules, transform.position, power)) return;
                 collected = true;
                 gameObject.SetActive(false);
                 PoolPowerCrateManager.Instance?.NotifyCollected(this);

@@ -96,7 +96,7 @@ namespace UntitledPoolGame.Core
         private bool joinedThisFrame;
         private int targetScore = 25;
         // Type per mode: its own (PoolMatchSetup.NativeType) until switched
-        // with Y / Tab on its ball.
+        // with Y / Tab on its row.
         private readonly Dictionary<PoolGameMode, PoolMatchType> chosenTypes = new Dictionary<PoolGameMode, PoolMatchType>();
         // Powers on/off, the same for every mode (X / P).
         private bool powers;
@@ -290,7 +290,7 @@ namespace UntitledPoolGame.Core
         }
 
         // The "rules" panel of the Mode screen: its title and line show the
-        // aimed game type; an option line is added under them.
+        // selected game type; an option line is added under them.
         private void BuildRulesCard(Page page)
         {
             MenuNode rules = page.view.Item("rules");
@@ -302,6 +302,8 @@ namespace UntitledPoolGame.Core
             ruleOption = K.Text(rules.visual, "", K.BodyFont, Mathf.Max(12f, rules.data.subTextSize * 0.87f), rules.data.textColor, false);
             ruleOption.style.marginTop = 14;
             ruleOption.style.alignSelf = Align.FlexStart;
+            ruleOption.style.maxWidth = Length.Percent(100);
+            ruleOption.style.whiteSpace = WhiteSpace.Normal;
             ruleOption.style.backgroundColor = new Color(0f, 0f, 0f, 0.2f);
             K.Pad(ruleOption, 14, 4);
             K.Radius(ruleOption, 10);
@@ -574,7 +576,7 @@ namespace UntitledPoolGame.Core
             Option focused = current.options[Mathf.Clamp(current.focused, 0, current.options.Count - 1)];
             MenuElement data = focused.data;
             if (data == null || data.action != MenuAction.StartMode) return;
-            // The rules come in letter by letter when the aimed ball changes.
+            // The rules come in letter by letter when the selected row changes.
             if (TextFx.Strip(data.text) != ruleTitle.text) TextFx.Reveal(ruleTitle, data.text);
             if (ruleText != null && TextFx.Strip(data.description) != ruleText.text) TextFx.Reveal(ruleText, data.description);
             if (ruleOption != null) TextFx.Set(ruleOption, DescribeOptions(data.mode));
@@ -589,7 +591,8 @@ namespace UntitledPoolGame.Core
             string type = !speedPool ? cfg.turnBasedOnlyOption
                 : !turns ? cfg.speedPoolOnlyOption
                 : TypeFor(gameMode) == PoolMatchType.SpeedPool ? cfg.speedPoolOption : cfg.turnBasedOption;
-            string text = type + "\n" + (powers ? cfg.powersOnOption : cfg.powersOffOption);
+            string text = type;
+            if (PoolMatchSetup.HasPowers(gameMode)) text += "\n" + (powers ? cfg.powersOnOption : cfg.powersOffOption);
             if (gameMode == PoolGameMode.FourteenOne) text += "\n" + Format(cfg.targetScoreFormat, targetScore);
             return text;
         }
@@ -735,7 +738,8 @@ namespace UntitledPoolGame.Core
                 o.focus = Mathf.MoveTowards(o.focus, i == current.focused ? 1f : 0f, dt * 7f);
                 float s = 1f + o.focusScale * Ease(o.focus);
                 o.visual.style.scale = new Scale(new Vector3(s, s, 1f));
-                o.visual.style.translate = new Translate(0, -14f * Ease(o.focus));
+                // The rows of the mode list are too close to rise: they slide aside.
+                o.visual.style.translate = current == mode ? new Translate(14f * Ease(o.focus), 0) : new Translate(0, -14f * Ease(o.focus));
                 o.visual.style.opacity = 1f;
                 FocusLook(o);
             }

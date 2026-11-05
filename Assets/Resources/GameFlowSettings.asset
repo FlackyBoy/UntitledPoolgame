@@ -26,10 +26,10 @@ MonoBehaviour:
     menuLine: "Lumi\xE8res qui sautent\u2026 et un gardien"
     twist: "Le twist : la lumi\xE8re saute, et quelqu'un vous traque dans le noir."
     comingSoon: 1
-  - displayName: Station spatiale
-    sceneName: 
+  - displayName: R&D
+    sceneName: R&D
     picture: {fileID: 0}
-    menuLine: Billes en apesanteur
-    twist: "Le twist : les billes flottent quand la gravit\xE9 se coupe."
-    comingSoon: 1
+    menuLine: "Le labo : d\xE9placement et combat en test"
+    twist: "Le twist : tout est en test, rien n'est promis."
+    comingSoon: 0
   playerActions: {fileID: -944628639613478452, guid: dd0bdb68284799d4e956ab3c97581747, type: 3}

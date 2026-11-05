@@ -18,5 +18,6 @@ namespace UntitledPoolGame.Pool
         OpponentTurnOnly,  // AllowDuringOwnTurn unchecked, pressed during one's own turn
         BallsMoving,       // AllowWhileBallsMoving unchecked, shot in progress
         PointerBusy,       // ball in hand or the 8-ball call holds the pointer
+        CannotAct,         // Shooter: down, frozen, before the fight, or a power already waiting for the shot
     }
 }

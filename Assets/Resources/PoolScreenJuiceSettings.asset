@@ -16,7 +16,7 @@ MonoBehaviour:
   visionImpairMaxOverlayAlpha: 0.6
   visionImpairFlickerFrequency: 8
   visionImpairShakeMagnitude: 0.03
-  chargeZoomDistance: 0.15
+  chargeZoomDistance: 0.108
   chargeShakeMaxMagnitude: 0.012
   shotShakeMagnitude: 0.015
   shotShakeDuration: 0.1

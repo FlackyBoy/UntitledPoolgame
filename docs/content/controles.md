@@ -9,7 +9,7 @@ Jouer (1 joueur : niveau puis mode ; 2 joueurs : J2 rejoint, niveau, puis Sélec
 | Souris, flèches, Z Q S D | Stick gauche, croix | Viser une bille |
 | Clic, Entrée, Espace | A / ✕ | Tirer (valider) |
 | Échap, Retour arrière | B / ○ | Écran précédent |
-| Tab | Y / △ | Bille de mode visée : chacun son tour ou Speed Pool (pas pour 9-ball ni 14.1) |
+| Tab | Y / △ | Mode sélectionné dans la liste : chacun son tour ou Speed Pool (pas pour 9-ball ni 14.1) |
 | P | X / □ | Avec ou sans pouvoirs (tous les modes) |
 | Molette, - / + | LB / RB | 14.1 : changer le score cible |
 | Gauche / droite, molette, - / + | Gauche / droite, LB / RB | Boogie Night : nombre de parties |
@@ -71,6 +71,7 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | Tab | Test, à plusieurs joueurs : passer le clavier et la souris au joueur suivant (celui qui les perd récupère la manette de l'autre, s'il en avait une). Aussi dans le menu debug, rubrique *Joueurs* |
 | C + W | Test : aller directement à la fin d'une partie de 8-ball |
 | C + A | Test, en Play Anywhere : ouvrir / fermer la liste des objets de la caisse. Un clic en pose un là où regarde le joueur au clavier (il marche tout de suite, sans caisse ni manche) ; *Tout retirer* les enlève ; Échap ferme. Pendant que la liste est ouverte, le joueur au clavier ne bouge plus. Éditeur et versions de développement seulement |
+| C + X | Test : ouvrir / fermer la liste des pouvoirs de ce mode, à donner à J1 ou J2 (niveau 1 ou 2) ou pour vider leur stock |
 | Clic gauche maintenu + 4 clics droits rapides | Test : ouvrir / fermer le **menu debug** (donner un pouvoir, victoire / défaite, phase « empocher la 8 », fautes et erreurs de groupe, Catch the Hole ; en Play Anywhere, rubrique *Objet en main* : un objet de la caisse directement dans les mains de J1 ou J2, à poser comme d'habitude, hors manche) |
 
 ## Manette
@@ -114,6 +115,37 @@ Toujours à deux : lancé seul, le deuxième joueur rejoint tout de suite en éc
 | Q | B | Lancer son pouvoir (ramassé en marchant sur une caisse bleue) |
 
 Le grand vise et tire comme d'habitude, avec sa blanche, dès la fin du compte à rebours.
+
+## Shooter miniature et Shooter Billard
+
+| Action | Clavier / souris | Manette |
+|---|---|---|
+| Tirer (maintenir pour répéter) | action *Attack* | action *Attack* |
+| Coup de pied (appui bref) ; Spartan kick (maintenir puis relâcher), sur une bille ou l'autre joueur | action *Kick* | action *Kick* |
+| Activer le pouvoir, qui part au tir suivant (partie avec pouvoirs) ; en changer | Q ; molette | B ; croix gauche / droite |
+| Ramasser une caisse | marcher dessus | marcher dessus |
+| Se déplacer, sauter, regarder | comme d'habitude | comme d'habitude |
+
+Courir : action *Sprint* (Maj), en avançant. Pas de visée de billard, de coups de poing ni de garde dans ce mode. Les touches sont celles réglées dans *Réglages > Touches*.
+
+## Sumo Pool et Sumo Billard
+
+| Action | Clavier / souris | Manette |
+|---|---|---|
+| Rouler (par rapport à la vue) | action *Move* | action *Move* |
+| Tourner la vue autour de la bille | action *Look* | action *Look* |
+| Dash léger (appui bref) ; dash puissant (maintenir, la bille blanchit, puis relâcher) | action *Attack* ou *Jump* | action *Attack* ou *Jump* |
+
+## Cache-cache (le cacheur)
+
+Le chercheur joue comme d'habitude, à la queue et à la blanche. Le cacheur, lui, voit la table du dessus une fois dans sa bille. Les ruses se visent avec la direction du stick ou des touches de déplacement : la bille la plus proche dans cette direction, ou la plus proche tout court sans direction. La souris ne sert à rien ici. À la manette, une vibration confirme la ruse.
+
+| Action | Clavier / souris | Manette |
+|---|---|---|
+| Petit, sur la table : prendre la place de la bille la plus proche | E | Y / △ |
+| Dans sa bille : rouler | ZQSD en AZERTY, WASD en QWERTY | Stick gauche |
+| Dans sa bille : changer de bille | E | Y / △ |
+| Dans sa bille : fausse piste | A en AZERTY, Q en QWERTY | B / ○ |
 
 ## R&D déplacement (arène de test, variante du joueur)
 

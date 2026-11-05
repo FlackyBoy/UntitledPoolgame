@@ -32,5 +32,23 @@ namespace UntitledPoolGame.Pool
         // One player shrunk on the felt, the other hunts them with the cue
         // ball; roles swap after the first round (PocketSizeRuleSet).
         PocketSize,
+        // Both players shrunk on the felt, shooting at each other
+        // (ShooterMiniRuleSet).
+        ShooterMini,
+        // The same fight, but the first to pot their group wins; a hit only
+        // costs time (ShooterPoolRuleSet).
+        ShooterPool,
+        // Ten real pins at the far end of the table, frames scored as in
+        // bowling (BowlingPoolRuleSet).
+        BowlingPool,
+        // Each player is a ball on a small square table, pushing the other into
+        // the pockets (SumoPoolRuleSet).
+        SumoPool,
+        // Sumo Pool's table and balls, but the first to pot their group wins
+        // (SumoBilliardRuleSet).
+        SumoBilliard,
+        // One player hides as a ball among decoys, the other looks for it with
+        // the cue ball (HideAndSeekRuleSet).
+        HideAndSeek,
     }
 }

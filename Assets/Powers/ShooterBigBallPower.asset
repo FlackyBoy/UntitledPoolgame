@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c04c875ee314c0848822cbe439315456, type: 3}
+  m_Name: ShooterBigBallPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ShooterBigBallPower
+  powerName: Grosse bille
+  tokenPrefab: {fileID: 7999304374453455657, guid: 09b115457d513634fa5a8e332c1ae57e, type: 3}
+  hudIcon: {fileID: 2800000, guid: 57b2942d58ba8f24aa38d29f7b925454, type: 3}
+  onlyInModes: 0b0000000c000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  radius: 0.12
+  level2Radius: 0.16
+  mass: 6
+  speed: 1.3
+  damage: 40
+  lifetime: 8
+  color: {r: 0.45, g: 0.15, b: 0.75, a: 1}

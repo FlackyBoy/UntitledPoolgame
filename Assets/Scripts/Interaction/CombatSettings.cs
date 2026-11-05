@@ -199,6 +199,8 @@ namespace UntitledPoolGame.Interaction
         [Min(0f)] public float knockOutPush = 3f;
         [Tooltip("Force des muscles pendant le K.O. (0 = tout mou, 1 = raide). Rétablie au réveil.")]
         [Range(0f, 1f)] public float knockOutLimp = 0.15f;
+        [Tooltip("Gravité d'un corps au sol. 1 = il tombe au même rythme quelle que soit sa taille, comme à l'échelle 1 (gravité × échelle du corps). Plus haut = plus lourd. Billes et objets ne changent pas.")]
+        [Min(0f)] public float ragdollGravityScale = 1f;
 
         private static CombatSettings instance;
         public static CombatSettings Instance =>

@@ -10,9 +10,9 @@ namespace UntitledPoolGame.Pool
     public class WaterBombPower : TablePointPower
     {
         [Tooltip("Portée de l'éclaboussure (mètres) autour du point visé, au niveau 1 (celle d'une bille rentrée : Pocket Splash Radius de PowerWashPoolSettings).")]
-        [Min(0.05f)] [SerializeField] private float radius = 0.45f;
+        [Min(0.05f)] [SerializeField] private float radius = 0.324f;
         [Tooltip("Portée au niveau 2 (pouvoir ramassé deux fois).")]
-        [Min(0.05f)] [SerializeField] private float level2Radius = 0.65f;
+        [Min(0.05f)] [SerializeField] private float level2Radius = 0.468f;
 
         public override PowerType Type => PowerType.Effect;
 

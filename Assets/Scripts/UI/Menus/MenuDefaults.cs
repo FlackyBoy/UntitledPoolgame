@@ -186,23 +186,35 @@ namespace UntitledPoolGame.Core
         private static void Mode(MenuScreen s, MenuSettings m)
         {
             s.backScreen = MenuLayouts.Level;
-            Cue(s, 50f, 84f, 70f);
             Context(s);
-            Heading(s, "heading", m.modeHeading, 30f, 25f, 70f);
+            Heading(s, "heading", m.modeHeading, 29.5f, 25f, 60f);
+            MenuElement list = Add(s, "list", MenuElementKind.Panel, 29.5f, 61.4f, 560f, 704f);
+            list.color = K.Card;
+            list.borderWidth = 4f;
+            list.borderColor = K.Ink;
+            list.cornerRadius = 16f;
+            list.entrance = MenuEntrance.SlideFromLeft;
             // The modes only: the type (Y / Tab) and the powers (X / P) are
-            // picked on the aimed ball (SyntheseMenu.DescribeOptions).
-            ModeBall(s, "classic", 26f, 57.5f, m.classicMode, PoolGameMode.EightBall, 0);
-            ModeBall(s, "catch-the-hole", 18f, 44f, m.catchTheHoleMode, PoolGameMode.CatchTheHole, 1);
-            ModeBall(s, "hungry-hole", 34f, 44f, m.hungryHoleMode, PoolGameMode.HungryHole, 2);
-            ModeBall(s, "snake-pool", 42f, 57.5f, m.snakePoolMode, PoolGameMode.SnakePool, 3);
-            ModeBall(s, "power-wash-pool", 10f, 57.5f, m.powerWashPoolMode, PoolGameMode.PowerWashPool, 4);
-            ModeBall(s, "play-anywhere", 26f, 71f, m.playAnywhereMode, PoolGameMode.PlayAnywhere, 5);
-            ModeBall(s, "pocket-size", 42f, 71f, m.pocketSizeMode, PoolGameMode.PocketSize, 6);
-            // Taken off the menu (30/10), kept to put back: tick Visible.
-            ModeBall(s, "nine-ball", 18f, 71f, m.nineBallMode, PoolGameMode.NineBall, 5).visible = false;
-            ModeBall(s, "fourteen-one", 34f, 71f, m.fourteenOneMode, PoolGameMode.FourteenOne, 6).visible = false;
+            // picked on the selected row (SyntheseMenu.DescribeOptions).
+            ModeRow(s, "classic", 0, m.classicMode, PoolGameMode.EightBall);
+            ModeRow(s, "catch-the-hole", 1, m.catchTheHoleMode, PoolGameMode.CatchTheHole);
+            ModeRow(s, "hungry-hole", 2, m.hungryHoleMode, PoolGameMode.HungryHole);
+            ModeRow(s, "snake-pool", 3, m.snakePoolMode, PoolGameMode.SnakePool);
+            ModeRow(s, "power-wash-pool", 4, m.powerWashPoolMode, PoolGameMode.PowerWashPool);
+            ModeRow(s, "play-anywhere", 5, m.playAnywhereMode, PoolGameMode.PlayAnywhere);
+            ModeRow(s, "pocket-size", 6, m.pocketSizeMode, PoolGameMode.PocketSize);
+            ModeRow(s, "shooter-mini", 7, m.shooterMiniMode, PoolGameMode.ShooterMini);
+            ModeRow(s, "shooter-pool", 8, m.shooterPoolMode, PoolGameMode.ShooterPool);
+            ModeRow(s, "bowling-pool", 9, m.bowlingPoolMode, PoolGameMode.BowlingPool);
+            ModeRow(s, "sumo-pool", 10, m.sumoPoolMode, PoolGameMode.SumoPool);
+            ModeRow(s, "sumo-billiard", 11, m.sumoBilliardMode, PoolGameMode.SumoBilliard);
+            ModeRow(s, "hide-and-seek", 12, m.hideAndSeekMode, PoolGameMode.HideAndSeek);
+            // Taken off the menu (30/10), kept to put back: tick Visible (and
+            // make room, the frame holds 13 rows).
+            ModeRow(s, "nine-ball", 13, m.nineBallMode, PoolGameMode.NineBall).visible = false;
+            ModeRow(s, "fourteen-one", 14, m.fourteenOneMode, PoolGameMode.FourteenOne).visible = false;
 
-            MenuElement rules = Add(s, "rules", MenuElementKind.Panel, 67.5f, 47.5f, 634f, 300f);
+            MenuElement rules = Add(s, "rules", MenuElementKind.Panel, 67f, 61.4f, 720f, 480f);
             rules.color = K.Cube;
             rules.rotation = 2f;
             rules.titleFont = true;
@@ -211,7 +223,6 @@ namespace UntitledPoolGame.Core
             rules.textColor = Color.white;
             rules.textShadow = false;
             rules.entrance = MenuEntrance.SlideFromRight;
-            AimHint(s, m);
             KeysHint(s, m.pageKeysHint);
         }
 
@@ -385,9 +396,11 @@ namespace UntitledPoolGame.Core
             return e;
         }
 
-        private static MenuElement ModeBall(MenuScreen s, string id, float x, float y, MenuModeBall b, PoolGameMode mode, int order)
+        private static MenuElement ModeRow(MenuScreen s, string id, int row, MenuModeBall b, PoolGameMode mode)
         {
-            MenuElement e = Ball(s, id, x, y, b.ball, MenuAction.StartMode, order);
+            MenuElement e = Pill(s, id, 29.5f, 32.5f + 4.8f * row, b.ball, MenuAction.StartMode, 0f, row);
+            e.size = new Vector2(520f, 48f);
+            e.textSize = 26f;
             e.mode = mode;
             e.description = b.rules;
             return e;

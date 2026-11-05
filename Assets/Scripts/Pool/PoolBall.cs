@@ -181,9 +181,20 @@ namespace UntitledPoolGame.Pool
             lastShotTime = Time.time;
         }
 
+        // Shooter miniature: set moving by this player's shot or kick.
+        public void MarkHitBy(int player)
+        {
+            LastShooter = player;
+            lastShotTime = Time.time;
+        }
+
+        // How many times another ball has hit this one.
+        public int BallContacts { get; private set; }
+
         private void OnCollisionEnter(Collision collision)
         {
             if (!collision.gameObject.TryGetComponent(out PoolBall other)) return;
+            BallContacts++;
 
             // The more recent shot wins: a ball set moving by A's shot is A's.
             // Both balls get this call; whichever runs second sees no change.
@@ -420,8 +431,12 @@ namespace UntitledPoolGame.Pool
             rb.linearVelocity -= horizontal / speed * Mathf.Min(PuckDeceleration * Time.fixedDeltaTime, speed);
         }
 
+        // Where it last went in, null if it fell off the table.
+        public PoolPocket LastPocket { get; private set; }
+
         public void OnPocketed(PoolPocket pocket = null)
         {
+            LastPocket = pocket;
             Pocketed?.Invoke(this, pocket);
 
             if (isCueBall)

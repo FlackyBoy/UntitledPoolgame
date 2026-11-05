@@ -27,6 +27,8 @@ MonoBehaviour:
   - {fileID: 6937146798108172750, guid: fa067cdda9b7a4e4ea8336ede85760b4, type: 3}
   ceilingTiles:
   - {fileID: 8655839044663046777, guid: d107112ba422e224094d95d87111f956, type: 3}
+  fitTilesToModule: 1
+  tileFitTolerance: 0.25
   stairs:
   - {fileID: 6497823356163155710, guid: 80a99031fc1265d4abd3150a3e63d33a, type: 3}
   stairsReversed: 0
@@ -39,6 +41,25 @@ MonoBehaviour:
   - {fileID: 745832511096798285, guid: 82ed8cc1b6b67394489d2ef62d671a26, type: 3}
   - {fileID: 4722537294229475351, guid: 241af004a18e9e1409ebe46c74536468, type: 3}
   - {fileID: 2001453399338522006, guid: 643fbe9dd1c2c8e4da539c16931cc49a, type: 3}
+  - {fileID: 7841670309732896562, guid: 2ed125ea3935c7c42ba3c38ab75c470a, type: 3}
+  - {fileID: 5090402770938629679, guid: 4960da73c4d7154479fbb507994b6a3e, type: 3}
+  - {fileID: 3321379551270838155, guid: 231f3b02a527c6d42a5376cd714cefd5, type: 3}
+  - {fileID: 6035464778405105436, guid: 06cb20bdef1fb7f41b6dced4fc077721, type: 3}
+  - {fileID: 6888054859080670512, guid: 14af9be362d044c40a5cf76018dfaa82, type: 3}
+  - {fileID: 6970698514935080142, guid: 79032fb4692892149b79403d3aaf5c40, type: 3}
+  - {fileID: 2451825337967950608, guid: 902c2230bbec7074db4ee772598173ea, type: 3}
+  - {fileID: 1174419343180658497, guid: ff09b78b145d1064b849bcdb99fb7c89, type: 3}
+  - {fileID: 1342821727561701700, guid: 4747726615328b642bf0a970c3ef1aae, type: 3}
+  - {fileID: 4839120292030725989, guid: ec7cb4d5cd5e0f148b02ce732cd16a21, type: 3}
+  - {fileID: 3233144222291814362, guid: 525d69732e7ec7748b0594522f4fbc98, type: 3}
+  - {fileID: 4743288450027258425, guid: 3b9475430f65b1b4796d43bcdcbffc08, type: 3}
+  - {fileID: 2367110023876152967, guid: 3abf27394471c764c874f0c957f8a2f5, type: 3}
+  - {fileID: 7741379222312673090, guid: 5f4c136e2aa4a174e95e5010f6a50c67, type: 3}
+  - {fileID: 5019388957838335599, guid: fc9212979c419f144a5e62fcf4af314e, type: 3}
+  - {fileID: 1858593630756553874, guid: cd8346b7535220e49b0c8e0f843b5677, type: 3}
+  - {fileID: 3389737986198442803, guid: 491794ed4f09fc5428488b68a70b32d2, type: 3}
+  lights:
+  - {fileID: 1680414949422631620, guid: b38f5655540a50444a5b346c4d0b553e, type: 3}
   addMissingColliders: 1
   wall: {fileID: 0}
   door: {fileID: 0}

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3f28c42547db7f4f986115487aff866, type: 3}
+  m_Name: ShooterMinePower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ShooterMinePower
+  powerName: Mine
+  tokenPrefab: {fileID: 928399987449670831, guid: 94a289ed594a70b40886e4238bf67fba, type: 3}
+  hudIcon: {fileID: 2800000, guid: 4aad8dfbd3f536d4ca25e5a2fceaffaa, type: 3}
+  onlyInModes: 0b0000000c000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  armDelay: 0.8
+  triggerRadius: 0.05
+  blastRadius: 0.2
+  level2BlastRadius: 0.3
+  damage: 50
+  knockSpeed: 0.7
+  liftSpeed: 1
+  ballSpeed: 1.2
+  lifetime: 15
+  explosionPrefab: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50, type: 3}
+  explosionScale: 0.2

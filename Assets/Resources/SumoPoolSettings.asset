@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 568c1b97a711fdd49bb5ceae5f655ed9, type: 3}
+  m_Name: SumoPoolSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.SumoPoolSettings
+  pointsToWin: 3
+  countdown: 2
+  roundEndDelay: 1.5
+  endDelay: 2
+  sinkTime: 0.5
+  tableSide: 1.7
+  holeRadius: 0.13
+  railWidth: 0.1
+  railHeight: 0.09
+  railBounciness: 0.85
+  feltColor: {r: 0.72, g: 0.16, b: 0.3, a: 1}
+  railColor: {r: 0.16, g: 0.09, b: 0.06, a: 1}
+  ballScale: 1.5
+  player1Color: {r: 0.2, g: 0.5, b: 1, a: 1}
+  player2Color: {r: 1, g: 0.25, b: 0.2, a: 1}
+  acceleration: 4.2
+  maxSpeed: 1.9
+  rollingFriction: 1.8
+  braking: 8
+  minBraking: 0.3
+  dashSpeed: 1.4
+  chargedDashSpeed: 4
+  dashChargeTime: 0.7
+  dashCooldown: 1
+  bumpBoost: 0.3
+  cameraDistance: 0.95
+  cameraPitch: 35
+  minCameraPitch: 10
+  maxCameraPitch: 75
+  cameraFollow: 12
+  cameraFov: 60
+  cameraNearClip: 0.03
+  mouseSensitivity: 0.1
+  stickSensitivity: 150
+  scoreFormat: '{0} - {1}'
+  goalFormat: "Premier \xE0 {0}"
+  countdownFormat: "D\xE9part dans {0}"
+  debugLogs: 1

@@ -39,6 +39,21 @@ namespace UntitledPoolGame.Player
         public Vector3 Velocity => horizontal + Vector3.up * verticalSpeed;
         public bool IsGrounded { get; private set; }
         public bool IsSprinting { get; private set; }
+
+        // Shooter miniature: the weapon has its own running (LocalShooterWeapon).
+        public bool ArmedAnimation { get; set; }
+
+        // Also read by ShooterAnimationTools.
+        public const string RunLayer = "Course";
+        public const string RunState = "Run";
+        public const string RunXParameter = "RunX";
+        public const string RunYParameter = "RunY";
+        private static readonly int RunXHash = Animator.StringToHash(RunXParameter);
+        private static readonly int RunYHash = Animator.StringToHash(RunYParameter);
+        private const int NotLookedUp = -2;
+        private const float RunDamp = 0.1f;
+        private const float RunFade = 0.2f;
+        private int runLayer = NotLookedUp;
         public bool IsClimbing => climbTime >= 0f;
 
         private MovementSettings cfg;
@@ -186,6 +201,7 @@ namespace UntitledPoolGame.Player
             // Same gates as LocalFpsPlayerController: still before the match
             // starts, and nothing while it's switched off (aiming, ragdoll).
             PoolMatchRules rules = PoolMatchRules.Instance;
+            UpdateRunLayer(dt, IsSprinting && !ArmedAnimation && fps != null && fps.enabled && controller.enabled);
             bool active = (rules == null || rules.MatchStarted) && fps != null && fps.enabled && controller.enabled;
             if (!active)
             {
@@ -272,13 +288,18 @@ namespace UntitledPoolGame.Player
 
         // ---------- Ledge climbing ----------
 
+        // The capsule's bottom above the root, in metres: not zero, the capsule
+        // is raised by the skin width so that the root and the model's feet sit
+        // on the ground.
+        private float CapsuleBottom => (controller.center.y - controller.height / 2f) * transform.lossyScale.y;
+
         // A ledge in front: a wall within reach, a flat top between Ledge Min
         // and Max Height above the feet, and room to stand on it.
         private bool TryFindLedge(out Vector3 top, out Vector3 wallNormal)
         {
             top = wallNormal = Vector3.zero;
             float radius = controller.radius;
-            Vector3 feet = transform.position + controller.center - Vector3.up * (controller.height / 2f);
+            Vector3 feet = transform.position + Vector3.up * CapsuleBottom;
             Vector3 forward = transform.forward;
             float reach = radius + cfg.ledgeReach;
 
@@ -321,7 +342,7 @@ namespace UntitledPoolGame.Player
         {
             climbTime = 0f;
             climbStart = transform.position;
-            Vector3 feetToRoot = transform.position - (transform.position + controller.center - Vector3.up * (controller.height / 2f));
+            Vector3 feetToRoot = -Vector3.up * CapsuleBottom;
             climbEnd = top - wallNormal * (controller.radius + 0.1f) + feetToRoot + Vector3.up * 0.02f;
             Vector3 side = Vector3.Cross(Vector3.up, wallNormal).normalized * 0.22f;
             Vector3 edge = top + wallNormal * 0.05f;
@@ -329,7 +350,7 @@ namespace UntitledPoolGame.Player
             climbHandRight = edge - side;
             horizontal = Vector3.zero;
             verticalSpeed = 0f;
-            Trace($"escalade d'un rebord de {top.y - (transform.position.y + controller.center.y - controller.height / 2f):0.00} m");
+            Trace($"escalade d'un rebord de {top.y - (transform.position.y + CapsuleBottom):0.00} m");
         }
 
         // Up first (hoisting on the hands), then over the edge.
@@ -444,6 +465,25 @@ namespace UntitledPoolGame.Player
         private bool handsOnLedge;
 
         // ---------- Animation and view ----------
+
+        // The sprint without a weapon: a layer of its own over the body's
+        // usual movement (ShooterAnimationTools makes it). Local velocity at
+        // normal size, against the sprint speed: 1 at full speed.
+        private void UpdateRunLayer(float dt, bool sprinting)
+        {
+            if (animator == null || dt <= 0f) return;
+            if (runLayer == NotLookedUp)
+            {
+                runLayer = animator.GetLayerIndex(RunLayer);
+                if (runLayer >= 0) animator.Play(RunState, runLayer, 0f);
+            }
+            if (runLayer < 0) return;
+            float size = fps != null ? fps.SizeScale : 1f;
+            Vector3 local = transform.InverseTransformDirection(controller.velocity) / (Mathf.Max(cfg.sprintSpeed, 0.01f) * Mathf.Max(size, 0.001f));
+            animator.SetFloat(RunXHash, local.x, RunDamp, dt);
+            animator.SetFloat(RunYHash, local.z, RunDamp, dt);
+            animator.SetLayerWeight(runLayer, Mathf.MoveTowards(animator.GetLayerWeight(runLayer), sprinting ? 1f : 0f, dt / RunFade));
+        }
 
         private void UpdateAnimator()
         {

@@ -19,7 +19,7 @@ namespace UntitledPoolGame.Pool
 
         [Header("Break")]
         [Tooltip("Vitesse minimale (m/s) de la blanche adverse pour briser la chaîne en la touchant. Une chaîne qui balaie une blanche arrêtée ne se brise pas.")]
-        [Min(0f)] public float minBreakSpeed = 0.15f;
+        [Min(0f)] public float minBreakSpeed = 0.108f;
         [Tooltip("Part de la vitesse de la blanche adverse donnée à la bille touchée quand la chaîne se brise.")]
         [Range(0f, 2f)] public float breakKick = 0.7f;
         [Tooltip("Part de leur vitesse que gardent les billes lâchées par la chaîne (brisée, ou blanche rentrée).")]
@@ -27,7 +27,7 @@ namespace UntitledPoolGame.Pool
 
         [Header("Finale")]
         [Tooltip("Vitesse (m/s) à laquelle la file s'engouffre dans la poche derrière la blanche, une fois la 8 au bout de la file. Plus lent = plus de temps pour que l'adversaire la brise.")]
-        [Min(0.05f)] public float finaleSpeed = 1.2f;
+        [Min(0.05f)] public float finaleSpeed = 0.864f;
 
         [Header("Scratch (cue ball potted)")]
         [Tooltip("Blanche rentrée sans la 8 au bout de la file : toute sa chaîne est lâchée sur le tapis. Décoché : la chaîne reste et repart avec la blanche quand elle revient.")]

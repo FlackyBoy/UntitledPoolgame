@@ -634,7 +634,7 @@ namespace UntitledPoolGame.Interaction
             Vector3 forceDirection = Vector3.Lerp(push, Vector3.up, upwardBias).normalized;
             Vector3 point = hit.ClosestPoint(Vector3.Lerp(grip, tip, 0.8f));
 
-            broadcaster.Hit(unpin, forceDirection * force, point);
+            broadcaster.Hit(unpin, forceDirection * (force * LocalPlayerRagdollController.ScaleOf(target)), point);
 
             BehaviourPuppet puppet = MeleeHit.FindPuppetBehaviour(target);
             bool forced = charge >= guaranteedKnockdownAt && puppet != null;

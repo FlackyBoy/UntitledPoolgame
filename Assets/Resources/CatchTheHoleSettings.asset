@@ -20,8 +20,8 @@ MonoBehaviour:
   addHoleEveryPots: 5
   addHoleEverySeconds: 0
   openTime: 0.8
-  minRadius: 0.05
-  maxRadius: 0.2
+  minRadius: 0.036
+  maxRadius: 0.144
   sizeChangeRate: 0.12
   growPerBall: 0.15
   maxGrowth: 1.5
@@ -29,15 +29,15 @@ MonoBehaviour:
   growBounce: 0.3
   gulpAmount: 0.6
   gulpTime: 0.45
-  baseSpeed: 0.15
-  maxSpeed: 0.5
-  acceleration: 0.12
-  arriveDistance: 0.15
+  baseSpeed: 0.108
+  maxSpeed: 0.36
+  acceleration: 0.0864
+  arriveDistance: 0.108
   maxLegTime: 8
   pauseChance: 0.35
   pauseTime: {x: 1, y: 3}
-  edgeClearance: 0.03
-  holeGap: 0.08
+  edgeClearance: 0.0216
+  holeGap: 0.0576
   ramp: 3
   rampSeconds: 300
   debugLogs: 1

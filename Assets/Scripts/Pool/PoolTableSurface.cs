@@ -13,8 +13,13 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private float halfLength;
         [SerializeField] private float halfWidth;
 
-        public float HalfLength => halfLength;
-        public float HalfWidth => halfWidth;
+        // The fields are at the table's own scale: scaling the table prefab
+        // moves the rails and pockets, the play area has to follow. Its parent:
+        // its own scale is the felt's (not uniform).
+        public float TableScale => transform.parent != null ? transform.parent.lossyScale.x : 1f;
+
+        public float HalfLength => halfLength * TableScale;
+        public float HalfWidth => halfWidth * TableScale;
 
         public void Configure(float halfLength, float halfWidth)
         {
@@ -44,8 +49,9 @@ namespace UntitledPoolGame.Pool
         public Vector3 ClampToPlayArea(Vector3 worldPosition, float margin)
         {
             Vector3 offset = Quaternion.Inverse(transform.rotation) * (worldPosition - transform.position);
-            offset.x = Mathf.Clamp(offset.x, -halfLength + margin, halfLength - margin);
-            offset.z = Mathf.Clamp(offset.z, -halfWidth + margin, halfWidth - margin);
+            float length = HalfLength, width = HalfWidth;
+            offset.x = Mathf.Clamp(offset.x, -length + margin, length - margin);
+            offset.z = Mathf.Clamp(offset.z, -width + margin, width - margin);
             offset.y = 0f;
             return transform.position + transform.rotation * offset;
         }
@@ -59,8 +65,8 @@ namespace UntitledPoolGame.Pool
             Vector3 localOrigin = inverseRotation * (origin - transform.position);
             Vector3 localDirection = inverseRotation * direction;
 
-            float exitViaX = AxisExitDistance(localOrigin.x, localDirection.x, halfLength + margin);
-            float exitViaZ = AxisExitDistance(localOrigin.z, localDirection.z, halfWidth + margin);
+            float exitViaX = AxisExitDistance(localOrigin.x, localDirection.x, HalfLength + margin);
+            float exitViaZ = AxisExitDistance(localOrigin.z, localDirection.z, HalfWidth + margin);
             float distance = Mathf.Min(exitViaX, exitViaZ);
             return float.IsInfinity(distance) ? 0f : distance;
         }

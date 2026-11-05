@@ -109,6 +109,30 @@ namespace UntitledPoolGame.Pool
         }
 
         // Far enough (horizontally) from the cup, the tees and both balls.
+        // The widest an object may be placed here, for the play area's width
+        // at that spot: a plate fit for a hall would plug a corridor. Small
+        // ones stay as they are, and none gets too small for a ball to matter.
+        public float ItemSizeAt(Vector3 point) => ItemSizeFor(hole != null ? hole.WidthAt(point) : float.PositiveInfinity, settings.itemMinSize);
+
+        // The widest on the crate and in hand: before knowing where it goes,
+        // what fits the narrowest stretch, within Crate Item Max Size; still
+        // big enough there to see and to take.
+        public float CrateItemSize
+        {
+            get
+            {
+                if (settings.crateItemMaxSize <= 0f) return float.PositiveInfinity;
+                return Mathf.Min(settings.crateItemMaxSize, ItemSizeFor(hole != null ? hole.NarrowestWidth : float.PositiveInfinity, MinCrateItemSize));
+            }
+        }
+
+        private float ItemSizeFor(float courseWidth, float smallest) =>
+            settings.itemCourseShare > 0f && !float.IsInfinity(courseWidth)
+                ? Mathf.Max(smallest, courseWidth * settings.itemCourseShare)
+                : float.PositiveInfinity;
+
+        private const float MinCrateItemSize = 0.2f;
+
         public bool IsClearOfCourse(Vector3 point, float radius)
         {
             if (hole == null) return true;
@@ -148,7 +172,7 @@ namespace UntitledPoolGame.Pool
                 propPlaced[p] = false;
             }
 
-            PlayAnywhereCrate crate = hole.Crate != null ? hole.Crate : PlayAnywhereCrate.Current;
+            PlayAnywhereCrate crate = hole.Crate;
             FindHands();
             if (crate == null || !HasPropChoices() || (hands[0] == null && hands[1] == null))
             {
@@ -156,7 +180,7 @@ namespace UntitledPoolGame.Pool
                 // for them (TickAwaitingPlayers) instead of being skipped.
                 buildAwaitsPlayers = crate != null && HasPropChoices();
                 if (settings.debugLogs)
-                    Debug.Log($"[PlayAnywhere] Manche {round}{RoundsLabel()} : pas de pose ({(crate == null ? "pas de caisse dans la scène : Tools > Pool > Play Anywhere > Créer la caisse" : !HasPropChoices() ? "pas d'objets dans Props de PlayAnywhereSettings" : "pas encore de joueur : elle commencera à son arrivée")}).");
+                    Debug.Log($"[PlayAnywhere] Manche {round}{RoundsLabel()} : pas de pose ({(!hole.UsesCrate ? "ce parcours se joue sans caisse (Use Crate)" : crate == null ? "pas de caisse dans la scène : Tools > Pool > Play Anywhere > Créer la caisse" : !HasPropChoices() ? "pas d'objets dans Props de PlayAnywhereSettings" : "pas encore de joueur : elle commencera à son arrivée")}).");
                 BeginShooting();
                 return;
             }
@@ -165,6 +189,7 @@ namespace UntitledPoolGame.Pool
             buildStartedAt = Time.time;
             buildWarned = false;
             UntitledPoolGame.Core.MatchHud.ShowShout(-1, settings.buildShout);
+            crate.ShowArrows();
             List<PlayAnywherePropChoice> all = settings.crateOffersAll ? settings.props.FindAll(c => c != null && c.prefab != null) : null;
             int count = all != null ? all.Count : Mathf.Max(settings.crateChoices, Solo ? 2 : PlayersPresent());
             for (int i = 0; i < count; i++)
@@ -293,6 +318,7 @@ namespace UntitledPoolGame.Pool
             foreach (PlayAnywhereProp prop in crateProps)
                 if (prop != null) prop.Remove();
             crateProps.Clear();
+            PlayAnywhereCrate.HideArrows();
             BeginShooting();
         }
 
@@ -444,6 +470,7 @@ namespace UntitledPoolGame.Pool
 
         private static void ClearProps()
         {
+            PlayAnywhereCrate.HideArrows();
             foreach (PlayAnywhereProp prop in spawnedProps)
                 if (prop != null) Object.Destroy(prop.gameObject);
             spawnedProps.Clear();

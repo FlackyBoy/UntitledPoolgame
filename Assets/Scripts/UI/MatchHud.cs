@@ -49,7 +49,7 @@ namespace UntitledPoolGame.Core
         }
 
         // Full screen, scaled from 1920 × 1080; under the menu (100).
-        private static PanelSettings CreatePanel()
+        public static PanelSettings CreatePanel(int sortingOrder = 90)
         {
             var panel = ScriptableObject.CreateInstance<PanelSettings>();
             panel.themeStyleSheet = Resources.Load<ThemeStyleSheet>("UI/MenuTheme");
@@ -57,7 +57,7 @@ namespace UntitledPoolGame.Core
             panel.referenceResolution = new Vector2Int(1920, 1080);
             panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
             panel.match = 0.5f;
-            panel.sortingOrder = 90;
+            panel.sortingOrder = sortingOrder;
             return panel;
         }
 
@@ -628,6 +628,15 @@ namespace UntitledPoolGame.Core
             PowerWashDirt wash = rules.Mode == PoolGameMode.PowerWashPool ? PowerWashDirt.Instance : null;
             // Pocket Size: the role, the round, the clock and the touches.
             PocketSizeRuleSet pocketSize = rules.Mode == PoolGameMode.PocketSize ? PocketSizeRuleSet.Current : null;
+            // Shooter miniature: health and eliminations. Shooter Billard: group and balls left.
+            ShooterMiniRuleSet shooter = ShooterMiniRuleSet.Current;
+            // Bowling Pool: the score, the frame and the throws so far.
+            BowlingPoolRuleSet bowling = rules.Mode == PoolGameMode.BowlingPool ? BowlingPoolRuleSet.Current : null;
+            // Sumo Pool: the score and the countdown. Sumo Billard: its group and
+            // the countdown, then the balls left as in any mode with groups.
+            SumoPoolRuleSet sumo = SumoPoolRuleSet.Current != null && SumoPoolRuleSet.Current.ShowsPlate ? SumoPoolRuleSet.Current : null;
+            // Hide and seek: the role, the score, the clock and what's left.
+            HideAndSeekRuleSet hideAndSeek = rules.Mode == PoolGameMode.HideAndSeek ? HideAndSeekRuleSet.Current : null;
             // Bit n set = ball n still on the table.
             int onTable = 0;
             foreach (PoolBall ball in PoolBall.Active)
@@ -638,6 +647,10 @@ namespace UntitledPoolGame.Core
                 rules.AreGroupsDisguised ? (1, 0, 0)
                 : golf != null ? (7, score, golf.RoundStateKey(p))
                 : pocketSize != null ? (8, pocketSize.PlateKey(p), 0)
+                : shooter != null ? (9, shooter.PlateKey(p), 0)
+                : bowling != null ? (10, bowling.PlateKey(p), 0)
+                : sumo != null ? (11, sumo.PlateKey(p), 0)
+                : hideAndSeek != null ? (12, hideAndSeek.PlateKey(p), 0)
                 : hasScore ? (2, score, target)
                 : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), 0)
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
@@ -658,6 +671,26 @@ namespace UntitledPoolGame.Core
             {
                 Text(h.plateBalls, pocketSize.RoleLabel(p), titleFont, 34, Ink);
                 Text(h.plateBalls, $"  ·  {pocketSize.DescribeRound(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (shooter != null)
+            {
+                Text(h.plateBalls, shooter.HealthLabel(p), titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {shooter.DescribeScore(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (bowling != null)
+            {
+                Text(h.plateBalls, $"{bowling.TotalOf(p)}", titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {bowling.DescribeProgress(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (hideAndSeek != null)
+            {
+                Text(h.plateBalls, hideAndSeek.RoleLabel(p), titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {hideAndSeek.DescribeRound(p)}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else if (sumo != null)
+            {
+                Text(h.plateBalls, sumo.DescribeScore(p), titleFont, 34, Ink);
+                Text(h.plateBalls, $"  ·  {sumo.DescribeRound()}", bodyFont, 22, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
             }
             else if (hasScore)
             {
@@ -712,13 +745,16 @@ namespace UntitledPoolGame.Core
             else Text(h.plateBalls, cfg.groupUndecidedText, bodyFont, 22, Ink);
         }
 
-        // Power Wash Pool's clock, top centre of each half. The last Clock
+        // Power Wash Pool's clock, or Play Anywhere's in Speed Pool (the player
+        // left after the other holed out), top centre of each half. The last Clock
         // Final Seconds: red, a bit bigger each second, and a bump on each
         // tick. Text and colour only change when the second does.
         private void UpdateWashClock(Half h, PoolMatchRules rules, float dt)
         {
             PowerWashDirt wash = rules.Mode == PoolGameMode.PowerWashPool && !rules.GameOver ? PowerWashDirt.Instance : null;
-            if (wash == null)
+            PlayAnywhereRuleSet golf = !rules.GameOver ? PlayAnywhereRuleSet.Current : null;
+            float golfLeft = golf != null ? golf.FinishClockLeft : -1f;
+            if (wash == null && golfLeft < 0f)
             {
                 if (h.shownClock == int.MinValue) return;
                 h.shownClock = int.MinValue;
@@ -726,7 +762,7 @@ namespace UntitledPoolGame.Core
                 return;
             }
 
-            int seconds = wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft);
+            int seconds = wash == null ? Mathf.CeilToInt(golfLeft) : wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft);
             bool final = seconds >= 0 && seconds <= cfg.clockFinalSeconds;
             if (seconds != h.shownClock)
             {
@@ -996,6 +1032,7 @@ namespace UntitledPoolGame.Core
                 PowerRefusal.OpponentTurnOnly => cfg.refusedOpponentTurnOnlyText,
                 PowerRefusal.BallsMoving => cfg.refusedBallsMovingText,
                 PowerRefusal.PointerBusy => cfg.refusedPointerBusyText,
+                PowerRefusal.CannotAct => cfg.refusedCannotActText,
                 _ => cfg.refusedNoPowerText,
             };
             if (string.IsNullOrEmpty(text)) return;

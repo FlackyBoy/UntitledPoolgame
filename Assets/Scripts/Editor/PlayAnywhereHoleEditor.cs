@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UntitledPoolGame.Pool;
@@ -15,7 +16,9 @@ namespace UntitledPoolGame.PoolEditor
     //   removes it.
     // - Dots on the corridor's side set its width there (at the tees and
     //   the cup: Path Width).
-    // Everything is undoable.
+    // Everything is undoable. The direction signs that follow from the course
+    // are previewed in orange (PlayAnywhereCourseSigns); a button makes them
+    // real objects of the scene, to move and size by hand (PlayAnywhereSignEditor).
     [CustomEditor(typeof(PlayAnywhereHole))]
     public class PlayAnywhereHoleEditor : Editor
     {
@@ -30,7 +33,8 @@ namespace UntitledPoolGame.PoolEditor
                 "Parcours : le couloir vert dans la Scene. Une bille qui en sort, ou qui tombe plus bas que lui, est hors limites.\n" +
                 "• Tire les sphères (départs, points, trou) : elles se posent sur la surface sous la souris (sol, comptoir…).\n" +
                 "• « + » entre deux points en ajoute un ; le cube rouge au-dessus d'un point le retire.\n" +
-                "• Les points sur le bord du couloir règlent sa largeur.", MessageType.None);
+                "• Les points sur le bord du couloir règlent sa largeur.\n" +
+                "• Les panneaux suivent le parcours : réglages Signs de PlayAnywhereSettings.", MessageType.None);
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Ajouter un point avant le trou"))
@@ -49,11 +53,88 @@ namespace UntitledPoolGame.PoolEditor
                         SceneView.RepaintAll();
                     }
             }
+            if (hole.CourseSigns) SignsGUI(hole);
+        }
+
+        private void SignsGUI(PlayAnywhereHole hole)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Panneaux", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(Application.isPlaying))
+            {
+                Transform placed = hole.PlacedSigns;
+                if (placed == null)
+                {
+                    EditorGUILayout.HelpBox("Automatiques : l'aperçu orange montre où ils seront en jeu, et ils suivent le parcours. Pour les déplacer ou changer leur taille, place-les dans la scène.", MessageType.None);
+                    if (GUILayout.Button("Placer les panneaux dans la scène")) PlaceSigns(hole);
+                    return;
+                }
+
+                PlayAnywhereSign[] signs = placed.GetComponentsInChildren<PlayAnywhereSign>(true);
+                int edited = System.Array.FindAll(signs, s => s.IsHandEdited).Length;
+                EditorGUILayout.HelpBox($"{signs.Length} panneau(x) dans la scène, dont {edited} modifié(s) à la main. Clique sur l'un d'eux et utilise les outils Déplacer, Tourner et Échelle ; ils ne suivent plus le parcours tout seuls.", MessageType.None);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Recalculer (garde les modifiés)")) PlaceSigns(hole);
+                    if (GUILayout.Button("Revenir à l'automatique"))
+                    {
+                        Undo.DestroyObjectImmediate(placed.gameObject);
+                        SceneView.RepaintAll();
+                    }
+                }
+            }
+        }
+
+        // Makes real objects of the signs: those edited by hand stay and keep
+        // their spot, the others are replaced by what the course asks for now.
+        private static void PlaceSigns(PlayAnywhereHole hole)
+        {
+            var settings = PoolSettingsLoader.LoadOrDefault<PlayAnywhereSettings>("PlayAnywhereSettings");
+            if (settings.signPrefab == null)
+            {
+                Debug.LogWarning("[PlayAnywhere] Pas de Sign Prefab dans PlayAnywhereSettings : lance Tools > Pool > Ensure Config Assets Exist.", hole);
+                return;
+            }
+            Undo.SetCurrentGroupName("Placer les panneaux");
+            int group = Undo.GetCurrentGroup();
+
+            Transform root = hole.PlacedSigns;
+            if (root == null)
+            {
+                root = new GameObject(PlayAnywhereCourseSigns.RootName).transform;
+                root.SetParent(hole.transform, true);
+                Undo.RegisterCreatedObjectUndo(root.gameObject, "Placer les panneaux");
+            }
+
+            var kept = new List<Vector3>();
+            foreach (PlayAnywhereSign sign in root.GetComponentsInChildren<PlayAnywhereSign>(true))
+            {
+                if (sign.IsHandEdited) kept.Add(sign.transform.position);
+                else Undo.DestroyObjectImmediate(sign.gameObject);
+            }
+
+            float keepOff = settings.signSpacing * 0.4f;
+            PlayAnywhereCourseSigns.Compute(hole, settings, signPlacements);
+            foreach (PlayAnywhereCourseSigns.Placement p in signPlacements)
+            {
+                if (kept.Exists(k => Vector3.Distance(k, p.position) < keepOff)) continue;
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(settings.signPrefab.gameObject, root);
+                Undo.RegisterCreatedObjectUndo(go, "Placer les panneaux");
+                go.transform.SetPositionAndRotation(p.position, p.rotation);
+                go.transform.localScale *= settings.signSize;
+                var sign = go.GetComponent<PlayAnywhereSign>();
+                sign.Configure(PlayAnywhereCourseSigns.Flipped(p), p.drop);
+                sign.MarkGenerated();
+            }
+            Undo.CollapseUndoOperations(group);
+            SceneView.RepaintAll();
         }
 
         private void OnSceneGUI()
         {
             var hole = (PlayAnywhereHole)target;
+
+            if (hole.CourseSigns && !Application.isPlaying && hole.PlacedSigns == null && Event.current.type == EventType.Repaint) DrawSignPreview(hole);
 
             MoveTransform(hole.Player1Tee, new Color(0.3f, 0.6f, 1f), "Départ J1", null);
             MoveTransform(hole.Player2Tee, new Color(1f, 0.35f, 0.3f), "Départ J2", null);
@@ -115,6 +196,30 @@ namespace UntitledPoolGame.PoolEditor
                     hole.InsertPoint(i, middle, (width + nextWidth) * 0.5f);
                     return;
                 }
+            }
+        }
+
+        private static readonly List<PlayAnywhereCourseSigns.Placement> signPlacements = new List<PlayAnywhereCourseSigns.Placement>();
+
+        // Where the signs will stand, as outlines: post, board, an arrow the
+        // way the chevrons point. Sizes are those of the generated sign.
+        private static void DrawSignPreview(PlayAnywhereHole hole)
+        {
+            var settings = PoolSettingsLoader.LoadOrDefault<PlayAnywhereSettings>("PlayAnywhereSettings");
+            PlayAnywhereCourseSigns.Compute(hole, settings, signPlacements);
+            Handles.color = new Color(1f, 0.6f, 0.1f);
+            float size = settings.signSize;
+            foreach (PlayAnywhereCourseSigns.Placement p in signPlacements)
+            {
+                Vector3 board = p.position + Vector3.up * (1.1f * size);
+                Vector3 across = p.rotation * Vector3.right * (0.45f * size);
+                Vector3 up = Vector3.up * (0.2f * size);
+                Handles.DrawLine(p.position + Vector3.down * p.drop, p.position + Vector3.up * (1.4f * size));
+                Handles.DrawPolyLine(board - across - up, board + across - up, board + across + up, board - across + up, board - across - up);
+                Vector3 tip = board + (PlayAnywhereCourseSigns.Flipped(p) ? -across : across) * 0.8f;
+                Handles.DrawLine(board - (tip - board), tip);
+                Handles.DrawLine(tip, board + up * 0.7f);
+                Handles.DrawLine(tip, board - up * 0.7f);
             }
         }
 

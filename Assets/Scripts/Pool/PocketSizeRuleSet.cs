@@ -62,10 +62,11 @@ namespace UntitledPoolGame.Pool
         private readonly int[] roundsWon = new int[2];
         private float invulnerableUntil;
 
-        private readonly LocalPlayerShrink[] bodies = new LocalPlayerShrink[2];
-        private Vector3 tinySpawn;
-        private bool tinyPlaced;
+        // The tiny one's small body, once placed.
+        private LocalPlayerShrink tinyBody;
+        private PlayerInput tinyWaitedFor;
         private int tinyReadyFrame;
+        private Vector3 tinySpawn;
         private float feltY;
         private int ballLayers;
 
@@ -96,6 +97,14 @@ namespace UntitledPoolGame.Pool
             Current = this;
             ballLayers = LayerMask.GetMask("Poolball");
 
+            // Both bodies come from these: without them, nothing to play
+            // (mainCue stays empty, Tick does nothing).
+            if (Settings.tinyPrefab == null || PlayerInputManager.instance == null || PlayerInputManager.instance.playerPrefab == null)
+            {
+                Debug.LogError("[PocketSize] Il manque le prefab du petit (PocketSizeSettings, Tiny Prefab) ou celui du joueur (PlayerInputManager, Player Prefab) : pas de partie.");
+                return;
+            }
+
             if (mainCue == null || extraCue == null)
             {
                 if (!FindPlayerCueBalls(out mainCue, out extraCue)) return;
@@ -107,41 +116,30 @@ namespace UntitledPoolGame.Pool
             // as C+P would (a free gamepad, else the keyboard: Tab swaps).
             if (PlayerInput.all.Count < 2)
                 Debug.Log($"[PocketSize] Un seul joueur : écran partagé. {Core.SplitScreenCheatSpawner.JoinPlayer()}");
-            bodies[0] = bodies[1] = null;
-            FindBodies();
-            if (bodies[0] == null || bodies[1] == null)
+            if (PlayerInput.all.Count < 2)
                 Debug.LogWarning("[PocketSize] Il faut deux joueurs : le petit sera posé sur la table dès que le deuxième arrive (C+P).");
 
             StartRound(match, 0);
         }
 
-        // The players' bodies by index. One just joined is given two frames
-        // before being shrunk and moved: its puppet and controllers start up
-        // first, and the join itself moves it to its spawn point.
-        private void FindBodies()
-        {
-            foreach (PlayerInput input in PlayerInput.all)
-            {
-                int index = input.playerIndex;
-                if (index < 0 || index >= 2 || bodies[index] != null) continue;
-                bodies[index] = LocalPlayerShrink.For(input.gameObject);
-                tinyReadyFrame = Time.frameCount + 2;
-            }
-        }
-
-        // Shrinks the tiny one and puts them on the felt, as soon as they're
-        // there and ready.
+        // Swaps the tiny one's body for the small one, on the felt, as soon as
+        // they're there and ready. A body just there is given two frames: its
+        // puppet and controllers start up first.
         private void TryPlaceTiny()
         {
-            if (tinyPlaced) return;
-            if (bodies[Tiny] == null) FindBodies();
-            LocalPlayerShrink tiny = bodies[Tiny];
-            if (tiny == null || Time.frameCount < tinyReadyFrame) return;
+            if (tinyBody != null) return;
+            PlayerInput player = PlayerInput.GetPlayerByIndex(Tiny);
+            if (player == null) return;
+            if (player != tinyWaitedFor)
+            {
+                tinyWaitedFor = player;
+                tinyReadyFrame = Time.frameCount + 2;
+            }
+            if (Time.frameCount < tinyReadyFrame) return;
             PocketSizeSettings s = Settings;
-            tiny.Shrink(s.tinyScale, s.tinyBlocksBalls ? ballLayers : 0, s.tinyNearClip, s.tinyJumpHeight);
-            tiny.Teleport(tinySpawn, FacingCueBall(tinySpawn));
-            tinyPlaced = true;
-            if (s.debugLogs) Debug.Log($"[PocketSize] J{Tiny + 1} rétréci ({s.tinyScale:0.###}×) et posé sur la table à {tinySpawn}.", tiny);
+            tinyBody = LocalPlayerShrink.Shrink(player, s.tinyPrefab, PlayerInputManager.instance.playerPrefab,
+                tinySpawn, FacingCueBall(tinySpawn), s.tinyBlocksBalls ? ballLayers : 0, s.tinyNearClip, s.tinyJumpHeight, s.tinyFallStiffness, s.tinyFallGravity, s.tinyFallDamper);
+            if (s.debugLogs) Debug.Log($"[PocketSize] J{Tiny + 1} : corps du petit ({s.tinyPrefab.name}) posé sur la table à {tinySpawn}.", tinyBody);
         }
 
         // On the felt (not beside the table, not above it): something else
@@ -176,6 +174,7 @@ namespace UntitledPoolGame.Pool
             CurrentPhase = Phase.Countdown;
             phaseTime = 0f;
             LocalPlayerShrink.RestoreAll();
+            tinyBody = null;
             // Powers belong to a role: a stock held over would be the wrong one.
             match.ClearHeldPowers();
             slowCueUntil = sprintUntil = slowTinyUntil = shotBoostUntil = extraCueUntil = -1f;
@@ -206,7 +205,6 @@ namespace UntitledPoolGame.Pool
 
             ScatterObstacles();
 
-            tinyPlaced = false;
             invulnerableUntil = 0f;
             if (s.debugLogs)
                 Debug.Log($"[PocketSize] Manche {round + 1}/{Rounds} : J{Giant + 1} grand (blanche {mainCue.transform.position}), J{Tiny + 1} petit. Chasse dans {s.countdown:0.#} s.");
@@ -304,7 +302,7 @@ namespace UntitledPoolGame.Pool
             phaseTime += Time.deltaTime;
             UpdateRespots();
             TryPlaceTiny();
-            LocalPlayerShrink tiny = tinyPlaced ? bodies[Tiny] : null;
+            LocalPlayerShrink tiny = tinyBody;
 
             switch (CurrentPhase)
             {
@@ -393,7 +391,7 @@ namespace UntitledPoolGame.Pool
         // threw it there already was (still invulnerable).
         private void CheckFall(LocalPlayerShrink tiny, bool counts)
         {
-            Vector3 where = tiny.transform.position;
+            Vector3 where = tiny.BodyPosition;
             if (where.y > feltY - Settings.fallDepth) return;
             bool counted = counts && Time.time >= invulnerableUntil;
             Vector3 spot = FeltSpot(0.03f, feltY + 0.01f);
@@ -412,10 +410,12 @@ namespace UntitledPoolGame.Pool
         // the giant: the cue ball, or a coloured ball it sent flying. A
         // distance test rather than collision callbacks: with Tiny Blocks
         // Balls the ball bounces off the body before overlapping it (Hit
-        // Margin). Invulnerable Time after a touch, none counts.
+        // Margin). None counts while the tiny one is down, nor for Invulnerable
+        // Time once they're back up.
         private void CheckHits(LocalPlayerShrink tiny)
         {
             PocketSizeSettings s = Settings;
+            if (tiny.IsDown) invulnerableUntil = Time.time + s.invulnerableTime;
             bool open = Time.time >= invulnerableUntil;
             tiny.GetCapsule(out Vector3 bottom, out Vector3 top, out float radius);
             PoolBall hitBy = null;
@@ -450,7 +450,7 @@ namespace UntitledPoolGame.Pool
         private static bool Coming(Vector3 velocity, Vector3 toTiny, float minSpeed) =>
             velocity.sqrMagnitude >= minSpeed * minSpeed && Vector3.Dot(Flat(velocity), Flat(toTiny)) > 0f;
 
-        // A touch: counted, and the tiny one is thrown by the impact. How
+        // A touch: counted, and the tiny one falls, thrown by the impact. How
         // hard: the ball's speed into them (head on, all of it; grazing,
         // little), times Knock Transfer. Which way: between where the ball
         // was rolling and straight away from the point of impact (Knock
@@ -466,7 +466,7 @@ namespace UntitledPoolGame.Pool
             float into = Mathf.Max(Vector3.Dot(Flat(velocity), away), 0f);
             float speed = Mathf.Min(into * s.knockTransfer, s.knockMaxSpeed);
             Vector3 direction = Vector3.Slerp(rolling, away, s.knockAlongImpact).normalized;
-            tiny.Knock((direction + Vector3.up * s.knockLift) * speed, s.knockDamping);
+            tiny.KnockDown((direction + Vector3.up * s.knockLift) * speed, s.debugLogs, ball.Rigidbody);
             TinyHit?.Invoke(Tiny, hitsTaken[Tiny], closest);
             if (s.debugLogs)
                 Debug.Log($"[PocketSize] J{Tiny + 1} touché par {(ball.IsCueBall ? "la blanche" : $"la bille {ball.Number}")} ({velocity.magnitude:0.00} m/s, {into:0.00} m/s vers lui) à {closest} : {hitsTaken[Tiny]}/{s.hitsToLose}, projeté à {speed:0.00} m/s.", ball);
@@ -539,9 +539,9 @@ namespace UntitledPoolGame.Pool
         {
             if (CurrentPhase != Phase.Hunt) return false;
             int taker = -1;
-            LocalPlayerShrink tiny = tinyPlaced ? bodies[Tiny] : null;
+            LocalPlayerShrink tiny = tinyBody;
             float tinyReach = Settings.tinyCrateReach;
-            if (tiny != null && Flat(tiny.transform.position - position).sqrMagnitude <= tinyReach * tinyReach) taker = Tiny;
+            if (tiny != null && !tiny.IsDown && Flat(tiny.transform.position - position).sqrMagnitude <= tinyReach * tinyReach) taker = Tiny;
             if (taker < 0)
             {
                 foreach (PoolBall ball in PoolBall.Active)

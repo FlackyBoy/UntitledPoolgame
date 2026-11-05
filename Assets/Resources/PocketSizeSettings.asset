@@ -17,24 +17,28 @@ MonoBehaviour:
   countdown: 3
   roundOverTime: 4
   firstGiant: 0
-  tinyScale: 0.07
+  tinyPrefab: {fileID: 6705447150338439117, guid: 4dd111435ac663447b7dbf4b419a62a4, type: 3}
   tinyBlocksBalls: 1
-  tinyJumpHeight: 1.2
-  tinyNearClip: 0.005
-  minHitSpeed: 0.25
-  hitMargin: 0.012
+  tinyJumpHeight: 0.864
+  tinyNearClip: 0.0036
+  tinyFallStiffness: 0.02
+  tinyFallDamper: 0.01
+  tinyFallGravity: 0.2
+  minHitSpeed: 0.18
+  hitMargin: 0.00864
   invulnerableTime: 1.5
-  knockSpeed: 0.9
+  knockTransfer: 0.4
+  knockMaxSpeed: 0.46
+  knockAlongImpact: 0.6
   knockLift: 0.5
-  knockDamping: 4
-  fallDepth: 0.06
+  fallDepth: 0.0432
   obstacleBalls: 6
-  obstacleClearance: 0.2
+  obstacleClearance: 0.144
   respotDelay: 1.5
   giantCueColor: {r: 1, g: 1, b: 1, a: 1}
   giantCrateColor: {r: 0.95, g: 0.3, b: 0.2, a: 1}
   tinyCrateColor: {r: 0.25, g: 0.8, b: 1, a: 1}
-  tinyCrateReach: 0.09
+  tinyCrateReach: 0.0648
   giantLabel: GRAND
   tinyLabel: PETIT
   roundFormat: Manche {0}/{1}

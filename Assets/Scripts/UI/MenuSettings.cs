@@ -171,6 +171,18 @@ namespace UntitledPoolGame.Core
             rules = "Du golf dans toute la salle : rentre ta blanche dans le trou en un minimum de coups. À chaque manche, pose un objet sur le parcours pour t'aider... ou gêner l'autre !" };
         public MenuModeBall pocketSizeMode = new MenuModeBall { ball = new MenuBall("Pocket Size", "5", "#e8761c"),
             rules = "L'un de vous rétrécit sur la table, l'autre le chasse à la blanche. Trois touches et le petit a perdu, deux minutes de survie et il gagne. Puis on échange !" };
+        public MenuModeBall shooterMiniMode = new MenuModeBall { ball = new MenuBall("Shooter miniature", "13", "#c23b3b", true),
+            rules = "Vous voilà tout petits sur la table, la queue en guise de fusil. Tirez-vous dessus, poussez les billes sur l'autre et gare aux poches. Le premier à cinq éliminations gagne !" };
+        public MenuModeBall shooterPoolMode = new MenuModeBall { ball = new MenuBall("Shooter Billard", "14", "#2f9e5b", true),
+            rules = "Tout petits sur la table, vous devez rentrer vos billes dans les poches, au coup de pied et au tir. Tirez sur l'autre pour le ralentir : seul compte le premier qui a vidé son groupe !" };
+        public MenuModeBall bowlingPoolMode = new MenuModeBall { ball = new MenuBall("Bowling Pool", "10", "#3d6fd1", true),
+            rules = "Dix quilles au fond de la table, ta blanche pour les faire tomber. Deux lancers par frame, cinq frames chacun, avec les vrais strikes et spares. Les bandes sont permises, et une quille dans une poche compte !" };
+        public MenuModeBall sumoPoolMode = new MenuModeBall { ball = new MenuBall("Sumo Pool", "1", "#f0b90f"),
+            rules = "Vous êtes les billes ! Une petite table carrée, six trous : roule, fonce et pousse l'autre dedans. Chaque chute donne un point à l'adversaire, même si tu es tombé tout seul. Le premier à trois gagne !" };
+        public MenuModeBall sumoBilliardMode = new MenuModeBall { ball = new MenuBall("Sumo Billard", "9", "#f0b90f", true),
+            rules = "Toujours dans la peau d'une bille, mais il faut rentrer les tiennes : les pleines pour J1, les rayées pour J2. Le premier qui a vidé son groupe gagne. Si tu tombes, une de tes billes ressort !" };
+        public MenuModeBall hideAndSeekMode = new MenuModeBall { ball = new MenuBall("Cache-cache", "3", "#d4342b"),
+            rules = "Ferme les yeux ! L'autre, tout petit sur la table, prend la place d'une bille. Puis tu as cinq tirs pour la toucher avec ta blanche, parmi des billes qui bougent toutes seules. Les rôles s'inversent à chaque manche, le premier à trois gagne !" };
         [Tooltip("Type de la bille visée, changé avec Y / Tab. Chaque mode commence sur son type d'origine.")]
         public string turnBasedOption = "Chacun son tour   < >  (Y / Tab)";
         public string speedPoolOption = "Speed Pool : tout le monde en même temps   < >  (Y / Tab)";
@@ -275,6 +287,12 @@ namespace UntitledPoolGame.Core
             Pool.PoolGameMode.PowerWashPool => powerWashPoolMode,
             Pool.PoolGameMode.PlayAnywhere => playAnywhereMode,
             Pool.PoolGameMode.PocketSize => pocketSizeMode,
+            Pool.PoolGameMode.ShooterMini => shooterMiniMode,
+            Pool.PoolGameMode.ShooterPool => shooterPoolMode,
+            Pool.PoolGameMode.BowlingPool => bowlingPoolMode,
+            Pool.PoolGameMode.SumoPool => sumoPoolMode,
+            Pool.PoolGameMode.SumoBilliard => sumoBilliardMode,
+            Pool.PoolGameMode.HideAndSeek => hideAndSeekMode,
             _ => classicMode,
         };
 

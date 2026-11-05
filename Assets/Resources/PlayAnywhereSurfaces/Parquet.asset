@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aee39909fc2ca3946bfa1e2920ed2ae6, type: 3}
   m_Name: Parquet
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PlayAnywhereSurfaceType
-  rollingFriction: 0.3
-  slideFriction: 1.5
+  rollingFriction: 0.216
+  slideFriction: 1.08
   bounciness: 0.4
   materials: []
   keywords:
