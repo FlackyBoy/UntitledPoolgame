@@ -40,6 +40,13 @@ namespace UntitledPoolGame.Pool
         private State state;
         private Vector3 crateSlot;
         private Quaternion crateRotation;
+        // Its real size, and how much smaller it is on the crate and in hand
+        // (Crate Item Max Size): a 1.2 m plate would cover the crate and fill
+        // the view. The sizes below are always the real ones; placed, they're
+        // reduced by placedFit, for the play area's width there.
+        private Vector3 fullScale;
+        private float crateShrink = 1f;
+        private float placedFit = 1f;
         // Pivot height above the bottom of the box (upright, scaled).
         private float bottomOffset;
         // Box half size in world units (upright), for the overlap test.
@@ -55,6 +62,7 @@ namespace UntitledPoolGame.Pool
         private float yawOffset;
 
         private GameObject ghost;
+        private Transform ghostRing;
         private Renderer[] ghostRenderers;
         private bool ghostValid;
         private bool hasGhostPose;
@@ -69,6 +77,7 @@ namespace UntitledPoolGame.Pool
         private bool firstPlaced;
         private Vector3 firstRestPosition, secondRestPosition;
         private Quaternion firstRestRotation, secondRestRotation;
+        private Vector3 firstRestScale;
 
         // Given by the debug menu, out of the round: taking and placing it
         // don't count, and let go unplaced it's gone (it has no crate slot).
@@ -138,21 +147,37 @@ namespace UntitledPoolGame.Pool
             prop.halfExtents = b.extents;
             prop.boxCenterOffset = b.center - slot;
             prop.footprintRadius = Mathf.Max(b.extents.x, b.extents.z);
+            prop.fullScale = go.transform.localScale;
+            float widest = 2f * prop.footprintRadius;
+            if (widest > rules.CrateItemSize) prop.crateShrink = rules.CrateItemSize / widest;
+            prop.crateShrink = Mathf.Min(prop.crateShrink, prop.HeightFit);
             prop.grabbable = go.AddComponent<LocalGrabbable>();
             if (twoPart != null)
             {
                 prop.twoPart = twoPart;
                 prop.firstRestPosition = twoPart.FirstPart.localPosition;
                 prop.firstRestRotation = twoPart.FirstPart.localRotation;
+                prop.firstRestScale = twoPart.FirstPart.localScale;
                 prop.secondRestPosition = twoPart.SecondPart.localPosition;
                 prop.secondRestRotation = twoPart.SecondPart.localRotation;
             }
 
             // Resting on the crate, the bottom on the slot.
-            prop.crateSlot = slot + Vector3.up * prop.bottomOffset;
+            prop.crateSlot = slot + Vector3.up * (prop.bottomOffset * prop.crateShrink);
             prop.crateRotation = rotation;
             prop.ReturnToCrate();
             return prop;
+        }
+
+        // A narrow but tall object (the cone) passes the width limits and
+        // still towers over the ball.
+        private float HeightFit
+        {
+            get
+            {
+                float height = 2f * halfExtents.y;
+                return settings.itemMaxHeight > 0f && height > settings.itemMaxHeight ? settings.itemMaxHeight / height : 1f;
+            }
         }
 
         // Diagnostics: where it is and whether anything can show it.
@@ -175,6 +200,7 @@ namespace UntitledPoolGame.Pool
             if (firstPlaced) ResetParts();
             state = State.InCrate;
             transform.SetParent(null, true);
+            transform.localScale = fullScale * crateShrink;
             transform.SetPositionAndRotation(crateSlot, crateRotation);
             Freeze();
         }
@@ -335,10 +361,13 @@ namespace UntitledPoolGame.Pool
             RaycastHit hit = rayHits[best];
             float yaw = holderView.eulerAngles.y + yawOffset;
             ghostRotation = Quaternion.Euler(0f, yaw, 0f);
-            ghostPosition = hit.point + Vector3.up * bottomOffset;
+            float widest = 2f * footprintRadius;
+            float allowed = rules.ItemSizeAt(hit.point);
+            placedFit = Mathf.Min(widest > allowed ? allowed / widest : 1f, HeightFit);
+            ghostPosition = hit.point + Vector3.up * (bottomOffset * placedFit);
             hasGhostPose = true;
             ghostValid = Vector3.Angle(hit.normal, Vector3.up) <= settings.maxPlaceSlope
-                      && rules.IsClearOfCourse(hit.point, footprintRadius + settings.noBuildRadius)
+                      && rules.IsClearOfCourse(hit.point, footprintRadius * placedFit + settings.noBuildRadius)
                       && !Overlaps(hit.collider);
             // The second part: not too far from the first.
             bool tooFar = firstPlaced && FlatDistance(hit.point, twoPart.FirstPart.position) > twoPart.MaxPartDistance;
@@ -346,6 +375,9 @@ namespace UntitledPoolGame.Pool
 
             EnsureGhost();
             ghost.transform.SetPositionAndRotation(ghostPosition, ghostRotation);
+            ghost.transform.localScale = fullScale * placedFit;
+            // The destroyer's reach doesn't change with its size.
+            if (ghostRing != null) ghostRing.localScale = Vector3.one / placedFit;
             Material m = ghostValid ? validMaterial : invalidMaterial;
             foreach (Renderer r in ghostRenderers)
             {
@@ -370,8 +402,8 @@ namespace UntitledPoolGame.Pool
         // shrunk and lifted, or the ground under it would count.
         private bool Overlaps(Collider ground)
         {
-            Vector3 center = ghostPosition + ghostRotation * boxCenterOffset + Vector3.up * 0.02f;
-            int count = Physics.OverlapBoxNonAlloc(center, halfExtents * 0.95f, overlaps, ghostRotation, ~0, QueryTriggerInteraction.Ignore);
+            Vector3 center = ghostPosition + ghostRotation * (boxCenterOffset * placedFit) + Vector3.up * 0.02f;
+            int count = Physics.OverlapBoxNonAlloc(center, halfExtents * (0.95f * placedFit), overlaps, ghostRotation, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < count; i++)
             {
                 Collider c = overlaps[i];
@@ -396,13 +428,14 @@ namespace UntitledPoolGame.Pool
             int player = holderIndex;
             by.ReleaseInPlace();
             transform.SetParent(null, true);
+            transform.localScale = fullScale * placedFit;
             transform.SetPositionAndRotation(ghostPosition, ghostRotation);
             Freeze();
             state = State.Placed;
             ClearHolder();
             holderIndex = player;
             if (ghost != null) Destroy(ghost);
-            if (settings.debugLogs) Debug.Log($"[PlayAnywhere] J{player + 1} pose {name} à {ghostPosition}.", this);
+            if (settings.debugLogs) Debug.Log($"[PlayAnywhere] J{player + 1} pose {name} à {ghostPosition}, {2f * footprintRadius * placedFit:0.00} m de large, {2f * halfExtents.y * placedFit:0.00} m de haut (échelle {placedFit:0.00}).", this);
             if (free) rules.OnFreePropPlaced(this);
             else rules.OnPropPlaced(this, player);
             GetComponent<IPlayAnywherePlaced>()?.OnPlaced(rules, this);
@@ -413,10 +446,11 @@ namespace UntitledPoolGame.Pool
         private void PlaceFirstPart()
         {
             Transform first = twoPart.FirstPart;
-            Vector3 scale = transform.lossyScale;
-            Vector3 position = ghostPosition + ghostRotation * Vector3.Scale(first.localPosition, scale);
+            Vector3 position = ghostPosition + ghostRotation * (Vector3.Scale(first.localPosition, fullScale) * placedFit);
             Quaternion rotation = ghostRotation * first.localRotation;
+            Vector3 placedScale = Vector3.Scale(first.localScale, fullScale) * placedFit;
             first.SetParent(null, true);
+            first.localScale = placedScale;
             first.SetPositionAndRotation(position, rotation);
             firstPlaced = true;
 
@@ -443,6 +477,7 @@ namespace UntitledPoolGame.Pool
                 first.SetParent(transform, false);
                 first.localPosition = firstRestPosition;
                 first.localRotation = firstRestRotation;
+                first.localScale = firstRestScale;
             }
             Transform second = twoPart.SecondPart;
             second.localPosition = secondRestPosition;
@@ -472,10 +507,9 @@ namespace UntitledPoolGame.Pool
                 }
             }
             if (!any) return;
-            Vector3 scale = transform.lossyScale;
-            bottomOffset = -local.min.y * scale.y;
-            halfExtents = Vector3.Scale(local.extents, scale);
-            boxCenterOffset = Vector3.Scale(local.center, scale);
+            bottomOffset = -local.min.y * fullScale.y;
+            halfExtents = Vector3.Scale(local.extents, fullScale);
+            boxCenterOffset = Vector3.Scale(local.center, fullScale);
             footprintRadius = Mathf.Max(halfExtents.x, halfExtents.z);
             if (solids.Length > 0 && solids[0] is BoxCollider box)
             {
@@ -523,13 +557,13 @@ namespace UntitledPoolGame.Pool
                 r.sharedMaterials = mats;
                 ghostRenderers[i] = r;
             }
-            ghost.transform.localScale = rootScale;
+            ghost.transform.localScale = fullScale;
 
             // The destroyer shows its reach: a ring on the ground.
-            if (TryGetComponent(out PlayAnywhereDestroyer _)) AddRadiusRing(ghost.transform, settings.destroyRadius / Mathf.Max(0.01f, rootScale.x));
+            if (TryGetComponent(out PlayAnywhereDestroyer _)) ghostRing = AddRadiusRing(ghost.transform, settings.destroyRadius / Mathf.Max(0.01f, fullScale.x));
         }
 
-        private static void AddRadiusRing(Transform parent, float radius)
+        private static Transform AddRadiusRing(Transform parent, float radius)
         {
             const int Segments = 48;
             var ring = new GameObject("Rayon");
@@ -546,6 +580,7 @@ namespace UntitledPoolGame.Pool
                 float a = i * Mathf.PI * 2f / Segments;
                 line.SetPosition(i, new Vector3(Mathf.Cos(a) * radius, 0.02f, Mathf.Sin(a) * radius));
             }
+            return ring.transform;
         }
 
         private void SetGhostVisible(bool visible)

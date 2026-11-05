@@ -27,19 +27,24 @@ namespace UntitledPoolGame.Pool
             return phase == Phase.Intermission ? total : total + strokes[player];
         }
 
-        // Only the hole being played is seen (and solid); the others wait
-        // their turn, those left out of the match stay hidden.
+        // Only the hole being played and its crate are seen (and solid); the
+        // others wait their turn, those left out of the match stay hidden.
         private void ShowOnly(PlayAnywhereHole current)
         {
             foreach (PlayAnywhereHole h in Object.FindObjectsByType<PlayAnywhereHole>())
                 h.SetShown(h == current);
+            PlayAnywhereCrate currentCrate = current != null ? current.Crate : null;
+            foreach (PlayAnywhereCrate c in Object.FindObjectsByType<PlayAnywhereCrate>())
+                c.SetShown(c == currentCrate);
         }
 
-        // Another mode starts: no flag nor course left in the level.
+        // Another mode starts: no flag, course nor crate left in the level.
         private static void HideAllHoles()
         {
             foreach (PlayAnywhereHole h in Object.FindObjectsByType<PlayAnywhereHole>())
                 h.SetShown(false);
+            foreach (PlayAnywhereCrate c in Object.FindObjectsByType<PlayAnywhereCrate>())
+                c.SetShown(false);
         }
 
         // The scene's holes in Order (then name), cut to Courses.
@@ -70,12 +75,12 @@ namespace UntitledPoolGame.Pool
                 winner = MatchWinner(out string why);
                 footer = $"J{winner + 1} gagne la partie !{why}";
             }
-            else footer = $"Parcours suivant : {course[holeIndex + 1].name}";
+            else footer = $"Parcours suivant : {holeIndex + 2} sur {course.Count}";
 
             string title = last ? "Score final" : $"Parcours {holeIndex + 1}/{course.Count} terminé";
             if (settings.debugLogs)
                 Debug.Log($"[PlayAnywhere] {title} : J1 {strokes[0]} coups, J2 {strokes[1]} (par {hole.Par}) ; total J1 {TotalOf(0)}, J2 {TotalOf(1)}. {footer}");
-            PlayAnywhereScoreboard.Show(title, results, footer);
+            PlayAnywhereScoreboard.Show(title, results, course, footer, winner, settings.scoreboardTime);
             match.StartCoroutine(AfterScoreboard(match.MatchGeneration, last, winner));
         }
 

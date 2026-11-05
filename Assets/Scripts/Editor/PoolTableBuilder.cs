@@ -200,6 +200,38 @@ namespace UntitledPoolGame.PoolEditor
                 settings.props.Insert(0, new PlayAnywherePropChoice { prefab = piece, useOwnColliders = true });
                 EditorUtility.SetDirty(settings);
             }
+
+            // The direction signs along the courses.
+            PlayAnywhereSign sign = PlayAnywhereTools.EnsureSignPrefab();
+            if (settings.signPrefab == null)
+            {
+                settings.signPrefab = sign;
+                EditorUtility.SetDirty(settings);
+            }
+
+            // The signs floating above the flags.
+            GameObject flagMarker = PlayAnywhereTools.EnsureFlagMarkerPrefab();
+            if (settings.flagMarkerPrefab == null)
+            {
+                settings.flagMarkerPrefab = flagMarker;
+                EditorUtility.SetDirty(settings);
+            }
+
+            // And above the crates, not to be mistaken for them.
+            GameObject crateMarker = PlayAnywhereTools.EnsureCrateMarkerPrefab();
+            if (settings.crateMarkerPrefab == null)
+            {
+                settings.crateMarkerPrefab = crateMarker;
+                EditorUtility.SetDirty(settings);
+            }
+
+            // The wall of light on the edge of the courses.
+            Material courseWall = PlayAnywhereTools.EnsureCourseWallMaterial();
+            if (settings.courseWallMaterial == null && courseWall != null)
+            {
+                settings.courseWallMaterial = courseWall;
+                EditorUtility.SetDirty(settings);
+            }
         }
 
         // Existing ones keep their values; their keywords are filled only

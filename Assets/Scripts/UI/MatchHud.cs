@@ -49,7 +49,7 @@ namespace UntitledPoolGame.Core
         }
 
         // Full screen, scaled from 1920 × 1080; under the menu (100).
-        private static PanelSettings CreatePanel()
+        public static PanelSettings CreatePanel(int sortingOrder = 90)
         {
             var panel = ScriptableObject.CreateInstance<PanelSettings>();
             panel.themeStyleSheet = Resources.Load<ThemeStyleSheet>("UI/MenuTheme");
@@ -57,7 +57,7 @@ namespace UntitledPoolGame.Core
             panel.referenceResolution = new Vector2Int(1920, 1080);
             panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
             panel.match = 0.5f;
-            panel.sortingOrder = 90;
+            panel.sortingOrder = sortingOrder;
             return panel;
         }
 
@@ -712,13 +712,16 @@ namespace UntitledPoolGame.Core
             else Text(h.plateBalls, cfg.groupUndecidedText, bodyFont, 22, Ink);
         }
 
-        // Power Wash Pool's clock, top centre of each half. The last Clock
+        // Power Wash Pool's clock, or Play Anywhere's in Speed Pool (the player
+        // left after the other holed out), top centre of each half. The last Clock
         // Final Seconds: red, a bit bigger each second, and a bump on each
         // tick. Text and colour only change when the second does.
         private void UpdateWashClock(Half h, PoolMatchRules rules, float dt)
         {
             PowerWashDirt wash = rules.Mode == PoolGameMode.PowerWashPool && !rules.GameOver ? PowerWashDirt.Instance : null;
-            if (wash == null)
+            PlayAnywhereRuleSet golf = !rules.GameOver ? PlayAnywhereRuleSet.Current : null;
+            float golfLeft = golf != null ? golf.FinishClockLeft : -1f;
+            if (wash == null && golfLeft < 0f)
             {
                 if (h.shownClock == int.MinValue) return;
                 h.shownClock = int.MinValue;
@@ -726,7 +729,7 @@ namespace UntitledPoolGame.Core
                 return;
             }
 
-            int seconds = wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft);
+            int seconds = wash == null ? Mathf.CeilToInt(golfLeft) : wash.Overtime ? -1 : Mathf.CeilToInt(wash.TimeLeft);
             bool final = seconds >= 0 && seconds <= cfg.clockFinalSeconds;
             if (seconds != h.shownClock)
             {

@@ -23,10 +23,12 @@ namespace UntitledPoolGame.Pool
     // following its height (a course on the counter: off the counter is
     // out). Edited with handles in the Scene view (PlayAnywhereHoleEditor).
     [AddComponentMenu("Pool/Play Anywhere/Trou")]
-    public class PlayAnywhereHole : MonoBehaviour
+    public class PlayAnywhereHole : MonoBehaviour, IPlayAnywhereArrowLayout
     {
         [Tooltip("Place de ce parcours dans la partie : les trous de la scène se jouent du plus petit numéro au plus grand.")]
         [SerializeField] private int order = 1;
+        [Tooltip("Décoché : ce parcours se joue sans caisse, donc sans phase de pose ; aucune caisse n'est affichée.")]
+        [SerializeField] private bool useCrate = true;
         [Tooltip("Caisse des objets de ce parcours. Vide = la première caisse de la scène.")]
         [SerializeField] private PlayAnywhereCrate crate;
         [Tooltip("Nombre de coups attendu pour ce trou (affiché à côté du score).")]
@@ -38,11 +40,27 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Centre du trou, au sol.")]
         [SerializeField] private Transform cup;
         [Tooltip("Rayon du trou (mètres). Une bille dont le centre passe à moins de cette distance, assez lentement, tombe dedans.")]
-        [Min(0.01f)] [SerializeField] private float cupRadius = 0.09f;
+        [Min(0.01f)] [SerializeField] private float cupRadius = 0.0648f;
         [Tooltip("Drapeau du trou (créé par l'outil). Vide = l'enfant « Drapeau ».")]
         [SerializeField] private Transform flag;
         [Tooltip("Taille du drapeau (1 = 80 cm de haut).")]
         [Min(0.1f)] [SerializeField] private float flagSize = 1f;
+
+        [Header("Flèches au-dessus du drapeau")]
+        [Tooltip("Flèches néon flottantes, qui pointent vers le drapeau, rebondissent et clignotent. Aperçu jaune dans la Scene quand le trou est sélectionné. Rebonds et clignotement : Flag Marker de PlayAnywhereSettings.")]
+        [SerializeField] private bool flagMarker = true;
+        [Tooltip("Nombre de flèches, en couronne. Plusieurs, pour que chaque joueur en voie toujours une de face. 0 = aucune.")]
+        [Min(0)] [SerializeField] private int flagArrowsCount = 4;
+        [Tooltip("Taille des flèches (1 = 90 cm de long).")]
+        [Min(0.05f)] [SerializeField] private float flagArrowsSize = 0.8f;
+        [Tooltip("Position (mètres) du point que visent les flèches, par rapport au haut du drapeau. Y = plus haut, X et Z = sur le côté.")]
+        [SerializeField] private Vector3 flagArrowsOffset = new Vector3(0f, 0.15f, 0f);
+        [Tooltip("Distance (mètres) entre ce point et le centre d'une flèche, au plus près.")]
+        [Min(0f)] [SerializeField] private float flagArrowsDistance = 0.75f;
+        [Tooltip("Inclinaison (degrés) des flèches : 5 = presque au-dessus du point visé, 85 = presque à l'horizontale autour de lui.")]
+        [Range(5f, 85f)] [SerializeField] private float flagArrowsTilt = 35f;
+        [Tooltip("Vitesse (degrés par seconde) à laquelle les flèches tournent autour du drapeau. 0 = fixes.")]
+        [SerializeField] private float flagArrowsSpin = 30f;
 
         [Header("Parcours (zone de jeu)")]
         [Tooltip("Points du parcours entre les départs et le trou, dans l'ordre (dans l'espace du trou). Se posent et se déplacent avec les poignées dans la Scene.")]
@@ -51,9 +69,15 @@ namespace UntitledPoolGame.Pool
         [Min(0f)] [SerializeField] private float pathWidth = 3f;
         [Tooltip("Une bille plus bas que le parcours de ce nombre de mètres est hors limites (tombée du comptoir, par exemple). Entre deux points, le parcours est à la hauteur du plus bas des deux : on peut sauter d'un point en hauteur vers un point au sol.")]
         [Min(0.05f)] [SerializeField] private float pathFallDepth = 0.5f;
+        [Tooltip("Panneaux d'orientation sur les côtés du parcours, déduits de ses points (réglages : Signs de PlayAnywhereSettings). Aperçu orange dans la Scene quand le trou est sélectionné ; le bouton « Placer les panneaux dans la scène » permet de les déplacer et de les redimensionner.")]
+        [SerializeField] private bool courseSigns = true;
+        [Tooltip("Mur de lumière rouge sur les bords de la zone de jeu, en jeu (réglages : Course Wall de PlayAnywhereSettings). Sans effet sur la bille.")]
+        [SerializeField] private bool courseWall = true;
 
         public int Order => order;
-        public PlayAnywhereCrate Crate => crate;
+        public bool UsesCrate => useCrate;
+        // Its own crate, else the scene's; none if it plays without.
+        public PlayAnywhereCrate Crate => !useCrate ? null : crate != null ? crate : PlayAnywhereCrate.Current;
         public int Par => par;
         public float CupRadius => cupRadius;
         public Vector3 CupPosition => cup != null ? cup.position : transform.position;
@@ -62,12 +86,46 @@ namespace UntitledPoolGame.Pool
         public Transform Player1Tee => player1Tee;
         public Transform Player2Tee => player2Tee;
         public float PathWidth => pathWidth;
+        public bool CourseSigns => courseSigns;
+        public int ArrowCount => flagArrowsCount;
+        public float ArrowSize => flagArrowsSize;
+        public Vector3 ArrowOffset => flagArrowsOffset;
+        public float ArrowDistance => flagArrowsDistance;
+        public float ArrowTilt => flagArrowsTilt;
+        public float ArrowSpin => flagArrowsSpin;
+
+        // The top of the flag, or the cup without one.
+        private Vector3 FlagTop
+        {
+            get
+            {
+                Vector3 top = CupPosition;
+                bool found = false;
+                if (flag != null)
+                    foreach (Renderer r in flag.GetComponentsInChildren<Renderer>(true))
+                    {
+                        top.y = found ? Mathf.Max(top.y, r.bounds.max.y) : r.bounds.max.y;
+                        found = true;
+                    }
+                return top;
+            }
+        }
+
+        // The signs placed in the scene from the Inspector, if any.
+        public Transform PlacedSigns => transform.Find(PlayAnywhereCourseSigns.RootName);
 
         // Its pieces (tees, cup, flag, any décor put under it), shown only
         // while it's the course being played. Those already off stay off.
         private Renderer[] shownRenderers;
         private Collider[] shownColliders;
         private bool shown = true;
+
+        // Made the first time it's shown: a level laid out for every mode
+        // doesn't pay for them, and the hole's own décor is solid by then.
+        private Transform signs;
+        private Transform wall;
+        private Transform marker;
+        private bool markingsBuilt;
 
         // A level is laid out for every mode: in play, a hole stays hidden
         // until a Play Anywhere match shows it (one already running has
@@ -89,6 +147,20 @@ namespace UntitledPoolGame.Pool
                 if (r != null) r.enabled = shown;
             foreach (Collider c in shownColliders)
                 if (c != null) c.enabled = shown;
+
+            if (shown && !markingsBuilt)
+            {
+                markingsBuilt = true;
+                var settings = PoolSettingsLoader.LoadOrDefault<PlayAnywhereSettings>("PlayAnywhereSettings");
+                Transform placed = PlacedSigns;
+                if (!courseSigns && placed != null) placed.gameObject.SetActive(false);
+                else if (courseSigns) signs = placed != null ? placed : PlayAnywhereCourseSigns.Build(this, settings);
+                if (courseWall) wall = PlayAnywhereCourseWall.Build(this, settings);
+                if (flagMarker) marker = PlayAnywhereArrowRing.Build("Repère du drapeau", settings.flagMarkerPrefab, this, FlagTop, transform, settings);
+            }
+            if (signs != null) signs.gameObject.SetActive(shown);
+            if (wall != null) wall.gameObject.SetActive(shown);
+            if (marker != null) marker.gameObject.SetActive(shown);
         }
 
         // Where the player's ball rests at the start: on the tee, raised by
@@ -162,6 +234,47 @@ namespace UntitledPoolGame.Pool
             return false;
         }
 
+        // How wide the play area is at its stretch nearest to this point
+        // (infinite without a course). In 3D: a floor above isn't near.
+        public float WidthAt(Vector3 point)
+        {
+            if (pathWidth <= 0f) return float.PositiveInfinity;
+            float width = pathWidth, nearest = float.PositiveInfinity;
+            GetNode(0, out Vector3 a, out float widthA);
+            for (int i = 1; i < NodeCount; i++)
+            {
+                GetNode(i, out Vector3 b, out float widthB);
+                Vector2 ab = Flat(b - a);
+                float length2 = ab.sqrMagnitude;
+                float t = length2 > 1e-6f ? Mathf.Clamp01(Vector2.Dot(Flat(point - a), ab) / length2) : 0f;
+                float distance = (point - Vector3.Lerp(a, b, t)).sqrMagnitude;
+                if (distance < nearest)
+                {
+                    nearest = distance;
+                    width = Mathf.Lerp(widthA, widthB, t);
+                }
+                a = b;
+                widthA = widthB;
+            }
+            return width;
+        }
+
+        // Its narrowest stretch (infinite without a course).
+        public float NarrowestWidth
+        {
+            get
+            {
+                if (pathWidth <= 0f) return float.PositiveInfinity;
+                float narrowest = float.PositiveInfinity;
+                for (int i = 0; i < NodeCount; i++)
+                {
+                    GetNode(i, out _, out float width);
+                    narrowest = Mathf.Min(narrowest, width);
+                }
+                return narrowest;
+            }
+        }
+
         private static Vector2 Flat(Vector3 v) => new Vector2(v.x, v.z);
 
         // Lowest point of the hole (tees, path and cup): below it by Out Of
@@ -188,6 +301,11 @@ namespace UntitledPoolGame.Pool
             if (flag != null) flag.localScale = Vector3.one * flagSize;
             if (cup == null || cup.localScale.y > 0.01f) return;
             cup.localScale = new Vector3(cupRadius * 2f, cup.localScale.y, cupRadius * 2f);
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            if (flagMarker) PlayAnywhereArrowRing.DrawPreviewGizmos(this, FlagTop, new Color(1f, 0.85f, 0.1f));
         }
 
         private void OnDrawGizmos()
