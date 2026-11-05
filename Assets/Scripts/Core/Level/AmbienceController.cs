@@ -105,14 +105,15 @@ namespace UntitledPoolGame.Core
             blend = null;
         }
 
-        // Every lamp of the level other than the main light and the
-        // players' own (cameras, held objects).
+        // Every lamp of the level other than the main light, the players'
+        // own (cameras, held objects) and the neons, whose color is chosen.
         private IEnumerable<Light> DecorLights()
         {
             foreach (Light light in FindObjectsByType<Light>(FindObjectsInactive.Include))
             {
                 if (light == mainLight || light.type == LightType.Directional) continue;
                 if (light.GetComponentInParent<UnityEngine.InputSystem.PlayerInput>() != null) continue;
+                if (light.GetComponentInParent<NeonLight>() != null) continue;
                 yield return light;
             }
         }

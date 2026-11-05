@@ -505,7 +505,7 @@ namespace UntitledPoolGame.PoolEditor
             return best;
         }
 
-        private static float Area(List<Vector3> polygon)
+        public static float Area(List<Vector3> polygon)
         {
             float sum = 0f;
             for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
@@ -805,9 +805,9 @@ namespace UntitledPoolGame.PoolEditor
             PlaceProp(prefab, hit.point, alignToSurface ? hit.normal : Vector3.up, yaw, scale, palette, null);
 
         // Base centered on point, standing along normal. parent = null: the
-        // scene's props folder.
+        // scene's props folder. mounted: see PropPose.
         public static GameObject PlaceProp(GameObject prefab, Vector3 point, Vector3 normal, float yaw, float scale,
-            PrefabPalette palette, Transform parent)
+            PrefabPalette palette, Transform parent, bool mounted = false)
         {
             if (prefab == null) return null;
             if (parent == null)
@@ -821,7 +821,7 @@ namespace UntitledPoolGame.PoolEditor
                 parent = rootGo.transform;
             }
 
-            PropPose(prefab, point, normal, yaw, scale, out Vector3 position, out Quaternion rotation, out Vector3 localScale);
+            PropPose(prefab, point, normal, yaw, scale, out Vector3 position, out Quaternion rotation, out Vector3 localScale, mounted);
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.gameObject.scene);
             Undo.RegisterCreatedObjectUndo(go, "Placer un prop");
             go.transform.SetParent(parent, false);
@@ -924,15 +924,29 @@ namespace UntitledPoolGame.PoolEditor
         }
 
         // Pose of a prop placed with PlaceProp. Shared with the Props ghost.
+        // mounted (lights): same orientation on every wall, see MountedTurn.
         public static void PropPose(GameObject prefab, Vector3 point, Vector3 normal, float yaw, float scale,
-            out Vector3 position, out Quaternion rotation, out Vector3 localScale)
+            out Vector3 position, out Quaternion rotation, out Vector3 localScale, bool mounted = false)
         {
-            Quaternion turn = Quaternion.FromToRotation(Vector3.up, normal) * Quaternion.Euler(0f, yaw, 0f);
+            Quaternion turn = mounted ? MountedTurn(normal, yaw)
+                : Quaternion.FromToRotation(Vector3.up, normal) * Quaternion.Euler(0f, yaw, 0f);
             TryMeasure(prefab, out Bounds b);
             Vector3 baseCenter = new Vector3(b.center.x, b.min.y, b.center.z) * scale;
             position = point - turn * baseCenter;
             rotation = turn * prefab.transform.localRotation;
             localScale = prefab.transform.localScale * scale;
+        }
+
+        // +Y out of the surface and, at yaw 0, +X level on a wall and along
+        // world X on a floor or ceiling. FromToRotation gives neither: it
+        // stands a tube on end on some walls and picks any axis on a ceiling.
+        // Seen from above, yaw turns the same way on floor and ceiling.
+        private static Quaternion MountedTurn(Vector3 normal, float yaw)
+        {
+            bool flat = Mathf.Abs(normal.y) > 0.9f;
+            Vector3 x = Vector3.ProjectOnPlane(flat ? Vector3.right : Vector3.Cross(Vector3.up, normal), normal).normalized;
+            Quaternion spin = Quaternion.AngleAxis(yaw, normal.y < -0.9f ? -normal : normal);
+            return spin * Quaternion.LookRotation(Vector3.Cross(x, normal), normal);
         }
 
         // ---------- Helpers ----------

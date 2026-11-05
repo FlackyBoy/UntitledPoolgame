@@ -57,6 +57,10 @@ namespace UntitledPoolGame.Core
         [Tooltip("Objets de décor proposés par le pinceau à props.")]
         public List<GameObject> props = new List<GameObject>();
 
+        [Header("Lumières")]
+        [Tooltip("Lumières proposées par l'outil Lumières : collées sur la surface cliquée (mur, plafond, sol), leur +Y sort de la surface.")]
+        public List<GameObject> lights = new List<GameObject>();
+
         [Header("Options")]
         [Tooltip("Ajoute un MeshCollider aux pièces qui n'ont aucun collider (sinon on traverse les murs).")]
         public bool addMissingColliders = true;
@@ -73,6 +77,7 @@ namespace UntitledPoolGame.Core
         public GameObject CeilingTile(int variant) => Pick(ceilingTiles, variant);
         public GameObject Stairs(int variant) => Pick(stairs, variant);
         public GameObject Railing(int variant) => Pick(railings, variant);
+        public GameObject Light(int variant) => Pick(lights, variant);
 
         // The variant at index, or the first one when the index doesn't
         // exist in this palette (a room built with another kit).

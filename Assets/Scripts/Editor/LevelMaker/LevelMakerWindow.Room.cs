@@ -13,11 +13,14 @@ namespace UntitledPoolGame.PoolEditor
     // changing kit keeps the layout.
     public partial class LevelMakerWindow
     {
-        private enum RoomTool { None, Walls, Openings, Floors, Stairs, Props }
+        private enum RoomTool { None, Walls, Openings, Floors, Stairs, Props, Lights }
 
-        private static readonly string[] RoomToolNames = { "Aucun", "Murs", "Ouvertures", "Sol / plafond", "Escaliers", "Props" };
+        private static readonly string[] RoomToolNames = { "Aucun", "Murs", "Ouvertures", "Sol / plafond", "Escaliers", "Props", "Lumières" };
         private static readonly float[] GridSteps = { 0.25f, 0.5f, 1f, 2f };
         private static readonly string[] GridStepNames = { "0,25 m", "0,5 m", "1 m", "2 m" };
+        // Finer than the trace's: 0,1 m lets 1,2 m tubes touch end to end.
+        private static readonly float[] LightGridSteps = { 0.1f, 0.25f, 0.5f, 1f };
+        private static readonly string[] LightGridStepNames = { "0,1 m", "0,25 m", "0,5 m", "1 m" };
         private static readonly RoomModuleKind[] OpeningKinds =
             { RoomModuleKind.Door, RoomModuleKind.Window, RoomModuleKind.Wall, RoomModuleKind.Railing, RoomModuleKind.None };
         private static readonly string[] OpeningNames = { "Porte", "Fenêtre", "Mur plein", "Garde-corps", "Vide" };
@@ -48,6 +51,14 @@ namespace UntitledPoolGame.PoolEditor
         private bool propRandomYaw = true;
         private float propYaw;
         private float propMinScale = 1f, propMaxScale = 1f;
+        private int lightBrush;
+        private Vector2 lightScroll;
+        private float lightYaw;
+        private Color neonColor = new Color(1f, 0.15f, 0.55f);
+        private float neonIntensity = 1.5f;
+        private bool neonShadows;
+        private bool lightGridSnap = true;
+        private int lightGridStep = 1;
         // Rolled before the click so the ghost shows what will be placed.
         private float nextRandomYaw, nextScale = 1f;
         private bool nextRolled;
@@ -59,6 +70,10 @@ namespace UntitledPoolGame.PoolEditor
         private static readonly Color GhostColor = new Color(0.3f, 1f, 1f, 0.4f);
         private static readonly Color GhostReplaceColor = new Color(0.4f, 1f, 0.5f, 0.45f);
         private bool propAlignToSurface;
+        private bool propSnapToProps;
+        private float propSnapDistance = 0.3f;
+        private bool propRoomGuides = true;
+        private static readonly Collider[] snapBuffer = new Collider[32];
         private bool showGrid = true;
         private bool paletteFoldout;
         private Editor paletteEditor;
@@ -133,6 +148,7 @@ namespace UntitledPoolGame.PoolEditor
                 case RoomTool.Floors: DrawFloorToolOptions(); break;
                 case RoomTool.Stairs: DrawStairsToolOptions(); break;
                 case RoomTool.Props: DrawPropToolOptions(); break;
+                case RoomTool.Lights: DrawLightToolOptions(); break;
             }
 
             EditorGUILayout.Space();
@@ -415,8 +431,44 @@ namespace UntitledPoolGame.PoolEditor
             EditorGUILayout.LabelField(" ", $"{propMinScale:0.00} – {propMaxScale:0.00}", EditorStyles.miniLabel);
             if (nextScale < propMinScale || nextScale > propMaxScale) nextScale = Random.Range(propMinScale, propMaxScale);
             propAlignToSurface = EditorGUILayout.Toggle("Suivre la pente / le mur", propAlignToSurface);
+            propSnapToProps = EditorGUILayout.Toggle("Aimanter aux autres props", propSnapToProps);
+            if (propSnapToProps)
+                propSnapDistance = EditorGUILayout.Slider("Distance d'aimantation", propSnapDistance, 0.05f, 1f);
+            propRoomGuides = EditorGUILayout.Toggle("Repères de la salle", propRoomGuides);
             EditorGUILayout.HelpBox("Le fantôme montre le prop tel qu'il sera posé. Clic : le poser. Ctrl + molette : le faire tourner (Maj = plus fin ; Alt = par 45°), R : +45°. " +
-                                    "Tourner coupe la rotation aléatoire. Maj + clic : retirer le prop visé.", MessageType.None);
+                                    "Tourner coupe la rotation aléatoire. Maj + clic : retirer le prop visé." +
+                                    (propSnapToProps ? " Aimanté : le prop prend l'orientation du prop le plus proche (au quart de tour près) et se colle " +
+                                                       "contre ses côtés, aligné sur ses bords ou son centre ; loin de tout prop, il s'aimante aux lignes du milieu de la salle." : "") +
+                                    (propRoomGuides ? " Repères : lignes du milieu de la salle (vertes quand le prop est dessus), écart du prop à chaque mur, " +
+                                                      "décalage par rapport au centre." : ""), MessageType.None);
+        }
+
+        private void DrawLightToolOptions()
+        {
+            if (Palette.Light(lightBrush) == null)
+            {
+                EditorGUILayout.HelpBox("La palette n'a aucune lumière.", MessageType.Info);
+                if (GUILayout.Button("Ajouter le néon greybox à cette palette")) KitGenerator.AddNeonTo(Palette);
+                return;
+            }
+            lightBrush = VariantGrid("Lumière", Palette.lights, lightBrush, ref lightScroll);
+            GameObject prefab = Palette.Light(lightBrush);
+            if (prefab == null) return;
+            EditorGUILayout.LabelField(prefab.name, EditorStyles.miniBoldLabel);
+            if (prefab.GetComponentInChildren<NeonLight>(true) != null)
+            {
+                neonColor = EditorGUILayout.ColorField(new GUIContent("Couleur"), neonColor, true, false, false);
+                neonIntensity = EditorGUILayout.Slider("Intensité", neonIntensity, 0f, 10f);
+                neonShadows = EditorGUILayout.Toggle("Ombres", neonShadows);
+            }
+            lightYaw = EditorGUILayout.Slider("Rotation", lightYaw, 0f, 360f);
+            lightGridSnap = EditorGUILayout.Toggle("Aimanter à une grille", lightGridSnap);
+            if (lightGridSnap)
+                lightGridStep = EditorGUILayout.Popup("Pas de la grille", lightGridStep, LightGridStepNames);
+            propRoomGuides = EditorGUILayout.Toggle("Repères de la salle", propRoomGuides);
+            EditorGUILayout.HelpBox("La lumière se colle sur la surface visée (mur, plafond, sol). Aimantée, son centre tombe sur la grille affichée sur cette surface. Clic : la poser. Ctrl + molette : la faire tourner (Maj = plus fin ; " +
+                                    "Alt = par 45°), R : +45°. Maj + clic : retirer le prop visé. Une fois posée, sa couleur, son intensité et ses ombres se changent dans l'Inspector (Neon Light). " +
+                                    "Repères au sol et au plafond seulement.", MessageType.None);
         }
 
         private void DrawRoomList()
@@ -611,7 +663,8 @@ namespace UntitledPoolGame.PoolEditor
                 case RoomTool.Openings: OpeningToolGUI(e); break;
                 case RoomTool.Floors: FloorToolGUI(e); break;
                 case RoomTool.Stairs: StairsToolGUI(e); break;
-                case RoomTool.Props: PropToolGUI(e); break;
+                case RoomTool.Props:
+                case RoomTool.Lights: PropToolGUI(e); break;
             }
         }
 
@@ -958,9 +1011,14 @@ namespace UntitledPoolGame.PoolEditor
 
         private void PropToolGUI(Event e)
         {
+            // Lights: same brush, flat on the surface aimed at, without the
+            // prop snapping (it works on the horizontal) or random turn.
+            bool lights = roomTool == RoomTool.Lights;
             List<GameObject> props = Palette.props.Where(p => p != null).ToList();
-            if (props.Count == 0) return;
-            GameObject prefab = props[Mathf.Clamp(propIndex, 0, props.Count - 1)];
+            if (!lights && props.Count == 0) return;
+            GameObject prefab = lights ? Palette.Light(lightBrush) : props[Mathf.Clamp(propIndex, 0, props.Count - 1)];
+            if (prefab == null) return;
+            float scale = lights ? 1f : nextScale;
 
             if (!nextRolled) RollNextProp();
             if (e.type == EventType.KeyDown && e.keyCode == KeyCode.R)
@@ -976,6 +1034,25 @@ namespace UntitledPoolGame.PoolEditor
                 return;
 
             bool erasing = e.shift;
+            Vector3 point = hit.point, normal = lights || propAlignToSurface ? hit.normal : Vector3.up;
+            bool onLightGrid = lights && lightGridSnap && !erasing;
+            if (onLightGrid) point = SnapToSurfaceGrid(point, normal, LightGridSteps[lightGridStep]);
+            bool snap = propSnapToProps && !lights;
+            // Walls aren't measured like a footprint on the floor.
+            bool guides = propRoomGuides && (!lights || Mathf.Abs(hit.normal.y) > 0.5f);
+            float yaw = NextYaw;
+            // Snapping works on the horizontal: the prop then stands upright.
+            // Walls first, so a prop beside another along a wall stays on it.
+            // Lights: a ceiling is above the room PropRoom looks in, step back in.
+            RoomOutline room = !erasing && (guides || snap) ? PropRoom(lights ? hit.point + hit.normal * 0.2f : hit.point) : null;
+            int walls = snap && room != null ? SnapToWalls(room, prefab, ref point, ref yaw) : 0;
+            // Aimed at the wall itself: the prop goes down to the floor below.
+            if (walls > 0 && Mathf.Abs(hit.normal.y) < 0.5f
+                && Physics.Raycast(point, Vector3.down, out RaycastHit below, 50f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                point.y = below.point.y;
+            RoomModule snappedTo = snap && !erasing ? SnapProp(prefab, ref point, ref yaw) : null;
+            bool centerSnapped = snappedTo == null && snap && room != null && SnapToRoomMiddle(room, ref point);
+            if (walls > 0 || snappedTo != null || centerSnapped) normal = Vector3.up;
             if (erasing)
             {
                 RoomModule target = hit.collider.GetComponentInParent<RoomModule>();
@@ -987,15 +1064,26 @@ namespace UntitledPoolGame.PoolEditor
             }
             else
             {
-                float radius = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? Mathf.Max(pb.extents.x, pb.extents.z) * nextScale : 0.3f;
-                RoomBuilder.PropPose(prefab, hit.point, propAlignToSurface ? hit.normal : Vector3.up, NextYaw, nextScale,
-                    out Vector3 ghostPosition, out Quaternion ghostRotation, out Vector3 ghostScale);
-                PrefabGhost.Draw(prefab, ghostPosition, ghostRotation, ghostScale, GhostColor);
+                float radius = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? Mathf.Max(pb.extents.x, pb.extents.z) * scale : 0.3f;
+                RoomBuilder.PropPose(prefab, point, normal, yaw, scale,
+                    out Vector3 ghostPosition, out Quaternion ghostRotation, out Vector3 ghostScale, lights);
+                bool colored = lights && prefab.GetComponentInChildren<NeonLight>(true) != null;
+                PrefabGhost.Draw(prefab, ghostPosition, ghostRotation, ghostScale,
+                    colored ? new Color(neonColor.r, neonColor.g, neonColor.b, 0.6f) : GhostColor);
                 Handles.color = new Color(0.3f, 1f, 1f);
-                Handles.DrawWireDisc(hit.point, hit.normal, radius, 2f);
-                Vector3 facing = Quaternion.Euler(0f, NextYaw, 0f) * Vector3.forward;
-                Handles.DrawLine(hit.point, hit.point + facing * radius, 2f);
-                Handles.Label(hit.point + hit.normal * 0.3f, $"{prefab.name}  {NextYaw:0}°", EditorStyles.whiteBoldLabel);
+                Handles.DrawWireDisc(point, normal, radius, 2f);
+                Vector3 facing = lights ? ghostRotation * Vector3.right : Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
+                Handles.DrawLine(point, point + facing * radius, 2f);
+                if (snappedTo != null)
+                {
+                    Handles.color = Color.yellow;
+                    DrawFootprint(snappedTo.gameObject, point.y);
+                }
+                if (guides && room != null) DrawRoomGuides(room, prefab, point, yaw);
+                if (onLightGrid) DrawSurfaceGrid(point, normal, LightGridSteps[lightGridStep]);
+                string snapNote = (walls > 1 ? "  dans le coin" : walls == 1 ? "  contre le mur" : "")
+                                  + (snappedTo != null ? $"  aimanté à {snappedTo.name}" : centerSnapped ? "  aimanté au milieu de la salle" : "");
+                Handles.Label(point + normal * 0.3f, $"{prefab.name}  {yaw:0}°{snapNote}", EditorStyles.whiteBoldLabel);
             }
             if (e.type == EventType.MouseMove) SceneView.RepaintAll();
 
@@ -1007,11 +1095,387 @@ namespace UntitledPoolGame.PoolEditor
             }
             else
             {
-                RoomBuilder.PlaceProp(prefab, hit, NextYaw, nextScale, propAlignToSurface, Palette);
+                GameObject placed = RoomBuilder.PlaceProp(prefab, point, normal, yaw, scale, Palette, null, lights);
+                NeonLight neon = lights && placed != null ? placed.GetComponentInChildren<NeonLight>(true) : null;
+                if (neon != null)
+                {
+                    neon.Configure(neonColor, neonIntensity, neonShadows);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(neon);
+                }
                 RollNextProp();
             }
             e.Use();
             MarkDirty();
+        }
+
+        // Axes of a grid lying on a surface: world X and Z on a floor or ceiling,
+        // level and up the slope on a wall, whichever way it faces. Multiples of
+        // the step from the world's origin, like the corners of a traced room,
+        // so the lines of two walls meet and a room's walls fall on them.
+        private static void SurfaceGridAxes(Vector3 normal, out Vector3 across, out Vector3 up)
+        {
+            bool flat = Mathf.Abs(normal.y) > 0.9f;
+            across = flat ? Vector3.right : Vector3.Cross(Vector3.up, normal).normalized;
+            up = flat ? Vector3.forward : Vector3.Cross(normal, across).normalized;
+        }
+
+        // Moves within the surface's plane only: the light stays flat on it.
+        private static Vector3 SnapToSurfaceGrid(Vector3 point, Vector3 normal, float step)
+        {
+            SurfaceGridAxes(normal, out Vector3 across, out Vector3 up);
+            float a = Vector3.Dot(point, across), u = Vector3.Dot(point, up);
+            return point + across * (Mathf.Round(a / step) * step - a) + up * (Mathf.Round(u / step) * step - u);
+        }
+
+        // point is on a grid node: the lines are drawn from it.
+        private static void DrawSurfaceGrid(Vector3 point, Vector3 normal, float step)
+        {
+            SurfaceGridAxes(normal, out Vector3 across, out Vector3 up);
+            float half = Mathf.Max(3f, step * 2f);
+            int lines = Mathf.RoundToInt(half / step);
+            Vector3 center = point + normal * 0.01f;
+            Handles.color = new Color(1f, 1f, 1f, 0.25f);
+            for (int i = -lines; i <= lines; i++)
+            {
+                Handles.DrawLine(center + across * (i * step) - up * half, center + across * (i * step) + up * half);
+                Handles.DrawLine(center + up * (i * step) - across * half, center + up * (i * step) + across * half);
+            }
+        }
+
+        // Snaps the next prop (base centered on point) against the nearest
+        // placed prop: its yaw to the nearest quarter turn, then flat against
+        // the side it is beside (no gap, whatever the distance once within
+        // propSnapDistance; pushed out if it overlaps), and along that side
+        // its edges flush or centered when within propSnapDistance. On top of
+        // the prop (a lamp on a table), only the alignment. Null: nothing in
+        // reach, point and yaw untouched.
+        private RoomModule SnapProp(GameObject prefab, ref Vector3 point, ref float yaw)
+        {
+            if (!RoomBuilder.TryMeasure(prefab, out Bounds pb)) return null;
+            Vector3 half = pb.extents * nextScale;
+            float reach = Mathf.Max(half.x, half.z) + propSnapDistance;
+            int count = Physics.OverlapBoxNonAlloc(point + Vector3.up * half.y, new Vector3(reach, Mathf.Max(half.y, 0.5f), reach),
+                snapBuffer, Quaternion.identity, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            RoomModule nearest = null;
+            float nearestDistance = float.MaxValue;
+            for (int i = 0; i < count; i++)
+            {
+                RoomModule module = snapBuffer[i].GetComponentInParent<RoomModule>();
+                if (module == null || module.kind != RoomModuleKind.Prop) continue;
+                float distance = (snapBuffer[i].bounds.ClosestPoint(point) - point).sqrMagnitude;
+                if (distance < nearestDistance) { nearest = module; nearestDistance = distance; }
+            }
+            if (nearest == null) return null;
+
+            Transform other = nearest.transform;
+            float otherYaw = PlacedYaw(nearest.gameObject);
+            Quaternion frame = Quaternion.Euler(0f, otherYaw, 0f);
+            if (!Footprint(nearest.gameObject, other.position, frame, out Vector2 center, out Vector2 extents, out float top)) return null;
+            int quarter = Mathf.RoundToInt(Mathf.DeltaAngle(otherYaw, yaw) / 90f);
+            Vector2 own = (quarter & 1) == 0 ? new Vector2(half.x, half.z) : new Vector2(half.z, half.x);
+            Vector3 local = Quaternion.Inverse(frame) * (point - other.position);
+            float x, z;
+            if (point.y >= top - 0.05f)
+            {
+                x = SnapAxis(local.x, center.x, extents.x, own.x, out bool alignedX);
+                z = SnapAxis(local.z, center.y, extents.y, own.y, out bool alignedZ);
+                if (!alignedX && !alignedZ) return null;
+            }
+            else
+            {
+                // Gap between the two footprints on each axis (< 0: overlap).
+                // They touch across the axis where they are furthest apart.
+                float dx = local.x - center.x, dz = local.z - center.y;
+                float gapX = Mathf.Abs(dx) - extents.x - own.x, gapZ = Mathf.Abs(dz) - extents.y - own.y;
+                if (Mathf.Max(gapX, gapZ) > propSnapDistance) return null;
+                if (gapX >= gapZ)
+                {
+                    x = center.x + Mathf.Sign(dx) * (extents.x + own.x);
+                    z = AlignAxis(local.z, center.y, extents.y, own.y);
+                }
+                else
+                {
+                    z = center.y + Mathf.Sign(dz) * (extents.y + own.y);
+                    x = AlignAxis(local.x, center.x, extents.x, own.x);
+                }
+            }
+
+            point = other.position + frame * new Vector3(x, local.y, z);
+            yaw = Mathf.Repeat(otherYaw + quarter * 90f, 360f);
+            return nearest;
+        }
+
+        // The yaw a prop was placed with: its rotation without its prefab
+        // root's own (PropPose: turn * prefab rotation; FBX roots are often
+        // tilted by -90° on X).
+        private static float PlacedYaw(GameObject go)
+        {
+            GameObject source = PrefabUtility.GetCorrespondingObjectFromSource(go);
+            Quaternion own = source != null ? source.transform.localRotation : Quaternion.identity;
+            return (go.transform.rotation * Quaternion.Inverse(own)).eulerAngles.y;
+        }
+
+        // Along the side two props touch: edges flush or centered, if close.
+        private float AlignAxis(float value, float center, float extent, float own)
+        {
+            float best = value, bestGap = propSnapDistance;
+            foreach (float candidate in new[] { center - extent + own, center + extent - own, center })
+            {
+                float gap = Mathf.Abs(candidate - value);
+                if (gap <= bestGap) { best = candidate; bestGap = gap; }
+            }
+            return best;
+        }
+
+        private float SnapAxis(float value, float center, float extent, float own, out bool snapped)
+        {
+            float best = value, bestGap = propSnapDistance;
+            snapped = false;
+            foreach (float candidate in new[]
+                     {
+                         center - extent - own, center + extent + own, // side by side
+                         center - extent + own, center + extent - own, // edges flush
+                         center,
+                     })
+            {
+                float gap = Mathf.Abs(candidate - value);
+                if (gap <= bestGap) { best = candidate; bestGap = gap; snapped = true; }
+            }
+            return best;
+        }
+
+        // Horizontal rectangle covered by go's meshes, in frame (yaw only)
+        // around origin, as Props measure them (RoomBuilder.TryMeasure).
+        // top: the highest point, in world space.
+        private static bool Footprint(GameObject go, Vector3 origin, Quaternion frame, out Vector2 center, out Vector2 extents,
+            out float top)
+        {
+            Quaternion inverse = Quaternion.Inverse(frame);
+            Vector2 min = Vector2.positiveInfinity, max = Vector2.negativeInfinity;
+            top = float.NegativeInfinity;
+            foreach (MeshFilter filter in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (filter.sharedMesh == null || !filter.TryGetComponent(out Renderer renderer) || !renderer.enabled) continue;
+                Bounds mb = filter.sharedMesh.bounds;
+                Matrix4x4 m = filter.transform.localToWorldMatrix;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 corner = mb.center + Vector3.Scale(mb.extents,
+                        new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    Vector3 world = m.MultiplyPoint3x4(corner);
+                    top = Mathf.Max(top, world.y);
+                    Vector3 p = inverse * (world - origin);
+                    min = Vector2.Min(min, new Vector2(p.x, p.z));
+                    max = Vector2.Max(max, new Vector2(p.x, p.z));
+                }
+            }
+            center = (min + max) / 2f;
+            extents = (max - min) / 2f;
+            return min.x <= max.x;
+        }
+
+        // ---------- Room guides of the Props tool ----------
+
+        // The closed room a prop at point goes in: inside its outline, between
+        // its floor and its ceiling (on a stage or a table too); the
+        // innermost one for a room inside another.
+        private static RoomOutline PropRoom(Vector3 point)
+        {
+            RoomOutline best = null;
+            float bestArea = float.MaxValue;
+            foreach (RoomOutline room in RoomBuilder.AllRooms())
+            {
+                if (!room.closed || room.points.Count < 3) continue;
+                float floor = room.points[0].y;
+                if (point.y < floor - 0.5f || point.y > floor + RoomBuilder.StoreyHeight(room.palette, room.wallVariant) - 0.1f) continue;
+                if (!RoomBuilder.Inside(point, room.points)) continue;
+                float area = RoomBuilder.Area(room.points);
+                if (area < bestArea) { best = room; bestArea = area; }
+            }
+            return best;
+        }
+
+        // The room's own axes (along its first wall, and across) and the
+        // middle of its outline along them, on its floor.
+        private static Quaternion RoomFrame(RoomOutline room, out Vector3 center)
+        {
+            Vector3 along = room.points[1] - room.points[0];
+            Quaternion frame = Quaternion.Euler(0f, Mathf.Atan2(along.x, along.z) * Mathf.Rad2Deg, 0f);
+            Quaternion inverse = Quaternion.Inverse(frame);
+            Vector2 min = Vector2.positiveInfinity, max = Vector2.negativeInfinity;
+            foreach (Vector3 p in room.points)
+            {
+                Vector3 l = inverse * p;
+                min = Vector2.Min(min, new Vector2(l.x, l.z));
+                max = Vector2.Max(max, new Vector2(l.x, l.z));
+            }
+            Vector2 c = (min + max) / 2f;
+            center = frame * new Vector3(c.x, 0f, c.y);
+            center.y = room.points[0].y;
+            return frame;
+        }
+
+        // Walls are centered on the outline: their face is this far inside.
+        private static float WallHalfThickness(RoomOutline room) =>
+            room.hasWalls && room.palette != null && RoomBuilder.TryMeasure(room.palette.Wall(room.wallVariant), out Bounds b)
+                ? Mathf.Min(b.size.x, b.size.z) / 2f : 0f;
+
+        // Puts the prop flat against the face of the nearest wall within
+        // propSnapDistance (also when it sinks into it), turned square to it
+        // to the nearest quarter turn; then against a second wall square to
+        // the first (a corner). Returns the number of walls touched.
+        private int SnapToWalls(RoomOutline room, GameObject prefab, ref Vector3 point, ref float yaw)
+        {
+            if (!room.hasWalls || !RoomBuilder.TryMeasure(prefab, out Bounds pb)) return 0;
+            Vector3 half = pb.extents * nextScale;
+            int first = SnapToWall(room, half, -1, ref point, ref yaw);
+            if (first < 0) return 0;
+            return SnapToWall(room, half, first, ref point, ref yaw) < 0 ? 1 : 2;
+        }
+
+        // One wall: the closest within reach. skip >= 0: the wall already
+        // touched; the yaw is then kept and only walls square to it count.
+        private int SnapToWall(RoomOutline room, Vector3 half, int skip, ref Vector3 point, ref float yaw)
+        {
+            float wallHalf = WallHalfThickness(room);
+            List<Vector3> points = room.points;
+            int best = -1;
+            float bestGap = float.MaxValue, bestYaw = yaw;
+            Vector3 bestPush = Vector3.zero;
+            for (int i = 0; i < points.Count; i++)
+            {
+                if (i == skip) continue;
+                Vector3 along = points[(i + 1) % points.Count] - points[i];
+                along.y = 0f;
+                float length = along.magnitude;
+                if (length < 0.01f) continue;
+                along /= length;
+                Vector3 toPoint = point - points[i];
+                toPoint.y = 0f;
+                float t = Vector3.Dot(toPoint, along);
+                if (t < 0f || t > length) continue;
+
+                float wallYaw = Mathf.Atan2(along.x, along.z) * Mathf.Rad2Deg;
+                float turn = Mathf.DeltaAngle(wallYaw, yaw) / 90f;
+                int quarter = Mathf.RoundToInt(turn);
+                if (skip >= 0 && Mathf.Abs(turn - quarter) > 0.01f) continue;
+                Vector3 inward = Vector3.Cross(Vector3.up, along);
+                float distance = Vector3.Dot(toPoint, inward);
+                if (distance < 0f) { inward = -inward; distance = -distance; }
+                // The prop's half-size across the wall at that quarter turn.
+                float depth = (quarter & 1) == 0 ? half.x : half.z;
+                float gap = distance - wallHalf - depth;
+                if (gap > propSnapDistance || Mathf.Abs(gap) >= bestGap) continue;
+                best = i;
+                bestGap = Mathf.Abs(gap);
+                bestPush = -inward * gap;
+                bestYaw = Mathf.Repeat(wallYaw + quarter * 90f, 360f);
+            }
+            if (best < 0) return -1;
+            point += bestPush;
+            yaw = bestYaw;
+            return best;
+        }
+
+        // Puts point on the room's middle lines it is within propSnapDistance of.
+        private bool SnapToRoomMiddle(RoomOutline room, ref Vector3 point)
+        {
+            Quaternion frame = RoomFrame(room, out Vector3 center);
+            Vector3 local = Quaternion.Inverse(frame) * (point - center);
+            bool snapped = false;
+            if (Mathf.Abs(local.x) <= propSnapDistance) { local.x = 0f; snapped = true; }
+            if (Mathf.Abs(local.z) <= propSnapDistance) { local.z = 0f; snapped = true; }
+            if (snapped) point = center + frame * local;
+            return snapped;
+        }
+
+        // Middle lines of the room (green when the prop is on them), the gap
+        // from each side of the prop to the wall facing it (green when equal
+        // on both sides), and the prop's offset from the middle.
+        private void DrawRoomGuides(RoomOutline room, GameObject prefab, Vector3 point, float yaw)
+        {
+            Quaternion frame = RoomFrame(room, out Vector3 center);
+            Vector3 right = frame * Vector3.right, forward = frame * Vector3.forward;
+            Vector3 local = Quaternion.Inverse(frame) * (point - center);
+            const float tolerance = 0.01f;
+            bool onX = Mathf.Abs(local.x) < tolerance, onZ = Mathf.Abs(local.z) < tolerance;
+            Color guide = new Color(1f, 1f, 1f, 0.6f), good = new Color(0.3f, 1f, 0.3f);
+            Vector3 middle = center + Vector3.up * (point.y - center.y + 0.02f);
+
+            // Each line runs from wall to wall through the room's middle.
+            Handles.color = onX ? good : guide;
+            Handles.DrawDottedLine(middle - forward * WallDistance(room, middle, -forward), middle + forward * WallDistance(room, middle, forward), 4f);
+            Handles.color = onZ ? good : guide;
+            Handles.DrawDottedLine(middle - right * WallDistance(room, middle, -right), middle + right * WallDistance(room, middle, right), 4f);
+
+            // Prop half-size along the room's axes, whatever its yaw.
+            Vector3 half = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? pb.extents * nextScale : Vector3.zero;
+            float turn = (yaw - frame.eulerAngles.y) * Mathf.Deg2Rad;
+            float cos = Mathf.Abs(Mathf.Cos(turn)), sin = Mathf.Abs(Mathf.Sin(turn));
+            float alongRight = cos * half.x + sin * half.z, alongForward = sin * half.x + cos * half.z;
+            float wallHalf = WallHalfThickness(room);
+
+            Vector3 from = point + Vector3.up * 0.02f;
+            float gapRight = DrawGap(room, from, right, alongRight, wallHalf);
+            float gapLeft = DrawGap(room, from, -right, alongRight, wallHalf);
+            float gapFront = DrawGap(room, from, forward, alongForward, wallHalf);
+            float gapBack = DrawGap(room, from, -forward, alongForward, wallHalf);
+            bool even = Mathf.Abs(gapRight - gapLeft) < tolerance && Mathf.Abs(gapFront - gapBack) < tolerance;
+            Handles.color = even ? good : new Color(0.3f, 1f, 1f);
+            Handles.DrawSolidDisc(from, Vector3.up, 0.03f);
+
+            string offset = onX && onZ ? "✓ centré dans la salle"
+                : $"décalage {(onX ? "centré" : $"{local.x:+0.00;-0.00} m")} / {(onZ ? "centré" : $"{local.z:+0.00;-0.00} m")}";
+            Handles.Label(point + Vector3.up * 0.6f, offset, EditorStyles.whiteBoldLabel);
+        }
+
+        // Line from the prop's side (extent from from) to the wall face along
+        // dir, labelled with its length. Returns the gap (-1: no wall).
+        private static float DrawGap(RoomOutline room, Vector3 from, Vector3 dir, float extent, float wallHalf)
+        {
+            float distance = WallDistance(room, from, dir);
+            if (distance <= 0f) return -1f;
+            float gap = distance - wallHalf - extent;
+            Vector3 a = from + dir * extent, b = from + dir * (distance - wallHalf);
+            Handles.color = new Color(0.3f, 1f, 1f, 0.8f);
+            Handles.DrawLine(a, b, 1.5f);
+            Handles.Label((a + b) / 2f + Vector3.up * 0.1f, $"{gap:0.00} m", EditorStyles.whiteMiniLabel);
+            return gap;
+        }
+
+        // Horizontal distance from origin to the room's outline along dir
+        // (the walls' center line); 0 if the ray leaves without meeting it.
+        private static float WallDistance(RoomOutline room, Vector3 origin, Vector3 dir)
+        {
+            float best = float.MaxValue;
+            Vector2 o = new Vector2(origin.x, origin.z), d = new Vector2(dir.x, dir.z);
+            List<Vector3> points = room.points;
+            for (int i = 0; i < points.Count; i++)
+            {
+                Vector3 a3 = points[i], b3 = points[(i + 1) % points.Count];
+                Vector2 a = new Vector2(a3.x, a3.z), s = new Vector2(b3.x - a3.x, b3.z - a3.z), ao = a - o;
+                float denominator = d.x * s.y - d.y * s.x;
+                if (Mathf.Abs(denominator) < 1e-6f) continue;
+                float t = (ao.x * s.y - ao.y * s.x) / denominator;
+                float u = (ao.x * d.y - ao.y * d.x) / denominator;
+                if (t > 1e-4f && u >= 0f && u <= 1f && t < best) best = t;
+            }
+            return best == float.MaxValue ? 0f : best;
+        }
+
+        // Outline of the prop snapped to, at height y.
+        private static void DrawFootprint(GameObject go, float y)
+        {
+            Transform t = go.transform;
+            Quaternion frame = Quaternion.Euler(0f, PlacedYaw(go), 0f);
+            if (!Footprint(go, t.position, frame, out Vector2 c, out Vector2 h, out _)) return;
+            Vector3 Corner(float sx, float sz)
+            {
+                Vector3 p = t.position + frame * new Vector3(c.x + sx * h.x, 0f, c.y + sz * h.y);
+                p.y = y + 0.01f;
+                return p;
+            }
+            Handles.DrawPolyLine(Corner(-1, -1), Corner(1, -1), Corner(1, 1), Corner(-1, 1), Corner(-1, -1));
         }
 
         private void DrawGhost(Color color)
@@ -1020,7 +1484,7 @@ namespace UntitledPoolGame.PoolEditor
                 PrefabGhost.Draw(piece.prefab, piece.position, piece.rotation, piece.scale, color);
         }
 
-        private float NextYaw => propRandomYaw ? nextRandomYaw : propYaw;
+        private float NextYaw => roomTool == RoomTool.Lights ? lightYaw : propRandomYaw ? nextRandomYaw : propYaw;
 
         private const float NotchScrollUnits = 3f;
         private float notchScroll;
@@ -1045,6 +1509,11 @@ namespace UntitledPoolGame.PoolEditor
         // the ghost was.
         private void RotateNextProp(float degrees)
         {
+            if (roomTool == RoomTool.Lights)
+            {
+                lightYaw = Mathf.Repeat(lightYaw + degrees, 360f);
+                return;
+            }
             if (propRandomYaw)
             {
                 propYaw = nextRandomYaw;
@@ -1053,14 +1522,14 @@ namespace UntitledPoolGame.PoolEditor
             propYaw = Mathf.Repeat(propYaw + degrees, 360f);
         }
 
-        // Ctrl + wheel turns the Props and Stairs ghost (Shift = finer),
+        // Ctrl + wheel turns the Props, Lights and Stairs ghost (Shift = finer),
         // Ctrl + Alt + wheel by 45° notches. Caught before the Scene view
         // zooms. Shift + wheel arrives as a horizontal scroll on Windows.
         private void OnBeforeSceneGUI(SceneView view)
         {
             Event e = Event.current;
             if (e.type != EventType.ScrollWheel || !(e.control || e.command) || EditorApplication.isPlaying) return;
-            if (step != Step.Room || (roomTool != RoomTool.Props && roomTool != RoomTool.Stairs) || Palette == null) return;
+            if (step != Step.Room || (roomTool != RoomTool.Props && roomTool != RoomTool.Lights && roomTool != RoomTool.Stairs) || Palette == null) return;
             float delta = Mathf.Abs(e.delta.y) >= Mathf.Abs(e.delta.x) ? e.delta.y : e.delta.x;
             float current = roomTool == RoomTool.Stairs ? stairsYaw : NextYaw;
             float degrees;

@@ -17,7 +17,7 @@ namespace UntitledPoolGame.PoolEditor
         {
             ("walls", "Murs"), ("doors", "Portes"), ("windows", "Fenêtres"),
             ("pillars", "Poteaux"), ("floorTiles", "Sols"), ("ceilingTiles", "Plafonds"),
-            ("stairs", "Escaliers"), ("railings", "Garde-corps"), ("props", "Props"),
+            ("stairs", "Escaliers"), ("railings", "Garde-corps"), ("props", "Props"), ("lights", "Lumières"),
         };
 
         public override void OnInspectorGUI()
