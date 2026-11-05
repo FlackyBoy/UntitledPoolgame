@@ -16,6 +16,7 @@ namespace UntitledPoolGame.Core
     //     group 1 or 2, judged by the real rule set;
     //   - start, add to or remove Catch the Hole's living holes;
     //   - Play Anywhere: put a crate object in a player's hands.
+    // C + X opens it on the powers alone, those this mode can hand out.
     // Inputs are off and the cursor free while open. Provisional OnGUI.
     // Created in any scene with a PoolMatchRules.
     public class DebugMenu : MonoBehaviour
@@ -54,9 +55,20 @@ namespace UntitledPoolGame.Core
         private string status = "";
         private Rect window = new Rect(20f, 20f, 460f, 620f);
         private Vector2 scroll;
+        private bool powersOnly;
+        private bool powersComboWasActive;
 
         private void Update()
         {
+            Keyboard keyboard = Keyboard.current;
+            bool powersCombo = keyboard != null && keyboard.cKey.isPressed && keyboard.xKey.isPressed;
+            if (powersCombo && !powersComboWasActive)
+            {
+                powersOnly = true;
+                SetOpen(!open);
+            }
+            powersComboWasActive = powersCombo;
+
             Mouse mouse = Mouse.current;
             if (mouse == null) return;
 
@@ -74,6 +86,7 @@ namespace UntitledPoolGame.Core
             rightClicks.RemoveAll(t => now - t > comboWindow);
             if (rightClicks.Count < rightClicksToToggle) return;
             rightClicks.Clear();
+            powersOnly = false;
             SetOpen(!open);
         }
 
@@ -128,7 +141,7 @@ namespace UntitledPoolGame.Core
         private void OnGUI()
         {
             if (!open) return;
-            window = GUI.Window(WindowId, window, DrawWindow, "Menu debug");
+            window = GUI.Window(WindowId, window, DrawWindow, powersOnly ? "Pouvoirs de ce mode (C + X)" : "Menu debug");
         }
 
         private void DrawWindow(int id)
@@ -151,12 +164,16 @@ namespace UntitledPoolGame.Core
                 GUILayout.Label("Les billes roulent : attendre qu'elles s'arrêtent.");
 
             scroll = GUILayout.BeginScrollView(scroll);
-            DrawPlayers();
-            DrawPowers(rules);
-            DrawMatch(rules, current);
-            DrawErrors(rules, current);
-            DrawCatchTheHole(rules);
-            DrawPlayAnywhere();
+            if (powersOnly) DrawPowers(rules);
+            else
+            {
+                DrawPlayers();
+                DrawPowers(rules);
+                DrawMatch(rules, current);
+                DrawErrors(rules, current);
+                DrawCatchTheHole(rules);
+                DrawPlayAnywhere();
+            }
             GUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(status)) GUILayout.Label(status);
@@ -190,8 +207,10 @@ namespace UntitledPoolGame.Core
             GUILayout.Label("Donner : sur son emplacement s'il est déjà en stock, sinon une place libre, sinon à la place du sélectionné.");
             bool wasEnabled = GUI.enabled;
             GUI.enabled = !rules.GameOver;
+            PoolPowerSpawnSettings spawn = powersOnly ? PoolSettingsLoader.LoadOrDefault<PoolPowerSpawnSettings>("PoolPowerSpawnSettings") : null;
             foreach (PoolPower power in powers)
             {
+                if (spawn != null && !spawn.Offers(power, rules.Mode)) continue;
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{power.PowerName} ({power.Type})");
                 // Level 1, then level 2 (power levels: PoolMatchRules.GetHeldPowerLevel).
