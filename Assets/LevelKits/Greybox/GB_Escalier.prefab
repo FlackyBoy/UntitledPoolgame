@@ -1017,6 +1017,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3051452736028669314}
+  - component: {fileID: 1106889627668623076}
   m_Layer: 0
   m_Name: GB_Escalier
   m_TagString: Untagged
@@ -1054,6 +1055,19 @@ Transform:
   - {fileID: 9025897472263508202}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1106889627668623076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6497823356163155710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f5221cfa6e01de4d8c5fe6b3209ca96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PlayAnywhereSurface
+  type: {fileID: 11400000, guid: 7f8c791097b2050409a4081465e0fbd7, type: 2}
 --- !u!1 &8168526682432332007
 GameObject:
   m_ObjectHideFlags: 0

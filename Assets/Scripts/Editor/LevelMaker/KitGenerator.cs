@@ -24,10 +24,13 @@ namespace UntitledPoolGame.PoolEditor
             var existing = AssetDatabase.LoadAssetAtPath<PrefabPalette>(palettePath);
             if (existing != null)
             {
-                // Palettes made before stairs existed get theirs.
-                if (existing.stairs.Count == 0 || existing.railings.Count == 0)
+                // Palettes made before stairs or the furniture existed get theirs.
+                bool missingFurniture = FurnitureNames.Any(n => !existing.props.Exists(p => p != null && p.name == n));
+                if (existing.stairs.Count == 0 || existing.railings.Count == 0 || existing.lights.Count == 0 || missingFurniture)
                 {
                     AddGreyboxLevelPieces(existing);
+                    AddGreyboxFurniture(existing, overwrite: false);
+                    AddGreyboxLights(existing, overwrite: false);
                     EditorUtility.SetDirty(existing);
                     AssetDatabase.SaveAssets();
                 }
@@ -88,23 +91,11 @@ namespace UntitledPoolGame.PoolEditor
             {
                 Save("GB_Caisse", go => Box(go, new Vector3(0f, 0.3f, 0f), new Vector3(0.6f, 0.6f, 0.6f), propMat)),
                 Save("GB_Tonneau", go => Cylinder(go, new Vector3(0f, 0.45f, 0f), new Vector3(0.6f, 0.45f, 0.6f), propMat)),
-                Save("GB_Table", go =>
-                {
-                    Box(go, new Vector3(0f, 0.74f, 0f), new Vector3(1.2f, 0.05f, 0.8f), propMat);
-                    foreach (float x in new[] { -0.55f, 0.55f })
-                        foreach (float z in new[] { -0.35f, 0.35f })
-                            Box(go, new Vector3(x, 0.36f, z), new Vector3(0.06f, 0.72f, 0.06f), trimMat);
-                }),
-                Save("GB_Tabouret", go =>
-                {
-                    Cylinder(go, new Vector3(0f, 0.72f, 0f), new Vector3(0.38f, 0.03f, 0.38f), propMat);
-                    Box(go, new Vector3(0f, 0.35f, 0f), new Vector3(0.06f, 0.7f, 0.06f), trimMat);
-                }),
-                Save("GB_Comptoir", go => Box(go, new Vector3(0f, 0.55f, 0f), new Vector3(2f, 1.1f, 0.6f), trimMat)),
-                Save("GB_Etagere", go => Box(go, new Vector3(0f, 1f, 0f), new Vector3(1.2f, 2f, 0.4f), trimMat)),
             };
 
             AddGreyboxLevelPieces(palette);
+            AddGreyboxFurniture(palette, overwrite: false);
+            AddGreyboxLights(palette, overwrite: false);
             AssetDatabase.CreateAsset(palette, palettePath);
             AssetDatabase.SaveAssets();
             return palette;
@@ -131,6 +122,356 @@ namespace UntitledPoolGame.PoolEditor
                     foreach (float x in new[] { -W / 2f + 0.03f, 0f, W / 2f - 0.03f })
                         Box(go, new Vector3(x, 0.5f, 0f), new Vector3(0.05f, 1f, 0.05f), propMat);
                 }));
+        }
+
+        private static readonly string[] FurnitureNames =
+            { "GB_Table", "GB_TableCarree", "GB_TableHaute", "GB_TableBasse", "GB_TableBasse_Ronde", "GB_Chaise", "GB_Tabouret", "GB_Comptoir", "GB_ComptoirMural", "GB_Etagere",
+              "GB_Estrade", "GB_Estrade_Demi", "GB_Estrade_Marches", "GB_Estrade_Marches_1m",
+              "GB_FauteuilClub", "GB_Canape_2Places", "GB_Canape_3Places",
+              "GB_BabyFoot", "GB_Flechettes", "GB_Flechettes_Ligne", "GB_BorneArcade" };
+
+        // Stage 60 cm high, reached by two 20 cm steps (under the character
+        // controller's 30 cm step offset); its edge can't be stepped onto.
+        private const float StageH = 0.6f, StepRise = 0.2f, StepTread = 0.3f;
+
+        // Overwrites the furniture prefabs with the current shapes. Overwriting
+        // keeps their GUIDs: instances already placed in scenes update.
+        [MenuItem("Tools/Pool/Régénérer le mobilier greybox", priority = 3)]
+        private static void RegenerateFurniture()
+        {
+            PrefabPalette palette = CreateGreybox();
+            AddGreyboxFurniture(palette, overwrite: true);
+            AddGreyboxLights(palette, overwrite: true);
+            EditorUtility.SetDirty(palette);
+            AssetDatabase.SaveAssets();
+            EditorGUIUtility.PingObject(palette);
+            Debug.Log($"[Level Maker] Mobilier greybox régénéré dans {GreyboxFolder} ({FurnitureNames.Length} prefabs).", palette);
+        }
+
+        // Bar furniture placeholders at real sizes (meters), base at y = 0.
+        // Seats and shelves face +Z; the counter's customer side is +Z.
+        private static void AddGreyboxFurniture(PrefabPalette palette, bool overwrite)
+        {
+            Material trimMat = Mat("GB_Trim", new Color(0.45f, 0.45f, 0.48f));
+            Material propMat = Mat("GB_Prop", new Color(0.95f, 0.6f, 0.25f));
+            Quaternion alongX = Quaternion.Euler(0f, 0f, 90f);
+
+            var furniture = new[]
+            {
+                Save("GB_Table", go =>
+                {
+                    Box(go, new Vector3(0f, 0.74f, 0f), new Vector3(1.2f, 0.05f, 0.8f), propMat);
+                    foreach (float x in new[] { -0.55f, 0.55f })
+                        foreach (float z in new[] { -0.35f, 0.35f })
+                            Box(go, new Vector3(x, 0.36f, z), new Vector3(0.06f, 0.72f, 0.06f), trimMat);
+                }, overwrite),
+                // 80 x 80 cm, 76 cm high, with an apron under the top.
+                Save("GB_TableCarree", go =>
+                {
+                    Box(go, new Vector3(0f, 0.74f, 0f), new Vector3(0.8f, 0.04f, 0.8f), propMat);
+                    foreach (float x in new[] { -0.35f, 0.35f })
+                        foreach (float z in new[] { -0.35f, 0.35f })
+                            Box(go, new Vector3(x, 0.36f, z), new Vector3(0.05f, 0.72f, 0.05f), trimMat);
+                    foreach (float side in new[] { -0.35f, 0.35f })
+                    {
+                        Box(go, new Vector3(0f, 0.67f, side), new Vector3(0.7f, 0.08f, 0.02f), trimMat);
+                        Box(go, new Vector3(side, 0.67f, 0f), new Vector3(0.02f, 0.08f, 0.7f), trimMat);
+                    }
+                }, overwrite),
+                // Round standing table, 70 cm across, 1.06 m high.
+                Save("GB_TableHaute", go =>
+                {
+                    Cylinder(go, new Vector3(0f, 0.02f, 0f), new Vector3(0.5f, 0.02f, 0.5f), trimMat);
+                    Cylinder(go, new Vector3(0f, 0.52f, 0f), new Vector3(0.07f, 0.5f, 0.07f), trimMat);
+                    Cylinder(go, new Vector3(0f, 1.04f, 0f), new Vector3(0.7f, 0.02f, 0.7f), propMat);
+                }, overwrite),
+                // Coffee table for the club seats: 1.1 × 0.6 m, 42 cm high,
+                // with a shelf underneath.
+                Save("GB_TableBasse", go =>
+                {
+                    Box(go, new Vector3(0f, 0.405f, 0f), new Vector3(1.1f, 0.03f, 0.6f), propMat);
+                    Box(go, new Vector3(0f, 0.12f, 0f), new Vector3(1f, 0.02f, 0.5f), propMat);
+                    foreach (float x in new[] { -0.51f, 0.51f })
+                        foreach (float z in new[] { -0.26f, 0.26f })
+                            Box(go, new Vector3(x, 0.195f, z), new Vector3(0.05f, 0.39f, 0.05f), trimMat);
+                }, overwrite),
+                // Round coffee table, 80 cm across, 42 cm high, on a drum base.
+                Save("GB_TableBasse_Ronde", go =>
+                {
+                    Cylinder(go, new Vector3(0f, 0.015f, 0f), new Vector3(0.5f, 0.015f, 0.5f), trimMat);
+                    Cylinder(go, new Vector3(0f, 0.2f, 0f), new Vector3(0.3f, 0.17f, 0.3f), trimMat);
+                    Cylinder(go, new Vector3(0f, 0.4f, 0f), new Vector3(0.8f, 0.02f, 0.8f), propMat);
+                }, overwrite),
+                // Seat at 48 cm, backrest on the -Z side up to 88 cm.
+                Save("GB_Chaise", go =>
+                {
+                    foreach (float x in new[] { -0.19f, 0.19f })
+                    {
+                        foreach (float z in new[] { -0.19f, 0.19f })
+                            Box(go, new Vector3(x, 0.22f, z), new Vector3(0.04f, 0.44f, 0.04f), trimMat);
+                        Box(go, new Vector3(x, 0.68f, -0.19f), new Vector3(0.04f, 0.4f, 0.04f), trimMat);
+                    }
+                    Box(go, new Vector3(0f, 0.46f, 0f), new Vector3(0.44f, 0.04f, 0.44f), propMat);
+                    Box(go, new Vector3(0f, 0.78f, -0.19f), new Vector3(0.42f, 0.18f, 0.03f), propMat);
+                }, overwrite),
+                // Bar stool: seat at 77 cm, footrest ring at 30 cm.
+                Save("GB_Tabouret", go =>
+                {
+                    Cylinder(go, new Vector3(0f, 0.015f, 0f), new Vector3(0.4f, 0.015f, 0.4f), trimMat);
+                    Cylinder(go, new Vector3(0f, 0.37f, 0f), new Vector3(0.05f, 0.35f, 0.05f), trimMat);
+                    foreach (float side in new[] { -0.15f, 0.15f })
+                    {
+                        Box(go, new Vector3(side, 0.3f, 0f), new Vector3(0.025f, 0.025f, 0.325f), trimMat);
+                        Box(go, new Vector3(0f, 0.3f, side), new Vector3(0.325f, 0.025f, 0.025f), trimMat);
+                    }
+                    Cylinder(go, new Vector3(0f, 0.74f, 0f), new Vector3(0.38f, 0.03f, 0.38f), propMat);
+                }, overwrite),
+                // 2 m long, 1.1 m high: recessed plinth, body, overhanging top,
+                // foot rail on the customer side.
+                Save("GB_Comptoir", go =>
+                {
+                    Box(go, new Vector3(0f, 0.05f, 0f), new Vector3(1.88f, 0.1f, 0.48f), trimMat);
+                    Box(go, new Vector3(0f, 0.575f, 0f), new Vector3(1.94f, 0.95f, 0.54f), propMat);
+                    Box(go, new Vector3(0f, 1.075f, 0f), new Vector3(2f, 0.05f, 0.6f), trimMat);
+                    Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 0.2f, 0.36f), new Vector3(0.05f, 0.9f, 0.05f), trimMat, alongX);
+                    foreach (float x in new[] { -0.8f, 0.8f })
+                        Box(go, new Vector3(x, 0.2f, 0.315f), new Vector3(0.03f, 0.03f, 0.09f), trimMat);
+                }, overwrite),
+                // Standing ledge fixed to a wall (wall side -Z): 1.6 m plank
+                // at 1.05 m on brackets, foot rail. The panel behind it goes
+                // down to the floor so the Props tool, which sets the lowest
+                // renderer on the clicked surface, keeps the ledge's height.
+                Save("GB_ComptoirMural", go =>
+                {
+                    Box(go, new Vector3(0f, 0.515f, -0.16f), new Vector3(1.6f, 1.03f, 0.02f), trimMat);
+                    Box(go, new Vector3(0f, 1.05f, 0f), new Vector3(1.6f, 0.04f, 0.3f), propMat);
+                    foreach (float x in new[] { -0.65f, 0.65f })
+                    {
+                        Box(go, new Vector3(x, 0.89f, -0.135f), new Vector3(0.03f, 0.28f, 0.03f), trimMat);
+                        Primitive(PrimitiveType.Cube, go, new Vector3(x, 0.89f, -0.0175f), new Vector3(0.03f, 0.366f, 0.03f), trimMat,
+                            Quaternion.Euler(40f, 0f, 0f));
+                    }
+                    Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 0.2f, 0.2f), new Vector3(0.05f, 0.75f, 0.05f), trimMat, alongX);
+                    foreach (float x in new[] { -0.6f, 0.6f })
+                        Box(go, new Vector3(x, 0.2f, 0.02f), new Vector3(0.03f, 0.03f, 0.36f), trimMat);
+                }, overwrite),
+                // 1.2 m wide, 2 m high, 40 cm deep, open on +Z: sides, back,
+                // four shelves and a top.
+                Save("GB_Etagere", go =>
+                {
+                    foreach (float x in new[] { -0.585f, 0.585f })
+                        Box(go, new Vector3(x, 1f, 0f), new Vector3(0.03f, 2f, 0.4f), trimMat);
+                    Box(go, new Vector3(0f, 1f, -0.19f), new Vector3(1.14f, 2f, 0.02f), trimMat);
+                    foreach (float y in new[] { 0.05f, 0.53f, 1.01f, 1.49f, 1.985f })
+                        Box(go, new Vector3(0f, y, 0.01f), new Vector3(1.14f, 0.03f, 0.38f), propMat);
+                }, overwrite),
+            };
+            foreach (GameObject prefab in furniture.Concat(StagePieces(trimMat, propMat, overwrite)).Concat(ClubSeats(trimMat, overwrite))
+                         .Concat(BarGames(trimMat, propMat, overwrite)))
+                if (!palette.props.Contains(prefab)) palette.props.Add(prefab);
+        }
+
+        // For a palette with no light (any kit): the Lights tool's button.
+        public static void AddNeonTo(PrefabPalette palette)
+        {
+            LevelBuilder.EnsureFolder(GreyboxFolder);
+            AddGreyboxLights(palette, overwrite: false);
+            EditorUtility.SetDirty(palette);
+            AssetDatabase.SaveAssets();
+        }
+
+        // 1.2 m tube along X, +Y out of the surface it's mounted on (see
+        // RoomBuilder.MountedTurn). Three lamps along it (see NeonLight), set
+        // away from the surface by its Lamp Distance: their spots on the wall
+        // merge into one long glow, closer they'd show as three.
+        private static void AddGreyboxLights(PrefabPalette palette, bool overwrite)
+        {
+            Material trimMat = Mat("GB_Trim", new Color(0.45f, 0.45f, 0.48f));
+            Material black = Mat("GB_Noir", new Color(0.08f, 0.08f, 0.09f));
+            Material glow = Mat("GB_Neon", Color.white, "Universal Render Pipeline/Unlit");
+            Quaternion alongX = Quaternion.Euler(0f, 0f, 90f);
+
+            GameObject neon = Save("GB_Neon", go =>
+            {
+                Box(go, new Vector3(0f, 0.01f, 0f), new Vector3(1.24f, 0.02f, 0.05f), trimMat);
+                foreach (float x in new[] { -0.45f, 0.45f })
+                    Box(go, new Vector3(x, 0.035f, 0f), new Vector3(0.03f, 0.03f, 0.05f), black);
+                foreach (float x in new[] { -0.61f, 0.61f })
+                    Primitive(PrimitiveType.Cylinder, go, new Vector3(x, 0.05f, 0f), new Vector3(0.05f, 0.015f, 0.05f), black, alongX);
+                Renderer tube = Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 0.05f, 0f), new Vector3(0.04f, 0.6f, 0.04f), glow, alongX)
+                    .GetComponent<Renderer>();
+                tube.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+                Light Lamp(string lampName, float x)
+                {
+                    var lampObject = new GameObject(lampName);
+                    lampObject.transform.SetParent(go.transform, false);
+                    lampObject.transform.localPosition = new Vector3(x, 0.4f, 0f);
+                    Light lamp = lampObject.AddComponent<Light>();
+                    lamp.type = LightType.Point;
+                    return lamp;
+                }
+
+                NeonLight light = go.AddComponent<NeonLight>();
+                light.tubes = new[] { tube };
+                light.lamp = Lamp("Lumiere", 0f);
+                light.sideLamps = new[] { Lamp("Lumiere_G", -0.4f), Lamp("Lumiere_D", 0.4f) };
+                light.Apply();
+            }, overwrite);
+            if (!palette.lights.Contains(neon)) palette.lights.Add(neon);
+        }
+
+        // Modular stage: 2 × 2 m and 2 × 1 m blocks (the greybox module) set
+        // side by side, and steps set against an edge. The deck is inset 1 cm
+        // per side so the joints between blocks show.
+        private static GameObject[] StagePieces(Material trimMat, Material propMat, bool overwrite) => new[]
+        {
+            Save("GB_Estrade", go => StageBlock(go, W, W, trimMat, propMat), overwrite),
+            Save("GB_Estrade_Demi", go => StageBlock(go, W, W / 2f, trimMat, propMat), overwrite),
+            Save("GB_Estrade_Marches", go => StageSteps(go, W, trimMat, propMat), overwrite),
+            Save("GB_Estrade_Marches_1m", go => StageSteps(go, 1f, trimMat, propMat), overwrite),
+        };
+
+        // Bar games. Baby-foot: played from the long sides (±Z); darts: on a
+        // wall (wall side -Z), with the throw line as its own prop; arcade
+        // cabinet: player on +Z.
+        private static GameObject[] BarGames(Material trimMat, Material propMat, bool overwrite)
+        {
+            Material black = Mat("GB_Noir", new Color(0.08f, 0.08f, 0.09f));
+            Material red = Mat("GB_Rouge", new Color(0.8f, 0.15f, 0.12f));
+            Material blue = Mat("GB_Bleu", new Color(0.15f, 0.3f, 0.8f));
+            Material green = Mat("GB_Vert", new Color(0.15f, 0.55f, 0.25f));
+            Material screen = Mat("GB_Ecran", new Color(0.3f, 0.95f, 1f));
+            Material cabinet = Mat("GB_Arcade", new Color(0.4f, 0.15f, 0.65f));
+            Quaternion alongZ = Quaternion.Euler(90f, 0f, 0f);
+
+            return new[]
+            {
+                // 1.2 × 0.7 m box at 94 cm, eight rods across, handles out to
+                // ±65 cm. Rods 1, 2, 4, 6 (from -X) are red's, handled from -Z.
+                Save("GB_BabyFoot", go =>
+                {
+                    foreach (float x in new[] { -0.5f, 0.5f })
+                        foreach (float z in new[] { -0.25f, 0.25f })
+                            Box(go, new Vector3(x, 0.35f, z), new Vector3(0.08f, 0.7f, 0.08f), trimMat);
+                    Box(go, new Vector3(0f, 0.72f, 0f), new Vector3(1.2f, 0.04f, 0.7f), green);
+                    foreach (float z in new[] { -0.335f, 0.335f })
+                        Box(go, new Vector3(0f, 0.83f, z), new Vector3(1.2f, 0.22f, 0.03f), propMat);
+                    foreach (float x in new[] { -0.585f, 0.585f })
+                    {
+                        Box(go, new Vector3(x, 0.83f, 0f), new Vector3(0.03f, 0.22f, 0.7f), propMat);
+                        Box(go, new Vector3(x * 1.03f, 0.79f, 0f), new Vector3(0.02f, 0.1f, 0.22f), black);
+                    }
+                    int[] players = { 1, 2, 3, 5, 5, 3, 2, 1 };
+                    bool[] redSide = { true, true, false, true, false, true, false, false };
+                    for (int i = 0; i < players.Length; i++)
+                    {
+                        float x = -0.525f + 0.15f * i;
+                        float side = redSide[i] ? -1f : 1f;
+                        Primitive(PrimitiveType.Cylinder, go, new Vector3(x, 0.88f, 0f), new Vector3(0.016f, 0.55f, 0.016f), trimMat, alongZ);
+                        Primitive(PrimitiveType.Cylinder, go, new Vector3(x, 0.88f, side * 0.6f), new Vector3(0.035f, 0.05f, 0.035f), black, alongZ);
+                        for (int j = 0; j < players[i]; j++)
+                        {
+                            float z = players[i] == 1 ? 0f : -0.24f + 0.48f * j / (players[i] - 1);
+                            Box(go, new Vector3(x, 0.84f, z), new Vector3(0.025f, 0.1f, 0.035f), redSide[i] ? red : blue);
+                        }
+                    }
+                }, overwrite),
+                // Board at the regulation 1.73 m, 45 cm across, in a frame on
+                // a floor-to-2.2 m backboard (also what puts the prop on the
+                // floor: the Props tool sets its lowest point on the surface).
+                Save("GB_Flechettes", go =>
+                {
+                    Box(go, new Vector3(0f, 1.1f, -0.02f), new Vector3(0.9f, 2.2f, 0.04f), trimMat);
+                    Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 1.73f, 0.015f), new Vector3(0.45f, 0.015f, 0.45f), black, alongZ);
+                    Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 1.73f, 0.032f), new Vector3(0.34f, 0.003f, 0.34f), propMat, alongZ);
+                    Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 1.73f, 0.034f), new Vector3(0.16f, 0.003f, 0.16f), green, alongZ);
+                    Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 1.73f, 0.036f), new Vector3(0.04f, 0.003f, 0.04f), red, alongZ);
+                    foreach (float y in new[] { 1.41f, 2.05f })
+                        Box(go, new Vector3(0f, y, 0.05f), new Vector3(0.64f, 0.04f, 0.1f), propMat);
+                    foreach (float x in new[] { -0.3f, 0.3f })
+                        Box(go, new Vector3(x, 1.73f, 0.05f), new Vector3(0.04f, 0.6f, 0.1f), propMat);
+                }, overwrite),
+                // Throw line, to set 2.37 m from the board's face.
+                Save("GB_Flechettes_Ligne", go => Box(go, new Vector3(0f, 0.005f, 0f), new Vector3(0.6f, 0.01f, 0.05f), red), overwrite),
+                // 70 cm wide, 1.8 m high: cabinet, sloped control panel with a
+                // stick and three buttons, tilted screen, lit marquee on top.
+                Save("GB_BorneArcade", go =>
+                {
+                    foreach (float x in new[] { -0.33f, 0.33f })
+                        Box(go, new Vector3(x, 0.9f, 0f), new Vector3(0.04f, 1.8f, 0.8f), cabinet);
+                    Box(go, new Vector3(0f, 0.9f, -0.38f), new Vector3(0.62f, 1.8f, 0.04f), cabinet);
+                    Box(go, new Vector3(0f, 0.42f, 0.1f), new Vector3(0.62f, 0.84f, 0.6f), cabinet);
+                    Box(go, new Vector3(0f, 0.55f, 0.405f), new Vector3(0.2f, 0.15f, 0.01f), black);
+                    Primitive(PrimitiveType.Cube, go, new Vector3(0f, 0.9f, 0.28f), new Vector3(0.62f, 0.04f, 0.3f), black, Quaternion.Euler(15f, 0f, 0f));
+                    Cylinder(go, new Vector3(-0.12f, 0.95f, 0.27f), new Vector3(0.015f, 0.04f, 0.015f), trimMat);
+                    Primitive(PrimitiveType.Sphere, go, new Vector3(-0.12f, 0.99f, 0.27f), new Vector3(0.045f, 0.045f, 0.045f), red);
+                    for (int i = 0; i < 3; i++)
+                        Cylinder(go, new Vector3(0.04f + 0.08f * i, 0.93f, 0.28f), new Vector3(0.04f, 0.01f, 0.04f), i == 1 ? blue : red);
+                    Box(go, new Vector3(0f, 1.3f, -0.18f), new Vector3(0.62f, 0.6f, 0.36f), black);
+                    Primitive(PrimitiveType.Cube, go, new Vector3(0f, 1.3f, 0.01f), new Vector3(0.54f, 0.44f, 0.02f), screen, Quaternion.Euler(-15f, 0f, 0f));
+                    Box(go, new Vector3(0f, 1.69f, -0.1f), new Vector3(0.62f, 0.2f, 0.52f), propMat);
+                }, overwrite),
+            };
+        }
+
+        // Club armchair and sofas: low and deep, thick arms and back with
+        // rolled tops, one seat cushion per place. Leather brown so they
+        // read apart from the orange furniture. Back on -Z, facing +Z.
+        private static GameObject[] ClubSeats(Material trimMat, bool overwrite)
+        {
+            Material leather = Mat("GB_Cuir", new Color(0.42f, 0.22f, 0.12f));
+            return new[]
+            {
+                Save("GB_FauteuilClub", go => ClubSeat(go, 1, leather, trimMat), overwrite),
+                Save("GB_Canape_2Places", go => ClubSeat(go, 2, leather, trimMat), overwrite),
+                Save("GB_Canape_3Places", go => ClubSeat(go, 3, leather, trimMat), overwrite),
+            };
+        }
+
+        // 60 cm per place between 16 cm arms, 85 cm deep, seat at 47 cm,
+        // back up to 84 cm.
+        private static void ClubSeat(GameObject go, int places, Material leather, Material trimMat)
+        {
+            const float place = 0.6f, arm = 0.16f, depth = 0.85f, back = 0.18f;
+            float inner = places * place, total = inner + 2f * arm;
+            float seatDepth = depth - back, seatZ = back / 2f, backZ = -depth / 2f + back / 2f;
+            Quaternion alongX = Quaternion.Euler(0f, 0f, 90f), alongZ = Quaternion.Euler(90f, 0f, 0f);
+
+            foreach (float x in new[] { -total / 2f + 0.06f, total / 2f - 0.06f })
+                foreach (float z in new[] { -depth / 2f + 0.06f, depth / 2f - 0.06f })
+                    Box(go, new Vector3(x, 0.025f, z), new Vector3(0.06f, 0.05f, 0.06f), trimMat);
+            Box(go, new Vector3(0f, 0.2f, seatZ), new Vector3(inner, 0.3f, seatDepth), leather);
+            for (int i = 0; i < places; i++)
+                Box(go, new Vector3(-inner / 2f + place * (i + 0.5f), 0.41f, seatZ + 0.02f),
+                    new Vector3(place - 0.02f, 0.12f, seatDepth - 0.06f), leather);
+            Box(go, new Vector3(0f, 0.4f, backZ), new Vector3(total, 0.7f, back), leather);
+            Primitive(PrimitiveType.Cylinder, go, new Vector3(0f, 0.75f, backZ), new Vector3(back, total / 2f, back), leather, alongX);
+            foreach (float x in new[] { -(inner + arm) / 2f, (inner + arm) / 2f })
+            {
+                Box(go, new Vector3(x, 0.3f, seatZ), new Vector3(arm, 0.5f, seatDepth), leather);
+                Primitive(PrimitiveType.Cylinder, go, new Vector3(x, 0.55f, seatZ), new Vector3(arm + 0.04f, seatDepth / 2f, arm + 0.04f), leather, alongZ);
+            }
+        }
+
+        private static void StageBlock(GameObject go, float width, float depth, Material trimMat, Material propMat)
+        {
+            Box(go, new Vector3(0f, (StageH - 0.02f) / 2f, 0f), new Vector3(width, StageH - 0.02f, depth), trimMat);
+            Box(go, new Vector3(0f, StageH - 0.01f, 0f), new Vector3(width - 0.02f, 0.02f, depth - 0.02f), propMat);
+        }
+
+        // Climbs toward -Z: the stage goes on the -Z side, the way up faces +Z.
+        private static void StageSteps(GameObject go, float width, Material trimMat, Material propMat)
+        {
+            int steps = Mathf.RoundToInt(StageH / StepRise) - 1;
+            float depth = steps * StepTread;
+            for (int i = 0; i < steps; i++)
+            {
+                float top = StepRise * (i + 1);
+                float z = depth / 2f - StepTread * (i + 0.5f);
+                Box(go, new Vector3(0f, (top - 0.02f) / 2f, z), new Vector3(width, top - 0.02f, StepTread), trimMat);
+                Box(go, new Vector3(0f, top - 0.01f, z), new Vector3(width - 0.02f, 0.02f, StepTread - 0.02f), propMat);
+            }
         }
 
         // Points at the Forest Bar prefabs in place. Its "HDRP" materials were
@@ -316,22 +657,22 @@ namespace UntitledPoolGame.PoolEditor
 
         // ---------- Greybox helpers ----------
 
-        private static Material Mat(string name, Color color)
+        private static Material Mat(string name, Color color, string shaderName = "Universal Render Pipeline/Lit")
         {
             string path = $"{GreyboxFolder}/{name}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (mat != null) return mat;
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Shader shader = Shader.Find(shaderName) ?? Shader.Find("Standard");
             mat = new Material(shader) { color = color };
             AssetDatabase.CreateAsset(mat, path);
             return mat;
         }
 
-        private static GameObject Save(string name, System.Action<GameObject> build)
+        private static GameObject Save(string name, System.Action<GameObject> build, bool overwrite = false)
         {
             string path = $"{GreyboxFolder}/{name}.prefab";
             var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (existing != null) return existing;
+            if (existing != null && !overwrite) return existing;
             var go = new GameObject(name);
             build(go);
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
@@ -346,13 +687,16 @@ namespace UntitledPoolGame.PoolEditor
         private static void Cylinder(GameObject parent, Vector3 center, Vector3 size, Material mat) =>
             Primitive(PrimitiveType.Cylinder, parent, center, size, mat);
 
-        private static void Primitive(PrimitiveType type, GameObject parent, Vector3 center, Vector3 size, Material mat)
+        private static GameObject Primitive(PrimitiveType type, GameObject parent, Vector3 center, Vector3 size, Material mat,
+                                      Quaternion rotation = default)
         {
             GameObject part = GameObject.CreatePrimitive(type);
             part.transform.SetParent(parent.transform, false);
             part.transform.localPosition = center;
+            if (rotation != default) part.transform.localRotation = rotation;
             part.transform.localScale = size;
             part.GetComponent<Renderer>().sharedMaterial = mat;
+            return part;
         }
     }
 }
