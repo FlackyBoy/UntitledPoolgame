@@ -226,6 +226,9 @@ Proposées sans retour pour l'instant : frapper le tireur pendant sa charge fait
 
 ### Technique
 
+- **Agents et hooks pour Claude** (05/11, non retenus pour l'instant, en plus des skills) : un agent `plugin-expert` qui lit FinalIK, PuppetMaster ou Feel pour dire si une chose existe nativement ; un agent `relecteur-unity` qui relit un diff selon les règles du projet ; un hook qui bloque toute modification des plugins, des scripts online et de `BarSplitscreen.unity`, et tout commit sur `master`.
+- **Sortir de Git les `.meta` des `.unitypackage`** (05/11) : les paquets sont ignorés mais pas leurs `.meta`, si bien qu'Unity semble les supprimer à l'ouverture et que 39 fichiers apparaissent comme supprimés à chaque fois. Retirer ces `.meta` du dépôt et l'exception `!*.unitypackage.meta` du `.gitignore` réglerait le bruit.
+
 - **Git LFS pour les gros fichiers** (textures, modèles, audio). *Pourquoi :* les gros envois ont échoué sur GitHub (erreur HTTP 500) et ont dû être découpés à la main ; le dépôt reste lourd à cloner.
 - **Tests automatiques des règles** (tests EditMode Unity sur `EightBallRuleSet`, `NineBallRuleSet`…). *Pourquoi :* deux bugs de règles (fausse faute sur la casse) ne sont apparus qu'en jeu ; un test par cas de faute les aurait repérés.
 - **Tout réglage de gameplay dans des ScriptableObjects**, chargés comme les réglages existants (`PoolSettingsLoader`). *Pourquoi :* on règle sans toucher au code, et c'est la base de l'outil de niveau et des dimensions.
