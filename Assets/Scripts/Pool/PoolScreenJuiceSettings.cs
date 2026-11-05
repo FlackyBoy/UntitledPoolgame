@@ -19,7 +19,7 @@ namespace UntitledPoolGame.Pool
         [Header("Charging a shot")]
         // How much closer the camera creeps toward the cue tip as the shot
         // charges up — read by LocalPoolAimController.UpdateAim().
-        public float chargeZoomDistance = 0.15f;
+        public float chargeZoomDistance = 0.108f;
         // Grows with the charge, read every frame.
         public float chargeShakeMaxMagnitude = 0.012f;
 

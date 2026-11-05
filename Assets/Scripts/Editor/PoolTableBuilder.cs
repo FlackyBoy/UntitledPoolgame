@@ -132,8 +132,17 @@ namespace UntitledPoolGame.PoolEditor
         {
             EnsureFolder("Assets/Resources");
             const string path = "Assets/Resources/PocketSizeSettings.asset";
-            if (AssetDatabase.LoadAssetAtPath<PocketSizeSettings>(path) == null)
-                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<PocketSizeSettings>(), path);
+            PocketSizeSettings settings = AssetDatabase.LoadAssetAtPath<PocketSizeSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<PocketSizeSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+            if (settings.tinyPrefab == null)
+            {
+                settings.tinyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/PlayerLocal/New_PlayerVariantMini.prefab");
+                EditorUtility.SetDirty(settings);
+            }
             EnsurePowerAsset<SlowCueBallPower>("SlowCueBallPower", "Blanche au ralenti", null);
             EnsurePowerAsset<RepelCueBallPower>("RepelCueBallPower", "Blanche à la poche", null);
             EnsurePowerAsset<TinySprintPower>("TinySprintPower", "Super vitesse", null);

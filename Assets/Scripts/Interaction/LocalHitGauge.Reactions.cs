@@ -195,6 +195,7 @@ namespace UntitledPoolGame.Interaction
             yield return new WaitForFixedUpdate();
             PuppetMaster pm = puppet != null ? puppet.puppetMaster : null;
             if (pm == null) yield break;
+            push *= LocalPlayerRagdollController.ScaleOf(pm);
             Vector3 dir = Vector3.ProjectOnPlane(direction, Vector3.up);
             if (dir.sqrMagnitude < 1e-4f) dir = -transform.forward;
             dir.Normalize();

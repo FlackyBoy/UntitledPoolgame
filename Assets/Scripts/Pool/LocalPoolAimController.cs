@@ -115,9 +115,9 @@ namespace UntitledPoolGame.Pool
         // the body crouches, the cue comes down with it and may tilt further.
         [Header("Low ball (on the floor)")]
         [Tooltip("Sans table dans la scène, et toujours en Play Anywhere : hauteur de la bille au-dessus des pieds (mètres) pour laquelle la pose de visée est réglée. Hors Play Anywhere avec une table, c'est la hauteur d'une bille sur son tapis. Une bille plus basse fait s'accroupir le personnage.")]
-        [SerializeField] private float standingBallHeight = 0.8f;
+        [SerializeField] private float standingBallHeight = 0.576f;
         [Tooltip("Descente maximale du bassin (mètres) pour une bille basse ; la queue descend d'autant. 0 = jamais accroupi.")]
-        [SerializeField] private float maxLowBallCrouch = 0.45f;
+        [SerializeField] private float maxLowBallCrouch = 0.324f;
         [Tooltip("Flexion du buste (degrés) quand le personnage est accroupi au maximum.")]
         [SerializeField] private float lowBallCrouchBend = 25f;
         [Tooltip("Inclinaison de la queue en plus de Max Cue Tilt (degrés) quand le personnage est accroupi au maximum, pour que la pointe atteigne une bille au sol.")]
@@ -142,17 +142,17 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Action qui fait passer de debout à accroupi en visée (Play Anywhere seulement).")]
         [SerializeField] private string crouchActionName = "Crouch";
         [Tooltip("Descente du bassin (mètres) en posture accroupie choisie. Le personnage descend aussi seul pour une bille au sol (Max Low Ball Crouch).")]
-        [SerializeField] private float stanceCrouchDepth = 0.45f;
+        [SerializeField] private float stanceCrouchDepth = 0.324f;
         [Tooltip("Rayon (mètres) des volumes qui cherchent un obstacle au-dessus du corps en visée.")]
-        [SerializeField] private float stanceProbeRadius = 0.2f;
+        [SerializeField] private float stanceProbeRadius = 0.144f;
         [Tooltip("Hauteurs (mètres, au-dessus des pieds) du buste debout : un obstacle entre les deux force la posture accroupie.")]
-        [SerializeField] private Vector2 standingTorsoHeights = new Vector2(1.05f, 1.7f);
+        [SerializeField] private Vector2 standingTorsoHeights = new Vector2(0.756f, 1.224f);
         [Tooltip("Hauteurs (mètres, au-dessus des pieds) du buste accroupi : un obstacle entre les deux demande de s'allonger.")]
-        [SerializeField] private Vector2 crouchedTorsoHeights = new Vector2(0.6f, 1.15f);
+        [SerializeField] private Vector2 crouchedTorsoHeights = new Vector2(0.432f, 0.828f);
         [Tooltip("Bille au sol : à moins de cette hauteur (mètres) au-dessus des pieds, le personnage vise toujours accroupi, et allongé si un obstacle l'empêche même de s'accroupir. Plus haut (sur un comptoir), il ne s'allonge pas.")]
-        [SerializeField] private float proneMaxBallHeight = 0.3f;
+        [SerializeField] private float proneMaxBallHeight = 0.216f;
         [Tooltip("Allongé : distance (mètres) entre la bille et le milieu des épaules, dans l'axe du tir.")]
-        [SerializeField] private float proneShoulderDistance = 1.1f;
+        [SerializeField] private float proneShoulderDistance = 0.792f;
         [Tooltip("Allongé : la queue monte de la bille vers le talon de cet angle (degrés), au lieu d'être à plat.")]
         [SerializeField] private float proneCueRise = 4f;
         [Tooltip("Allongé : hauteur de la caméra de visée, en part de Orbit Height (elle passe sous l'obstacle).")]
@@ -170,17 +170,21 @@ namespace UntitledPoolGame.Pool
         // aiming camera comes in front of a wall between it and the ball.
         [Header("Walls (Play Anywhere)")]
         [Tooltip("Avancée (mètres) du corps, poussé par un mur, à partir de laquelle la queue est levée et penchée au maximum (Wall Cue Raise, Wall Extra Cue Tilt). Le corps, lui, avance autant qu'il faut, jusqu'à Min Wall Ball Gap de la bille ; la queue glisse d'autant dans ses mains pour que la pointe reste à la bille.")]
-        [SerializeField] private float maxWallPush = 0.6f;
+        [SerializeField] private float maxWallPush = 0.432f;
         [Tooltip("Distance minimale (mètres) entre la bille et le centre du corps poussé par un mur. Bille plus près du mur que ça : le corps touche le mur, mais reste de ce côté.")]
-        [SerializeField] private float minWallBallGap = 0.4f;
+        [SerializeField] private float minWallBallGap = 0.288f;
         [Tooltip("Hauteurs (mètres, au-dessus des pieds) du volume qui cherche un mur derrière le corps : jambes et bassin, pour que les comptoirs et plafonds au-dessus restent gérés par la posture.")]
-        [SerializeField] private Vector2 wallProbeHeights = new Vector2(0.2f, 0.8f);
+        [SerializeField] private Vector2 wallProbeHeights = new Vector2(0.144f, 0.576f);
         [Tooltip("Mur au plus près (Max Wall Push) : les mains montent de cette hauteur (mètres), la queue penche vers la bille et son talon s'écarte du mur.")]
-        [SerializeField] private float wallCueRaise = 0.25f;
+        [SerializeField] private float wallCueRaise = 0.18f;
         [Tooltip("Inclinaison de la queue permise en plus (degrés) quand un mur avance le joueur au maximum.")]
         [SerializeField] private float wallExtraCueTilt = 20f;
         [Tooltip("Rapproche la caméra de visée de la bille quand un mur est entre les deux.")]
         [SerializeField] private bool cameraAvoidsWalls = true;
+        [Tooltip("Mur derrière la bille : la caméra monte de cette part de ce que le mur lui fait perdre en recul (1 = autant), pour garder le tir à l'écran.")]
+        [SerializeField] private float cameraWallLift = 1f;
+        [Tooltip("Mur derrière la bille : la vue se relève vers l'avant du tir, en descendant la bille à l'écran. 0 = la bille reste au centre (vue plongeante), 1 = tout en bas de l'écran.")]
+        [Range(0f, 1f)] [SerializeField] private float cameraWallBallLow = 0.85f;
 
         // How far a wall pushed the body forward this frame (m).
         private float wallPush;

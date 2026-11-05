@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af8fd8a01af6e304d91047535eeebaba, type: 3}
   m_Name: PoolPhysicsSettings
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPhysicsSettings
-  slideFriction: 2
-  friction: 0.5
-  sleepVelocityThreshold: 0.02
+  slideFriction: 1.44
+  friction: 0.36
+  sleepVelocityThreshold: 0.0144

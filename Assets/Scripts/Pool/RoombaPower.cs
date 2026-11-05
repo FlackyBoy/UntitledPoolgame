@@ -10,9 +10,9 @@ namespace UntitledPoolGame.Pool
     public class RoombaPower : TablePointPower
     {
         [Tooltip("Rayon du robot (mètres). Une bille fait ~3 cm de rayon.")]
-        [Min(0.02f)] [SerializeField] private float radius = 0.06f;
+        [Min(0.02f)] [SerializeField] private float radius = 0.0432f;
         [Tooltip("Vitesse (m/s) quand il roule tout droit.")]
-        [Min(0.05f)] [SerializeField] private float speed = 0.35f;
+        [Min(0.05f)] [SerializeField] private float speed = 0.252f;
         [Tooltip("Vitesse (degrés/s) à laquelle il tourne sur place quand une bande ou une poche le bloque.")]
         [Min(10f)] [SerializeField] private float turnSpeed = 240f;
         [Tooltip("Largeur de la trace qu'il lave, en part de son diamètre (1 = toute sa largeur).")]

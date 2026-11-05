@@ -23,16 +23,16 @@ MonoBehaviour:
   growStiffness: 260
   growBounce: 0.3
   growRingTime: 0.5
-  growRingWidth: 0.02
+  growRingWidth: 0.0144
   growRingOvershoot: 0.15
   eatHoleRatio: 1.2
   growPerHoleEaten: 0.5
   eatenSizeFactor: 0.6
   sinkTime: 0.35
-  deceleration: 0.6
+  deceleration: 0.432
   player1Ring: {r: 0.2, g: 0.55, b: 1, a: 1}
   player2Ring: {r: 1, g: 0.25, b: 0.2, a: 1}
-  ringWidth: 0.006
+  ringWidth: 0.00432
   gulpAmount: 1
   discBump: 1.5
   gulpTime: 0.45
@@ -40,18 +40,18 @@ MonoBehaviour:
   shockwave: 1
   shockwaveReach: 3
   shockwaveTime: 0.4
-  shockwaveWidth: 0.015
+  shockwaveWidth: 0.0108
   beam: 1
   beamPrefab: {fileID: 0}
   beamPrefabScale: 1
-  beamHeight: 4
+  beamHeight: 2.88
   beamWidth: 0.9
   beamTime: 0.3
   goodBiteColor: {r: 1, g: 1, b: 1, a: 1}
   badBiteColor: {r: 1, g: 0.12, b: 0.08, a: 1}
   beamAlpha: 0.75
   beamLightIntensity: 0
-  beamLightRange: 0.8
+  beamLightRange: 0.576
   shakeMagnitude: 0.12
   shakeDuration: 0.25
   shakeMinSize: 0.6

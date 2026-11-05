@@ -48,7 +48,7 @@ namespace UntitledPoolGame.Pool
         [Range(0.05f, 1f)] public float growBounce = 0.3f;
         [Tooltip("Anneau de croissance : il saute tout de suite à la nouvelle taille (un peu au-delà), épais et lumineux, puis s'estompe pendant que le trou le rattrape. Durée (s), épaisseur (m), dépassement (part du rayon).")]
         [Min(0f)] public float growRingTime = 0.5f;
-        [Min(0f)] public float growRingWidth = 0.02f;
+        [Min(0f)] public float growRingWidth = 0.0144f;
         [Range(0f, 1f)] public float growRingOvershoot = 0.15f;
         [Tooltip("Un trou mange l'autre s'il est au moins ce nombre de fois plus gros et passe sur son centre. L'autre revient après le délai de Speed Pool, réduit (Eaten Size Factor).")]
         [Min(1f)] public float eatHoleRatio = 1.2f;
@@ -59,12 +59,12 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Durée (secondes) de la chute d'une bille avalée.")]
         [Min(0.01f)] public float sinkTime = 0.35f;
         [Tooltip("Ralentissement du trou qui glisse (m/s²). Une bille qui roule ralentit d'environ 0,5.")]
-        [Min(0.01f)] public float deceleration = 0.6f;
+        [Min(0.01f)] public float deceleration = 0.432f;
         [Tooltip("Couleur du cercle autour du trou de chaque joueur (J1, J2).")]
         public Color player1Ring = new Color(0.2f, 0.55f, 1f, 1f);
         public Color player2Ring = new Color(1f, 0.25f, 0.2f, 1f);
         [Tooltip("Épaisseur du cercle (mètres). 0 = pas de cercle, juste le disque noir.")]
-        [Min(0f)] public float ringWidth = 0.006f;
+        [Min(0f)] public float ringWidth = 0.00432f;
 
         [Header("Juice (quand le trou avale quelque chose)")]
         [Tooltip("Le trou gonfle d'un coup puis oscille en revenant : de combien (0,5 = +50 % pour un gros morceau, moins pour un petit). Le son, la vibration, le texte : moments Feel « Hungry Hole Swallow » et « Hungry Hole Ate Hole » dans GameFeelSettings.")]
@@ -81,7 +81,7 @@ namespace UntitledPoolGame.Pool
         [Min(1f)] public float shockwaveReach = 3f;
         [Min(0.05f)] public float shockwaveTime = 0.4f;
         [Tooltip("Épaisseur de l'onde au départ (mètres).")]
-        [Min(0f)] public float shockwaveWidth = 0.015f;
+        [Min(0f)] public float shockwaveWidth = 0.0108f;
         [Tooltip("Faisceau de lumière : une colonne qui jaillit du trou, aux couleurs du joueur, avec une vraie lumière qui éclaire la table.")]
         public bool beam = true;
         [Tooltip("Effet à jouer à la place du faisceau généré (vide = le faisceau généré et sa lumière). Il est créé au centre du trou, à l'échelle du trou (Beam Prefab Scale × son diamètre), le suit, prend la couleur de la bouchée (systèmes de particules), et s'arrête au bout de Beam Time.")]
@@ -89,7 +89,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Taille de l'effet, en diamètres du trou.")]
         [Min(0f)] public float beamPrefabScale = 1f;
         [Tooltip("Hauteur du faisceau (mètres) pour un gros morceau ; moins pour un petit.")]
-        [Min(0f)] public float beamHeight = 4f;
+        [Min(0f)] public float beamHeight = 2.88f;
         [Tooltip("Largeur du faisceau, en rayons du trou.")]
         [Min(0.1f)] public float beamWidth = 0.9f;
         [Tooltip("Durée totale du faisceau (secondes) : il jaillit dans le premier quart, puis s'éteint.")]
@@ -102,7 +102,7 @@ namespace UntitledPoolGame.Pool
         [Range(0f, 1f)] public float beamAlpha = 0.75f;
         [Tooltip("Intensité et portée (mètres) d'une lumière qui éclaire la table autour du trou (0 = pas de lumière ; elle déborde sur les côtés).")]
         [Min(0f)] public float beamLightIntensity = 0f;
-        [Min(0f)] public float beamLightRange = 0.8f;
+        [Min(0f)] public float beamLightRange = 0.576f;
         [Tooltip("Secousse de l'écran du joueur pour un gros morceau (la plus forte, pour Shake Full Size et plus).")]
         [Min(0f)] public float shakeMagnitude = 0.12f;
         [Min(0f)] public float shakeDuration = 0.25f;

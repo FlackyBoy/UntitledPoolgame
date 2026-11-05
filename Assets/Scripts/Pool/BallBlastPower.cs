@@ -11,7 +11,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Effet joué à l'endroit de la bille détruite (Cartoon FX Remaster > CFXR2 WW Explosion, choisi par l'utilisateur).")]
         [SerializeField] private GameObject explosionPrefab;
         [Tooltip("Échelle de l'effet par rapport à son prefab : les effets sont faits pour des objets de quelques mètres, une bille fait 6 cm.")]
-        [SerializeField] private float explosionScale = 0.15f;
+        [SerializeField] private float explosionScale = 0.108f;
         [Tooltip("Durée (secondes) avant de supprimer l'effet, s'il ne se supprime pas tout seul.")]
         [SerializeField] private float explosionLifetime = 4f;
         [Tooltip("La bille 8 n'explose pas : la détruire ferait perdre la partie sur-le-champ (8 rentrée sans être annoncée). Le pouvoir est alors perdu, le coup se joue normalement.")]
@@ -20,9 +20,9 @@ namespace UntitledPoolGame.Pool
         // balls' mass. (Was Blast Impulse, 0 by default; renamed so the light
         // blast asked for applies to an asset already created.)
         [Tooltip("Souffle : vitesse (m/s) donnée aux billes collées à l'explosion, diminuant jusqu'à 0 au bord du rayon. 0 = aucun. 0,5 = léger, 1,5 = fort.")]
-        [SerializeField] private float blastSpeed = 0.5f;
+        [SerializeField] private float blastSpeed = 0.36f;
         [Tooltip("Rayon (mètres) du souffle.")]
-        [SerializeField] private float blastRadius = 0.3f;
+        [SerializeField] private float blastRadius = 0.216f;
 
         public override PowerType Type => PowerType.Effect;
 

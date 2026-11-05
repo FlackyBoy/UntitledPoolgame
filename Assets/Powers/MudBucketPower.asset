@@ -19,5 +19,5 @@ MonoBehaviour:
   requiresOwnTurn: 1
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1
-  radius: 0.35
-  level2Radius: 0.5
+  radius: 0.252
+  level2Radius: 0.36

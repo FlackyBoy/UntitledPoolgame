@@ -12,7 +12,7 @@ namespace UntitledPoolGame.Pool
         public Color haloColor = new Color(1f, 0.85f, 0.35f); // warm gold
         // Depends on URP's Physical Light Units; this assumes they're off.
         public float haloIntensity = 8f;
-        public float haloRange = 0.6f;
+        public float haloRange = 0.432f;
         public float haloDuration = 0.35f;
 
         [Header("Rising aura (CFXR3 Magic Aura A (Runic))")]
@@ -24,7 +24,7 @@ namespace UntitledPoolGame.Pool
         public float risingAuraFadeOutBuffer = 4f;
         // The prefab's own scale/pace was built for a much bigger, slower
         // effect than a pool pocket needs.
-        public float risingAuraScale = 0.4f;
+        public float risingAuraScale = 0.288f;
         public float risingAuraSpeedMultiplier = 1.8f;
 
         [Header("Pocket pick: halo (8-ball call, powers aimed at a pocket)")]
@@ -38,9 +38,9 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Rayon du cercle, en multiple du rayon de la poche.")]
         public float targetRingRadiusScale = 1.3f;
         [Tooltip("Épaisseur du trait (mètres).")]
-        public float targetRingWidth = 0.008f;
+        public float targetRingWidth = 0.00576f;
         [Tooltip("Hauteur (mètres) du cercle au-dessus du centre de la poche, pour qu'il ne passe pas sous le tapis.")]
-        public float targetRingHeight = 0.004f;
+        public float targetRingHeight = 0.00288f;
         [Tooltip("Battements par seconde du cercle (il grossit et rétrécit).")]
         public float targetRingPulseRate = 2.5f;
         [Tooltip("Amplitude du battement, en fraction du rayon (0 = fixe).")]

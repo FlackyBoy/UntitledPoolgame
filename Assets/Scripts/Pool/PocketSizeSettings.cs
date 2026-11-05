@@ -20,40 +20,45 @@ namespace UntitledPoolGame.Pool
         [Range(0, 1)] public int firstGiant = 0;
 
         [Header("Le petit")]
-        [Tooltip("Taille du petit par rapport à la normale (0,07 ≈ 12 cm : une bille lui arrive à mi-cuisse).")]
-        [Range(0.02f, 0.5f)] public float tinyScale = 0.07f;
-        [Tooltip("Collisions entre le petit et les billes : elles le bloquent, rebondissent sur lui, il s'en sert comme abri. Décoché = il les traverse, seule la touche compte. (Son ragdoll est coupé tant qu'il est petit.)")]
+        [Tooltip("Le corps du petit : une variante du prefab du joueur, à sa taille (échelle de sa racine : 0,05 ≈ 12 cm). Il remplace le corps du joueur le temps de la manche. Son ragdoll démarre à cette taille et reste actif.")]
+        public GameObject tinyPrefab;
+        [Tooltip("Collisions entre le petit et les billes : elles le bloquent et rebondissent sur lui, debout comme à terre, et il s'en sert comme abri. Décoché = il les traverse, seule la touche compte.")]
         public bool tinyBlocksBalls = true;
-        [Tooltip("Hauteur de saut du petit quand son personnage n'a pas le déplacement R&D, en mètres à taille normale (multipliée par Tiny Scale).")]
-        [Min(0f)] public float tinyJumpHeight = 1.2f;
+        [Tooltip("Hauteur de saut du petit quand son personnage n'a pas le déplacement R&D, en mètres à taille normale (réduite à sa taille).")]
+        [Min(0f)] public float tinyJumpHeight = 0.864f;
         [Tooltip("Plan proche de la caméra du petit, en mètres. Trop grand : le tapis et les billes sont coupés devant lui.")]
-        [Min(0.0005f)] public float tinyNearClip = 0.005f;
+        [Min(0.0005f)] public float tinyNearClip = 0.0036f;
+
+        [Tooltip("Force avec laquelle les muscles du petit tiennent la pose de l'animation de chute (0 = aucune). Au-dessus de 0,1 environ, il tombe figé dans cette pose : pour le rendre plus ferme, monter plutôt Tiny Fall Damper.")]
+        [Range(0f, 1f)] public float tinyFallStiffness = 0.02f;
+        [Tooltip("Résistance de ses articulations au mouvement quand il est projeté ou au sol, sans lui imposer de pose, par kilo de l'os (le tronc résiste donc plus que les mains). Plus haut = plus raide, plus lourd ; trop haut, il bouge au ralenti.")]
+        [Min(0f)] public float tinyFallDamper = 0.003f;
+        [Tooltip("Gravité du petit quand il est projeté ou au sol, en part de la gravité normale. Plus bas = il plane ; plus haut = il retombe vite et va moins loin.")]
+        [Range(0.02f, 2f)] public float tinyFallGravity = 0.2f;
 
         [Header("Touches")]
         [Tooltip("Vitesse minimale d'une bille (la blanche ou une bille de couleur) pour qu'elle compte comme une touche, en m/s. Seule une bille qui va vers le petit compte, pas celle qu'il pousse.")]
-        [Min(0f)] public float minHitSpeed = 0.25f;
+        [Min(0f)] public float minHitSpeed = 0.18f;
         [Tooltip("Marge ajoutée au contact blanche / petit, en mètres (la blanche rebondit sur lui avant de le traverser).")]
-        [Min(0f)] public float hitMargin = 0.012f;
+        [Min(0f)] public float hitMargin = 0.00864f;
         [Tooltip("Après une touche ou une chute, le petit ne peut plus être touché pendant ce temps, en secondes.")]
         [Min(0f)] public float invulnerableTime = 1.5f;
-        [Tooltip("Vitesse de projection du petit touché, pour 1 m/s de bille qui arrive sur lui (de face ; de biais, moins). 1,5 = un peu plus vite que la bille, comme un corps léger percuté.")]
-        [Min(0f)] public float knockTransfer = 1.5f;
-        [Tooltip("Vitesse de projection maximale, en m/s (vraie échelle de la table).")]
-        [Min(0f)] public float knockMaxSpeed = 3f;
+        [Tooltip("Touché, le petit tombe en ragdoll. Vitesse de projection, en m/s, pour 1 m/s de bille qui arrive sur lui (de face ; de biais, moins).")]
+        [Min(0f)] public float knockTransfer = 0.4f;
+        [Tooltip("Vitesse de projection maximale, en m/s.")]
+        [Min(0f)] public float knockMaxSpeed = 0.46f;
         [Tooltip("Direction de la projection : 0 = dans le sens où roulait la bille, 1 = à l'opposé du point d'impact (une bille qui l'effleure le pousse de côté).")]
         [Range(0f, 1f)] public float knockAlongImpact = 0.6f;
         [Tooltip("Part de la projection vers le haut (0 = à plat, 1 = autant vers le haut que vers l'avant).")]
         [Range(0f, 1.5f)] public float knockLift = 0.35f;
-        [Tooltip("Freinage de la projection, par seconde (plus haut = il s'arrête plus vite, plus près).")]
-        [Min(0.1f)] public float knockDamping = 3f;
         [Tooltip("Le petit est tombé (poche, hors de la table) quand ses pieds passent cette distance sous le tapis, en mètres. Compte une touche, il revient sur la table.")]
-        [Min(0.01f)] public float fallDepth = 0.06f;
+        [Min(0.01f)] public float fallDepth = 0.0432f;
 
         [Header("Table")]
         [Tooltip("Billes de couleur laissées sur la table, éparpillées : des obstacles pour le grand, des abris pour le petit.")]
         [Range(0, 15)] public int obstacleBalls = 6;
         [Tooltip("Distance minimale entre une bille éparpillée et la blanche ou le départ du petit, en mètres.")]
-        [Min(0f)] public float obstacleClearance = 0.2f;
+        [Min(0f)] public float obstacleClearance = 0.144f;
         [Tooltip("Une bille de couleur rentrée revient sur la table au bout de ce temps, en secondes.")]
         [Min(0f)] public float respotDelay = 1.5f;
         [Tooltip("Couleur de la blanche du grand.")]
@@ -65,7 +70,7 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Couleur des caisses de pouvoirs du petit. La blanche du grand qui passe dessus la détruit.")]
         public Color tinyCrateColor = new Color(0.25f, 0.8f, 1f);
         [Tooltip("Distance de ramassage d'une caisse par le petit, en mètres depuis son centre (les caisses sont faites pour la blanche).")]
-        [Min(0.01f)] public float tinyCrateReach = 0.09f;
+        [Min(0.01f)] public float tinyCrateReach = 0.0648f;
 
         [Header("Textes (plaque du HUD)")]
         public string giantLabel = "GRAND";

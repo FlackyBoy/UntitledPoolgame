@@ -9,11 +9,11 @@ namespace UntitledPoolGame.Pool
     public class MagnetPower : PocketTargetPower
     {
         [Tooltip("Distance (mètres, à plat) du trou en dessous de laquelle une bille du joueur qui roule vers lui est captée. Une poche fait ~6 cm de rayon, une bille ~3 cm.")]
-        [SerializeField] private float captureRadius = 0.4f;
+        [SerializeField] private float captureRadius = 0.288f;
         [Tooltip("Vitesse minimale (m/s) pour qu'une bille soit captée : une bille immobile près du trou ne l'est pas, il faut l'y envoyer.")]
-        [SerializeField] private float minCaptureSpeed = 0.05f;
+        [SerializeField] private float minCaptureSpeed = 0.036f;
         [Tooltip("Accélération (m/s²) qui tire la bille captée vers le trou. 1 = discret, 3 = franc.")]
-        [SerializeField] private float pullAcceleration = 1.5f;
+        [SerializeField] private float pullAcceleration = 1.08f;
         [Tooltip("Correction de trajectoire (par seconde) : à quelle vitesse la bille captée perd ce qui l'écarte du trou. 0 = aucune, 5 = presque rail.")]
         [SerializeField] private float steering = 4f;
         [Tooltip("Durée maximale (secondes) d'attraction : au-delà la bille est lâchée, pour qu'une bille coincée contre une bande ne bloque pas le coup.")]
@@ -23,9 +23,9 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Effet en boucle joué dans la poche choisie tant que l'aimant est actif : de la validation du trou jusqu'à la fin du tir (ou l'empochage de la bille captée). Vide = aucun. Par défaut : Cartoon FX Remaster > CFXR Electrified 3.")]
         [SerializeField] private GameObject pocketVfxPrefab;
         [Tooltip("Échelle de l'effet par rapport à son prefab : les effets sont faits pour des objets de quelques mètres, une poche fait ~12 cm.")]
-        [SerializeField] private float pocketVfxScale = 0.2f;
+        [SerializeField] private float pocketVfxScale = 0.144f;
         [Tooltip("Hauteur (mètres) de l'effet au-dessus du centre de la poche.")]
-        [SerializeField] private float pocketVfxHeight = 0.02f;
+        [SerializeField] private float pocketVfxHeight = 0.0144f;
         [Tooltip("Durée (secondes) laissée aux particules déjà lancées pour finir, une fois l'aimant terminé, avant de supprimer l'effet.")]
         [SerializeField] private float pocketVfxFadeOut = 1.5f;
 

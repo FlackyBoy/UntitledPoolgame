@@ -19,8 +19,8 @@ MonoBehaviour:
   requiresOwnTurn: 1
   allowDuringOwnTurn: 1
   allowWhileBallsMoving: 1
-  radius: 0.06
-  speed: 0.35
+  radius: 0.0432
+  speed: 0.252
   turnSpeed: 240
   washWidth: 1
   duration: 20

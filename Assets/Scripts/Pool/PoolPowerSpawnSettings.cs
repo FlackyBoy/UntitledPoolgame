@@ -85,7 +85,7 @@ namespace UntitledPoolGame.Pool
         public float ballRotationMaxInterval = 40f;
         // Depends on URP Physical Light Units, like the pot halo.
         public float ballGlowIntensity = 4f;
-        public float ballGlowRange = 0.3f;
+        public float ballGlowRange = 0.216f;
 
         [Header("Power ball visuals — optional, one material per PowerType")]
         // Optional material for the ball while it carries a power of that

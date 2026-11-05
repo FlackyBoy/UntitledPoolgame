@@ -17,14 +17,14 @@ MonoBehaviour:
   sharpEdges: 0
   dirtColor: {r: 0.32, g: 0.24, b: 0.13, a: 0.92}
   dirtNoise: 0.35
-  dirtNoiseScale: 0.12
+  dirtNoiseScale: 0.0864
   washedTint: 0.22
-  pocketClearance: 0.02
+  pocketClearance: 0.0144
   slowTrailWidth: 0.8
   fastTrailWidth: 1.6
-  fullSpeed: 3
+  fullSpeed: 2.16
   stealWashed: 1
-  pocketSplashRadius: 0.6
+  pocketSplashRadius: 0.432
   splashPuddleShare: 0.45
   splashDrops: 14
   splashSpread: 160
@@ -32,7 +32,7 @@ MonoBehaviour:
   freshPaintTime: 0.6
   freshPaintWhiten: 0.35
   splashVfx: {fileID: 8205706795460263314, guid: 326e86d5729c54e479798cacab220bb2, type: 3}
-  splashVfxScale: 0.35
+  splashVfxScale: 0.252
   tintSplashVfx: 0
   splashVfxBoosted:
   - Drops
@@ -45,5 +45,5 @@ MonoBehaviour:
   screenFlashAlpha: 0.2
   screenFlashDuration: 0.25
   mudTrailWidth: 1.2
-  eightSplashRadius: 0.6
+  eightSplashRadius: 0.432
   debugLogs: 1

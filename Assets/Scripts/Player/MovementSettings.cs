@@ -60,6 +60,8 @@ namespace UntitledPoolGame.Player
         [Min(0f)] public float headBob = 0.025f;
         [Tooltip("Pas par seconde à pleine vitesse de marche, pour le balancement.")]
         [Min(0f)] public float headBobFrequency = 1.9f;
+        [Tooltip("Distance gardée entre la caméra et les murs, plafonds et objets fixes, en mètres, pour tous les joueurs (à la taille normale ; 0 = la caméra peut passer au travers). Plus grande que le plan proche de la caméra (Near Clip, prefab du joueur), sinon le décor est coupé.")]
+        [Min(0f)] public float cameraCollisionRadius = 0.1f;
 
         private static MovementSettings instance;
         public static MovementSettings Instance =>

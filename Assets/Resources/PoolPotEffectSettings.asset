@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.PoolPotEffectSettings
   haloColor: {r: 1, g: 0.47232935, b: 0.34901965, a: 1}
   haloIntensity: 8
-  haloRange: 0.6
+  haloRange: 0.432
   haloDuration: 0
   risingAuraPrefab: {fileID: 2900534572940629487, guid: b6c33720de6ba7b4e99883af09ada503, type: 3}
   risingAuraActiveDuration: 0.5
   risingAuraFadeOutBuffer: 0.5
-  risingAuraScale: 0.2
+  risingAuraScale: 0.144
   risingAuraSpeedMultiplier: 5
   selectionHighlightIntensity: 6
   closedPocketCapPrefab: {fileID: 4899273314697128760, guid: dcd777c5328a7674497f0ec45ff2e000, type: 3}
