@@ -4,6 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-11-05
+- **Validé en jeu** par l'utilisateur : taille humaine, suite de Play Anywhere, mobilier du Level Maker, Shooter, Bowling, Sumo, Cache-cache et liste des modes (restent à faire les lots 2 et 4 du Shooter).
 - **Cache-cache, nouveau mode** (compilé, non testé) : pendant que le chercheur ferme les yeux, l'autre, tout petit sur la table, prend la place d'une bille. Il la fait rouler en vue du dessus parmi des billes qui roulent toutes seules de la même façon, et la table tremble de temps en temps. Il peut changer de bille et lancer de fausses pistes. Le chercheur a 5 tirs et 90 s : sa blanche doit toucher la bonne bille en premier. Rôles inversés à chaque manche, premier à 3 points. Le mode est dans la liste de sélection et sur la roue de Boogie Night. Après un changement de bille, le chercheur est prévenu 1 à 3 s plus tard.
 - **Écran de choix du mode en liste** (compilé, non testé) : les treize modes ne sont plus des billes éparpillées sur la table à viser, mais une liste verticale à gauche, avec les règles du mode sélectionné dans un panneau plus grand à droite. Le choix s'applique tout de suite, sans tir à la queue.
 - **Cheat C + X** (compilé, non testé) : ouvre la liste des pouvoirs du mode en cours, pour les donner à J1 ou J2, au niveau 1 ou 2, ou vider leur stock.
