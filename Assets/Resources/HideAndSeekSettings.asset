@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93f29e1d346e3034a8c322dbc058010a, type: 3}
+  m_Name: HideAndSeekSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.HideAndSeekSettings
+  pointsToWin: 3
+  firstSeeker: 0
+  hideTime: 15
+  searchTime: 90
+  shotsPerRound: 5
+  roundOverTime: 3
+  ballsOnTable: 15
+  scatterClearance: 0.3
+  takeReach: 0.3
+  rollSpeed: 0.5
+  rollAcceleration: 3
+  decoyIntervalMin: 2
+  decoyIntervalMax: 5
+  decoyRollMin: 1
+  decoyRollMax: 3
+  swapsPerRound: 2
+  swapReach: 0.2
+  fakesPerRound: 2
+  fakeReach: 1
+  fakeRollTime: 3
+  swapAlertDelayMin: 1
+  swapAlertDelayMax: 3
+  swapAlertTime: 2.5
+  rumbleTime: 0.2
+  rumbleStrength: 0.5
+  shakeIntervalMin: 15
+  shakeIntervalMax: 25
+  shakeSpeed: 0.7
+  shakeCamera: 0.02
+  shakeCameraTime: 0.4
+  cameraFov: 40
+  cameraMargin: 1.15
+  cameraClearAbove: 0.5
+  closeEyesLabel: Ferme les yeux !
+  hideLabel: Cache-toi !
+  seekerLabel: Chercheur
+  hiderLabel: Cacheur
+  seekerWaitFormat: 'le cacheur se cache : {0} s'
+  hideFormat: 'E / Y : prendre la place d''une bille : {0} s'
+  hiddenFormat: 'ne bouge plus trop : {0} s'
+  searchFormat: "{0}  \xB7  {1} tirs  \xB7  changements : {2}"
+  swapAlertLabel: "Il a chang\xE9 de bille !"
+  hiderFormat: "{0}  \xB7  changer : {1}  \xB7  fausse piste : {2}"
+  foundText: "Trouv\xE9 !"
+  notFoundText: "Pas trouv\xE9 !"
+  scoreFormat: '{0} - {1}'
+  debugLogs: 1

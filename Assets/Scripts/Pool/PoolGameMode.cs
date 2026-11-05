@@ -47,5 +47,8 @@ namespace UntitledPoolGame.Pool
         // Sumo Pool's table and balls, but the first to pot their group wins
         // (SumoBilliardRuleSet).
         SumoBilliard,
+        // One player hides as a ball among decoys, the other looks for it with
+        // the cue ball (HideAndSeekRuleSet).
+        HideAndSeek,
     }
 }

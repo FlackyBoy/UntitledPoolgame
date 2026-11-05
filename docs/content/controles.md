@@ -136,6 +136,10 @@ Courir : action *Sprint* (Maj), en avançant. Pas de visée de billard, de coups
 | Tourner la vue autour de la bille | action *Look* | action *Look* |
 | Dash léger (appui bref) ; dash puissant (maintenir, la bille blanchit, puis relâcher) | action *Attack* ou *Jump* | action *Attack* ou *Jump* |
 
+## Cache-cache (le cacheur)
+
+Le chercheur joue comme d'habitude, à la queue et à la blanche. Le cacheur, lui, voit la table du dessus une fois dans sa bille. Les ruses se visent avec la direction du stick ou des touches de déplacement : la bille la plus proche dans cette direction, ou la plus proche tout court sans direction. La souris ne sert à rien ici. À la manette, une vibration confirme la ruse.
+
 | Action | Clavier / souris | Manette |
 |---|---|---|
 | Petit, sur la table : prendre la place de la bille la plus proche | E | Y / △ |
