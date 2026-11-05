@@ -37,8 +37,8 @@ namespace UntitledPoolGame.Core
             new LevelEntry(),
             new LevelEntry { displayName = "La prison", sceneName = "", menuLine = "Lumières qui sautent… et un gardien",
                              twist = "Le twist : la lumière saute, et quelqu'un vous traque dans le noir.", comingSoon = true },
-            new LevelEntry { displayName = "Station spatiale", sceneName = "", menuLine = "Billes en apesanteur",
-                             twist = "Le twist : les billes flottent quand la gravité se coupe.", comingSoon = true },
+            new LevelEntry { displayName = "R&D", sceneName = "R&D", menuLine = "Le labo : déplacement et combat en test",
+                             twist = "Le twist : tout est en test, rien n'est promis." },
         };
 
         [Tooltip("Actions des joueurs (InputSystem_Actions_Local) : ce que l'écran des touches modifie quand aucun joueur n'a encore rejoint.")]

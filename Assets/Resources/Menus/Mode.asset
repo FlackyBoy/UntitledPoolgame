@@ -17,7 +17,7 @@ MonoBehaviour:
   backgroundImage: {fileID: 0}
   barLights: 1
   table: 1
-  hasCue: 1
+  hasCue: 0
   cuePosition: {x: 50, y: 84}
   cueSize: 70
   backScreen: Level
@@ -60,7 +60,7 @@ MonoBehaviour:
   - id: heading
     kind: 2
     visible: 1
-    position: {x: 30, y: 25}
+    position: {x: 29.5, y: 25}
     size: {x: 0, y: 0}
     rotation: 0
     color: {r: 1, g: 1, b: 1, a: 1}
@@ -72,7 +72,7 @@ MonoBehaviour:
     cornerRadius: 14
     text: Quel type de partie ?
     subText: 
-    textSize: 70
+    textSize: 60
     subTextSize: 24
     textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
     titleFont: 0
@@ -91,11 +91,45 @@ MonoBehaviour:
     idleSpeed: 1
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
-  - id: classic
-    kind: 0
+  - id: list
+    kind: 4
     visible: 1
-    position: {x: 26, y: 57.5}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 61.4}
+    size: {x: 560, y: 704}
+    rotation: 0
+    color: {r: 1, g: 0.9647059, b: 0.8901961, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 4
+    cornerRadius: 16
+    text: 
+    subText: 
+    textSize: 44
+    subTextSize: 24
+    textColor: {r: 1, g: 1, b: 1, a: 1}
+    titleFont: 0
+    textShadow: 0
+    revealText: 0
+    action: 0
+    targetScreen: 
+    mode: 0
+    description: 
+    focusScale: 0.06
+    entrance: 4
+    entranceDelay: 0
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: classic
+    kind: 5
+    visible: 1
+    position: {x: 29.5, y: 32.5}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.06666667, g: 0.06666667, b: 0.06666667, a: 1}
     stripe: 0
@@ -106,18 +140,18 @@ MonoBehaviour:
     cornerRadius: 14
     text: Classique
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 0
     description: "8-ball : pleines contre ray\xE9es, la 8 en dernier dans la poche annonc\xE9e."
-    focusScale: 0.18
-    entrance: 1
+    focusScale: 0.05
+    entrance: 4
     entranceDelay: 0
     entranceDuration: 0.45
     idle: 0
@@ -126,10 +160,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: nine-ball
-    kind: 0
+    kind: 5
     visible: 0
-    position: {x: 18, y: 71}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 94.9}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.95686275, g: 0.7607843, b: 0.050980393, a: 1}
     stripe: 1
@@ -140,19 +174,19 @@ MonoBehaviour:
     cornerRadius: 14
     text: 9-ball
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 1
     description: Touche toujours la plus petite bille. Qui rentre la 9 gagne.
-    focusScale: 0.18
-    entrance: 1
-    entranceDelay: 0.25
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.55
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -160,10 +194,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: fourteen-one
-    kind: 0
+    kind: 5
     visible: 0
-    position: {x: 34, y: 71}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 99.7}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.84705883, g: 0.14901961, b: 0.10980392, a: 1}
     stripe: 0
@@ -174,19 +208,19 @@ MonoBehaviour:
     cornerRadius: 14
     text: 14.1
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 2
     description: "Chaque bille rentr\xE9e rapporte 1 point."
-    focusScale: 0.18
-    entrance: 1
-    entranceDelay: 0.3
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.6
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -194,10 +228,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: catch-the-hole
-    kind: 0
+    kind: 5
     visible: 1
-    position: {x: 18, y: 44}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 37.3}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.9411765, g: 0.5411765, b: 0.10980392, a: 1}
     stripe: 1
@@ -208,18 +242,18 @@ MonoBehaviour:
     cornerRadius: 14
     text: Catch the Hole
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 5
     description: "Des trous vivants se baladent sur le tapis. Une bille qui roule dedans est rentrée, même la tienne... ou la blanche."
-    focusScale: 0.18
-    entrance: 1
+    focusScale: 0.05
+    entrance: 4
     entranceDelay: 0.05
     entranceDuration: 0.45
     idle: 0
@@ -228,10 +262,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: hungry-hole
-    kind: 0
+    kind: 5
     visible: 1
-    position: {x: 34, y: 44}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 42.1}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.10980392, g: 0.10980392, b: 0.10980392, a: 1}
     stripe: 0
@@ -242,18 +276,18 @@ MonoBehaviour:
     cornerRadius: 14
     text: Hungry Hole
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 6
     description: "Ta blanche est un trou : avale tes billes pour grandir, assez pour finir par la 8. Tout le monde joue en même temps."
-    focusScale: 0.18
-    entrance: 1
+    focusScale: 0.05
+    entrance: 4
     entranceDelay: 0.1
     entranceDuration: 0.45
     idle: 0
@@ -262,10 +296,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: snake-pool
-    kind: 0
+    kind: 5
     visible: 1
-    position: {x: 42, y: 57.5}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 46.9}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.18039216, g: 0.61960787, b: 0.2901961, a: 1}
     stripe: 0
@@ -276,18 +310,18 @@ MonoBehaviour:
     cornerRadius: 14
     text: Snake Pool
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 7
     description: "Touche tes billes avec ta blanche : elles te suivent en file. Ta blanche brise la file de l'autre. File complète ? Attrape la 8, annonce ta poche et plonge dedans : toute la file te suit !"
-    focusScale: 0.18
-    entrance: 1
+    focusScale: 0.05
+    entrance: 4
     entranceDelay: 0.15
     entranceDuration: 0.45
     idle: 0
@@ -296,10 +330,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: power-wash-pool
-    kind: 0
+    kind: 5
     visible: 1
-    position: {x: 10, y: 57.5}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 51.7}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.16862746, g: 0.7019608, b: 0.8509804, a: 1}
     stripe: 0
@@ -310,18 +344,18 @@ MonoBehaviour:
     cornerRadius: 14
     text: Power Wash Pool
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 8
     description: "Le tapis est crasseux : tes billes le lavent en roulant, à ta couleur. Repasse sur le propre de l'autre pour le lui prendre. La 8 salit tout... et la rentrer arrête la partie. À la fin du chrono, le plus propre gagne !"
-    focusScale: 0.18
-    entrance: 1
+    focusScale: 0.05
+    entrance: 4
     entranceDelay: 0.2
     entranceDuration: 0.45
     idle: 0
@@ -330,10 +364,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: play-anywhere
-    kind: 0
+    kind: 5
     visible: 1
-    position: {x: 26, y: 71}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 56.5}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.4862745, g: 0.7607843, b: 0.25882354, a: 1}
     stripe: 1
@@ -344,18 +378,18 @@ MonoBehaviour:
     cornerRadius: 14
     text: Play Anywhere
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 9
     description: "Du golf dans toute la salle : rentre ta blanche dans le trou en un minimum de coups. À chaque manche, pose un objet sur le parcours pour t'aider... ou gêner l'autre !"
-    focusScale: 0.18
-    entrance: 1
+    focusScale: 0.05
+    entrance: 4
     entranceDelay: 0.25
     entranceDuration: 0.45
     idle: 0
@@ -364,10 +398,10 @@ MonoBehaviour:
     feelOnFocus: {fileID: 0}
     feelOnPress: {fileID: 0}
   - id: pocket-size
-    kind: 0
+    kind: 5
     visible: 1
-    position: {x: 42, y: 71}
-    size: {x: 110, y: 110}
+    position: {x: 29.5, y: 61.3}
+    size: {x: 520, y: 48}
     rotation: 0
     color: {r: 0.9098039, g: 0.4627451, b: 0.10980392, a: 1}
     stripe: 0
@@ -378,19 +412,223 @@ MonoBehaviour:
     cornerRadius: 14
     text: Pocket Size
     subText: 
-    textSize: 44
+    textSize: 26
     subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
     revealText: 0
     action: 9
     targetScreen: 
     mode: 10
     description: "L'un de vous rétrécit sur la table, l'autre le chasse à la blanche. Trois touches et le petit a perdu, deux minutes de survie et il gagne. Puis on échange !"
-    focusScale: 0.18
-    entrance: 1
+    focusScale: 0.05
+    entrance: 4
     entranceDelay: 0.3
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: shooter-mini
+    kind: 5
+    visible: 1
+    position: {x: 29.5, y: 66.1}
+    size: {x: 520, y: 48}
+    rotation: 0
+    color: {r: 0.7607843, g: 0.23137255, b: 0.23137255, a: 1}
+    stripe: 1
+    number: 13
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Shooter miniature
+    subText: 
+    textSize: 26
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 11
+    description: "Vous voilà tout petits sur la table, la queue en guise de fusil. Tirez-vous dessus, poussez les billes sur l'autre et gare aux poches. Le premier à cinq éliminations gagne !"
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.35
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: shooter-pool
+    kind: 5
+    visible: 1
+    position: {x: 29.5, y: 70.9}
+    size: {x: 520, y: 48}
+    rotation: 0
+    color: {r: 0.18431373, g: 0.61960787, b: 0.35686275, a: 1}
+    stripe: 1
+    number: 14
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Shooter Billard
+    subText: 
+    textSize: 26
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 12
+    description: "Tout petits sur la table, vous devez rentrer vos billes dans les poches, au coup de pied et au tir. Tirez sur l'autre pour le ralentir : seul compte le premier qui a vidé son groupe !"
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.4
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: bowling-pool
+    kind: 5
+    visible: 1
+    position: {x: 29.5, y: 75.7}
+    size: {x: 520, y: 48}
+    rotation: 0
+    color: {r: 0.23921569, g: 0.43529412, b: 0.81960785, a: 1}
+    stripe: 1
+    number: 10
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Bowling Pool
+    subText: 
+    textSize: 26
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 13
+    description: "Dix quilles au fond de la table, ta blanche pour les faire tomber. Deux lancers par frame, cinq frames chacun, avec les vrais strikes et spares. Les bandes sont permises, et une quille dans une poche compte !"
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.45
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: sumo-pool
+    kind: 5
+    visible: 1
+    position: {x: 29.5, y: 80.5}
+    size: {x: 520, y: 48}
+    rotation: 0
+    color: {r: 0.9411765, g: 0.7254902, b: 0.05882353, a: 1}
+    stripe: 0
+    number: 1
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Sumo Pool
+    subText: 
+    textSize: 26
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 9
+    targetScreen: 
+    mode: 14
+    description: "Vous êtes les billes ! Une petite table carrée, six trous : roule, fonce et pousse l'autre dedans. Chaque chute donne un point à l'adversaire, même si tu es tombé tout seul. Le premier à trois gagne !"
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.5
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: sumo-billiard
+    kind: 5
+    visible: 1
+    position: {x: 29.5, y: 85.3}
+    size: {x: 520, y: 48}
+    rotation: 0
+    color: {r: 0.9411765, g: 0.7254902, b: 0.05882353, a: 1}
+    stripe: 1
+    number: 9
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Sumo Billard
+    subText:
+    textSize: 26
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 9
+    targetScreen:
+    mode: 15
+    description: "Toujours dans la peau d'une bille, mais il faut rentrer les tiennes : les pleines pour J1, les rayées pour J2. Le premier qui a vidé son groupe gagne. Si tu tombes, une de tes billes ressort !"
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.55
+    entranceDuration: 0.45
+    idle: 0
+    idleAmount: 1
+    idleSpeed: 1
+    feelOnFocus: {fileID: 0}
+    feelOnPress: {fileID: 0}
+  - id: hide-and-seek
+    kind: 5
+    visible: 1
+    position: {x: 29.5, y: 90.1}
+    size: {x: 520, y: 48}
+    rotation: 0
+    color: {r: 0.83137256, g: 0.20392157, b: 0.16862746, a: 1}
+    stripe: 0
+    number: 3
+    image: {fileID: 0}
+    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    borderWidth: 0
+    cornerRadius: 14
+    text: Cache-cache
+    subText:
+    textSize: 26
+    subTextSize: 24
+    textColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
+    titleFont: 1
+    textShadow: 0
+    revealText: 0
+    action: 9
+    targetScreen:
+    mode: 16
+    description: "Ferme les yeux ! L'autre, tout petit sur la table, prend la place d'une bille. Puis tu as cinq tirs pour la toucher avec ta blanche, parmi des billes qui bougent toutes seules. Les rôles s'inversent à chaque manche, le premier à trois gagne !"
+    focusScale: 0.05
+    entrance: 4
+    entranceDelay: 0.55
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
@@ -400,8 +638,8 @@ MonoBehaviour:
   - id: rules
     kind: 4
     visible: 1
-    position: {x: 67.5, y: 47.5}
-    size: {x: 634, y: 300}
+    position: {x: 67, y: 61.4}
+    size: {x: 720, y: 480}
     rotation: 2
     color: {r: 0.23921569, g: 0.56078434, b: 0.8784314, a: 1}
     stripe: 0
@@ -425,40 +663,6 @@ MonoBehaviour:
     focusScale: 0.06
     entrance: 5
     entranceDelay: 0
-    entranceDuration: 0.45
-    idle: 0
-    idleAmount: 1
-    idleSpeed: 1
-    feelOnFocus: {fileID: 0}
-    feelOnPress: {fileID: 0}
-  - id: aim-hint
-    kind: 2
-    visible: 1
-    position: {x: 84, y: 91}
-    size: {x: 0, y: 0}
-    rotation: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-    stripe: 0
-    number: 1
-    image: {fileID: 0}
-    borderColor: {r: 0.10980392, g: 0.08235294, b: 0.0627451, a: 1}
-    borderWidth: 0
-    cornerRadius: 14
-    text: vise une bille, tire !
-    subText: 
-    textSize: 34
-    subTextSize: 24
-    textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}
-    titleFont: 0
-    textShadow: 1
-    revealText: 0
-    action: 0
-    targetScreen: 
-    mode: 0
-    description: 
-    focusScale: 0.06
-    entrance: 6
-    entranceDelay: 0.4
     entranceDuration: 0.45
     idle: 0
     idleAmount: 1
