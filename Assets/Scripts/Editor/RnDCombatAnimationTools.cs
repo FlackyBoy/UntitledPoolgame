@@ -27,7 +27,7 @@ namespace UntitledPoolGame.PoolEditor
         private const string MaskFolder = "Assets/Animations/Combat";
         private const string SpeedParameter = "PunchSpeed";
 
-        private enum Mask { UpperBody, UpperBodyAndHead, Legs }
+        internal enum Mask { UpperBody, UpperBodyAndHead, Legs }
 
         // Builds (or rebuilds) the layers. False, with a dialog, if the
         // controller or a clip is missing.
@@ -127,7 +127,7 @@ namespace UntitledPoolGame.PoolEditor
 
         // The controller of the variant's character Animator (the one
         // LocalCharacterAnimationController drives).
-        private static AnimatorController FindController(out string error)
+        internal static AnimatorController FindController(out string error)
         {
             error = null;
             GameObject variant = AssetDatabase.LoadAssetAtPath<GameObject>(VariantPath);
@@ -171,7 +171,7 @@ namespace UntitledPoolGame.PoolEditor
         //   following the look), nor legs and root.
         // - UpperBodyAndHead (stunned, blows taken): plus the head.
         // - Legs (stunned while standing still): legs and feet IK.
-        private static AvatarMask EnsureMask(Mask kind)
+        internal static AvatarMask EnsureMask(Mask kind)
         {
             string path = kind switch
             {

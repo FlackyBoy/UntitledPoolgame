@@ -181,6 +181,13 @@ namespace UntitledPoolGame.Pool
             lastShotTime = Time.time;
         }
 
+        // Shooter miniature: set moving by this player's shot or kick.
+        public void MarkHitBy(int player)
+        {
+            LastShooter = player;
+            lastShotTime = Time.time;
+        }
+
         // How many times another ball has hit this one.
         public int BallContacts { get; private set; }
 

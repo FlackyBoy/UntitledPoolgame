@@ -39,6 +39,21 @@ namespace UntitledPoolGame.Player
         public Vector3 Velocity => horizontal + Vector3.up * verticalSpeed;
         public bool IsGrounded { get; private set; }
         public bool IsSprinting { get; private set; }
+
+        // Shooter miniature: the weapon has its own running (LocalShooterWeapon).
+        public bool ArmedAnimation { get; set; }
+
+        // Also read by ShooterAnimationTools.
+        public const string RunLayer = "Course";
+        public const string RunState = "Run";
+        public const string RunXParameter = "RunX";
+        public const string RunYParameter = "RunY";
+        private static readonly int RunXHash = Animator.StringToHash(RunXParameter);
+        private static readonly int RunYHash = Animator.StringToHash(RunYParameter);
+        private const int NotLookedUp = -2;
+        private const float RunDamp = 0.1f;
+        private const float RunFade = 0.2f;
+        private int runLayer = NotLookedUp;
         public bool IsClimbing => climbTime >= 0f;
 
         private MovementSettings cfg;
@@ -186,6 +201,7 @@ namespace UntitledPoolGame.Player
             // Same gates as LocalFpsPlayerController: still before the match
             // starts, and nothing while it's switched off (aiming, ragdoll).
             PoolMatchRules rules = PoolMatchRules.Instance;
+            UpdateRunLayer(dt, IsSprinting && !ArmedAnimation && fps != null && fps.enabled && controller.enabled);
             bool active = (rules == null || rules.MatchStarted) && fps != null && fps.enabled && controller.enabled;
             if (!active)
             {
@@ -449,6 +465,25 @@ namespace UntitledPoolGame.Player
         private bool handsOnLedge;
 
         // ---------- Animation and view ----------
+
+        // The sprint without a weapon: a layer of its own over the body's
+        // usual movement (ShooterAnimationTools makes it). Local velocity at
+        // normal size, against the sprint speed: 1 at full speed.
+        private void UpdateRunLayer(float dt, bool sprinting)
+        {
+            if (animator == null || dt <= 0f) return;
+            if (runLayer == NotLookedUp)
+            {
+                runLayer = animator.GetLayerIndex(RunLayer);
+                if (runLayer >= 0) animator.Play(RunState, runLayer, 0f);
+            }
+            if (runLayer < 0) return;
+            float size = fps != null ? fps.SizeScale : 1f;
+            Vector3 local = transform.InverseTransformDirection(controller.velocity) / (Mathf.Max(cfg.sprintSpeed, 0.01f) * Mathf.Max(size, 0.001f));
+            animator.SetFloat(RunXHash, local.x, RunDamp, dt);
+            animator.SetFloat(RunYHash, local.z, RunDamp, dt);
+            animator.SetLayerWeight(runLayer, Mathf.MoveTowards(animator.GetLayerWeight(runLayer), sprinting ? 1f : 0f, dt / RunFade));
+        }
 
         private void UpdateAnimator()
         {

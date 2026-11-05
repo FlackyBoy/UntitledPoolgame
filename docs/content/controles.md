@@ -116,6 +116,8 @@ Toujours à deux : lancé seul, le deuxième joueur rejoint tout de suite en éc
 
 Le grand vise et tire comme d'habitude, avec sa blanche, dès la fin du compte à rebours.
 
+## Shooter miniature et Shooter Billard
+
 | Action | Clavier / souris | Manette |
 |---|---|---|
 | Tirer (maintenir pour répéter) | action *Attack* | action *Attack* |

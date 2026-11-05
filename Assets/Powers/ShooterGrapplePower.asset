@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd8dd2a4df36f3c4c8c90e065989395f, type: 3}
+  m_Name: ShooterGrapplePower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ShooterGrapplePower
+  powerName: Grappin
+  tokenPrefab: {fileID: 4273990101770474559, guid: ca5f08ef5f8beb346a4deaedff28d16c, type: 3}
+  hudIcon: {fileID: 2800000, guid: d4b567965e74ce44094a23d657916e76, type: 3}
+  onlyInModes: 0b0000000c000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  range: 2
+  level2Range: 3
+  pullSpeed: 1.6
+  maxTime: 1.5
