@@ -195,6 +195,8 @@ namespace UntitledPoolGame.Interaction
 
         // Read by LocalPoolAimController so aim mode can't start mid-swing
         // (it would snapshot the cue's pose halfway through the arc).
+        private PlayerInput playerInput;
+
         public bool IsSwinging => phase != Phase.Idle;
 
         private void Awake()
@@ -209,7 +211,8 @@ namespace UntitledPoolGame.Interaction
             viewCamera = viewTransform != null ? viewTransform.GetComponent<Camera>() : GetComponentInChildren<Camera>(true);
             if (viewTransform == null && viewCamera != null) viewTransform = viewCamera.transform;
 
-            InputActionMap map = GetComponent<PlayerInput>().actions.FindActionMap(actionMapName, throwIfNotFound: true);
+            playerInput = GetComponent<PlayerInput>();
+            InputActionMap map = playerInput.actions.FindActionMap(actionMapName, throwIfNotFound: true);
             attackAction = map.FindAction(attackActionName, throwIfNotFound: true);
 
             if (muscleLayers.value == 0) muscleLayers = LayerMask.GetMask("Ragdoll");
@@ -282,6 +285,7 @@ namespace UntitledPoolGame.Interaction
         {
             LocalGrabbable held = handController.HeldObject;
             if (held == null || !held.IsCue) return false;
+            if (!MeleeHit.Allowed(playerInput)) return false;
             if (aimController != null && (aimController.IsAiming || aimController.IsPlacementViewActive)) return false;
             if (unarmedMelee != null && unarmedMelee.IsAttacking) return false;
             // Only once the pickup has finished moving the cue into the

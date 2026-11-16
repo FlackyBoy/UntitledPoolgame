@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UntitledPoolGame.Interaction;
 
 namespace UntitledPoolGame.Pool
 {
@@ -440,6 +441,19 @@ namespace UntitledPoolGame.Pool
         }
 
         public void SetShotPowerMultiplier(int player, float multiplier) => shotPowerMultiplier[player] = multiplier;
+
+        // ---------- Melee (MeleeHit.Allowed) ----------
+
+        // Until when each player may hit outside the modes that allow it (BrawlPower).
+        private readonly float[] meleeUntil = new float[2];
+
+        public bool CanHit(int player) => CombatSettings.Instance.AllowsMelee(Mode) || Time.time < meleeUntil[player];
+
+        public void AllowMelee(int player, float duration)
+        {
+            meleeUntil[player] = Time.time + duration;
+            if (traceShots) Debug.Log($"[Match] J{player + 1} peut frapper pendant {duration:0.#} s.", this);
+        }
 
         // Both stocks emptied (Pocket Size: powers belong to a role, the
         // roles swap between rounds).
@@ -1533,6 +1547,7 @@ namespace UntitledPoolGame.Pool
         {
             Setup = setup.Normalized();
             ruleSet = CreateRuleSet(Setup);
+            meleeUntil[0] = meleeUntil[1] = 0f;
             // Normal balls again if the last match was Hungry Hole.
             if (!(ruleSet is HungryHoleRuleSet)) HungryHoleRuleSet.Cleanup();
             // No chain left from a Snake Pool match (Snake Pool clears its own).

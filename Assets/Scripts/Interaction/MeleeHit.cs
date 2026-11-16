@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using RootMotion.Dynamics;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
@@ -9,6 +11,14 @@ namespace UntitledPoolGame.Interaction
     // telling whose ragdoll muscle a collider is, and the global hitstop.
     public static class MeleeHit
     {
+        // The mode or a power lets this player hit. No match (the R&D arena):
+        // nothing to forbid it.
+        public static bool Allowed(PlayerInput input)
+        {
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            return rules == null || rules.CanHit(rules.GetEffectivePlayerIndex(input.playerIndex));
+        }
+
         // True when the collider is a ragdoll muscle of another player that
         // this attack hasn't hit yet (the puppet is then added to alreadyHit).
         public static bool TryGetTarget(Collider hit, Transform attacker, PuppetMaster ownPuppet, HashSet<PuppetMaster> alreadyHit,
