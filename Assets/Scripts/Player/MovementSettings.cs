@@ -63,6 +63,14 @@ namespace UntitledPoolGame.Player
         [Tooltip("Distance gardée entre la caméra et les murs, plafonds et objets fixes, en mètres, pour tous les joueurs (à la taille normale ; 0 = la caméra peut passer au travers). Plus grande que le plan proche de la caméra (Near Clip, prefab du joueur), sinon le décor est coupé.")]
         [Min(0f)] public float cameraCollisionRadius = 0.1f;
 
+        [Header("Table (tous les joueurs à taille normale, tous les modes)")]
+        [Tooltip("Distance gardée au-delà du tapis, en mètres, pour une table à l'échelle 1, en plus du rayon du joueur : couvre les bandes. Plus grand = le mur invisible commence plus loin de la table.")]
+        [Min(0f)] public float tableKeepOffMargin = 0.15f;
+        [Tooltip("Le joueur est repoussé dès que ses pieds passent à cette hauteur sous le tapis, en mètres, pour une table à l'échelle 1. Doit rester au-dessus du sol, sinon il ne pourrait plus s'approcher de la table.")]
+        [Min(0f)] public float tableKeepOffBelowFelt = 0.3f;
+        [Tooltip("Au-delà de cette hauteur au-dessus du tapis, le joueur n'est plus repoussé, en mètres, pour une table à l'échelle 1 : une mezzanine au-dessus de la table reste accessible.")]
+        [Min(0f)] public float tableKeepOffAboveFelt = 3f;
+
         private static MovementSettings instance;
         public static MovementSettings Instance =>
             instance != null ? instance : instance = Pool.PoolSettingsLoader.LoadOrDefault<MovementSettings>("MovementSettings");

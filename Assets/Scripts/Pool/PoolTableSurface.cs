@@ -56,6 +56,21 @@ namespace UntitledPoolGame.Pool
             return transform.position + transform.rotation * offset;
         }
 
+        // The sideways move that takes a point off the table by its nearest
+        // edge, margin past the felt. False if it isn't over the table.
+        public bool PushOffTable(Vector3 position, float margin, out Vector3 push)
+        {
+            push = Vector3.zero;
+            Vector3 offset = Quaternion.Inverse(transform.rotation) * (position - transform.position);
+            float overLength = HalfLength + margin - Mathf.Abs(offset.x);
+            float overWidth = HalfWidth + margin - Mathf.Abs(offset.z);
+            if (overLength <= 0f || overWidth <= 0f) return false;
+            push = transform.rotation * (overLength < overWidth
+                ? new Vector3(Mathf.Sign(offset.x) * overLength, 0f, 0f)
+                : new Vector3(0f, 0f, Mathf.Sign(offset.z) * overWidth));
+            return true;
+        }
+
         // How far a point going along direction travels before leaving the
         // table rectangle (inflated by margin); 0 if already out. Used to
         // stand the player behind the cue.
