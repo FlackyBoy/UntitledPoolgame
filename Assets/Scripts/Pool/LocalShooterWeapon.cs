@@ -377,7 +377,7 @@ namespace UntitledPoolGame.Pool
             return shot;
         }
 
-        private Vector3 Muzzle => cue != null && cueInHand != null ? cue.TransformPoint(cueTip) : aim.position + aim.forward * cfg.shotRadius * 4f;
+        public Vector3 Muzzle => cue != null && cueInHand != null ? cue.TransformPoint(cueTip) : aim.position + aim.forward * cfg.shotRadius * 4f;
 
         public Vector3 AimOrigin => aim.position;
         public Vector3 AimDirection => aim.forward;

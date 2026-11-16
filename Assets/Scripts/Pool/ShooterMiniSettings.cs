@@ -45,7 +45,7 @@ namespace UntitledPoolGame.Pool
 
         [Header("Queue-fusil")]
         [Tooltip("Temps minimal entre deux tirs, en secondes.")]
-        [Min(0.02f)] public float fireInterval = 0.25f;
+        [Min(0.02f)] public float fireInterval = 0.5f;
         [Tooltip("Vitesse d'un tir, en m/s. Il va tout droit (pas de gravité) et rebondit.")]
         [Min(0.1f)] public float shotSpeed = 3f;
         [Tooltip("Rayon d'une petite bille tirée, en mètres.")]
