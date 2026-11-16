@@ -306,6 +306,23 @@ namespace UntitledPoolGame.PoolEditor
                     g.Add(Glyph.Circle(0f, 0f, 0.5f));
                     g.Cut(Glyph.Circle(0f, 0f, 0.17f));
                     break;
+                case "ShooterGrenade":   // a round grenade, its lever and pin
+                    g.Add(Glyph.Circle(0f, -0.2f, 0.58f));
+                    g.Add(Glyph.Box(0f, 0.48f, 0.18f, 0.14f, 0.03f));
+                    g.Add(Glyph.Segment(0.1f, 0.58f, 0.62f, 0.3f, 0.12f));
+                    g.Arc(-0.36f, 0.56f, 0.16f, 0f, 360f, 0.07f);
+                    break;
+                case "HideAndSeekSonar":   // waves around a point
+                    g.Add(Glyph.Circle(0f, 0f, 0.17f));
+                    g.Arc(0f, 0f, 0.48f, 0f, 360f, 0.11f);
+                    g.Arc(0f, 0f, 0.8f, 0f, 360f, 0.11f);
+                    break;
+                case "Brawl":   // a fist
+                    g.Add(Glyph.Box(0f, -0.1f, 0.55f, 0.45f, 0.18f));
+                    g.Add(Glyph.Box(0f, -0.72f, 0.33f, 0.22f, 0.05f));
+                    foreach (float x in new[] { -0.28f, 0f, 0.28f })
+                        g.Cut(Glyph.Segment(x, 0.36f, x, 0.04f, 0.05f));
+                    break;
                 case "ShooterShotgun":   // a barrel and its fan of shots
                     g.Add(Glyph.Box(-0.6f, -0.45f, 0.2f, 0.14f, 0.03f));
                     foreach (var (x, y) in new[] { (0.55f, -0.62f), (0.62f, -0.15f), (0.4f, 0.25f), (0f, 0.42f), (-0.25f, 0.58f) })
@@ -488,6 +505,30 @@ namespace UntitledPoolGame.PoolEditor
                     foreach (Vector3 d in new[] { Vector3.right, Vector3.left, Vector3.forward, Vector3.back, Vector3.down, (Vector3.right + Vector3.up).normalized, (Vector3.left + Vector3.up).normalized })
                         Part(p, "Spike", Cone(), Steel, d * 0.03f, Quaternion.FromToRotation(Vector3.up, d).eulerAngles, Vector3.one * 0.016f);
                     Part(p, "Lamp", Builtin("Sphere"), Glow("Lamp", new Color(1f, 0.12f, 0.06f)), Vector3.up * 0.027f, Vector3.zero, Vector3.one * 0.016f, shadows: false);
+                    return true;
+                }
+                case "ShooterGrenade":   // a green grenade, its lever and ring
+                {
+                    Material green = Lit("Grenade", new Color(0.2f, 0.34f, 0.16f));
+                    Part(p, "Body", Builtin("Sphere"), green, new Vector3(0f, -0.01f, 0f), Vector3.zero, Vector3.one * 0.055f);
+                    Part(p, "Neck", Builtin("Cylinder"), Steel, new Vector3(0f, 0.024f, 0f), Vector3.zero, new Vector3(0.018f, 0.008f, 0.018f));
+                    Part(p, "Lever", Builtin("Cube"), Steel, new Vector3(0.016f, 0.024f, 0f), new Vector3(0f, 0f, -35f), new Vector3(0.036f, 0.005f, 0.01f));
+                    Part(p, "Ring", Torus(0.01f, 0.002f, 360f), Steel, new Vector3(-0.018f, 0.032f, 0f), Vertical, Vector3.one);
+                    return true;
+                }
+                case "HideAndSeekSonar":   // a glowing point in two rings
+                {
+                    Material wave = Glow("Sonar", new Color(0.2f, 0.9f, 1f));
+                    Part(p, "Point", Builtin("Sphere"), wave, Vector3.zero, Vector3.zero, Vector3.one * 0.022f, shadows: false);
+                    Part(p, "Ring", Torus(0.026f, 0.003f, 360f), wave, Vector3.zero, Vertical, Vector3.one, shadows: false);
+                    Part(p, "Ring", Torus(0.045f, 0.003f, 360f), wave, Vector3.zero, Vertical, Vector3.one, shadows: false);
+                    return true;
+                }
+                case "Brawl":   // a boxing glove
+                {
+                    Part(p, "Glove", Builtin("Sphere"), Red, new Vector3(0f, 0.008f, 0f), Vector3.zero, new Vector3(0.05f, 0.055f, 0.05f));
+                    Part(p, "Thumb", Builtin("Sphere"), Red, new Vector3(0.024f, -0.002f, 0f), Vector3.zero, Vector3.one * 0.022f);
+                    Part(p, "Cuff", Builtin("Cylinder"), White, new Vector3(0f, -0.03f, 0f), Vector3.zero, new Vector3(0.036f, 0.012f, 0.036f));
                     return true;
                 }
                 case "ShooterShotgun":   // two barrels and a stock

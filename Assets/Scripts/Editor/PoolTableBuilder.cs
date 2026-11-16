@@ -58,6 +58,7 @@ namespace UntitledPoolGame.PoolEditor
             EnsurePocketSizeAssets();
             EnsureShooterMiniSettingsAsset();
             EnsureShooterPowerAssets();
+            EnsureBrawlPowerAsset();
             EnsureBowlingPoolSettingsAsset();
             EnsureSumoPoolSettingsAsset();
             EnsureHideAndSeekSettingsAsset();
@@ -183,13 +184,8 @@ namespace UntitledPoolGame.PoolEditor
         {
             EnsurePowerAsset<ShooterBigBallPower>("ShooterBigBallPower", "Grosse bille", OnlyInShooter);
             EnsurePowerAsset<ShooterFreezeShotPower>("ShooterFreezeShotPower", "Tir de glace", OnlyInShooter);
-            EnsurePowerAsset<ShooterMinePower>("ShooterMinePower", "Mine", serialized =>
-            {
-                OnlyInShooter(serialized);
-                var blast = AssetDatabase.LoadAssetAtPath<BallBlastPower>("Assets/Powers/BallBlastPower.asset");
-                if (blast != null)
-                    serialized.FindProperty("explosionPrefab").objectReferenceValue = new SerializedObject(blast).FindProperty("explosionPrefab").objectReferenceValue;
-            });
+            EnsurePowerAsset<ShooterMinePower>("ShooterMinePower", "Mine", ExplosiveInShooter);
+            EnsurePowerAsset<ShooterGrenadePower>("ShooterGrenadePower", "Grenade", ExplosiveInShooter);
             EnsurePowerAsset<ShooterShotgunPower>("ShooterShotgunPower", "Fusil à pompe", OnlyInShooter);
             EnsurePowerAsset<ShooterHomingBallPower>("ShooterHomingBallPower", "Tête chercheuse", OnlyInShooter);
             EnsurePowerAsset<ShooterMagnetPower>("ShooterMagnetPower", "Aimant à billes", serialized =>
@@ -201,6 +197,21 @@ namespace UntitledPoolGame.PoolEditor
             });
             EnsurePowerAsset<ShooterClosePocketPower>("ShooterClosePocketPower", "Poche fermée", OnlyInShooter);
             EnsurePowerAsset<ShooterGrapplePower>("ShooterGrapplePower", "Grappin", OnlyInShooter);
+        }
+
+        private static void ExplosiveInShooter(SerializedObject serialized)
+        {
+            OnlyInShooter(serialized);
+            var blast = AssetDatabase.LoadAssetAtPath<BallBlastPower>("Assets/Powers/BallBlastPower.asset");
+            if (blast != null)
+                serialized.FindProperty("explosionPrefab").objectReferenceValue = new SerializedObject(blast).FindProperty("explosionPrefab").objectReferenceValue;
+        }
+
+        // "Bagarre": usable at any time, a fight doesn't wait for one's turn.
+        internal static void EnsureBrawlPowerAsset()
+        {
+            EnsurePowerAsset<BrawlPower>("BrawlPower", "Bagarre", serialized =>
+                serialized.FindProperty("requiresOwnTurn").boolValue = false);
         }
 
         private static void OnlyInShooter(SerializedObject serialized)
@@ -229,13 +240,29 @@ namespace UntitledPoolGame.PoolEditor
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SumoPoolSettings>(), path);
         }
 
-        // Hide and seek: the rounds, the decoys, the hider's tricks.
-        private static void EnsureHideAndSeekSettingsAsset()
+        // Hide and seek: the rounds, the decoys, the hider's tricks, the seeker's
+        // power (only ever handed out by the rules: no crate in this mode).
+        internal static void EnsureHideAndSeekSettingsAsset()
         {
             EnsureFolder("Assets/Resources");
             const string path = "Assets/Resources/HideAndSeekSettings.asset";
-            if (AssetDatabase.LoadAssetAtPath<HideAndSeekSettings>(path) != null) return;
-            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<HideAndSeekSettings>(), path);
+            HideAndSeekSettings settings = AssetDatabase.LoadAssetAtPath<HideAndSeekSettings>(path);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<HideAndSeekSettings>();
+                AssetDatabase.CreateAsset(settings, path);
+            }
+            EnsurePowerAsset<HideAndSeekSonarPower>("HideAndSeekSonarPower", "Sonar", serialized =>
+            {
+                SerializedProperty modes = serialized.FindProperty("onlyInModes");
+                modes.arraySize = 1;
+                modes.GetArrayElementAtIndex(0).intValue = (int)PoolGameMode.HideAndSeek;
+                serialized.FindProperty("requiresOwnTurn").boolValue = false;
+            });
+            if (settings.seekerPower != null) return;
+            settings.seekerPower = AssetDatabase.LoadAssetAtPath<HideAndSeekSonarPower>("Assets/Powers/HideAndSeekSonarPower.asset");
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
         }
 
         // Snake Pool: the chains behind the cue balls.

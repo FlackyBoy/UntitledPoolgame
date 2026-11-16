@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac5bd5cecc57c77468993a8adf39f3a6, type: 3}
+  m_Name: ShooterGrenadePower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.ShooterGrenadePower
+  powerName: Grenade
+  tokenPrefab: {fileID: 7607304176548514628, guid: 99d37d8a4f3e6af45bade35209661ff9, type: 3}
+  hudIcon: {fileID: 2800000, guid: b47bc64b35acb234185a57e285cb4a69, type: 3}
+  onlyInModes: 0b0000000c000000i
+  requiresOwnTurn: 1
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  throwSpeed: 2.5
+  throwLift: 1.2
+  radius: 0.018
+  mass: 0.2
+  bounciness: 0.5
+  fuse: 1.5
+  blastRadius: 0.25
+  level2BlastRadius: 0.35
+  damage: 50
+  knockSpeed: 0.7
+  liftSpeed: 1
+  ballSpeed: 1.2
+  explosionPrefab: {fileID: 4593184484909914552, guid: 2e1e9506f5904a64b81744324fb7cd50, type: 3}
+  explosionScale: 0.2

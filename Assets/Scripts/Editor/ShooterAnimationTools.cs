@@ -52,9 +52,13 @@ namespace UntitledPoolGame.PoolEditor
             {
                 if (EditorApplication.isPlayingOrWillChangePlaymode) return;
                 // The powers and their tokens too: same reason.
-                if (AssetDatabase.LoadAssetAtPath<ShooterGrapplePower>("Assets/Powers/ShooterGrapplePower.asset") == null)
+                if (AssetDatabase.LoadAssetAtPath<ShooterGrenadePower>("Assets/Powers/ShooterGrenadePower.asset") == null
+                    || AssetDatabase.LoadAssetAtPath<HideAndSeekSonarPower>("Assets/Powers/HideAndSeekSonarPower.asset") == null
+                    || AssetDatabase.LoadAssetAtPath<BrawlPower>("Assets/Powers/BrawlPower.asset") == null)
                 {
                     PoolTableBuilder.EnsureShooterPowerAssets();
+                    PoolTableBuilder.EnsureBrawlPowerAsset();
+                    PoolTableBuilder.EnsureHideAndSeekSettingsAsset();
                     PowerTokenGenerator.Generate(onlyMissing: true);
                 }
                 AnimatorController controller = RnDCombatAnimationTools.FindController(out _);
