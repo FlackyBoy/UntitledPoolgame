@@ -397,6 +397,7 @@ namespace UntitledPoolGame.Pool
             PoolPower power = GetHeldPower(player);
             if (power == null) return PowerRefusal.NoPower;
             if (ShooterMiniRuleSet.Current != null && !ShooterMiniRuleSet.Current.CanArm(player)) return PowerRefusal.CannotAct;
+            if (HideAndSeekRuleSet.Current != null && !HideAndSeekRuleSet.Current.CanPing(player)) return PowerRefusal.CannotAct;
             if (IsSimultaneous) return PowerRefusal.None;
             if (PlayerInput.all.Count > 1)
             {
