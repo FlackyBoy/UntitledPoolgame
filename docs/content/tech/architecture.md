@@ -23,7 +23,7 @@ Un outil d'éditeur, `PoolTableBuilder` (namespace `UntitledPoolGame.PoolEditor`
 - **Événements statiques** pour découpler : `PoolBall.Pocketed`, `PoolBall.CueBallFirstContact`, `PoolMatchRules.Fouled`, `PoolMatchRules.PowerGranted`, `PoolMatchRules.PowerActivated` / `PowerRefused`.
   - **Sens d'une bille rentrée** : `PoolMatchRules.MeaningOfPot` (Good, Opponent, EarlyEight) est lu par `MatchHud` et `GameFeel` sur `PoolBall.Pocketed`. Seule une bille du joueur est fêtée. Les règles, elles, jugent le tir entier à sa fin (`IPoolRuleSet.ResolveShot`).
 - **Données dans des ScriptableObjects** : réglages (physique, effets, pouvoirs) et chaque pouvoir est un asset (voir *Configuration → rendu*).
-- **Stratégie pour les règles** : `PoolMatchRules` délègue la résolution d'un tir à une implémentation de `IPoolRuleSet` choisie au lancement de la partie.
+- **Stratégie pour les règles** : `PoolMatchRules` délègue la résolution d'un tir à une implémentation de `IPoolRuleSet` choisie au lancement de la partie. La classe est découpée en fichiers `partial` par métier : `PoolMatchRules.cs` (partie, tours, boucle de tir, lien avec les modes), `.Powers.cs` (pouvoirs en stock, effets liés au tour, aimant, souffle, Bagarre), `.TableHoles.cs` (trous de table et Catch the Hole), `.Debug.cs` (triches et menu debug), `.LegacyGui.cs` (`OnGUI` provisoire).
 
 ## Joueur
 

@@ -27,7 +27,7 @@ Décider, ou demander si le choix change le jeu :
 | `Pool/<Nom>Power.cs` | La classe, avec `[CreateAssetMenu]`, `Type`, `Activate`, et les réglages sérialisés avec un `[Tooltip]` en français. Sans effet hors de son mode : un `Debug.Log` avec le tag du mode, pas d'exception. |
 | `Editor/PoolTableBuilder.cs` | `EnsurePowerAsset<T>(fichier, nom affiché, configure)`, avec les pouvoirs de sa famille. Il crée le fichier et l'ajoute à `PoolPowerSpawnSettings.availablePowers`. |
 | `Editor/PowerTokenGenerator.cs` | **Deux** `case "<Nom>"` (classe sans `Power`) : `DrawHudIcon` pour l'icône, l'autre `switch (key)` pour le jeton 3D. Le même objet dans les deux, un dessin simple et lisible. |
-| `Pool/PoolMatchRules.cs`, `UI/MatchHud.cs` | Seulement si le pouvoir a besoin d'un état de partie ou d'un affichage à lui. |
+| `Pool/PoolMatchRules.Powers.cs`, `UI/MatchHud.cs` | Seulement si le pouvoir a besoin d'un état de partie ou d'un affichage à lui. |
 
 La triche **C + X** et le menu debug listent les pouvoirs tout seuls : rien à y ajouter.
 
