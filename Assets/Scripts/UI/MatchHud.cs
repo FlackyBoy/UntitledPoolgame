@@ -139,7 +139,8 @@ namespace UntitledPoolGame.Core
         private Label endTitle, endSubtitle, endWho, endButtonText;
         private VisualElement endWhoBox;
         private readonly List<VisualElement> confetti = new List<VisualElement>();
-        private readonly Half[] halves = new Half[2];
+        // One per player who can join (split screen up to four).
+        private readonly Half[] halves = new Half[PoolMatchRules.MaxPlayers];
         private readonly List<Fx> effects = new List<Fx>();
         private readonly List<(float at, Action run)> delayed = new List<(float, Action)>();
         private Font bodyFont, titleFont;
@@ -187,6 +188,7 @@ namespace UntitledPoolGame.Core
 
         private void OnDisable()
         {
+            HideFree();
             PoolMatchRules.ExternalHud = false;
             PoolBall.Pocketed -= OnPocketed;
             PoolMatchRules.Fouled -= OnFouled;
@@ -223,7 +225,9 @@ namespace UntitledPoolGame.Core
                 Layout(rules);
                 foreach (Half h in halves)
                     if (h.input != null) UpdateHalf(h, rules, dt);
+                UpdateFree(rules, root.layout.size, dt);
             }
+            else HideFree();
             UpdateEnd(rules, dt);
         }
 
@@ -253,7 +257,7 @@ namespace UntitledPoolGame.Core
                     h.shownTag = int.MinValue;
                     h.bannerKey = (Hint.Unset, null, null);
                 }
-                h.player = Mathf.Clamp(rules.GetEffectivePlayerIndex(h.input.playerIndex), 0, 1);
+                h.player = Mathf.Clamp(rules.GetEffectivePlayerIndex(h.input.playerIndex), 0, rules.PlayerCount - 1);
                 h.frame.style.display = DisplayStyle.Flex;
 
                 if (h.cam == null) h.cam = h.input.camera != null ? h.input.camera : h.input.GetComponentInChildren<Camera>();
@@ -267,7 +271,9 @@ namespace UntitledPoolGame.Core
                 h.frame.style.height = height;
 
                 // Designed for a 960 × 1080 half (side by side on 1920 × 1080).
-                float k = Mathf.Clamp(Mathf.Min(width / 960f, height / 1080f), 0.6f, 1.4f) * Mathf.Max(0.1f, cfg.scale);
+                // A quarter (3 or 4 players: 960 × 540) shrinks it by half, so
+                // the whole height still fits.
+                float k = Mathf.Clamp(Mathf.Min(width / 960f, height / 1080f), 0.45f, 1.4f) * Mathf.Max(0.1f, cfg.scale);
                 h.content.style.width = width / k;
                 h.content.style.height = height / k;
                 h.content.style.scale = new Scale(new Vector3(k, k, 1f));
@@ -287,7 +293,7 @@ namespace UntitledPoolGame.Core
             if (h.shownWho != p)
             {
                 h.shownWho = p;
-                h.who.style.backgroundColor = p == 0 ? P1 : P2;
+                h.who.style.backgroundColor = cfg.PlayerColor(p);
                 TextFx.Set(h.whoText, Format(cfg.playerTagFormat, p + 1));
             }
             UpdatePlate(h, rules);

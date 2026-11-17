@@ -27,7 +27,6 @@ namespace UntitledPoolGame.Pool
 
         // Set by the rules: in Play, and for the survivor until the next round.
         public bool Controllable { get; set; }
-        public SumoPoolBall Opponent { get; set; }
         public PoolBall Ball { get; private set; }
         public bool IsBound => input != null;
 
@@ -287,15 +286,16 @@ namespace UntitledPoolGame.Pool
 
         // The bounce already gives most of the other's speed (a pool collision,
         // nearly elastic). This is on top, for each ball from what the other
-        // brought: both get here, and nobody has to work out who hit whom.
+        // brought: both get here, and nobody has to work out who hit whom. Any
+        // other player's ball (up to four on the table).
         private void OnCollisionEnter(Collision collision)
         {
-            if (Opponent == null || collision.rigidbody != Opponent.rb || rb.isKinematic) return;
-            Vector3 away = transform.position - Opponent.transform.position;
+            if (rb.isKinematic || collision.rigidbody == null || !collision.rigidbody.TryGetComponent(out SumoPoolBall other)) return;
+            Vector3 away = transform.position - other.transform.position;
             away.y = 0f;
             if (away.sqrMagnitude < 1e-8f) return;
             away.Normalize();
-            float brought = Mathf.Max(0f, Vector3.Dot(Opponent.velocityBeforeContact, away));
+            float brought = Mathf.Max(0f, Vector3.Dot(other.velocityBeforeContact, away));
             Roll(away * (brought * settings.bumpBoost));
         }
 

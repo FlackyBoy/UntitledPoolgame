@@ -50,7 +50,7 @@ namespace UntitledPoolGame.Core
                         button = boogie.menuButton;
                     }
                 }
-                endWhoBox.style.backgroundColor = w == 0 ? P1 : P2;
+                endWhoBox.style.backgroundColor = cfg.PlayerColor(w);
                 TextFx.Set(endWho, Format(cfg.playerTagFormat, w + 1));
                 TextFx.Reveal(endTitle, title);
                 TextFx.Set(endSubtitle, subtitle);

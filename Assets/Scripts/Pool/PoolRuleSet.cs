@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
@@ -43,6 +44,25 @@ namespace UntitledPoolGame.Pool
         {
             score = target = 0;
             return false;
+        }
+
+        // What the view from above frames (the free quarter at three
+        // players): the middle of the play area, its half extents along the
+        // table's length (x) and width (y), and the table's rotation. False
+        // without a table.
+        public virtual bool GetOverview(out Vector3 center, out Vector2 halfSize, out Quaternion rotation)
+        {
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            if (surface == null)
+            {
+                center = Vector3.zero; halfSize = Vector2.zero; rotation = Quaternion.identity;
+                return false;
+            }
+            center = surface.transform.position;
+            center.y = surface.FeltTopY;
+            halfSize = new Vector2(surface.HalfLength, surface.HalfWidth);
+            rotation = surface.transform.rotation;
+            return true;
         }
     }
 }

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quart libre — Prototype UI</title>
+<meta name="description" content="Écran partagé à 3 joueurs : ce que montre le quart d'écran sans joueur. Option D (vue de dessus pendant le jeu, grand panneau des scores entre les manches) et option C + E (vue de dessus, bandeau de classement, invitation à rejoindre).">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Nunito:wght@700;900&family=Titan+One&display=swap">
+<style>
+  .stage { --ink: #1c1510; --cream: #fff6e3; --yel: #ffd23f; --red: #ff4d3d;
+           --p1: #2f7cf6; --p2: #ef4a3c; --p3: #2ec25a; --p4: #a25cf2;
+           --felt: #1d7f4b; --felt-d: #125c35; --wood: #6b3a1e;
+           font-family: "Nunito", sans-serif; color: #fff; background: var(--ink); }
+  .bowl { font-family: "Bowlby One", sans-serif; }
+  .grid { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .25em; background: var(--ink); }
+  .q { position: relative; overflow: hidden; }
+
+  /* ---------- a player's quarter: behind their ball, the square table ahead ---------- */
+  .pv { background: radial-gradient(ellipse at 50% 10%, rgba(255,214,140,.28), transparent 60%), linear-gradient(#3a271c 0 36%, #4a3122 36%); }
+  .pv .tbl { position: absolute; left: 4%; right: 4%; top: 34%; bottom: -8%; clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); background: var(--wood); }
+  .pv .tbl::after { content: ""; position: absolute; inset: 5% 5% 0; clip-path: polygon(21% 0, 79% 0, 100% 100%, 0 100%); background: radial-gradient(ellipse at 50% 40%, var(--felt), var(--felt-d)); }
+  .pv .hole { position: absolute; width: 1.6em; height: .7em; border-radius: 50%; background: #000; transform: translate(-50%, -50%); z-index: 1; }
+  .ball { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); z-index: 2;
+          background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.85) 0 8%, transparent 9%), radial-gradient(circle at 40% 35%, var(--c), color-mix(in srgb, var(--c) 55%, #000) 75%);
+          box-shadow: 0 .35em .5em rgba(0,0,0,.45); }
+  .pv .me { width: 7em; height: 7em; left: 50%; top: 82%; }
+  .pv .far { width: 2.2em; height: 2.2em; }
+  .pv .far.out { opacity: 0; transform: translate(-50%, -50%) scale(.3); transition: .5s; }
+  .pop-card { background: var(--cream); color: var(--ink); border: .18em solid var(--ink); border-radius: .8em; box-shadow: 0 .3em 0 var(--ink); }
+  .plate { position: absolute; left: 3%; top: 6%; display: flex; align-items: center; gap: .5em; padding: .25em .7em .25em .25em; z-index: 3; font-size: .85em; }
+  .plate .who { width: 2.5em; height: 2.5em; border-radius: .55em; display: grid; place-items: center; font: 1.05em "Bowlby One"; color: #fff; border: .15em solid var(--ink); }
+  .plate .sc { font: 1.6em "Bowlby One"; }
+  .plate .goal { font: 900 .9em "Nunito"; opacity: .6; }
+  .q .fallen { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; background: rgba(10,6,4,.55); }
+  .q.down .fallen { display: grid; }
+  .fallen span { font: 2.6em "Bowlby One"; color: var(--yel); -webkit-text-stroke: .05em var(--ink); paint-order: stroke fill; text-shadow: .05em .07em 0 var(--ink); transform: rotate(-5deg); }
+  .fallen small { display: block; text-align: center; font: 900 .38em "Nunito"; -webkit-text-stroke: 0; color: #fff; text-shadow: none; margin-top: .3em; }
+
+  /* ---------- the free quarter ---------- */
+  .free { background: #0f0a07; }
+  .tag { position: absolute; z-index: 5; font: .8em "Bowlby One"; letter-spacing: .04em; padding: .2em .6em; border-radius: .4em; background: rgba(255,255,255,.12); color: #fff; }
+  .tag.tl { left: 3%; top: 5%; }
+
+  /* Top view: the square Sumo table seen from above. */
+  .top { position: absolute; inset: 0; display: grid; place-items: center;
+         background: radial-gradient(ellipse at 50% 50%, rgba(255,226,160,.18), transparent 60%), #1a110b; transition: opacity .45s, transform .45s; }
+  .top { padding-top: 7%; box-sizing: border-box; }
+  .sq { position: relative; height: 74%; aspect-ratio: 1; border-radius: .6em; background: var(--wood); box-shadow: 0 .6em 1.4em rgba(0,0,0,.6), inset 0 0 0 .25em #3e200f; }
+  .sq .felt { position: absolute; inset: 7%; border-radius: .3em; background: radial-gradient(ellipse at 50% 45%, var(--felt), var(--felt-d)); }
+  .sq .pk { position: absolute; width: 11%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#000 55%, #1b0f07); transform: translate(-50%, -50%); }
+  .sq .ball { width: 12%; aspect-ratio: 1; transition: left .9s cubic-bezier(.4,.1,.3,1), top .9s cubic-bezier(.4,.1,.3,1), opacity .4s, transform .4s; }
+  .sq .ball b { position: absolute; inset: 0; display: grid; place-items: center; font: .8em "Bowlby One"; color: #fff; text-shadow: 0 .08em 0 var(--ink); }
+  .sq .ball.out { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+  .danger { position: absolute; width: 22%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%); border: .2em dashed var(--red); animation: pulse .8s ease-in-out infinite; opacity: 0; transition: opacity .3s; }
+  .danger.on { opacity: 1; }
+  @keyframes pulse { 50% { transform: translate(-50%, -50%) scale(1.15); } }
+
+  /* C: the ranking strip over the top view. */
+  .strip { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: .5em; padding: .45em; font-size: .8em; background: rgba(15,10,7,.88); border-top: .15em solid var(--ink); }
+  #ce .top { padding: 4% 0 13%; }
+  .strip .r { display: flex; align-items: center; gap: .35em; padding: .15em .5em .15em .2em; border-radius: .5em; background: #fff; color: var(--ink); border: .12em solid var(--ink); font: 900 1em "Nunito"; transition: transform .3s; }
+  .strip .r .w { width: 1.8em; height: 1.8em; border-radius: .4em; display: grid; place-items: center; color: #fff; font: .85em "Bowlby One"; border: .12em solid var(--ink); }
+  .strip .r .n { font: 1.25em "Bowlby One"; }
+  .strip .r.top1 { background: var(--yel); transform: translateY(-.2em) rotate(-2deg); }
+  .strip .r.out { opacity: .45; }
+
+  /* E: the invite to join. */
+  .invite { position: absolute; right: 3%; top: 5%; z-index: 5; display: flex; align-items: center; gap: .45em; padding: .3em .7em .3em .35em; border-radius: .6em;
+            background: var(--p4); color: #fff; border: .15em solid var(--ink); box-shadow: 0 .22em 0 var(--ink); font: .8em "Bowlby One"; animation: blink 1.4s ease-in-out infinite; }
+  .invite .btn { width: 1.7em; height: 1.7em; border-radius: 50%; background: #fff; color: var(--ink); display: grid; place-items: center; font: .8em "Bowlby One"; border: .12em solid var(--ink); }
+  @keyframes blink { 50% { transform: scale(1.06) rotate(-2deg); filter: brightness(1.15); } }
+
+  /* D, between rounds: the big score panel takes the quarter over. */
+  .board { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4em; padding: 16% 9% 3%; font-size: .9em;
+           background: radial-gradient(ellipse at 50% 0%, rgba(255,210,63,.35), transparent 60%), repeating-linear-gradient(-45deg, #2a1a10 0 1.2em, #23160d 1.2em 2.4em);
+           opacity: 0; transform: scale(1.08); transition: opacity .45s, transform .45s; pointer-events: none; }
+  .free.panel .board { opacity: 1; transform: none; }
+  .free.panel .top { opacity: 0; transform: scale(.92); }
+  .free.panel .tag { opacity: 0; }
+  .board h3 { margin: 0; white-space: nowrap; font: 1.5em "Bowlby One"; color: var(--yel); -webkit-text-stroke: .05em var(--ink); paint-order: stroke fill; text-shadow: .05em .07em 0 var(--ink); transform: rotate(-3deg); }
+  .board .sub { font: 900 .85em "Nunito"; opacity: .8; margin-top: -.2em; }
+  .rows { width: 100%; display: flex; flex-direction: column; gap: .35em; }
+  .row { display: grid; grid-template-columns: 1.8em 2.4em 1fr auto; align-items: center; gap: .5em; padding: .25em .6em .25em .3em; border-radius: .6em;
+         background: var(--cream); color: var(--ink); border: .15em solid var(--ink); box-shadow: 0 .22em 0 var(--ink);
+         opacity: 0; transform: translateX(-1.5em); }
+  .free.panel .row { animation: rowin .4s cubic-bezier(.2,1.4,.4,1) forwards; }
+  .free.panel .row:nth-child(2) { animation-delay: .12s; } .free.panel .row:nth-child(3) { animation-delay: .24s; }
+  @keyframes rowin { to { opacity: 1; transform: none; } }
+  .row .rk { font: 1.2em "Bowlby One"; text-align: center; }
+  .row .w { width: 2.2em; height: 2.2em; border-radius: .5em; display: grid; place-items: center; color: #fff; font: .95em "Bowlby One"; border: .13em solid var(--ink); }
+  .row .pips { display: flex; gap: .25em; }
+  .row .pips i { width: 1em; height: 1em; border-radius: 50%; border: .12em solid var(--ink); background: rgba(0,0,0,.1); }
+  .row .pips i.on { background: var(--pc); }
+  .row .pt { font: 1.5em "Bowlby One"; }
+  .row.top1 { background: var(--yel); transform: rotate(-1.5deg); }
+  .row .badge { font: 900 .7em "Nunito"; background: var(--ink); color: var(--yel); border-radius: .3em; padding: .05em .4em; margin-left: .4em; vertical-align: middle; }
+  .board .count { font: 2.8em "Bowlby One"; color: #fff; -webkit-text-stroke: .05em var(--ink); paint-order: stroke fill; text-shadow: .05em .07em 0 var(--ink); line-height: 1; }
+  .board .count small { display: block; font: 900 .3em "Nunito"; -webkit-text-stroke: 0; text-shadow: none; text-align: center; opacity: .8; }
+
+  /* Countdown: the number first, the ranking smaller under it. */
+  .board.cd { padding-top: 14%; gap: .25em; }
+  .board.cd h3 { font-size: 1.15em; }
+  .board.cd .rows { display: none; }
+  .board .chips { display: none; align-items: center; gap: .5em; font-size: .9em; }
+  .board.cd .chips { display: flex; }
+  .chips .r { display: flex; align-items: center; gap: .35em; padding: .15em .5em .15em .2em; border-radius: .5em; background: #fff; color: var(--ink); border: .12em solid var(--ink); box-shadow: 0 .18em 0 var(--ink); }
+  .chips .r .w { width: 1.8em; height: 1.8em; border-radius: .4em; display: grid; place-items: center; color: #fff; font: .85em "Bowlby One"; border: .12em solid var(--ink); }
+  .chips .r .n { font: 1.25em "Bowlby One"; }
+  .chips .r.top1 { background: var(--yel); }
+  .board.cd .count { font-size: 3.2em; order: -1; }
+  .board:not(.cd) .count { display: none; }
+
+  /* Option C+E never switches to the panel. */
+  #ce .board { display: none; }
+  #d .strip, #dt .strip { display: none; }
+  /* D + totals: the points, always there, in a column beside the table. */
+  .totals { display: none; position: absolute; left: 3%; top: 50%; transform: translateY(-50%); z-index: 4; flex-direction: column; align-items: stretch; gap: .35em; font-size: .85em; transition: opacity .3s; }
+  #dt .totals { display: flex; }
+  #dt .free.panel .totals { opacity: 0; }
+  .totals .hd { font: .75em "Bowlby One"; letter-spacing: .05em; color: var(--yel); text-align: center; }
+  .totals .r { display: flex; align-items: center; gap: .4em; padding: .15em .55em .15em .2em; border-radius: .5em; background: #fff; color: var(--ink); border: .12em solid var(--ink); box-shadow: 0 .18em 0 var(--ink); transition: transform .3s; }
+  .totals .r .w { width: 1.9em; height: 1.9em; border-radius: .4em; display: grid; place-items: center; color: #fff; font: .85em "Bowlby One"; border: .12em solid var(--ink); }
+  .totals .r .n { font: 1.4em "Bowlby One"; margin-left: auto; }
+  .totals .r.top1 { background: var(--yel); transform: translateX(.3em) rotate(-2deg); }
+  .totals .r.out { opacity: .45; }
+  .totals .goal { font: 900 .7em "Nunito"; text-align: center; opacity: .75; }
+  #dt .top { padding-left: 22%; }
+</style>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div>
+      <h1>Quart libre</h1>
+      <p>Sumo Pool à 3 joueurs : ce que montre le quart d'écran sans joueur. <b>D</b> : vue de dessus pendant le jeu, grand panneau des scores entre les manches. <b>C + E</b> : vue de dessus, bandeau de classement et invitation à rejoindre, tout le temps. Utilise « Simuler » sous l'écran.</p>
+    </div>
+    <a href="../ui.html">← Tous les concepts</a>
+  </div>
+  <div class="stage-box"><div class="stage">
+
+    <section class="scr" id="d" data-label="D · selon le moment"></section>
+    <section class="scr" id="dt" data-label="D + total des points"></section>
+    <section class="scr" id="ce" data-label="C + E · vue de dessus + bandeau"></section>
+
+  </div></div>
+
+  <div class="proto-notes">
+    <div><b>D, pendant le jeu</b>Vue de dessus en direct, sans rien par-dessus (à part l'invitation E). Le trou le plus proche d'une bille qui roule vite clignote en rouge.</div>
+    <div><b>D, entre les manches</b>Au compte à rebours et à la fin d'une manche, le quart bascule sur un grand panneau : classement, points sur le chemin de la victoire, qui vient de marquer. Il revient à la vue de dessus au « Go ».</div>
+    <div><b>D + total des points</b>Comme D, avec le total de chacun en colonne à gauche de la vue de dessus pendant le jeu : classé, le premier en jaune, les joueurs tombés grisés. Elle s'efface quand le grand panneau prend le quart.</div>
+    <div><b>C + E</b>La vue de dessus ne part jamais ; le classement est un bandeau en bas, qui se réordonne quand quelqu'un marque. L'invitation « Start pour rejoindre » reste en haut à droite.</div>
+    <div><b>Dans le jeu</b>La vue de dessus reprendrait la caméra de placement de la blanche ; le contenu du panneau ou du bandeau viendrait de chaque mode (comme la carte de score de Play Anywhere).</div>
+  </div>
+</div>
+
+<script>
+const PLAYERS = [
+  { n: 1, c: 'var(--p1)', pts: 1 },
+  { n: 2, c: 'var(--p2)', pts: 1 },
+  { n: 3, c: 'var(--p3)', pts: 0 },
+];
+const GOAL = 3;
+// Ball positions on the square felt (%), per player.
+const START = [[28, 50], [64, 31], [64, 69]];
+const POCKETS = [[7, 7], [50, 4], [93, 7], [7, 93], [50, 96], [93, 93]];
+let fallen = [false, false, false], pos = START.map(p => p.slice()), wander = null;
+
+const $ = (s, r = document) => r.querySelector(s);
+
+function playerQuarter(p) {
+  const others = PLAYERS.filter(o => o !== p);
+  return `<div class="q pv" data-p="${p.n - 1}"><div class="tbl"></div>
+    <span class="hole" style="left:27%;top:39%"></span><span class="hole" style="left:50%;top:38%"></span><span class="hole" style="left:73%;top:39%"></span>
+    ${others.map((o, i) => `<span class="ball far" data-far="${o.n - 1}" style="--c:${o.c};left:${40 + i * 20}%;top:${50 + i * 4}%"></span>`).join('')}
+    <span class="ball me" style="--c:${p.c}"></span>
+    <div class="plate pop-card"><span class="who" style="background:${p.c}">J${p.n}</span><span class="sc" data-sc></span><span class="goal">Premier à ${GOAL}</span></div>
+    <div class="fallen"><span>TOMBÉ !<small>tu reviens à la prochaine manche</small></span></div></div>`;
+}
+
+function freeQuarter() {
+  return `<div class="q free">
+    <div class="top"><div class="sq"><div class="felt"></div>
+      ${POCKETS.map(([x, y]) => `<span class="pk" style="left:${x}%;top:${y}%"></span>`).join('')}
+      <span class="danger" style="left:93%;top:7%"></span>
+      ${PLAYERS.map((p, i) => `<span class="ball" data-b="${i}" style="--c:${p.c};left:${START[i][0]}%;top:${START[i][1]}%"><b>${p.n}</b></span>`).join('')}
+    </div></div>
+    <span class="tag tl">VUE DE DESSUS</span>
+    <div class="totals"></div>
+    <div class="strip"></div>
+    <div class="invite"><span class="btn">▶</span>J4 : START POUR REJOINDRE</div>
+    <div class="board"><h3 data-title>FIN DE MANCHE</h3><div class="sub" data-sub></div><div class="rows"></div><div class="chips"></div><div class="count" data-count></div></div>
+  </div>`;
+}
+
+function build(scr) {
+  scr.innerHTML = `<div class="grid">${PLAYERS.map(playerQuarter).join('')}${freeQuarter()}</div>`;
+  refresh(scr);
+}
+
+function ranking() { return PLAYERS.map((p, i) => ({ ...p, i })).sort((a, b) => b.pts - a.pts || a.n - b.n); }
+
+function refresh(scr) {
+  const best = Math.max(...PLAYERS.map(p => p.pts));
+  scr.querySelectorAll('.pv').forEach(q => {
+    const i = +q.dataset.p, p = PLAYERS[i];
+    const other = Math.max(...PLAYERS.filter((_, j) => j !== i).map(o => o.pts));
+    $('[data-sc]', q).textContent = `${p.pts} - ${other}`;
+    q.classList.toggle('down', fallen[i]);
+    q.querySelectorAll('[data-far]').forEach(b => b.classList.toggle('out', fallen[+b.dataset.far]));
+  });
+  scr.querySelectorAll('[data-b]').forEach(b => {
+    const i = +b.dataset.b;
+    b.style.left = pos[i][0] + '%'; b.style.top = pos[i][1] + '%';
+    b.classList.toggle('out', fallen[i]);
+  });
+  const chips = ranking().map(p => `<div class="r ${p.pts === best && best > 0 ? 'top1' : ''}"><span class="w" style="background:${p.c}">J${p.n}</span><span class="n">${p.pts}</span></div>`).join('');
+  $('.chips', scr).innerHTML = chips;
+  $('.totals', scr).innerHTML = `<span class="hd">TOTAL</span>` + ranking().map(p => `<div class="r ${p.pts === best && best > 0 ? 'top1' : ''} ${fallen[p.i] ? 'out' : ''}"><span class="w" style="background:${p.c}">J${p.n}</span><span class="n">${p.pts}</span></div>`).join('') + `<span class="goal">Premier à ${GOAL}</span>`;
+  const strip = $('.strip', scr);
+  strip.innerHTML = ranking().map(p => `<div class="r ${p.pts === best && best > 0 ? 'top1' : ''} ${fallen[p.i] ? 'out' : ''}">
+    <span class="w" style="background:${p.c}">J${p.n}</span><span class="n">${p.pts}</span></div>`).join('');
+  $('.rows', scr).innerHTML = ranking().map((p, k) => `<div class="row ${k === 0 && p.pts > 0 ? 'top1' : ''}">
+    <span class="rk">${k + 1}</span><span class="w" style="background:${p.c}">J${p.n}</span>
+    <span class="pips" style="--pc:${p.c}">${Array.from({ length: GOAL }, (_, j) => `<i class="${j < p.pts ? 'on' : ''}"></i>`).join('')}${p.scored ? '<span class="badge">+1 !</span>' : ''}</span>
+    <span class="pt">${p.pts}</span></div>`).join('');
+}
+
+// The balls drift about while the round is played.
+function startWander(scr) {
+  stopWander();
+  const step = () => {
+    pos = pos.map((p, i) => fallen[i] ? p : [Math.min(84, Math.max(16, p[0] + (Math.random() - .5) * 26)), Math.min(84, Math.max(16, p[1] + (Math.random() - .5) * 26))]);
+    const near = pos.some((p, i) => !fallen[i] && p[0] > 70 && p[1] < 30);
+    $('.danger', scr).classList.toggle('on', near);
+    refresh(scr);
+  };
+  step();
+  wander = setInterval(step, 1000);
+}
+function stopWander() { if (wander) clearInterval(wander); wander = null; }
+
+function showPanel(scr, title, sub, count) {
+  const free = $('.free', scr);
+  $('[data-title]', scr).textContent = title;
+  $('[data-sub]', scr).textContent = sub;
+  $('[data-count]', scr).innerHTML = count || '';
+  $('.board', scr).classList.toggle('cd', !!count);
+  if (scr.id !== 'ce') free.classList.add('panel');
+}
+function hidePanel(scr) { $('.free', scr).classList.remove('panel'); }
+
+function reset() {
+  fallen = [false, false, false]; pos = START.map(p => p.slice());
+  PLAYERS.forEach(p => delete p.scored);
+}
+
+window.PROTO = {
+  enter: {
+    d: scr => { reset(); build(scr); startWander(scr); },
+    dt: scr => { reset(); build(scr); startWander(scr); },
+    ce: scr => { reset(); build(scr); startWander(scr); },
+  },
+  leave: { d: stopWander, dt: stopWander, ce: stopWander },
+  events: {
+    fall1: { label: 'J1 tombe', run: scr => { fallen[0] = true; pos[0] = [7, 93]; refresh(scr); } },
+    fall3: { label: 'J3 tombe : point pour J2', run: scr => {
+      fallen[2] = true; pos[2] = [93, 7];
+      const standing = PLAYERS.findIndex((_, i) => !fallen[i]);
+      if (fallen.filter(f => !f).length === 1) { PLAYERS[standing].pts++; PLAYERS[standing].scored = true; }
+      refresh(scr); stopWander();
+      setTimeout(() => showPanel(scr, 'FIN DE MANCHE', `J${standing + 1} est le dernier sur la table !`), 500);
+    } },
+    countdown: { label: 'Nouvelle manche (compte à rebours)', run: scr => {
+      reset(); refresh(scr);
+      let n = 3;
+      const tick = () => {
+        if (n === 0) { hidePanel(scr); startWander(scr); return; }
+        showPanel(scr, 'MANCHE SUIVANTE', 'Premier à 3', `${n}<small>prêts ?</small>`);
+        n--; setTimeout(tick, 900);
+      };
+      tick();
+    } },
+  },
+};
+</script>
+<script src="proto.js"></script>
+</body>
+</html>

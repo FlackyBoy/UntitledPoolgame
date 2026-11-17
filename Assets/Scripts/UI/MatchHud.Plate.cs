@@ -106,7 +106,7 @@ namespace UntitledPoolGame.Core
                 // The score in a badge of the player's colour: on the cream
                 // card, next to the balls, plain ink got lost.
                 VisualElement badge = Box(h.plateBalls, "wash-score");
-                badge.style.backgroundColor = p == 0 ? P1 : P2;
+                badge.style.backgroundColor = cfg.PlayerColor(p);
                 Radius(badge, 12);
                 Border(badge, 3, Ink);
                 badge.style.paddingLeft = badge.style.paddingRight = 10;

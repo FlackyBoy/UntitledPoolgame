@@ -271,7 +271,9 @@ namespace UntitledPoolGame.Pool
         // Player whose group the ball is in, -1 for none (the 8, a cue ball).
         public static int OwnerOf(PoolBall ball) => ball.Group == BallGroup.Solid ? 0 : ball.Group == BallGroup.Stripe ? 1 : -1;
 
-        public override BallGroup GroupOf(int player) => PlayerGroup[player];
+        // Players 3 and 4 (Sumo Pool) have no group.
+        public override BallGroup GroupOf(int player) =>
+            player >= 0 && player < PlayerGroup.Length ? PlayerGroup[player] : BallGroup.Cue;
 
         // leaving: the ball being potted, not off the table yet.
         protected static bool IsGroupCleared(BallGroup group, PoolBall leaving)

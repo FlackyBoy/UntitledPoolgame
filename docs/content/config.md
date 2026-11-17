@@ -92,7 +92,7 @@ Pour chaque mode, une ligne dans *Modes* : s'il se joue **chacun son tour** (*Tu
 
 Si aucun des deux n'est coché, le mode se joue chacun son tour. Créé par *Tools > Pool > Ensure Config Assets Exist*.
 
-**Max Players** (0 à 4, 0 par défaut) : le nombre de joueurs au plus pour ce mode. 0 = autant que ses règles le permettent. Une valeur plus haute que ce que les règles savent gérer est ramenée à leur maximum : **pour l'instant, toutes les règles sont écrites pour 2 joueurs**, ce champ ne change donc rien avant les lots suivants du chantier « Jusqu'à 4 joueurs ».
+**Max Players** (0 à 4, 0 par défaut) : le nombre de joueurs au plus pour ce mode. 0 = autant que ses règles le permettent. Une valeur plus haute que ce que les règles savent gérer est ramenée à leur maximum : **pour l'instant, seul Sumo Pool va jusqu'à 4**, les autres modes sont écrits pour 2 joueurs. Pendant une partie, personne ne peut arriver au-delà de ce nombre.
 
 **Les pouvoirs de chaque mode** se règlent sur chaque pouvoir, dans `Assets/Powers` : champ *Only In Modes* (voir *Pouvoirs*). Sur la ligne d'un mode, **Own Powers Only** ne garde que ses pouvoirs propres (ceux qui listent ce mode dans leur *Only In Modes*) : les pouvoirs communs (*Only In Modes* vide) n'y sortent plus. Coché pour PowerWashPool, décoché pour les autres.
 
@@ -252,7 +252,7 @@ Une petite table carrée à six trous, premier à N points (*Lancer sans le menu
 |---|---|---|
 | Partie | *Points To Win* ; *Countdown* ; *Round End Delay* ; *End Delay* ; *Sink Time* (chute dans le trou) | 3 ; 2 s ; 1,5 s ; 2 s ; 0,5 s |
 | Table | *Table Side* (jamais plus que la largeur de la vraie table) ; *Hole Radius* ; *Rail Width* ; *Rail Height* ; *Rail Bounciness* ; *Felt Color* ; *Rail Color* | 1,7 m ; 0,13 m ; 0,1 m ; 0,09 m ; 0,85 |
-| Billes | *Ball Scale* ; *Player 1 Color*, *Player 2 Color* ; *Acceleration* (sert aussi à tourner) ; *Max Speed* ; *Braking* (freinage à *Max Speed* quand on ne pousse plus, plus haut = moins de glisse) ; *Min Braking* (tout à la fin de la glisse, plus bas = elle traîne plus) ; *Rolling Friction* (lancée à deux fois *Max Speed* ou plus : dash, choc) ; *Dash Speed* (appui bref) ; *Charged Dash Speed* (charge complète) ; *Dash Charge Time* ; *Dash Cooldown* ; *Bump Boost* (0 = choc de billard pur) | ×1,5 ; 4,2 m/s² ; 1,9 m/s ; 8 m/s² ; 0,3 m/s² ; 1,8 m/s² ; 1,4 m/s ; 4 m/s ; 0,7 s ; 1 s ; 0,3 |
+| Billes | *Ball Scale* ; *Player 1 Color* à *Player 4 Color* (J3 et J4 : parties à 3 ou 4) ; *Acceleration* (sert aussi à tourner) ; *Max Speed* ; *Braking* (freinage à *Max Speed* quand on ne pousse plus, plus haut = moins de glisse) ; *Min Braking* (tout à la fin de la glisse, plus bas = elle traîne plus) ; *Rolling Friction* (lancée à deux fois *Max Speed* ou plus : dash, choc) ; *Dash Speed* (appui bref) ; *Charged Dash Speed* (charge complète) ; *Dash Charge Time* ; *Dash Cooldown* ; *Bump Boost* (0 = choc de billard pur) | ×1,5 ; 4,2 m/s² ; 1,9 m/s ; 8 m/s² ; 0,3 m/s² ; 1,8 m/s² ; 1,4 m/s ; 4 m/s ; 0,7 s ; 1 s ; 0,3 |
 | Caméra | *Camera Distance* ; *Camera Pitch*, *Min*, *Max* ; *Camera Follow* ; *Camera Fov* ; *Camera Near Clip* ; *Mouse Sensitivity* ; *Stick Sensitivity* | 0,95 m ; 35°, 10°, 75° ; 12 ; 60° ; 0,03 m ; 0,1 ; 150 °/s |
 | Textes | *Score Format*, *Goal Format*, *Countdown Format* (plaque du HUD) | |
 | Sumo Billard (même fichier, *Mode* = *SumoBilliard*) | *Fall Respawn Delay* (retour après une chute) ; *Fall Returns Ball* (la dernière bille rentrée du joueur ressort) ; *Rack Spacing* (écart au départ, en diamètres) ; *Table Ball Friction* (ralentissement des billes à rentrer) ; *Solids Label*, *Stripes Label*, *Billiard Goal* (textes) | 1,5 s ; oui ; 1,15 ; 0,8 m/s² ; Pleines, Rayées, Rentre toutes tes billes |
@@ -328,7 +328,7 @@ Aussi : *Player Actions*, les actions des joueurs que l'écran des touches modif
 
 1. **Préparer la scène.** Elle contient :
    - une table avec `PoolMatchRules` ;
-   - un `PlayerInputManager` dont le *Player Prefab* est `New`, avec `ScenePlayerSpawner` et ses points d'apparition.
+   - un `PlayerInputManager` dont le *Player Prefab* est `New`, avec `ScenePlayerSpawner` et ses points d'apparition. *Max Player Count* : -1 (ou 4) pour accepter jusqu'à 4 joueurs ; le jeu n'en laisse de toute façon pas entrer plus que le mode n'en accepte (*Max Players* de `PoolModeSettings`). Prévoir 4 points d'apparition (sinon J3 et J4 apparaissent sur ceux de J1 et J2).
 
    Le plus simple : dupliquer `BarSplitscreen` et changer le décor, ou passer par le Level Maker.
 2. **Ajouter une ligne dans *Levels*** (le **+**) et la remplir ; pour *Scene Name*, glisser la scène dans le champ.
@@ -539,7 +539,8 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 |---|---|
 | Polices | Police des textes et police des titres (vide = Titan One / Bowlby One) |
 | Taille | Taille globale du HUD (1 = calé pour une moitié de 1920 × 1080), taille du bloc des pouvoirs en haut à droite (*Power Slot Scale*, 1,35 : anneaux, icônes, nom, touche, second pouvoir), taille des interjections, de « À toi ! », des bandeaux |
-| Couleurs | J1, J2, encre des contours, fond des cartes, mise en avant (jaune), danger (rouge), « BOUM ! », voile du joueur qui attend, jauge (début, milieu, fin) |
+| Couleurs | J1, J2, J3, J4, encre des contours, fond des cartes, mise en avant (jaune), danger (rouge), « BOUM ! », voile du joueur qui attend, jauge (début, milieu, fin) |
+| Quart libre (3 joueurs) | *Free Quarter* (activer), textes (« VUE DE DESSUS », « TOTAL », « Premier à {0} », « FIN DE MANCHE », « J{0} marque ! », « MANCHE SUIVANTE », « prêts ? », « J{0} : START POUR REJOINDRE »), *Free View Margin* (marge autour de la table, 1,15), *Free View Clear Above* (la vue commence 0,5 m au-dessus du tapis : lampe et plafond invisibles) |
 | Textes : tour et plaque | « À toi ! », « Tour de J{0} », « J{0} », groupe à décider, « Prochaine », « Prolongation ! » (Power Wash Pool, à la place du chrono), « Puissance », touche du pouvoir |
 | Chrono (Power Wash Pool) | En haut au centre de l'écran de chaque joueur : taille (*Clock Font Size*, 64) ; les *Clock Final Seconds* dernières secondes (10), il passe au rouge, grossit à chaque seconde jusqu'à *Clock Final Scale* (×2,2) et fait un bond à chaque seconde (*Clock Bump*, +35 %, pendant *Clock Bump Time*, 0,3 s) |
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |

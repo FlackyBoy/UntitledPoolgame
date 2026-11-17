@@ -29,6 +29,10 @@ namespace UntitledPoolGame.Core
         [Header("Couleurs")]
         public Color player1Color = new Color32(0x2f, 0x7c, 0xf6, 0xff);
         public Color player2Color = new Color32(0xef, 0x4a, 0x3c, 0xff);
+        [Tooltip("Couleur de J3 (parties à 3 ou 4 joueurs).")]
+        public Color player3Color = new Color32(0x2e, 0xc2, 0x5a, 0xff);
+        [Tooltip("Couleur de J4 (parties à 4 joueurs).")]
+        public Color player4Color = new Color32(0xa2, 0x5c, 0xf2, 0xff);
         [Tooltip("Contours et ombres « pop ».")]
         public Color inkColor = new Color32(0x1c, 0x15, 0x10, 0xff);
         [Tooltip("Fond des cartes (plaque, bandeau, sponsor, gagnant).")]
@@ -187,5 +191,27 @@ namespace UntitledPoolGame.Core
         public float turnTagBobPeriod = 1.2f;
         [Tooltip("Assombrir la moitié du joueur qui attend son tour.")]
         public bool dimWaitingPlayer = true;
+
+        [Header("Quart libre (3 joueurs) : vue de dessus, total, panneau entre les manches")]
+        [Tooltip("À 3 joueurs, le quart d'écran sans joueur montre la table vue de dessus, le total des points (modes à manches) et l'invitation à rejoindre.")]
+        public bool freeQuarter = true;
+        public string freeViewText = "VUE DE DESSUS";
+        public string freeTotalText = "TOTAL";
+        [Tooltip("{0} = points pour gagner.")]
+        public string freeGoalFormat = "Premier à {0}";
+        public string freeRoundEndText = "FIN DE MANCHE";
+        [Tooltip("{0} = numéro du joueur qui vient de marquer.")]
+        public string freeScorerFormat = "J{0} marque !";
+        public string freeCountdownText = "MANCHE SUIVANTE";
+        public string freeReadyText = "prêts ?";
+        [Tooltip("{0} = numéro du joueur qui peut arriver.")]
+        public string freeInviteFormat = "J{0} : START POUR REJOINDRE";
+        [Tooltip("Marge autour de la table dans la vue de dessus (1 = la table touche les bords).")]
+        [Min(1f)] public float freeViewMargin = 1.15f;
+        [Tooltip("Hauteur au-dessus du tapis en dessous de laquelle la vue de dessus commence (m) : la lampe et le plafond au-dessus ne cachent pas la table.")]
+        [Min(0.05f)] public float freeViewClearAbove = 0.5f;
+
+        // J1 to J4 (index 0 to 3); past J4, J4's.
+        public Color PlayerColor(int player) => player <= 0 ? player1Color : player == 1 ? player2Color : player == 2 ? player3Color : player4Color;
     }
 }

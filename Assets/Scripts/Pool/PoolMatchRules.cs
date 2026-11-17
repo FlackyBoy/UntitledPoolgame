@@ -139,6 +139,16 @@ namespace UntitledPoolGame.Pool
 
         // For the HUD: 8-ball group (Cue = undecided or not 8-ball), 14.1 score.
         public BallGroup GetGroup(int player) => ruleSet?.GroupOf(player) ?? BallGroup.Cue;
+
+        // Points and rounds of the mode, null if it has none (free quarter).
+        public IMatchScoreboard Scoreboard => ruleSet as IMatchScoreboard;
+
+        public bool GetOverview(out Vector3 center, out Vector2 halfSize, out Quaternion rotation)
+        {
+            if (ruleSet != null) return ruleSet.GetOverview(out center, out halfSize, out rotation);
+            center = Vector3.zero; halfSize = Vector2.zero; rotation = Quaternion.identity;
+            return false;
+        }
         public bool TryGetScore(int player, out int score, out int target)
         {
             score = target = 0;
