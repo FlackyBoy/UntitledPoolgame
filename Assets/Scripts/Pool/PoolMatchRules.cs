@@ -35,7 +35,7 @@ namespace UntitledPoolGame.Pool
         // From a foul until the cue ball is placed again.
         public bool BallInHand { get; private set; }
 
-        private IPoolRuleSet ruleSet;
+        private PoolRuleSet ruleSet;
 
         // Speed Pool: no turns, both players shoot whenever their own cue ball
         // is still. No shot is ever resolved: the rule set judges each pot as
@@ -48,12 +48,7 @@ namespace UntitledPoolGame.Pool
 
         // Shot strength multiplier of the mode: Play Anywhere is played across
         // the room, not on a table; Pocket Size's Rapid Shot power.
-        public float ShotPowerScale => ruleSet switch
-        {
-            PlayAnywhereRuleSet golf => golf.ShotPowerScale,
-            PocketSizeRuleSet pocketSize => pocketSize.ShotPowerScale,
-            _ => 1f,
-        };
+        public float ShotPowerScale => ruleSet?.ShotPowerScale ?? 1f;
 
         // Two powers in stock per player; the selected one is what the power
         // button launches (switched with the wheel / D-pad).
@@ -122,26 +117,11 @@ namespace UntitledPoolGame.Pool
         public static event Action MatchBegan;
 
         // For the HUD: 8-ball group (Cue = undecided or not 8-ball), 14.1 score.
-        public BallGroup GetGroup(int player) => ruleSet switch
-        {
-            EightBallRuleSet eightBall => eightBall.GroupOf(player),
-            SpeedPoolRuleSet speedPool => speedPool.GroupOf(player),
-            _ => BallGroup.Cue,
-        };
+        public BallGroup GetGroup(int player) => ruleSet?.GroupOf(player) ?? BallGroup.Cue;
         public bool TryGetScore(int player, out int score, out int target)
         {
             score = target = 0;
-            // Play Anywhere: strokes over the hole's par.
-            if (ruleSet is PlayAnywhereRuleSet golf)
-            {
-                score = golf.StrokesOf(player);
-                target = golf.Par;
-                return true;
-            }
-            if (!(ruleSet is FourteenOneRuleSet straight)) return false;
-            score = straight.ScoreOf(player);
-            target = straight.TargetScore;
-            return true;
+            return ruleSet != null && ruleSet.TryGetScore(player, out score, out target);
         }
 
         // Fired after a shot is resolved when the turn passes to the other
@@ -201,9 +181,7 @@ namespace UntitledPoolGame.Pool
             {
                 // No slow motion: the other player is mid-shot.
                 if (GameOver || ownCueBalls == null) return;
-                // Play Anywhere brings its ball back itself (where it was struck from),
-                // Sumo Pool with the next round.
-                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet || ownCueBalls is SumoPoolRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
+                if (ball.IsCueBall && ownCueBalls.RespawnsPottedCueBall) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
                 ownCueBalls.HandlePocketed(this, ball);
                 return;
             }
@@ -217,9 +195,7 @@ namespace UntitledPoolGame.Pool
             if (ownCueBalls != null)
             {
                 if (GameOver) return;
-                // Play Anywhere brings its ball back itself (where it was struck from),
-                // Sumo Pool with the next round.
-                if (ball.IsCueBall && !(ownCueBalls is PlayAnywhereRuleSet || ownCueBalls is SumoPoolRuleSet)) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
+                if (ball.IsCueBall && ownCueBalls.RespawnsPottedCueBall) StartCoroutine(RespawnCueBall(ball, MatchGeneration));
                 ownCueBalls.HandlePocketed(this, ball);
                 // Sending the opponent's cue ball in costs them, not the shooter.
                 if (ball.IsCueBall && ball.CueOwner >= 0 && ball.CueOwner != CurrentPlayer) return;
@@ -367,20 +343,11 @@ namespace UntitledPoolGame.Pool
 
         // Whether this player may shoot (offline only for now). With at most
         // one active PlayerInput, always true: a solo player would otherwise
-        // be locked out on player 2's turn.
-        // Play Anywhere also needs the shooting phase and a stroke left this
-        // round (for the player whose ball it is: alone, the current one).
-        // Pocket Size: only the giant, only while hunting.
-        // Hide and seek: only the seeker, while they have shots left.
-        // Shooter miniature: nobody, the shots are the rifle's.
-        // Bowling Pool: between throws, not while the pins fall.
+        // be locked out on player 2's turn. The mode has its say on top
+        // (PoolRuleSet.AllowsShot: the phase, the role, the shots left).
         public bool CanPlayerShoot(int playerIndex) =>
             MatchStarted && !GameOver && (IsSimultaneous || CurrentPlayer == playerIndex || PlayerInput.all.Count <= 1)
-            && (!(ruleSet is PlayAnywhereRuleSet golf) || golf.CanShoot(IsSimultaneous || PlayerInput.all.Count > 1 ? playerIndex : CurrentPlayer))
-            && (!(ruleSet is PocketSizeRuleSet pocketSize) || pocketSize.CanShoot(playerIndex))
-            && (!(ruleSet is HideAndSeekRuleSet hideAndSeek) || hideAndSeek.CanShoot(playerIndex))
-            && !(ruleSet is ShooterMiniRuleSet) && !(ruleSet is SumoPoolRuleSet)
-            && (!(ruleSet is BowlingPoolRuleSet bowling) || bowling.CanShoot);
+            && ruleSet.AllowsShot(this, playerIndex);
 
         // Raised before SwitchTurn: CurrentPlayer is the one who fouled.
         public static event Action Fouled;
@@ -404,9 +371,7 @@ namespace UntitledPoolGame.Pool
         public void NotifyShotFired(PoolBall cueBall = null)
         {
             // Every stroke counts, in turns or not.
-            if (ruleSet is PlayAnywhereRuleSet golf) golf.OnStroke(cueBall);
-            if (ruleSet is BowlingPoolRuleSet bowling) bowling.OnThrow();
-            if (ruleSet is HideAndSeekRuleSet hideAndSeek) hideAndSeek.OnShot();
+            ruleSet?.OnShotFired(cueBall);
 
             // Speed Pool has no shot loop, only each player's own shot.
             if (IsSimultaneous)
@@ -640,18 +605,8 @@ namespace UntitledPoolGame.Pool
             }
 
             if (!MatchStarted || GameOver) return;
-            // The cup and out of bounds, checked every frame.
-            if (ruleSet is PlayAnywhereRuleSet golfHole) golfHole.Tick(this);
-            // Rounds, touches and falls of Pocket Size.
-            else if (ruleSet is PocketSizeRuleSet pocketSizeRounds) pocketSizeRounds.Tick(this);
-            // Health, hits and eliminations of the Shooter miniature.
-            else if (ruleSet is ShooterMiniRuleSet shooterMini) shooterMini.Tick(this);
-            // Pins off the table, and the sweep after each throw.
-            else if (ruleSet is BowlingPoolRuleSet bowlingPins) bowlingPins.Tick(this);
-            // Rounds and falls of Sumo Pool.
-            else if (ruleSet is SumoPoolRuleSet sumo) sumo.Tick(this);
-            // Hiding, the search, the decoys and the rounds of Hide and seek.
-            else if (ruleSet is HideAndSeekRuleSet hideAndSeek) hideAndSeek.Tick(this);
+            // The mode's own clock: rounds, falls, the cup, the pins...
+            ruleSet.Tick(this);
             if (IsSimultaneous)
             {
                 UpdatePlayerShots();
@@ -660,8 +615,8 @@ namespace UntitledPoolGame.Pool
 
             // A ball still sinking into a table hole counts as moving: the shot
             // is judged once it's gone, not halfway down.
-            // So does a pin still falling.
-            bool moving = PoolBall.AnyMoving() || AnyBallSinking() || (ruleSet is BowlingPoolRuleSet bowling && bowling.PinsMoving);
+            // So does what the mode moves besides the balls (Bowling's pins).
+            bool moving = PoolBall.AnyMoving() || AnyBallSinking() || ruleSet.IsSettling;
 
             if (shotInProgress && !moving && wasMoving)
             {
@@ -824,7 +779,7 @@ namespace UntitledPoolGame.Pool
 
         // setup is normalized: a type the mode supports. The powers don't
         // change the rules, the crates and the power ball add them.
-        private static IPoolRuleSet CreateRuleSet(PoolMatchSetup setup) => setup.mode switch
+        private static PoolRuleSet CreateRuleSet(PoolMatchSetup setup) => setup.mode switch
         {
             PoolGameMode.NineBall => new NineBallRuleSet(),
             PoolGameMode.FourteenOne => new FourteenOneRuleSet(setup.targetScore),

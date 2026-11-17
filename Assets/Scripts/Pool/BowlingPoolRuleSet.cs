@@ -15,7 +15,7 @@ namespace UntitledPoolGame.Pool
     // too (PinsMoving), then calls ResolveShot; the pins stay as they fell for
     // Sweep Delay before Tick clears them and passes the turn. Nothing is
     // shootable between a throw and that moment (CanShoot).
-    public class BowlingPoolRuleSet : IPoolRuleSet
+    public class BowlingPoolRuleSet : PoolRuleSet
     {
         private enum Phase { Ready, Rolling, Sweeping }
 
@@ -52,7 +52,15 @@ namespace UntitledPoolGame.Pool
         // Between throws only: the pins are still falling otherwise.
         public bool CanShoot => phase == Phase.Ready;
 
-        public void Setup(PoolMatchRules match)
+        // Between throws, not while the pins fall.
+        public override bool AllowsShot(PoolMatchRules match, int playerIndex) => CanShoot;
+
+        public override void OnShotFired(PoolBall cueBall) => OnThrow();
+
+        // A throw is judged once the pins have stopped too.
+        public override bool IsSettling => PinsMoving;
+
+        public override void Setup(PoolMatchRules match)
         {
             Cleanup();
             cfg = PoolSettingsLoader.LoadOrDefault<BowlingPoolSettings>("BowlingPoolSettings");
@@ -163,7 +171,7 @@ namespace UntitledPoolGame.Pool
         }
 
         // Every frame (PoolMatchRules.Update).
-        public void Tick(PoolMatchRules match)
+        public override void Tick(PoolMatchRules match)
         {
             switch (phase)
             {
@@ -185,7 +193,7 @@ namespace UntitledPoolGame.Pool
 
         private bool IsDown(BowlingPin pin) => !pin.gameObject.activeSelf || IsBelowFelt(pin) || pin.IsTippedOver(cosTiltToFall);
 
-        public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
+        public override void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
         {
             int player = match.CurrentPlayer;
             int standing = 0;
@@ -302,6 +310,6 @@ namespace UntitledPoolGame.Pool
             return $"{stage}{(rolls.Length > 0 ? "  ·  " + rolls : "")}  ·  {string.Format(cfg.opponentFormat, sheets[1 - player].Total)}";
         }
 
-        public string DescribePlayer(int player) => $"{sheets[player].Total} · {DescribeProgress(player)}";
+        public override string DescribePlayer(int player) => $"{sheets[player].Total} · {DescribeProgress(player)}";
     }
 }

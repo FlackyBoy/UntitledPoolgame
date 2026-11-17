@@ -23,7 +23,7 @@ Un outil d'éditeur, `PoolTableBuilder` (namespace `UntitledPoolGame.PoolEditor`
 - **Événements statiques** pour découpler : `PoolBall.Pocketed`, `PoolBall.CueBallFirstContact`, `PoolMatchRules.Fouled`, `PoolMatchRules.PowerGranted`, `PoolMatchRules.PowerActivated` / `PowerRefused`.
   - **Sens d'une bille rentrée** : `PoolMatchRules.MeaningOfPot` (Good, Opponent, EarlyEight) est lu par `MatchHud` et `GameFeel` sur `PoolBall.Pocketed`. Seule une bille du joueur est fêtée. Les règles, elles, jugent le tir entier à sa fin (`IPoolRuleSet.ResolveShot`).
 - **Données dans des ScriptableObjects** : réglages (physique, effets, pouvoirs) et chaque pouvoir est un asset (voir *Configuration → rendu*).
-- **Stratégie pour les règles** : `PoolMatchRules` délègue la résolution d'un tir à une implémentation de `IPoolRuleSet` choisie au lancement de la partie. La classe est découpée en fichiers `partial` par métier : `PoolMatchRules.cs` (partie, tours, boucle de tir, lien avec les modes), `.Powers.cs` (pouvoirs en stock, effets liés au tour, aimant, souffle, Bagarre), `.TableHoles.cs` (trous de table et Catch the Hole), `.Debug.cs` (triches et menu debug), `.LegacyGui.cs` (`OnGUI` provisoire).
+- **Stratégie pour les règles** : `PoolMatchRules` délègue la résolution d'un tir à une implémentation de `IPoolRuleSet` choisie au lancement de la partie. Toutes dérivent de `PoolRuleSet`, qui ajoute ce qu'un mode peut changer dans la partie sans que `PoolMatchRules` le nomme : `Tick` (suivi à chaque image), `AllowsShot` (peut tirer), `OnShotFired`, `IsSettling` (autre chose que les billes bouge encore : les quilles), `AllowsPower`, `ShotPowerScale`, `GroupOf`, `TryGetScore` ; `SpeedPoolRuleSet` ajoute `RespawnsPottedCueBall`. La valeur par défaut est celle du 8-ball, un mode ne redéfinit que ce qu'il fait autrement. La classe est découpée en fichiers `partial` par métier : `PoolMatchRules.cs` (partie, tours, boucle de tir, lien avec les modes), `.Powers.cs` (pouvoirs en stock, effets liés au tour, aimant, souffle, Bagarre), `.TableHoles.cs` (trous de table et Catch the Hole), `.Debug.cs` (triches et menu debug), `.LegacyGui.cs` (`OnGUI` provisoire).
 
 ## Joueur
 
@@ -279,6 +279,17 @@ classDiagram
     +ResolveShot(match, pocketed, cueBallPocketed, firstContact)
     +DescribePlayer(int) string
   }
+  class PoolRuleSet {
+    <<abstract>>
+    +Tick(PoolMatchRules)
+    +AllowsShot(match, int) bool
+    +OnShotFired(PoolBall)
+    +IsSettling bool
+    +AllowsPower(int) bool
+    +ShotPowerScale float
+    +GroupOf(int) BallGroup
+    +TryGetScore(int, out score, out target) bool
+  }
   class EightBallRuleSet
   class NineBallRuleSet
   class FourteenOneRuleSet
@@ -326,11 +337,12 @@ classDiagram
   }
   class LocalPoolAimController
 
-  IPoolRuleSet <|.. EightBallRuleSet
-  IPoolRuleSet <|.. NineBallRuleSet
-  IPoolRuleSet <|.. FourteenOneRuleSet
-  IPoolRuleSet <|.. SpeedPoolRuleSet
-  PoolMatchRules o-- IPoolRuleSet : règle active
+  IPoolRuleSet <|.. PoolRuleSet
+  PoolRuleSet <|-- EightBallRuleSet
+  PoolRuleSet <|-- NineBallRuleSet
+  PoolRuleSet <|-- FourteenOneRuleSet
+  PoolRuleSet <|-- SpeedPoolRuleSet
+  PoolMatchRules o-- PoolRuleSet : règle active
   PoolMatchRules o-- PoolMatchSetup : Setup
   PoolMatchRules ..> PoolBall : écoute Pocketed, CueBallFirstContact
   PoolPocket ..> PoolBall : OnPocketed
@@ -371,7 +383,7 @@ Lancé avec un seul `PlayerInput`, `Setup` fait rejoindre le second (`SplitScree
 Pourquoi pas de ragdoll : rétréci en cours de partie, le ragdoll restait disloqué (articulations à 50-80 cm les unes des autres sur un corps de 14 cm, logs du 30/10), qu'on laisse PuppetMaster recalculer les attaches (`Muscle.UpdateAnchor` divise par une échelle mémorisée au démarrage, `connectedBodyScale`) ou qu'on les règle de nouveau soi-même ; `LocalPlayerRagdollController.CheckStuckRagdoll` ignore un PuppetMaster inactif. À terre, le contrôleur est coupé : `LocalPlayerShrink.LateUpdate` ajoute alors la couche des billes aux muscles (`Rigidbody.includeLayers`), sinon elles traversent le corps. Le CharacterController rétréci entre en collision avec les billes (`includeLayers`). Touche : test de distance entre chaque bille (blanche ou de couleur) et la capsule du CharacterController (`GetCapsule`), avec la vitesse de cette image ou de la précédente (`lastVelocity`, la bille a pu rebondir sur le corps entre-temps) : au-dessus de *Min Hit Speed* et dirigée vers le petit. Puis projection (`Knock`, déplacement ajouté au CharacterController et freiné) : vitesse de la bille vers le petit × *Knock Transfer* (au plus *Knock Max Speed*), direction entre le sens de la bille et l'opposé du point d'impact (*Knock Along Impact*), *Knock Lift* vers le haut ; puis *Invulnerable Time*. Chute : pieds sous le tapis de *Fall Depth*. Pouvoirs : `PocketSizePower` (rôle Grand ou Petit, `AvailableIn` seulement ce mode ; `PoolPowerSpawnSettings.PickPower` n'offre qu'eux dans ce mode) appelle une méthode du jeu de règles en cours (`PocketSizeRuleSet.Current`) ; `PoolPowerCrate` passe par `TryTakeCrate` (le petit à *Tiny Crate Reach*, ou une blanche du grand ; le mauvais rôle détruit la caisse), et `PoolPowerCrateManager` pose un cube à la couleur du rôle. `PoolMatchRules.ClearHeldPowers` vide les stocks à chaque manche. Événements `TinyHit` et `RoundEnded` (pour Feel et le HUD, pas encore branchés). La plaque du HUD lit `RoleLabel` et `DescribeRound`.
 
 **Shooter miniature** (les deux joueurs réduits se tirent dessus) : `ShooterMiniRuleSet` dérive de `SpeedPoolRuleSet` parce que `PoolMatchRules.HandleBallPocketed` envoie les billes rentrées à ce type, mais n'utilise aucune blanche : elles sont rangées pendant la partie (`CanPlayerShoot` renvoie toujours faux) et rendues par `Cleanup`. Speed Pool seulement, sans pouvoirs (`PoolMatchSetup.Normalized`). `PoolMatchRules.Update` appelle `Tick` (phases *Countdown*, *Fight*, *Over*). Les corps sont ceux de Pocket Size : `TryPlace` appelle `LocalPlayerShrink.Shrink` pour chaque joueur, avec les réglages de `PocketSizeSettings`, puis `LocalShooterWeapon.Equip`.
-**Bowling Pool** (des quilles sur la table) : `BowlingPoolRuleSet` implémente `IPoolRuleSet` directement (blanche partagée, chacun son tour). `Setup` range les billes de couleur et crée dix `BowlingPin` : maillage tourné et collider convexe générés, calque *Poolball* (joueurs et queue les traversent, comme les billes), tailles en diamètres de bille. Déroulé d'un lancer : `NotifyShotFired` appelle `OnThrow` ; `PoolMatchRules.Update` attend aussi `PinsMoving` (borné par *Settle Timeout*) ; `ResolveShot` compte les quilles debout et donne le résultat à `BowlingScoreSheet` (le score, sans dépendance à Unity) ; `Tick` attend *Sweep Delay*, retire les quilles tombées ou refait le triangle, remet la blanche et passe la main. `CanPlayerShoot` est faux entre le tir et ce moment (`CanShoot`), et `LocalPoolAimController` garde alors la queue en main sur Interagir. Le tapis n'a pas de trous : une quille qui touche le déclencheur d'une poche se désactive elle-même (`BowlingPin.OnTriggerEnter`), une quille sous le tapis est retirée par `Tick`. `Cleanup` détruit tout ce qui a été créé (quilles, maillages, matériaux).
+**Bowling Pool** (des quilles sur la table) : `BowlingPoolRuleSet` dérive directement de `PoolRuleSet` (blanche partagée, chacun son tour). `Setup` range les billes de couleur et crée dix `BowlingPin` : maillage tourné et collider convexe générés, calque *Poolball* (joueurs et queue les traversent, comme les billes), tailles en diamètres de bille. Déroulé d'un lancer : `NotifyShotFired` appelle `OnThrow` ; `PoolMatchRules.Update` attend aussi `PinsMoving` (borné par *Settle Timeout*) ; `ResolveShot` compte les quilles debout et donne le résultat à `BowlingScoreSheet` (le score, sans dépendance à Unity) ; `Tick` attend *Sweep Delay*, retire les quilles tombées ou refait le triangle, remet la blanche et passe la main. `CanPlayerShoot` est faux entre le tir et ce moment (`CanShoot`), et `LocalPoolAimController` garde alors la queue en main sur Interagir. Le tapis n'a pas de trous : une quille qui touche le déclencheur d'une poche se désactive elle-même (`BowlingPin.OnTriggerEnter`), une quille sous le tapis est retirée par `Tick`. `Cleanup` détruit tout ce qui a été créé (quilles, maillages, matériaux).
 
 **Sumo Billard** (dérive de `SumoPoolRuleSet`, décrit ci-dessous) : `SumoBilliardRuleSet` garde les billes pleines et rayées (`KeepsTableBall`), les pose en losange au milieu de la petite table (`PlaceTableBalls`, avec `SetSpawn` ; `TearDown` leur rend la place de la vraie table) et juge la victoire à chaque bille rentrée. `UpdateRules`, appelé par `Tick`, remet en jeu les billes sorties et les joueurs tombés. Le HUD garde la plaque de Sumo Pool pendant le compte à rebours (`ShowsPlate`), puis affiche les billes du groupe comme les autres modes.
 **Sumo Pool** (les joueurs sont les billes) : `SumoPoolRuleSet` dérive de `SpeedPoolRuleSet` (une blanche par joueur, `HandlePocketed`) et gère les manches dans `Tick`. `SumoPoolTable` construit la table carrée au lancement : visuels, bandes, murs et six `PoolPocket` ; les billes roulent sur le collider du vrai tapis, resté en dessous, dont les rendus sont cachés et les poches coupées (`SetAllCatching`). `SumoPoolBall`, ajouté à la bille, lit les actions du joueur et pousse la bille avec la rotation qui va avec (pas de glissement). Poussée à la vitesse de roulage, `Drive` amène la vitesse vers celle demandée (*Acceleration*), ce qui retire aussi la vitesse de côté. Sinon, `CoastRate` donne le ralentissement, une courbe sans saut : *Rolling Friction* à deux fois *Max Speed* et plus, *Braking* à *Max Speed*, puis proportionnel à la vitesse jusqu'à *Min Braking*. Le frottement de `PoolBall` est coupé (`RollingFrictionOverride` à 0). Le dash se charge tant que le bouton est maintenu ; le corps garde son `PlayerInput` et sa caméra, mais ses scripts des espaces `Player`, `Interaction` et `Pool` sont éteints et ses rendus cachés, le temps de la partie. La vue passe par une `CinemachineCamera` créée sur le canal du joueur, de priorité 100. `PoolMatchRules` ne fait pas revenir la blanche (`RespawnCueBall`) : la manche suivante s'en charge (`ResetToSpawn`).

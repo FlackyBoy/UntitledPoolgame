@@ -196,7 +196,13 @@ namespace UntitledPoolGame.Pool
 
         // ---------- Every frame (PoolMatchRules.Update) ----------
 
-        public void Tick(PoolMatchRules match)
+        // The players are the balls: no cue to strike with.
+        public override bool AllowsShot(PoolMatchRules match, int playerIndex) => false;
+
+        // The cue balls come back with the next round.
+        public override bool RespawnsPottedCueBall => false;
+
+        public override void Tick(PoolMatchRules match)
         {
             if (!ready || match.GameOver) return;
             SumoPoolSettings s = Settings;

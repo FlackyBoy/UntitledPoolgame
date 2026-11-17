@@ -75,9 +75,23 @@ namespace UntitledPoolGame.Pool
         // Below the ball's bottom, the ground still counts as under it.
         private const float GroundProbe = 0.03f;
 
-        public float ShotPowerScale => settings != null ? settings.shotPowerMultiplier : 1f;
+        public override float ShotPowerScale => settings != null ? settings.shotPowerMultiplier : 1f;
         public int StrokesOf(int player) => strokes[player];
         public int Par => hole != null ? hole.Par : 0;
+
+        // Strokes over the hole's par.
+        public override bool TryGetScore(int player, out int score, out int target)
+        {
+            score = StrokesOf(player);
+            target = Par;
+            return true;
+        }
+
+        // It brings its ball back itself, where it was struck from.
+        public override bool RespawnsPottedCueBall => false;
+
+        // Every stroke counts, in turns or not.
+        public override void OnShotFired(PoolBall cueBall) => OnStroke(cueBall);
         // Seconds on the clock for the HUD, -1 when none is running.
         public float FinishClockLeft => finishClockEnd < 0f || phase == Phase.Intermission ? -1f : Mathf.Max(0f, finishClockEnd - Time.time);
         public PlayAnywhereSettings Settings => settings;
@@ -172,7 +186,7 @@ namespace UntitledPoolGame.Pool
 
         // Every frame from PoolMatchRules.Update: the cup, out of bounds, in
         // Speed Pool the end of each stroke, and the round's phase.
-        public void Tick(PoolMatchRules match)
+        public override void Tick(PoolMatchRules match)
         {
             if (hole == null || match.GameOver || phase == Phase.Intermission) return;
             if (TickFinishClock(match)) return;
