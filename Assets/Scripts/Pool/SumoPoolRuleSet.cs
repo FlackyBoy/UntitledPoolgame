@@ -57,6 +57,10 @@ namespace UntitledPoolGame.Pool
         protected virtual bool KeepsTableBall(PoolBall ball) => false;
         protected virtual void PlaceTableBalls(Vector3 center, Quaternion rotation, float scale) { }
         protected virtual void UpdateRules(PoolMatchRules match) { }
+        // The table balls' rolling friction (m/s², RollingFrictionOverride),
+        // which a player's ball gets too with Pool Ball Physics. -1 = the
+        // normal table's.
+        protected virtual float TableBallFriction(float scale) => -1f;
 
         private int CountdownLeft => Mathf.CeilToInt(Mathf.Max(0f, Settings.countdown - phaseTime));
 
@@ -135,13 +139,14 @@ namespace UntitledPoolGame.Pool
         }
 
         // Its start is set by PlaceStarts.
-        private static SumoPoolBall PrepareBall(PoolBall ball, int player, Vector3 center, float scale)
+        private SumoPoolBall PrepareBall(PoolBall ball, int player, Vector3 center, float scale)
         {
             SumoPoolSettings s = Settings;
             ball.SetSize(s.ballScale, 0f);
-            // Its slowing down is all SumoPoolBall's: this one would add a constant
-            // on top, down to a sudden stop.
-            ball.RollingFrictionOverride = 0f;
+            // Pool physics: the felt slows it as it does the table's balls.
+            // Arcade: its slowing down is all SumoPoolBall's, this one would add
+            // a constant on top, down to a sudden stop.
+            ball.RollingFrictionOverride = s.poolBallPhysics ? TableBallFriction(scale) : 0f;
             ball.MakePlayerCueBall(player, center + Vector3.up * ball.Radius, s.PlayerColor(player));
             SumoPoolBall sumo = ball.gameObject.AddComponent<SumoPoolBall>();
             sumo.Prepare(ball, s, scale, center);

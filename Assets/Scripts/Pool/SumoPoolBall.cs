@@ -240,7 +240,15 @@ namespace UntitledPoolGame.Pool
 
             float speed = velocity.magnitude;
 
-            if (pushed && speed <= maxSpeed)
+            if (settings.poolBallPhysics)
+            {
+                // A table ball's: the felt (PoolBall) slows it, nothing steers
+                // or brakes it. The stick only pushes, up to Max Speed along
+                // where it points; pushing the other way is what brakes.
+                if (pushed && Vector3.Dot(velocity, heading) < amount * maxSpeed)
+                    Roll(heading * (settings.acceleration * scale * amount * Time.fixedDeltaTime));
+            }
+            else if (pushed && speed <= maxSpeed)
             {
                 // At rolling speed the ball goes where it's told: sideways speed
                 // is taken off as much as forward speed is added, or turning
@@ -290,7 +298,8 @@ namespace UntitledPoolGame.Pool
         // other player's ball (up to four on the table).
         private void OnCollisionEnter(Collision collision)
         {
-            if (rb.isKinematic || collision.rigidbody == null || !collision.rigidbody.TryGetComponent(out SumoPoolBall other)) return;
+            // Pool physics: the bounce alone, as between two table balls.
+            if (settings.poolBallPhysics || rb.isKinematic || collision.rigidbody == null || !collision.rigidbody.TryGetComponent(out SumoPoolBall other)) return;
             Vector3 away = transform.position - other.transform.position;
             away.y = 0f;
             if (away.sqrMagnitude < 1e-8f) return;

@@ -42,6 +42,8 @@ namespace UntitledPoolGame.Pool
         public Color player2Color = new Color(1f, 0.25f, 0.2f);
         public Color player3Color = new Color(0.2f, 0.8f, 0.35f);
         public Color player4Color = new Color(0.65f, 0.35f, 0.95f);
+        [Tooltip("Coché : la bille du joueur a la physique des billes de la table — même ralentissement sur le tapis (celui de la table normale ; en Sumo Billard, Table Ball Friction), pas de freinage ni de virage assisté, chocs de billard purs (Bump Boost, Braking, Min Braking et Rolling Friction ignorés). Le stick ne fait que pousser, à Acceleration, jusqu'à Max Speed. Décoché : la conduite arcade.")]
+        public bool poolBallPhysics = true;
         [Tooltip("Accélération de la bille, en m/s². Sert aussi à tourner et à freiner en poussant à l'opposé : à la vitesse de roulage, la bille va où on la pousse.")]
         [Min(0f)] public float acceleration = 10f;
         [Tooltip("Vitesse maximale en roulant, en m/s. Un dash ou un choc peuvent la dépasser.")]

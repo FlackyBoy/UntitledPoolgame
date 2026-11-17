@@ -36,6 +36,8 @@ namespace UntitledPoolGame.Pool
         // The copies are Speed Pool's.
         protected override bool KeepsTableBall(PoolBall ball) => !ball.IsExtra && OwnerOf(ball) >= 0;
 
+        protected override float TableBallFriction(float scale) => Settings.tableBallFriction * scale;
+
         protected override void PlaceTableBalls(Vector3 center, Quaternion rotation, float scale)
         {
             var solids = new List<PoolBall>();
@@ -63,7 +65,7 @@ namespace UntitledPoolGame.Pool
             float spacing = ball.Radius * 2f * Settings.rackSpacing;
             ball.SetSpawn(center + rotation * new Vector3(spot.x, 0f, spot.y) * spacing + Vector3.up * ball.Radius);
             ball.ResetToSpawn();
-            ball.RollingFrictionOverride = Settings.tableBallFriction * scale;
+            ball.RollingFrictionOverride = TableBallFriction(scale);
             racked.Add(ball);
         }
 

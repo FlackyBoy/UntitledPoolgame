@@ -4,6 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-11-17
+- **Sumo Pool : la bille du joueur a la physique des billes du billard** (validé en jeu le 17/11) : elle ralentit sur le tapis comme les billes de la table, n'a plus de freinage ni de virage assisté, et les chocs sont ceux du billard, sans bonus. Le stick pousse, le dash ne change pas. Même chose en Sumo Billard, avec le frottement des billes à rentrer. Case *Pool Ball Physics* dans `SumoPoolSettings` (décochée : la conduite arcade d'avant).
 - **Décidé : jusqu'à 4 joueurs en écran partagé.** Chantier découpé en six lots dans la TODO (socle, écran et HUD, modes simultanés, modes à rôles, tour par tour, pouvoirs et Boogie Night). Formules du 8-ball à plusieurs : 2 contre 2, chacun pour soi, cutthroat ; modes à rôles en 1 contre tous. Les orientations du 05/11 des pistes passent dans la TODO.
   - **Lot 1, socle** (validé en jeu par l'utilisateur le 17/11 ; aucun changement en jeu) : l'état par joueur de `PoolMatchRules` est prévu pour 4 joueurs, le tour passe au joueur suivant (`NextPlayer`), et chaque mode dit jusqu'à combien de joueurs il se joue (`PoolMatchSetup.MaxPlayers`, champ *Max Players* de `PoolModeSettings`). Tous les modes restent à 2 joueurs pour l'instant.
 - Skill `a-tester` : la console d'Unity se lit maintenant dans `Logs/Editor.log` du projet.
