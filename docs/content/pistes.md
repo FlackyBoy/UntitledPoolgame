@@ -101,7 +101,7 @@ Autres idées autour des pouvoirs :
   - **Variante à quatre** : un grand et trois petits, le dernier petit debout gagne.
   - **Points plutôt que manches** : en Boogie Night, une manche par joueur, et le score de chacun = temps tenu en petit.
 
-### Mode 4 joueurs en écran scindé (réflexion du 05/11, pas à développer pour l'instant)
+### Mode 4 joueurs en écran scindé (réflexion du 05/11 ; décidé le 17/11, suivi dans `TODO.md` : « Jusqu'à 4 joueurs en écran partagé »)
 
 **Orientations données par l'utilisateur :**
 

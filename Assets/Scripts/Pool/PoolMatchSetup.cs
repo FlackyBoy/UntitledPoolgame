@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace UntitledPoolGame.Pool
 {
     // What a match is made of, three independent choices: the type (turn
@@ -65,6 +67,20 @@ namespace UntitledPoolGame.Pool
             PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(mode);
             return entry == null ? type == PoolMatchType.TurnBased : entry.Allows(type);
         }
+
+        // Up to how many players the mode is played with: what its rules are
+        // written for, lowered by PoolModeSettings' Max Players (0 = no
+        // lower). Every rule set still assumes two players (one opponent,
+        // `1 - player`); each one is raised here once it handles more.
+        public static int MaxPlayers(PoolGameMode mode)
+        {
+            int written = RulesMaxPlayers(Current(mode));
+            PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(Current(mode));
+            int max = entry != null && entry.maxPlayers > 0 ? Mathf.Min(entry.maxPlayers, written) : written;
+            return Mathf.Clamp(max, 2, PoolMatchRules.MaxPlayers);
+        }
+
+        private static int RulesMaxPlayers(PoolGameMode mode) => 2;
 
         // Bowling Pool: no balls on the table for the powers to work on. Sumo modes:
         // the players are the balls, nothing to shoot a power with. Hide and seek:

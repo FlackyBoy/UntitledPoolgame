@@ -22,6 +22,19 @@ namespace UntitledPoolGame.Pool
         public bool TraceShots => traceShots;
 
         public int CurrentPlayer { get; private set; }
+
+        // Split screen goes up to four players. Per-player state is sized for
+        // the most a match can have; PlayerCount is how many this one has.
+        public const int MaxPlayers = 4;
+
+        // Players in this match: the ones who joined, at least two (a solo
+        // player still plays both sides, J2 joins later), and no more than the
+        // mode is written for (PoolMatchSetup.MaxPlayers).
+        public int PlayerCount =>
+            Mathf.Clamp(PlayerInput.all.Count, 2, MatchStarted ? PoolMatchSetup.MaxPlayers(Mode) : 2);
+
+        // Whose turn comes after this player's (turn order J1, J2, J3, J4).
+        public int NextPlayer(int player) => (player + 1) % PlayerCount;
         public bool GameOver { get; private set; }
         public int Winner { get; private set; } = -1;
         public bool MatchStarted { get; private set; }
@@ -54,9 +67,17 @@ namespace UntitledPoolGame.Pool
         // button launches (switched with the wheel / D-pad).
         public const int PowerSlots = 2;
         public const int MaxPowerLevel = 2;
-        private readonly PoolPower[,] heldPowers = new PoolPower[2, PowerSlots];
-        private readonly int[,] heldLevels = { { 1, 1 }, { 1, 1 } };
-        private readonly int[] selectedSlot = new int[2];
+        private readonly PoolPower[,] heldPowers = new PoolPower[MaxPlayers, PowerSlots];
+        private readonly int[,] heldLevels = NewLevels();
+        // A power picked up starts at level 1.
+        private static int[,] NewLevels()
+        {
+            var levels = new int[MaxPlayers, PowerSlots];
+            for (int p = 0; p < MaxPlayers; p++)
+                for (int s = 0; s < PowerSlots; s++) levels[p, s] = 1;
+            return levels;
+        }
+        private readonly int[] selectedSlot = new int[MaxPlayers];
         // Set by Boosted Shot, read once by the next shot.
         private readonly float[] shotPowerMultiplier = { 1f, 1f };
 
@@ -411,8 +432,8 @@ namespace UntitledPoolGame.Pool
         // again (or potted). The effects that last "the opponent's turn" in
         // the other modes last until the end of the target's next shot.
 
-        private readonly PoolBall[] rollingCueBall = new PoolBall[2];
-        private readonly float[] rollingSince = new float[2];
+        private readonly PoolBall[] rollingCueBall = new PoolBall[MaxPlayers];
+        private readonly float[] rollingSince = new float[MaxPlayers];
         // The cue ball reads as still for a frame or two after the strike.
         private const float MinShotTime = 0.3f;
 
@@ -441,7 +462,7 @@ namespace UntitledPoolGame.Pool
 
         private void UpdatePlayerShots()
         {
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < MaxPlayers; p++)
             {
                 PoolBall ball = rollingCueBall[p];
                 if (ball == null || Time.time - rollingSince[p] < MinShotTime) continue;
@@ -654,7 +675,7 @@ namespace UntitledPoolGame.Pool
 
             CloseTableHoles(turnEnding: true, shotResolved: false);
 
-            CurrentPlayer = 1 - CurrentPlayer;
+            CurrentPlayer = NextPlayer(CurrentPlayer);
 
             LaunchPendingTableHoles();
 
@@ -743,7 +764,7 @@ namespace UntitledPoolGame.Pool
         {
             Setup = setup.Normalized();
             ruleSet = CreateRuleSet(Setup);
-            meleeUntil[0] = meleeUntil[1] = 0f;
+            System.Array.Clear(meleeUntil, 0, meleeUntil.Length);
             // Normal balls again if the last match was Hungry Hole.
             if (!(ruleSet is HungryHoleRuleSet)) HungryHoleRuleSet.Cleanup();
             // No chain left from a Snake Pool match (Snake Pool clears its own).

@@ -21,7 +21,7 @@
 | | |
 |---|---|
 | Genre | Party game / billard physique, vue FPS |
-| Joueurs | 2 — écran partagé local ✅ · en ligne 📌 |
+| Joueurs | 2 — écran partagé local ✅ · jusqu'à 4 en local 🔄 (décidé le 17/11) · en ligne 📌 |
 | Moteur | Unity 6 (6000.6), URP |
 | Contrôles | Clavier/souris et manette |
 

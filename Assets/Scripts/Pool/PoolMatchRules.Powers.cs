@@ -161,7 +161,7 @@ namespace UntitledPoolGame.Pool
         // ---------- Melee (MeleeHit.Allowed) ----------
 
         // Until when each player may hit outside the modes that allow it (BrawlPower).
-        private readonly float[] meleeUntil = new float[2];
+        private readonly float[] meleeUntil = new float[MaxPlayers];
 
         public bool CanHit(int player) => CombatSettings.Instance.AllowsMelee(Mode) || Time.time < meleeUntil[player];
 
@@ -171,11 +171,11 @@ namespace UntitledPoolGame.Pool
             if (traceShots) Debug.Log($"[Match] J{player + 1} peut frapper pendant {duration:0.#} s.", this);
         }
 
-        // Both stocks emptied (Pocket Size: powers belong to a role, the
+        // Every stock emptied (Pocket Size: powers belong to a role, the
         // roles swap between rounds).
         public void ClearHeldPowers()
         {
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < MaxPlayers; p++)
             {
                 for (int s = 0; s < PowerSlots; s++) { heldPowers[p, s] = null; heldLevels[p, s] = 1; }
                 selectedSlot[p] = 0;
@@ -194,12 +194,12 @@ namespace UntitledPoolGame.Pool
         // Vision Impair (Attack): overlay and lower look sensitivity on the
         // target. It starts when they enter aim and ends with their shot, so
         // it lasts exactly one of their shots. SwitchTurn clears it in case.
-        private readonly bool[] visionImpaired = new bool[2];
-        private readonly float[] visionImpairedSensitivity = new float[2];
+        private readonly bool[] visionImpaired = new bool[MaxPlayers];
+        private readonly float[] visionImpairedSensitivity = new float[MaxPlayers];
 
         // Activated but waiting for the target's turn.
-        private readonly bool[] visionImpairPending = new bool[2];
-        private readonly float[] pendingVisionImpairSensitivity = new float[2];
+        private readonly bool[] visionImpairPending = new bool[MaxPlayers];
+        private readonly float[] pendingVisionImpairSensitivity = new float[MaxPlayers];
 
         // Queued until the target enters aim on their turn. If it's already
         // their turn (power launched off-turn, or Speed Pool), it applies
@@ -248,11 +248,11 @@ namespace UntitledPoolGame.Pool
 
         // Inverted Controls (Attack): same lifecycle as Vision Impair, but it
         // flips the look, boosts sensitivity and hides the preview.
-        private readonly bool[] invertedControls = new bool[2];
-        private readonly float[] invertedControlsSensitivity = new float[2];
+        private readonly bool[] invertedControls = new bool[MaxPlayers];
+        private readonly float[] invertedControlsSensitivity = new float[MaxPlayers];
 
-        private readonly bool[] invertedControlsPending = new bool[2];
-        private readonly float[] pendingInvertedControlsSensitivity = new float[2];
+        private readonly bool[] invertedControlsPending = new bool[MaxPlayers];
+        private readonly float[] pendingInvertedControlsSensitivity = new float[MaxPlayers];
 
         // Same as QueueVisionImpair.
         public void QueueInvertedControls(int player, float sensitivityMultiplier)
@@ -365,15 +365,15 @@ namespace UntitledPoolGame.Pool
 
         // Magnet: armed on a pocket, used by the launcher's next shot, during
         // which FixedUpdate catches one of their balls and pulls it in.
-        private readonly MagnetPower[] magnetArmed = new MagnetPower[2];
-        private readonly PoolPocket[] magnetArmedPocket = new PoolPocket[2];
+        private readonly MagnetPower[] magnetArmed = new MagnetPower[MaxPlayers];
+        private readonly PoolPocket[] magnetArmedPocket = new PoolPocket[MaxPlayers];
         private MagnetPower magnetThisShot;
         private PoolPocket magnetPocketThisShot;
         private int magnetShooter;
         private PoolBall magnetCaught;
         private float magnetCaughtAt;
         // The pocket's looping VFX, kept until the magnet is done.
-        private readonly GameObject[] magnetArmedVfx = new GameObject[2];
+        private readonly GameObject[] magnetArmedVfx = new GameObject[MaxPlayers];
         private GameObject magnetVfxThisShot;
 
         public void ArmMagnet(int player, MagnetPower power, PoolPocket pocket)
@@ -441,10 +441,10 @@ namespace UntitledPoolGame.Pool
 
 
         // Ball Blast: armed, used by the launcher's next shot.
-        private readonly BallBlastPower[] ballBlastArmed = new BallBlastPower[2];
+        private readonly BallBlastPower[] ballBlastArmed = new BallBlastPower[MaxPlayers];
         private BallBlastPower ballBlastThisShot;
         // Speed Pool: one per player, both can be rolling at once.
-        private readonly BallBlastPower[] ballBlastRolling = new BallBlastPower[2];
+        private readonly BallBlastPower[] ballBlastRolling = new BallBlastPower[MaxPlayers];
 
         public void ArmBallBlast(int player, BallBlastPower power) => ballBlastArmed[player] = power;
         public bool IsBallBlastArmed(int player) => ballBlastArmed[player] != null;

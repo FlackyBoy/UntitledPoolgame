@@ -4,6 +4,9 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-11-17
+- **Décidé : jusqu'à 4 joueurs en écran partagé.** Chantier découpé en six lots dans la TODO (socle, écran et HUD, modes simultanés, modes à rôles, tour par tour, pouvoirs et Boogie Night). Formules du 8-ball à plusieurs : 2 contre 2, chacun pour soi, cutthroat ; modes à rôles en 1 contre tous. Les orientations du 05/11 des pistes passent dans la TODO.
+  - **Lot 1, socle** (validé en jeu par l'utilisateur le 17/11 ; aucun changement en jeu) : l'état par joueur de `PoolMatchRules` est prévu pour 4 joueurs, le tour passe au joueur suivant (`NextPlayer`), et chaque mode dit jusqu'à combien de joueurs il se joue (`PoolMatchSetup.MaxPlayers`, champ *Max Players* de `PoolModeSettings`). Tous les modes restent à 2 joueurs pour l'instant.
+- Skill `a-tester` : la console d'Unity se lit maintenant dans `Logs/Editor.log` du projet.
 - **Réorganisation du code de l'interface en jeu** (aucun changement en jeu, validé en jeu) : le fichier de l'affichage pendant la partie est découpé en sept, un par rôle (construction, plaque, événements, annonces et cartes, fin de partie, dessin), sans rien changer à ce qu'il fait.
 - **Réorganisation des règles des modes** (aucun changement en jeu, validé en jeu) : chaque mode dit lui-même quand on peut tirer, ce qu'il suit à chaque image, ce qu'il fait d'un tir, s'il change la force du tir ou s'il remet la blanche en jeu. Le fichier qui gère la partie ne liste plus les modes un par un : un nouveau mode y touche une ligne au lieu de cinq.
 - **Validé en jeu** par l'utilisateur : la table interdite, la Bagarre, le Cache-cache (bouger, Sonar), la grenade et la cadence du Shooter, ainsi que la réorganisation du code des parties.

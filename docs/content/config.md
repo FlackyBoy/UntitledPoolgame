@@ -92,6 +92,8 @@ Pour chaque mode, une ligne dans *Modes* : s'il se joue **chacun son tour** (*Tu
 
 Si aucun des deux n'est coché, le mode se joue chacun son tour. Créé par *Tools > Pool > Ensure Config Assets Exist*.
 
+**Max Players** (0 à 4, 0 par défaut) : le nombre de joueurs au plus pour ce mode. 0 = autant que ses règles le permettent. Une valeur plus haute que ce que les règles savent gérer est ramenée à leur maximum : **pour l'instant, toutes les règles sont écrites pour 2 joueurs**, ce champ ne change donc rien avant les lots suivants du chantier « Jusqu'à 4 joueurs ».
+
 **Les pouvoirs de chaque mode** se règlent sur chaque pouvoir, dans `Assets/Powers` : champ *Only In Modes* (voir *Pouvoirs*). Sur la ligne d'un mode, **Own Powers Only** ne garde que ses pouvoirs propres (ceux qui listent ce mode dans leur *Only In Modes*) : les pouvoirs communs (*Only In Modes* vide) n'y sortent plus. Coché pour PowerWashPool, décoché pour les autres.
 
 ### SpeedPoolSettings — type Speed Pool, et les modes où chacun a sa blanche
