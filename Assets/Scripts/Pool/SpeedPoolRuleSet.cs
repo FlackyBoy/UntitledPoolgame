@@ -14,7 +14,7 @@ namespace UntitledPoolGame.Pool
     // again if one of their balls scored and their cue ball stayed on the
     // table. Scratch: the cue ball is out (Cue Respawn Delay, or until the
     // shot is over in turns) and the player's last potted ball comes back.
-    public class SpeedPoolRuleSet : IPoolRuleSet
+    public class SpeedPoolRuleSet : PoolRuleSet
     {
         private static readonly BallGroup[] PlayerGroup = { BallGroup.Solid, BallGroup.Stripe };
 
@@ -27,7 +27,11 @@ namespace UntitledPoolGame.Pool
         // Hungry Hole plays with the 8.
         protected virtual bool KeepsEightBall => false;
 
-        public virtual void Setup(PoolMatchRules match)
+        // A potted cue ball comes back on its own spot (PoolMatchRules.RespawnCueBall).
+        // False when the mode brings it back itself.
+        public virtual bool RespawnsPottedCueBall => true;
+
+        public override void Setup(PoolMatchRules match)
         {
             settings = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
 
@@ -109,7 +113,7 @@ namespace UntitledPoolGame.Pool
         }
 
         // Turn based only. cueBallPocketed: the shooter's own cue ball.
-        public virtual void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
+        public override void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
         {
             if (match.GameOver) return;
             int player = match.CurrentPlayer;
@@ -267,7 +271,7 @@ namespace UntitledPoolGame.Pool
         // Player whose group the ball is in, -1 for none (the 8, a cue ball).
         public static int OwnerOf(PoolBall ball) => ball.Group == BallGroup.Solid ? 0 : ball.Group == BallGroup.Stripe ? 1 : -1;
 
-        public BallGroup GroupOf(int player) => PlayerGroup[player];
+        public override BallGroup GroupOf(int player) => PlayerGroup[player];
 
         // leaving: the ball being potted, not off the table yet.
         protected static bool IsGroupCleared(BallGroup group, PoolBall leaving)
@@ -277,6 +281,6 @@ namespace UntitledPoolGame.Pool
             return true;
         }
 
-        public virtual string DescribePlayer(int player) => player == 0 ? "Blanche bleue · Pleines (1-7)" : "Blanche rouge · Rayées (9-15)";
+        public override string DescribePlayer(int player) => player == 0 ? "Blanche bleue · Pleines (1-7)" : "Blanche rouge · Rayées (9-15)";
     }
 }

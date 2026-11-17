@@ -7,11 +7,11 @@ namespace UntitledPoolGame.Pool
     // lowest ball first. Potting it keeps the turn, anything else passes it.
     // The 9 wins, except with a scratch (loss) or a bad first contact
     // (doesn't count, a known simplification).
-    public class NineBallRuleSet : IPoolRuleSet
+    public class NineBallRuleSet : PoolRuleSet
     {
         private int nextBall = 1;
 
-        public void Setup(PoolMatchRules match)
+        public override void Setup(PoolMatchRules match)
         {
             foreach (PoolBall ball in new List<PoolBall>(PoolBall.Active))
             {
@@ -20,7 +20,7 @@ namespace UntitledPoolGame.Pool
             }
         }
 
-        public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
+        public override void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
         {
             // Captured before the loop can advance it — same bug class as
             // EightBallRuleSet's group reassignment: pocketing balls that
@@ -65,6 +65,6 @@ namespace UntitledPoolGame.Pool
             if (!pocketedInOrder) match.SwitchTurn();
         }
 
-        public string DescribePlayer(int player) => $"Prochaine bille : {Mathf.Min(nextBall, 9)}";
+        public override string DescribePlayer(int player) => $"Prochaine bille : {Mathf.Min(nextBall, 9)}";
     }
 }

@@ -4,6 +4,7 @@ Toutes les modifications notables apportées au projet sont listées ici, dans l
 chronologique inverse (les plus récentes en haut).
 
 ## 2026-11-17
+- **Réorganisation des règles des modes** (aucun changement en jeu, compilé, non testé) : chaque mode dit lui-même quand on peut tirer, ce qu'il suit à chaque image, ce qu'il fait d'un tir, s'il change la force du tir ou s'il remet la blanche en jeu. Le fichier qui gère la partie ne liste plus les modes un par un : un nouveau mode y touche une ligne au lieu de cinq.
 - **Validé en jeu** par l'utilisateur : la table interdite, la Bagarre, le Cache-cache (bouger, Sonar), la grenade et la cadence du Shooter, ainsi que la réorganisation du code des parties.
 
 ## 2026-11-16

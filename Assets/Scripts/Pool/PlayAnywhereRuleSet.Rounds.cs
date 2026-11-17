@@ -53,6 +53,10 @@ namespace UntitledPoolGame.Pool
         public bool IsBuilding => phase == Phase.Build;
 
         // Shooting phase, not done with the hole nor with this round's strokes.
+        // For the player whose ball it is: alone, the current one.
+        public override bool AllowsShot(PoolMatchRules match, int playerIndex) =>
+            CanShoot(match.IsSimultaneous || PlayerInput.all.Count > 1 ? playerIndex : match.CurrentPlayer);
+
         public bool CanShoot(int player) =>
             phase == Phase.Shoot && player >= 0 && player < 2 && !finished[player] && roundStrokes[player] < settings.strokesPerRound;
 

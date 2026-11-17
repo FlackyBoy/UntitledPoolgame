@@ -31,9 +31,9 @@ Lancer `notion-todo start`. Notion est plein pour l'instant : si la création é
 | Fichier | À ajouter |
 |---|---|
 | `Pool/PoolGameMode.cs` | La valeur **à la fin de l'enum** : elle est sérialisée en entier, ne jamais réordonner. Commentaire d'une ou deux lignes. |
-| `Pool/<Mode>RuleSet.cs` | Les règles (`IPoolRuleSet` : `Setup`, `ResolveShot`, `DescribePlayer`). |
+| `Pool/<Mode>RuleSet.cs` | Les règles, dérivées de `PoolRuleSet` (ou de `SpeedPoolRuleSet`, une blanche par joueur) : `Setup`, `ResolveShot`, `DescribePlayer`, et au besoin les `override` de ce que le mode change dans la partie : `Tick` (suivi à chaque image), `AllowsShot`, `OnShotFired`, `IsSettling`, `AllowsPower`, `ShotPowerScale`, `GroupOf`, `TryGetScore`, `RespawnsPottedCueBall`. |
 | `Pool/<Mode>Settings.cs` | Le ScriptableObject de réglages, chargé par `PoolSettingsLoader.LoadOrDefault<T>()`, avec un `debugLogs` et un tag `[Mode]`. |
-| `Pool/PoolMatchRules.cs` | `CreateRuleSet`. Le `Tick` s'il faut un suivi par image. Le nettoyage de fin de mode si le mode crée des objets. |
+| `Pool/PoolMatchRules.cs` | `CreateRuleSet`. Le nettoyage de fin de mode si le mode crée des objets (`StartMatch`). Rien d'autre : le reste passe par les `override` de `PoolRuleSet`. |
 | `Pool/PoolMatchRules.LegacyGui.cs` | `DrawModeButton` (menu de secours). |
 | `Pool/PoolMatchSetup.cs` | `ModeName`. `Supports` si un type de partie est impossible. `HasPowers` si le mode n'a pas de pouvoirs. |
 | `Pool/PoolModeSettings.cs` | Une ligne dans `Defaults()` (types permis, type par défaut, *Own Powers Only*). |
@@ -45,7 +45,7 @@ Lancer `notion-todo start`. Notion est plein pour l'instant : si la création é
 | `Editor/PoolTableBuilder.cs` | `Ensure<Mode>SettingsAsset()`, appelé avec les autres. |
 | `Pool/LocalPoolAimController.cs` | Seulement si le mode bloque ou change le tir. |
 
-Quand un mode s'ajoute à une chaîne de `else if` ou à une condition déjà longue, le signaler à l'utilisateur comme dette plutôt que de refactorer au passage.
+Si un mode a besoin de changer la partie autrement, ajouter une méthode `virtual` à `PoolRuleSet` plutôt qu'un `is <Mode>RuleSet` dans `PoolMatchRules`. Quand un mode s'ajoute quand même à une chaîne de `else if` ou à une condition déjà longue, le signaler à l'utilisateur comme dette plutôt que de refactorer au passage.
 
 ## Fichiers de données : le piège
 

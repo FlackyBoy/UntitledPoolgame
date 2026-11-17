@@ -86,7 +86,9 @@ namespace UntitledPoolGame.Pool
         public float TimeLeft => CurrentPhase == Phase.Hunt ? Mathf.Max(0f, Settings.roundDuration - phaseTime) : Settings.roundDuration;
         public float CountdownLeft => CurrentPhase == Phase.Countdown ? Mathf.Max(0f, Settings.countdown - phaseTime) : 0f;
 
-        public float ShotPowerScale => Time.time < shotBoostUntil ? shotBoostMultiplier : 1f;
+        public override float ShotPowerScale => Time.time < shotBoostUntil ? shotBoostMultiplier : 1f;
+
+        public override bool AllowsShot(PoolMatchRules match, int playerIndex) => CanShoot(playerIndex);
 
         public bool CanShoot(int player) => CurrentPhase == Phase.Hunt && player == Giant;
 
@@ -294,7 +296,7 @@ namespace UntitledPoolGame.Pool
 
         // ---------- Every frame (PoolMatchRules.Update) ----------
 
-        public void Tick(PoolMatchRules match)
+        public override void Tick(PoolMatchRules match)
         {
             // No cue ball on the table (Setup said so): nothing to play.
             if (match.GameOver || mainCue == null) return;

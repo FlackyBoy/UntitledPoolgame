@@ -271,7 +271,12 @@ namespace UntitledPoolGame.Pool
 
         // ---------- Every frame (PoolMatchRules.Update) ----------
 
-        public void Tick(PoolMatchRules match)
+        // Nobody strikes a ball: the shots are the rifle's.
+        public override bool AllowsShot(PoolMatchRules match, int playerIndex) => false;
+
+        public override bool AllowsPower(int player) => CanArm(player);
+
+        public override void Tick(PoolMatchRules match)
         {
             if (match.GameOver || !ready) return;
             ShooterMiniSettings s = Settings;

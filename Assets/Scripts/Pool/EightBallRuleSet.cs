@@ -7,14 +7,14 @@ namespace UntitledPoolGame.Pool
     // yours keeps the turn; potting only the opponent's is a foul. The 8 has
     // to be called. Also Catch the Hole's rules; the powers, when on, come
     // on top.
-    public class EightBallRuleSet : IPoolRuleSet
+    public class EightBallRuleSet : PoolRuleSet
     {
         // Cue means "not assigned yet".
         private readonly BallGroup[] playerGroup = { BallGroup.Cue, BallGroup.Cue };
 
-        public void Setup(PoolMatchRules match) { }
+        public override void Setup(PoolMatchRules match) { }
 
-        public void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
+        public override void ResolveShot(PoolMatchRules match, IReadOnlyList<PoolBall> pocketedThisShot, bool cueBallPocketed, PoolBall firstContact)
         {
             int player = match.CurrentPlayer;
             // Taken before the loop can assign the group: the first contact is
@@ -133,9 +133,9 @@ namespace UntitledPoolGame.Pool
         }
 
         // Cue = not decided yet (read by the HUD through PoolMatchRules.GetGroup).
-        public BallGroup GroupOf(int player) => playerGroup[player];
+        public override BallGroup GroupOf(int player) => playerGroup[player];
 
-        public string DescribePlayer(int player) => playerGroup[player] switch
+        public override string DescribePlayer(int player) => playerGroup[player] switch
         {
             BallGroup.Solid => "Pleines (1-7)",
             BallGroup.Stripe => "Rayées (9-15)",

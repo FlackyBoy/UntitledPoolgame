@@ -92,6 +92,12 @@ namespace UntitledPoolGame.Pool
         private GameObject pingZone;
         private float pingUntil;
 
+        public override bool AllowsShot(PoolMatchRules match, int playerIndex) => CanShoot(playerIndex);
+
+        public override void OnShotFired(PoolBall cueBall) => OnShot();
+
+        public override bool AllowsPower(int player) => CanPing(player);
+
         public bool CanShoot(int player) => CurrentPhase == Phase.Search && player == Seeker && shotsLeft > 0;
 
         public override void Setup(PoolMatchRules match)
@@ -294,7 +300,7 @@ namespace UntitledPoolGame.Pool
 
         // ---------- Every frame (PoolMatchRules.Update) ----------
 
-        public void Tick(PoolMatchRules match)
+        public override void Tick(PoolMatchRules match)
         {
             if (match.GameOver || Current != this) return;
             HideAndSeekSettings s = Settings;
