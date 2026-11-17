@@ -36415,7 +36415,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Core.SkipMainMenu
   type: 0
-  mode: 14
+  mode: 11
   powers: 1
   targetScore: 150
   partyMode: 0

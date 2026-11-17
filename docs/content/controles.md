@@ -53,6 +53,8 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 |---|---|---|
 | Entrée, Espace, E, clic sur « Revanche » | A / ✕, Y / △ | Revanche (même mode) |
 
+**Frapper** (poing, coup de pied, coup de queue) ne marche que dans les modes Shooter, ou avec le pouvoir *Bagarre* pendant sa durée. Sans partie, comme dans l'arène de R&D, c'est toujours possible.
+
 ## Clavier / souris
 
 | Touche | Action |
@@ -146,6 +148,10 @@ Le chercheur joue comme d'habitude, à la queue et à la blanche. Le cacheur, lu
 | Dans sa bille : rouler | ZQSD en AZERTY, WASD en QWERTY | Stick gauche |
 | Dans sa bille : changer de bille | E | Y / △ |
 | Dans sa bille : fausse piste | A en AZERTY, Q en QWERTY | B / ○ |
+
+Pendant la recherche, il faut se déplacer : après 9 s sans parcourir 0,2 m, la plaque affiche « Bouge ! » et la manette vibre ; à 12 s, la bille part toute seule pendant 1,5 s, sans réponse aux commandes.
+
+Le chercheur a aussi un pouvoir par manche, le **Sonar**, sur le bouton de pouvoir habituel (A en AZERTY, Q en QWERTY, ou B / ○), pendant la recherche seulement.
 
 ## R&D déplacement (arène de test, variante du joueur)
 

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ab2f6033b3acb245a4d92265421ca9d, type: 3}
+  m_Name: HideAndSeekSonarPower
+  m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.HideAndSeekSonarPower
+  powerName: Sonar
+  tokenPrefab: {fileID: 57343465282026501, guid: 7664cf02df67fbf4b879bd5a3aeb7542, type: 3}
+  hudIcon: {fileID: 2800000, guid: 3c8e6a717ad36f44b9e0c36a075b50aa, type: 3}
+  onlyInModes: 10000000i
+  requiresOwnTurn: 0
+  allowDuringOwnTurn: 1
+  allowWhileBallsMoving: 1
+  radius: 0.6
+  duration: 4
+  color: {r: 0.2, g: 0.9, b: 1, a: 0.3}

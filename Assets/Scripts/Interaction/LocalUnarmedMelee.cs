@@ -461,6 +461,7 @@ namespace UntitledPoolGame.Interaction
             if (fullBodyIK == null || viewTransform == null || IsDown()) return false;
             PoolMatchRules rules = PoolMatchRules.Instance;
             if (rules != null && !rules.MatchStarted) return false;
+            if (!MeleeHit.Allowed(playerInput)) return false;
             if (aimController != null && (aimController.IsAiming || aimController.IsPlacementViewActive)) return false;
             if (cueMelee != null && cueMelee.IsSwinging) return false;
             // Not while picking the cue up or letting it go: the pickup pins

@@ -14,7 +14,10 @@ namespace UntitledPoolGame.Pool
     // with the hider's ball finds it, and a fall into a pocket gives it away.
     // A swap of ball reaches the seeker's plate after a random delay, or the
     // message would show which ball had just set off.
-    // The roles swap every round, first to Points To Win.
+    // A hider who stays put too long is warned, then their ball rolls off by
+    // itself (UpdateMustMove).
+    // The roles swap every round, first to Points To Win. Each round the seeker
+    // is given a power (Seeker Power, the Sonar: Ping).
     //
     // Derived from SpeedPoolRuleSet for a cue ball owned by a player
     // (PoolBall.CueOwner, which LocalPoolAimController aims), with its own table
@@ -30,6 +33,10 @@ namespace UntitledPoolGame.Pool
         private const float StickDeadZone = 0.3f;
         // A shot's cue ball may not have started rolling yet.
         private const float LastShotGrace = 0.5f;
+        // How far the Sonar's centre may be from the ball, in share of its
+        // radius: the ball stays inside the zone.
+        private const float PingOffCentre = 0.85f;
+        private const float PingAboveFelt = 0.003f;
 
         // The match under way, null in other modes.
         public static HideAndSeekRuleSet Current { get; private set; }
@@ -75,6 +82,16 @@ namespace UntitledPoolGame.Pool
         private Gamepad rumbling;
         private float rumbleUntil;
 
+        // Where the hider's ball last counted as having moved, when it has to
+        // have moved again, and until when it rolls by itself.
+        private Vector3 moveAnchor;
+        private float moveDeadline, forcedUntil;
+        private bool moveWarned;
+
+        // The Sonar's zone on the felt, and when it goes.
+        private GameObject pingZone;
+        private float pingUntil;
+
         public bool CanShoot(int player) => CurrentPhase == Phase.Search && player == Seeker && shotsLeft > 0;
 
         public override void Setup(PoolMatchRules match)
@@ -113,6 +130,8 @@ namespace UntitledPoolGame.Pool
             foreach (HideAndSeekBall ball in rules.tableBalls)
                 if (ball != null) Object.Destroy(ball);
             rules.tableBalls.Clear();
+            PoolMatchRules match = PoolMatchRules.Instance;
+            if (match != null) match.ClearHeldPowers();
             if (rules.spareCue != null)
             {
                 // Inactive first: the next mode's Setup, this same frame, would
@@ -127,6 +146,7 @@ namespace UntitledPoolGame.Pool
         private void ReleaseHider()
         {
             StopRumble();
+            ClearPing();
             if (cameraObject != null) Object.Destroy(cameraObject);
             cameraObject = null;
             hiddenBall = null;
@@ -147,8 +167,14 @@ namespace UntitledPoolGame.Pool
             swapsTold = swapsLeft;
             swapAlertAt = swapAlertUntil = 0f;
             toRespot.Clear();
+            forcedUntil = 0f;
 
             cue.MakePlayerCueBall(Seeker, cue.SpawnPosition, Color.white);
+
+            // An unused power doesn't follow the seeker into the hider's role.
+            PoolMatchRules match = PoolMatchRules.Instance;
+            match.ClearHeldPowers();
+            match.GrantPower(Seeker, s.seekerPower);
 
             // The small one starts on the foot spot, across the table from the cue ball.
             PoolTableSurface surface = PoolTableSurface.Instance;
@@ -275,6 +301,7 @@ namespace UntitledPoolGame.Pool
             phaseTime += Time.deltaTime;
             UpdateRumble();
             UpdateSwapAlert();
+            if (pingZone != null && Time.time >= pingUntil) ClearPing();
             foreach (PoolBall ball in toRespot) match.RespotBall(ball);
             toRespot.Clear();
 
@@ -292,12 +319,14 @@ namespace UntitledPoolGame.Pool
                     phaseTime = 0f;
                     // A swap while the seeker's eyes were shut sends no message.
                     swapsTold = swapsLeft;
+                    ResetMoveClock();
                     nextDecoy = Time.time + Random.Range(s.decoyIntervalMin, s.decoyIntervalMax);
                     nextShake = Time.time + Random.Range(s.shakeIntervalMin, s.shakeIntervalMax);
                     if (s.debugLogs) Debug.Log($"[HideAndSeek] Recherche ! J{Seeker + 1} peut tirer.");
                     break;
 
                 case Phase.Search:
+                    UpdateMustMove();
                     UpdateHidden();
                     UpdateDecoys();
                     UpdateShake();
@@ -419,7 +448,7 @@ namespace UntitledPoolGame.Pool
         private void UpdateHidden()
         {
             Vector3 stick = StickOnTable();
-            hiddenBall.Drive(stick);
+            if (Time.time >= forcedUntil) hiddenBall.Drive(stick);
             HideAndSeekSettings s = Settings;
             if (swapAction.WasPressedThisFrame() && swapsLeft > 0)
             {
@@ -428,6 +457,8 @@ namespace UntitledPoolGame.Pool
                 swapsLeft--;
                 hiddenBall.Stop();
                 hiddenBall = target;
+                forcedUntil = 0f;
+                ResetMoveClock();
                 // A second swap before the message: that one tells of both.
                 if (CurrentPhase == Phase.Search && swapAlertAt <= 0f)
                     swapAlertAt = Time.time + Random.Range(s.swapAlertDelayMin, s.swapAlertDelayMax);
@@ -480,6 +511,12 @@ namespace UntitledPoolGame.Pool
             nextDecoy = Time.time + Random.Range(s.decoyIntervalMin, s.decoyIntervalMax);
             HideAndSeekBall ball = tableBalls[Random.Range(0, tableBalls.Count)];
             if (ball == hiddenBall || ball.IsDriven || !ball.gameObject.activeInHierarchy) return;
+            RollToRandomPoint(ball, Random.Range(s.decoyRollMin, s.decoyRollMax));
+        }
+
+        // Towards a random point of the felt, as any decoy.
+        private static void RollToRandomPoint(HideAndSeekBall ball, float duration)
+        {
             PoolTableSurface surface = PoolTableSurface.Instance;
             Vector3 center = surface.transform.position;
             Vector3 point = center
@@ -487,8 +524,47 @@ namespace UntitledPoolGame.Pool
                 + surface.transform.forward * (Random.Range(-1f, 1f) * surface.HalfWidth);
             Vector3 toPoint = Flat(point - ball.transform.position);
             if (toPoint.sqrMagnitude < 1e-6f) return;
-            ball.Drive(toPoint.normalized * Random.Range(0.5f, 1f), Random.Range(s.decoyRollMin, s.decoyRollMax));
+            ball.Drive(toPoint.normalized * Random.Range(0.5f, 1f), duration);
         }
+
+        // ---------- The hider has to keep moving ----------
+
+        private void ResetMoveClock()
+        {
+            moveAnchor = hiddenBall.transform.position;
+            moveDeadline = Time.time + Settings.mustMoveTime;
+            moveWarned = false;
+        }
+
+        // Ground covered, not the stick: pushing against a cushion or jiggling
+        // on the spot doesn't count. Rolled off like a decoy, nothing about the
+        // roll itself gives the ball away.
+        private void UpdateMustMove()
+        {
+            HideAndSeekSettings s = Settings;
+            if (s.mustMoveTime <= 0f || Time.time < forcedUntil) return;
+            float distance = s.mustMoveDistance * tableScale;
+            if (Flat(hiddenBall.transform.position - moveAnchor).sqrMagnitude >= distance * distance)
+            {
+                ResetMoveClock();
+                return;
+            }
+            if (!moveWarned && MustMoveSoon)
+            {
+                moveWarned = true;
+                StartRumble();
+            }
+            if (Time.time < moveDeadline) return;
+            forcedUntil = Time.time + s.forcedRollTime;
+            RollToRandomPoint(hiddenBall, s.forcedRollTime);
+            StartRumble();
+            ResetMoveClock();
+            if (s.debugLogs) Debug.Log($"[HideAndSeek] J{Hider + 1} n'a pas bougé : la bille {hiddenBall.Ball.Number} part toute seule.", hiddenBall);
+        }
+
+        private bool MustMoveSoon =>
+            CurrentPhase == Phase.Search && Settings.mustMoveTime > 0f && Time.time >= forcedUntil
+            && Time.time >= moveDeadline - Settings.mustMoveWarning;
 
         // Every ball gets a knock, the hider's too: the moment to go far, and to
         // lose track of one's own ball.
@@ -506,6 +582,33 @@ namespace UntitledPoolGame.Pool
             }
             LocalPoolPowerEffectReceiver.PlayImpact(-1, s.shakeCamera, s.shakeCameraTime, Color.clear, 0f, 0f);
             if (s.debugLogs) Debug.Log("[HideAndSeek] Secousse.");
+        }
+
+        // ---------- The seeker's power ----------
+
+        public bool CanPing(int player) => CurrentPhase == Phase.Search && player == Seeker && hiddenBall != null;
+
+        // A zone with the hider's ball somewhere inside, not at its centre: it
+        // narrows the search down to a few balls, it doesn't name one.
+        public void Ping(float radius, float duration, Color color)
+        {
+            if (hiddenBall == null) return;
+            ClearPing();
+            float size = radius * tableScale;
+            Vector2 off = Random.insideUnitCircle * (size * PingOffCentre);
+            Vector3 center = hiddenBall.transform.position + new Vector3(off.x, 0f, off.y);
+            center.y = feltY + PingAboveFelt;
+            pingZone = ShooterPowerFx.Shape(PrimitiveType.Cylinder, ShooterPowerFx.Glass(color, "Hide And Seek Sonar"), "Hide And Seek Sonar");
+            pingZone.transform.position = center;
+            pingZone.transform.localScale = new Vector3(size * 2f, PingAboveFelt * 0.5f, size * 2f);
+            pingUntil = Time.time + duration;
+            if (Settings.debugLogs) Debug.Log($"[HideAndSeek] Sonar de J{Seeker + 1} autour de la bille {hiddenBall.Ball.Number} ({size:0.##} m, {duration:0.#} s).", hiddenBall);
+        }
+
+        private void ClearPing()
+        {
+            if (pingZone != null) Object.Destroy(pingZone);
+            pingZone = null;
         }
 
         // ---------- Rumble: tells the hider a trick worked, unseen by the other ----------
@@ -570,6 +673,7 @@ namespace UntitledPoolGame.Pool
             points[winner]++;
             CurrentPhase = Phase.RoundOver;
             phaseTime = 0f;
+            ClearPing();
             foreach (HideAndSeekBall ball in tableBalls) ball.Stop();
             if (Settings.debugLogs) Debug.Log($"[HideAndSeek] Fin de la manche {round + 1} : {why} → point pour J{winner + 1} ({points[0]}-{points[1]}).");
         }
@@ -582,6 +686,7 @@ namespace UntitledPoolGame.Pool
             if (CurrentPhase == Phase.RoundOver) return roundWinner == Seeker ? s.foundText : s.notFoundText;
             if (player == Seeker)
                 return CurrentPhase == Phase.Hiding ? s.closeEyesLabel : SwapAlertUp ? s.swapAlertLabel : s.seekerLabel;
+            if (MustMoveSoon) return s.mustMoveLabel;
             return hiddenBall == null ? s.hideLabel : s.hiderLabel;
         }
 
@@ -616,7 +721,7 @@ namespace UntitledPoolGame.Pool
         {
             int time = CurrentPhase == Phase.Hiding ? HideLeft : CurrentPhase == Phase.Search ? SearchLeft : 0;
             int counts = shotsLeft * 64 + (player == Seeker ? swapsTold : swapsLeft) * 8 + fakesLeft;
-            int state = (int)CurrentPhase * 4 + (hiddenBall != null ? 2 : 0) + (SwapAlertUp ? 1 : 0);
+            int state = (int)CurrentPhase * 4 + (hiddenBall != null ? 2 : 0) + ((player == Seeker ? SwapAlertUp : MustMoveSoon) ? 1 : 0);
             return (((points[player] * 16 + points[1 - player]) * 16 + state) * 512 + counts) * 1024 + time * 2 + (player == Seeker ? 1 : 0);
         }
 

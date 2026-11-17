@@ -147,6 +147,31 @@ namespace UntitledPoolGame.Player
 
             Vector3 velocity = move * (moveSpeed * MoveScale) + Vector3.up * verticalVelocity;
             controller.Move(velocity * Time.deltaTime);
+            KeepOffTable();
+        }
+
+        // Nobody stands on the table, in any mode: wherever a jump, a ledge or a
+        // fall left them, they're moved off it. A body shrunk onto the felt is
+        // exempt, it's where it plays. Not a collider around the table: the
+        // balls, the cue and every aiming ray would have to be kept out of it.
+        // Goes through Move: a table against a wall doesn't push them through it.
+        public void KeepOffTable()
+        {
+            if (IsOverTable(transform.position, out Vector3 push)) controller.Move(push);
+        }
+
+        // Whether a full-size body at this point would be over the table, and
+        // the move that gets it off.
+        public bool IsOverTable(Vector3 point, out Vector3 push)
+        {
+            push = Vector3.zero;
+            PoolTableSurface table = PoolTableSurface.Instance;
+            if (table == null || SizeScale < 1f) return false;
+            MovementSettings cfg = MovementSettings.Instance;
+            float scale = table.TableScale;
+            float above = point.y - table.FeltTopY;
+            if (above < -cfg.tableKeepOffBelowFelt * scale || above > cfg.tableKeepOffAboveFelt * scale) return false;
+            return table.PushOffTable(point, cfg.tableKeepOffMargin * scale + controller.radius * transform.lossyScale.x, out push);
         }
     }
 }

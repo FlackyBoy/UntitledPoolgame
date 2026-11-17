@@ -144,6 +144,18 @@ namespace UntitledPoolGame.Pool
             Keep(ShooterMine.Lay(this, player, spec, at).gameObject);
         }
 
+        // ---------- Grenade ----------
+
+        // From the tip of the cue towards the crosshair, with a lift for the curve.
+        public void ThrowGrenade(int player, float speed, float lift, ShooterGrenade.Spec spec)
+        {
+            Fighter f = fighters[player];
+            if (f.body == null || f.weapon == null) return;
+            Vector3 from = f.weapon.Muzzle;
+            Vector3 velocity = (f.weapon.AimedPoint(Settings.cueAimDistance) - from).normalized * speed + Vector3.up * lift;
+            Keep(ShooterGrenade.Throw(this, player, spec, from, velocity, f.body.GetComponent<CharacterController>()).gameObject);
+        }
+
         // A player on it, or a ball rolling over it. A ball at rest doesn't
         // count: one lying nearby would set it off as soon as it's armed.
         public bool IsMineTouched(Vector3 at, float reach)

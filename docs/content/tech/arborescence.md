@@ -169,11 +169,11 @@ Assets/Scripts/
     ├── PoolMatchRules.cs           partie : tours, fautes, main libre, pouvoirs, HUD
     ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOne/SpeedPoolRuleSet.cs   règles par mode
     ├── PoolGameMode.cs, PoolMatchType.cs, PoolMatchSetup.cs, PoolModeSettings.cs   mode, type (tour par tour / Speed Pool) et pouvoirs d'une partie ; types autorisés par mode
-    ├── ShooterPower.cs + Shooter*Power.cs (pouvoirs), ShooterRollingBall.cs, ShooterMine.cs, ShooterMagnet.cs, ShooterPowerFx.cs, ShooterMiniRuleSet.cs + .Powers.cs, ShooterPoolRuleSet.cs, ShooterMiniSettings.cs, LocalShooterWeapon.cs + .Animation.cs, ShooterMiniProjectile.cs   mode Shooter miniature : règles, réglages, queue-fusil et ses animations, tirs
+    ├── ShooterPower.cs + Shooter*Power.cs (pouvoirs), ShooterRollingBall.cs, ShooterMine.cs, ShooterGrenade.cs, ShooterMagnet.cs, ShooterPowerFx.cs, ShooterMiniRuleSet.cs + .Powers.cs, ShooterPoolRuleSet.cs, ShooterMiniSettings.cs, LocalShooterWeapon.cs + .Animation.cs, ShooterMiniProjectile.cs   mode Shooter miniature : règles, réglages, queue-fusil et ses animations, tirs
     ├── BowlingPoolRuleSet.cs, BowlingScoreSheet.cs, BowlingPin.cs, BowlingPoolSettings.cs   Bowling Pool : règles, score, quilles générées, réglages
     ├── SumoPoolRuleSet.cs, SumoPoolBall.cs, SumoPoolTable.cs, SumoPoolSettings.cs   Sumo Pool : règles, bille pilotée et sa caméra, table générée, réglages
     ├── SumoBilliardRuleSet.cs   Sumo Billard : Sumo Pool, mais il faut rentrer son groupe
-    ├── HideAndSeekRuleSet.cs, HideAndSeekBall.cs, HideAndSeekSettings.cs   Cache-cache : règles, bille pilotée (cacheur et leurres), réglages
+    ├── HideAndSeekRuleSet.cs, HideAndSeekBall.cs, HideAndSeekSonarPower.cs, HideAndSeekSettings.cs   Cache-cache : règles, bille pilotée (cacheur et leurres), pouvoir du chercheur, réglages
     ├── LocalPoolAimController.cs   visée, tir, vue de dessus (main libre), annonce de la 8
     ├── LocalPocketPointer.cs       choix d'une poche ou d'un point de la table en le visant (pouvoirs, annonce de la 8)
     ├── RingLine.cs                 cercle tracé au LineRenderer (poche visée, aperçu sur la table, bord d'un trou)
@@ -182,6 +182,7 @@ Assets/Scripts/
     ├── PoolPower.cs, PowerType.cs + BoostedShot/VisionImpair/InvertedControls/BallBlast/IdenticalGroupsPower.cs
     ├── PocketTargetPower.cs + ClosePocket/MagnetPower.cs   pouvoirs qui visent un trou
     ├── BallDisguise.cs             aspect commun des billes (Groupe identique), restauré ensuite
+    ├── BrawlPower.cs   pouvoir Bagarre (autorise à frapper pour un temps)
     ├── TablePointPower.cs + TableHolePower.cs, TableHole.cs, TableHoleMeteor.cs   pouvoir Trou (météore, trou, billes tombées)
     ├── CatchTheHole.cs, LivingHole.cs, CatchTheHoleSettings.cs   Catch the Hole : trous vivants (apparition, trajet, taille, accélération)
     ├── HungryHoleRuleSet.cs, HungryHoleCue.cs, HungryHoleProp.cs, HungryHoleSettings.cs   Hungry Hole : la blanche est un trou qui grandit, objets à manger

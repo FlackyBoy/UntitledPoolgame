@@ -18,6 +18,7 @@ MonoBehaviour:
   searchTime: 90
   shotsPerRound: 5
   roundOverTime: 3
+  seekerPower: {fileID: 11400000, guid: 164e90e346e512c41a65fe6bc04c680f, type: 2}
   ballsOnTable: 15
   scatterClearance: 0.3
   takeReach: 0.3
@@ -27,6 +28,10 @@ MonoBehaviour:
   decoyIntervalMax: 5
   decoyRollMin: 1
   decoyRollMax: 3
+  mustMoveTime: 12
+  mustMoveDistance: 0.2
+  mustMoveWarning: 3
+  forcedRollTime: 1.5
   swapsPerRound: 2
   swapReach: 0.2
   fakesPerRound: 2
@@ -54,6 +59,7 @@ MonoBehaviour:
   hiddenFormat: 'ne bouge plus trop : {0} s'
   searchFormat: "{0}  \xB7  {1} tirs  \xB7  changements : {2}"
   swapAlertLabel: "Il a chang\xE9 de bille !"
+  mustMoveLabel: Bouge !
   hiderFormat: "{0}  \xB7  changer : {1}  \xB7  fausse piste : {2}"
   foundText: "Trouv\xE9 !"
   notFoundText: "Pas trouv\xE9 !"

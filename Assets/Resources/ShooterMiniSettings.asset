@@ -24,7 +24,7 @@ MonoBehaviour:
   respawnSafeTime: 1.5
   respawnClearance: 0.5
   fallDepth: 0.0432
-  fireInterval: 0.25
+  fireInterval: 0.5
   shotSpeed: 3
   shotRadius: 0.006
   shotMass: 0.03

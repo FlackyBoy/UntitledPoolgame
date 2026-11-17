@@ -1,4 +1,5 @@
 using UnityEngine;
+using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Interaction
 {
@@ -7,9 +8,16 @@ namespace UntitledPoolGame.Interaction
     // - the hit gauge: stagger, daze, knock-out, wake-up, zones and reactions;
     // - the held guard (block meter, break, counter) and stamina.
     // The kick's settings stay on the component. Read every frame.
+    // Which modes allow hitting at all applies to every player.
     [CreateAssetMenu(fileName = "CombatSettings", menuName = "Pool/Combat Settings")]
     public class CombatSettings : ScriptableObject
     {
+        [Header("Qui peut frapper (poing, pied, queue)")]
+        [Tooltip("Modes où tout le monde peut frapper. Ailleurs, seul le pouvoir Bagarre le permet, pour un temps. Sans partie (arène de R&D), on peut toujours frapper.")]
+        public PoolGameMode[] meleeModes = { PoolGameMode.ShooterMini, PoolGameMode.ShooterPool };
+
+        public bool AllowsMelee(PoolGameMode mode) => System.Array.IndexOf(meleeModes, mode) >= 0;
+
         [Header("Coups animés (Tools > Pool > R&D > Préparer le joueur de R&D)")]
         [Tooltip("Coups et garde joués par des animations (calque « R&D Combat » du contrôleur d'animation). Décoché = coups et garde procéduraux (IK).")]
         public bool useAnimations = true;

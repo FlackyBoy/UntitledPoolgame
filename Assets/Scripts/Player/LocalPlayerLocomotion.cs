@@ -270,6 +270,7 @@ namespace UntitledPoolGame.Player
             else verticalSpeed += gravity * dt;
 
             CollisionFlags flags = controller.Move((horizontal + Vector3.up * verticalSpeed) * dt);
+            fps.KeepOffTable();
             if ((flags & CollisionFlags.Above) != 0 && verticalSpeed > 0f) verticalSpeed = 0f;
             // Running into a wall eats the speed going into it.
             if ((flags & CollisionFlags.Sides) != 0)
@@ -320,6 +321,7 @@ namespace UntitledPoolGame.Player
                 return false;
             }
             if (hit.normal.y < 0.7f) { Trace("rebord refusé : dessus trop penché"); return false; }
+            if (fps.IsOverTable(hit.point, out _)) { Trace("rebord refusé : la table"); return false; }
             float height = hit.point.y - feet.y;
             if (height < cfg.ledgeMinHeight || height > cfg.ledgeMaxHeight) return false;
 

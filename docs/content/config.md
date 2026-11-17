@@ -263,8 +263,10 @@ Un joueur se cache dans une bille, l'autre la cherche à la blanche (*Lancer san
 | Groupe | Champs |
 |---|---|
 | Partie | *Points To Win*, *First Seeker*, *Hide Time* (temps pour se cacher), *Search Time* (temps de la recherche), *Shots Per Round*, *Round Over Time* |
+| Pouvoir du chercheur | *Seeker Power* : donné au chercheur à chaque manche, rempli par *Ensure Config Assets Exist* (`HideAndSeekSonarPower`) |
 | Table | *Balls On Table*, *Scatter Clearance* (écart avec la blanche et le départ du petit), *Take Reach* (portée pour prendre une bille) |
 | Bille cachée et leurres | *Roll Speed*, *Roll Acceleration* (les mêmes pour le cacheur et les leurres), *Decoy Interval Min / Max* (temps entre deux leurres), *Decoy Roll Min / Max* (durée de leur roulement) |
+| Obligation de bouger | *Must Move Time* (temps sans déplacer sa bille, 0 = pas d'obligation), *Must Move Distance* (distance à parcourir pour que ce temps reparte), *Must Move Warning* (préavis avant l'échéance, sur la plaque et à la vibration), *Forced Roll Time* (durée du roulement forcé) ; 12 s, 0,2 m, 3 s, 1,5 s |
 | Ruses du cacheur | *Swaps Per Round*, *Swap Reach*, *Fakes Per Round*, *Fake Reach*, *Fake Roll Time*, *Swap Alert Delay Min / Max* (délai du message au chercheur), *Swap Alert Time*, *Rumble Time*, *Rumble Strength* |
 | Secousse | *Shake Interval Min / Max*, *Shake Speed* (vitesse donnée aux billes), *Shake Camera*, *Shake Camera Time* |
 | Vue du cacheur | *Camera Fov*, *Camera Margin*, *Camera Clear Above* (la lampe et le plafond, plus haut, ne sont pas dessinés) |
@@ -273,13 +275,13 @@ Un joueur se cache dans une bille, l'autre la cherche à la blanche (*Lancer san
 
 ### ShooterMiniSettings — les joueurs se tirent dessus (modes Shooter miniature et Shooter Billard)
 
-Les deux joueurs réduits sur la table, premier à N éliminations (*Lancer sans le menu* : *Mode* = *ShooterMini*). Créé par *Ensure Config Assets Exist*. Le corps et sa chute viennent de `PocketSizeSettings` (*Tiny Prefab* et les réglages *Tiny…*, *Tiny Blocks Balls*). Se joue sans pouvoirs pour l'instant, même si l'option est active dans le menu.
+Les deux joueurs réduits sur la table, premier à N éliminations (*Lancer sans le menu* : *Mode* = *ShooterMini*). Créé par *Ensure Config Assets Exist*. Le corps et sa chute viennent de `PocketSizeSettings` (*Tiny Prefab* et les réglages *Tiny…*, *Tiny Blocks Balls*). Les pouvoirs sortent de caisses quand l'option est active dans le menu.
 
 | Groupe | Réglages | Valeurs |
 |---|---|---|
 | Partie | *Eliminations To Win* ; *Countdown* ; *End Delay* (entre la dernière élimination et l'écran de fin) | 5 ; 3 s ; 2 s |
 | Vie | *Max Health* ; perdue par *Shot Damage*, *Ball Damage*, *Fall Damage*, *Kick Damage* (Spartan kick, environ la moitié pour un coup simple) ; *Respawn Delay* ; *Respawn Safe Time* ; *Respawn Clearance* (distance à l'autre joueur) ; *Fall Depth* (sous le tapis) | 100 ; 20, 40, 30, 60 ; 3 s ; 1,5 s ; 0,5 m ; 0,0432 m |
-| Queue-fusil | *Fire Interval* ; *Shot Speed* (tout droit, sans gravité) ; *Shot Radius* ; *Shot Mass* (plus haut = déplace plus les billes) ; *Shot Bounciness* ; *Shot Bounces* ; *Shot Lifetime* ; *Shot Hit Margin* ; *Cue Prefab* (la queue tenue, rempli par *Ensure Config Assets Exist*) ; *Aim Spine Weight* et *Aim Arm Weight* (part de la colonne et du bras droit dans Aim IK) ; *Cue Hand Span* (écart des mains sur la queue) ; *Cue Hand Offset* (sort les bras du ventre, se règle pendant le jeu) ; *Cue Butt Margin* (main droite au talon) ; *Cue Palm Offset* (dans la paume) ; *Camera Forward* (avance de la caméra) ; *Cue Aim Distance* ; *Player Colors* (les tirs) | 0,25 s ; 3 m/s ; 0,006 m ; 0,03 kg ; 0,8 ; 3 ; 2 s ; 0,004 m ; `Cue.prefab` ; 0,25 ; 0,6 ; 0,25 m ; (-0,08 ; 0,08 ; 0,28) ; 0,06 m ; 0,03 m ; 0,12 m ; 3 m ; bleu, rouge |
+| Queue-fusil | *Fire Interval* ; *Shot Speed* (tout droit, sans gravité) ; *Shot Radius* ; *Shot Mass* (plus haut = déplace plus les billes) ; *Shot Bounciness* ; *Shot Bounces* ; *Shot Lifetime* ; *Shot Hit Margin* ; *Cue Prefab* (la queue tenue, rempli par *Ensure Config Assets Exist*) ; *Aim Spine Weight* et *Aim Arm Weight* (part de la colonne et du bras droit dans Aim IK) ; *Cue Hand Span* (écart des mains sur la queue) ; *Cue Hand Offset* (sort les bras du ventre, se règle pendant le jeu) ; *Cue Butt Margin* (main droite au talon) ; *Cue Palm Offset* (dans la paume) ; *Camera Forward* (avance de la caméra) ; *Cue Aim Distance* ; *Player Colors* (les tirs) | 0,5 s ; 3 m/s ; 0,006 m ; 0,03 kg ; 0,8 ; 3 ; 2 s ; 0,004 m ; `Cue.prefab` ; 0,25 ; 0,6 ; 0,25 m ; (-0,08 ; 0,08 ; 0,28) ; 0,06 m ; 0,03 m ; 0,12 m ; 3 m ; bleu, rouge |
 | Caisses de pouvoir | *Crate Reach* (distance pour ramasser en marchant dessus ; les pouvoirs eux-mêmes : section *Pouvoirs*) ; *Armed Crosshair Color* (viseur quand un pouvoir attend le tir) ; *Armed No Target Color* (grappin sans rien à portée : le pouvoir reste armé) | 0,06 m ; jaune ; rouge |
 | Réaction à un tir | *Shot Pin* (maintien sur l'animation juste après un tir, plus bas = le corps part plus loin ; au-dessus de 0,5) ; *Shot Impact Speed* (vitesse du muscle touché à taille normale, la moitié au reste de la chaîne) ; *Shot Reaction Time* (durée pendant laquelle le modèle suit le ragdoll) ; *Shot Knock Speed* (projection quand un coup fait tomber) | 0,55 ; 5 m/s ; 0,7 s ; 0,35 m/s |
 | Animations | *Animation Fade* ; *Ready Time* (mise en joue) ; *Shoot Hold* (après le dernier tir) | 0,15 s ; 1 s ; 0,15 s |
@@ -463,6 +465,7 @@ En R&D (branche `feature/deplacements-combat`) : ne s'applique qu'au joueur qui 
 | Saut | hauteur, gravité, marge après un bord, appui gardé avant d'atterrir | 1,1 m, −22 m/s², 0,12 s, 0,12 s |
 | Escalade | hauteur min et max d'un rebord, distance de recherche, durée | 0,8 m, 2,1 m, 0,6 m, 0,6 s |
 | Corps mou (mains libres) | force et maintien des bras, force du buste, vitesse de passage mou ↔ rigide, penché du buste et son lissage | 0,45, 0,15, 0,8, 6, 0,08 m, 8 |
+| Table (**tous les joueurs à taille normale**, tous les modes) | *Table Keep Off Margin* : distance gardée au-delà du tapis, en plus du rayon du joueur ; *Table Keep Off Below Felt* : hauteur sous le tapis à partir de laquelle il est repoussé ; *Table Keep Off Above Felt* : au-delà, il ne l'est plus (mezzanine). Toutes pour une table à l'échelle 1 | 0,15 m, 0,3 m, 3 m |
 | Vue | roulis en pas de côté, balancement et sa fréquence ; *Camera Collision Radius* : distance gardée entre la caméra et les murs, plafonds et objets fixes (s'applique à tous les joueurs, variante R&D ou non ; 0 = coupé) | 2,5°, 0,025 m, 1,9 pas/s ; 0,1 m |
 
 Sur le composant *Local Player Locomotion* lui-même : les noms des actions (Move, Sprint, Jump) et *Trace Movement*, qui écrit dans la console les sauts, rebords trouvés ou refusés (avec la raison) et escalades.
@@ -470,6 +473,8 @@ Sur le composant *Local Player Locomotion* lui-même : les noms des actions (Mov
 ### CombatSettings — combat de R&D (coups, encaissement, garde, endurance)
 
 En R&D : ne s'applique qu'avec la case *Boxing Punches* cochée sur *Local Unarmed Melee*, c'est-à-dire sur la variante `New_PlayerVariant`.
+
+Une exception, pour tous les joueurs : *Melee Modes* (groupe *Qui peut frapper*) liste les modes où tout le monde peut frapper, au poing, au pied et à la queue (par défaut : Shooter miniature et Shooter Billard). Ailleurs, seul le pouvoir *Bagarre* le permet, pour un temps. Sans partie, comme dans l'arène de R&D, on peut toujours frapper.
 
 **Un seul outil prépare tout** : *Tools > Pool > R&D > Préparer le joueur de R&D*. Il met sur la variante le déplacement, les poings de boxe et la jauge d'encaissement, puis crée ou reconstruit les calques d'animation. On peut le relancer sans risque. *Créer l'arène de test* l'appelle aussi. Ces valeurs remplacent celles du composant pour le poing. La garde et la portée du poing, ainsi que tout le coup de pied (spartiate compris), restent réglés sur le composant (voir [Combat](config.html#config:combat)). Lu à chaque image.
 
@@ -588,6 +593,9 @@ En solo (une seule manette ou un seul clavier pour les deux côtés), les deux r
 | Tête chercheuse (Shooter) | `ShooterHomingBallPower` | Radius (0,04 m), Mass (1,5 kg), Speed (0,3 m/s ; niveau 2 : 0,42), Steering (3), Damage (40), Lifetime (10 s), Color |
 | Aimant à billes (Shooter) | `ShooterMagnetPower` | Duration (4 s ; niveau 2 : 7), Radius (0,7 m), Acceleration (1,5 m/s²), Range (2 m), Vfx Prefab, Vfx Scale |
 | Poche fermée (Shooter) | `ShooterClosePocketPower` | Duration (10 s ; niveau 2 : 18), la poche ouverte la plus proche du viseur |
+| Grenade (Shooter) | `ShooterGrenadePower` | Throw Speed (2,5 m/s), Throw Lift (1,2 m/s : plus haut = plus en cloche), Radius (0,018 m), Mass (0,2 kg), Bounciness (0,5), Fuse (1,5 s), Blast Radius (0,25 m ; niveau 2 : 0,35), Damage (50, le lanceur compris), Knock Speed (0,7 m/s), Lift Speed (1 m/s), Ball Speed (1,2 m/s), Explosion Prefab, Explosion Scale |
+| Sonar (Cache-cache) | `HideAndSeekSonarPower` | Radius (0,6 m à l'échelle 1), Duration (4 s), Color. Pas de niveau 2 ; donné au chercheur par les règles, jamais dans une caisse |
+| Bagarre | `BrawlPower` | Duration (20 s ; niveau 2 : 40), le temps où ce joueur peut frapper. Ne sort pas dans les modes de *Melee Modes*, où tout le monde peut déjà frapper |
 | Grappin (Shooter) | `ShooterGrapplePower` | Range (2 m ; niveau 2 : 3), Pull Speed (1,6 m/s), Max Time (1,5 s), Opponent Damage (30), Opponent Knock Speed (0,4 m/s : l'adversaire tombe en ragdoll), Ball Hit Speed (1,6 m/s : une bille atteinte part où le joueur regarde, comme au coup de pied) |
 | Blanche au ralenti (Pocket Size, petit) | `SlowCueBallPower` | Duration (6 s), Max Speed (0,5 m/s : vitesse maximale des blanches du grand) |
 | Blanche à la poche (Pocket Size, petit) | `RepelCueBallPower` | Speed (2,5 m/s : vitesse donnée à chaque blanche du grand vers la poche ouverte la plus proche) |

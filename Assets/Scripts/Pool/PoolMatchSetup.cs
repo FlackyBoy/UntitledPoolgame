@@ -68,7 +68,8 @@ namespace UntitledPoolGame.Pool
 
         // Bowling Pool: no balls on the table for the powers to work on. Sumo modes:
         // the players are the balls, nothing to shoot a power with. Hide and seek:
-        // the hider has their own tricks.
+        // no crates, the hider has their own tricks and the seeker is given the
+        // Sonar each round (HideAndSeekRuleSet).
         public static bool HasPowers(PoolGameMode mode) =>
             mode != PoolGameMode.BowlingPool && mode != PoolGameMode.SumoPool && mode != PoolGameMode.SumoBilliard && mode != PoolGameMode.HideAndSeek;
 

@@ -24,6 +24,10 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Temps pendant lequel le résultat d'une manche reste affiché, en secondes.")]
         [Min(0f)] public float roundOverTime = 3f;
 
+        [Header("Pouvoir du chercheur")]
+        [Tooltip("Pouvoir donné au chercheur au début de chaque manche, utilisable une fois pendant la recherche. Vide = aucun. Rempli par Ensure Config Assets Exist.")]
+        public PoolPower seekerPower;
+
         [Header("Table")]
         [Tooltip("Billes éparpillées sur la table (toutes les billes de couleur = 15).")]
         [Range(2, 15)] public int ballsOnTable = 15;
@@ -45,6 +49,16 @@ namespace UntitledPoolGame.Pool
         [Min(0.1f)] public float decoyRollMin = 1f;
         [Tooltip("Durée la plus longue du roulement d'un leurre, en secondes.")]
         [Min(0.1f)] public float decoyRollMax = 3f;
+
+        [Header("Obligation de bouger")]
+        [Tooltip("Pendant la recherche, temps que le cacheur peut passer sans déplacer sa bille, en secondes. Au bout, elle part toute seule. 0 = pas d'obligation.")]
+        [Min(0f)] public float mustMoveTime = 12f;
+        [Tooltip("Distance que la bille doit parcourir pour que ce temps reparte, en mètres : pousser contre une bande ou trembler sur place ne compte pas.")]
+        [Min(0.01f)] public float mustMoveDistance = 0.2f;
+        [Tooltip("Le cacheur est prévenu ce temps avant que sa bille parte, en secondes (plaque, vibration à la manette).")]
+        [Min(0f)] public float mustMoveWarning = 3f;
+        [Tooltip("Durée du roulement forcé, en secondes : le cacheur ne contrôle plus sa bille, comme un leurre qui roule vers un point du tapis.")]
+        [Min(0.1f)] public float forcedRollTime = 1.5f;
 
         [Header("Ruses du cacheur")]
         [Tooltip("Changements de bille par manche.")]
@@ -102,6 +116,8 @@ namespace UntitledPoolGame.Pool
         [Tooltip("{0} : temps restant, {1} : tirs restants, {2} : changements de bille restants au cacheur, à ce que le chercheur en sait.")]
         public string searchFormat = "{0}  ·  {1} tirs  ·  changements : {2}";
         public string swapAlertLabel = "Il a changé de bille !";
+        [Tooltip("Sur la plaque du cacheur, juste avant que sa bille parte toute seule.")]
+        public string mustMoveLabel = "Bouge !";
         [Tooltip("{0} : temps restant, {1} : changements restants, {2} : fausses pistes restantes.")]
         public string hiderFormat = "{0}  ·  changer : {1}  ·  fausse piste : {2}";
         public string foundText = "Trouvé !";
