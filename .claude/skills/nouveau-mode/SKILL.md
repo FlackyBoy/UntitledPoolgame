@@ -33,7 +33,8 @@ Lancer `notion-todo start`. Notion est plein pour l'instant : si la création é
 | `Pool/PoolGameMode.cs` | La valeur **à la fin de l'enum** : elle est sérialisée en entier, ne jamais réordonner. Commentaire d'une ou deux lignes. |
 | `Pool/<Mode>RuleSet.cs` | Les règles (`IPoolRuleSet` : `Setup`, `ResolveShot`, `DescribePlayer`). |
 | `Pool/<Mode>Settings.cs` | Le ScriptableObject de réglages, chargé par `PoolSettingsLoader.LoadOrDefault<T>()`, avec un `debugLogs` et un tag `[Mode]`. |
-| `Pool/PoolMatchRules.cs` | `CreateRuleSet`. `DrawModeButton` (menu de secours). Le `Tick` s'il faut un suivi par image. Le nettoyage de fin de mode si le mode crée des objets. |
+| `Pool/PoolMatchRules.cs` | `CreateRuleSet`. Le `Tick` s'il faut un suivi par image. Le nettoyage de fin de mode si le mode crée des objets. |
+| `Pool/PoolMatchRules.LegacyGui.cs` | `DrawModeButton` (menu de secours). |
 | `Pool/PoolMatchSetup.cs` | `ModeName`. `Supports` si un type de partie est impossible. `HasPowers` si le mode n'a pas de pouvoirs. |
 | `Pool/PoolModeSettings.cs` | Une ligne dans `Defaults()` (types permis, type par défaut, *Own Powers Only*). |
 | `UI/MenuSettings.cs` | Le champ `MenuModeBall` (nom, numéro, couleur, règles) et la ligne de `ModeBall()`. |

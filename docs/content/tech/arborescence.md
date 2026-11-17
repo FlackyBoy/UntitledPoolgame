@@ -166,7 +166,8 @@ Assets/Scripts/
 │   └── FpsPlayerController.cs, CharacterAnimationController.cs, NetworkPlayerRigLink.cs   online (figés)
 └── Pool/
     ├── PoolBall.cs, PoolPocket.cs, PoolTableSurface.cs   billes, poches, zone de jeu
-    ├── PoolMatchRules.cs           partie : tours, fautes, main libre, pouvoirs, HUD
+    ├── PoolMatchRules.cs           partie : tours, fautes, main libre, boucle de tir
+    ├── PoolMatchRules.Powers.cs, .TableHoles.cs, .Debug.cs, .LegacyGui.cs   la même classe (partial) : pouvoirs en stock et leurs effets, trous de table, entrées du menu debug, menu et HUD OnGUI provisoires
     ├── IPoolRuleSet.cs + EightBall/NineBall/FourteenOne/SpeedPoolRuleSet.cs   règles par mode
     ├── PoolGameMode.cs, PoolMatchType.cs, PoolMatchSetup.cs, PoolModeSettings.cs   mode, type (tour par tour / Speed Pool) et pouvoirs d'une partie ; types autorisés par mode
     ├── ShooterPower.cs + Shooter*Power.cs (pouvoirs), ShooterRollingBall.cs, ShooterMine.cs, ShooterGrenade.cs, ShooterMagnet.cs, ShooterPowerFx.cs, ShooterMiniRuleSet.cs + .Powers.cs, ShooterPoolRuleSet.cs, ShooterMiniSettings.cs, LocalShooterWeapon.cs + .Animation.cs, ShooterMiniProjectile.cs   mode Shooter miniature : règles, réglages, queue-fusil et ses animations, tirs
