@@ -81,18 +81,19 @@ namespace UntitledPoolGame.Core
         private Page title, players, level, gameChoice, mode, boogie, lobby, settingsPage, current;
         private KeyBindingsPanel settings;
         private Label ruleTitle, ruleText, ruleOption;
-        private readonly VisualElement[] slots = new VisualElement[2];
-        private readonly Label[] slotLabels = new Label[2];
+        // The lobby's places, J1 to J4.
+        private readonly VisualElement[] slots = new VisualElement[PoolMatchRules.MaxPlayers];
+        private readonly Label[] slotLabels = new Label[PoolMatchRules.MaxPlayers];
         private int knownPlayers = -1;
 
         private bool local;                   // multiplayer path (the lobby) or Just for fun
         private string levelName = "";
         private int levelIndex;
 
-        // J1 drives the menu (device of the last confirm); J2 joins in the
-        // lobby with another device. Passed on through GameSession.
+        // J1 drives the menu (device of the last confirm); J2 to J4 join in
+        // the lobby with other devices. Passed on through GameSession.
         private InputDevice menuDevice;
-        private readonly InputDevice[] slotDevices = new InputDevice[2];
+        private readonly InputDevice[] slotDevices = new InputDevice[PoolMatchRules.MaxPlayers];
         private bool joinedThisFrame;
         private int targetScore = 25;
         // Type per mode: its own (PoolMatchSetup.NativeType) until switched
@@ -311,7 +312,7 @@ namespace UntitledPoolGame.Core
 
         private void BuildLobbySlots(Page page)
         {
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < slots.Length; i++)
             {
                 slots[i] = page.view.Item("slot" + (i + 1))?.visual;
                 slotLabels[i] = page.view.Item("slot" + (i + 1) + "-label")?.text;
@@ -331,6 +332,8 @@ namespace UntitledPoolGame.Core
             switch (e.action)
             {
                 case MenuAction.OpenScreen:
+                    // Boogie Night's wheel and scores are for two (lot 6 of the 4 players).
+                    if (e.targetScreen == MenuLayouts.Boogie && MenuPlayers > 2) { Toast(cfg.boogieTwoOnlyToast); break; }
                     if (pages.TryGetValue(e.targetScreen ?? "", out Page target)) Show(target);
                     else Debug.LogWarning($"[Menu] Écran « {e.targetScreen} » introuvable (élément {e.id}).");
                     break;
@@ -347,10 +350,12 @@ namespace UntitledPoolGame.Core
                 case MenuAction.PlayOnline: Toast(cfg.onlineToast); break;
                 case MenuAction.LobbyGo: Show(level); break;
                 case MenuAction.StartMode:
+                    if (!Accepts(e.mode)) { Toast(Format(cfg.modeTooManyFormat, MenuPlayers)); break; }
                     BoogieNight.End();
                     Launch(SetupFor(e.mode));
                     break;
                 case MenuAction.StartBoogie:
+                    if (MenuPlayers > 2) { Toast(cfg.boogieTwoOnlyToast); break; }
                     // The wheel draws each match in the level; this setup only
                     // fills the loading screen until then.
                     BoogieNight.Begin(boogieRounds);
@@ -386,7 +391,10 @@ namespace UntitledPoolGame.Core
             page.focused = 0;
             if (page == mode)
             {
-                int classic = page.options.FindIndex(o => o.data != null && o.data.action == MenuAction.StartMode && o.data.mode == PoolGameMode.EightBall);
+                int classic = page.options.FindIndex(o => o.data != null && o.data.action == MenuAction.StartMode && o.data.mode == PoolGameMode.EightBall
+                                                          && Accepts(o.data.mode));
+                // More players than 8-ball takes: the first mode that can be played.
+                if (classic < 0) classic = page.options.FindIndex(o => o.data != null && o.data.action == MenuAction.StartMode && Accepts(o.data.mode));
                 page.focused = Mathf.Max(0, classic);
             }
             if (page == lobby) { slotDevices[0] = menuDevice ?? slotDevices[0]; knownPlayers = -1; }
@@ -398,10 +406,15 @@ namespace UntitledPoolGame.Core
                 if (cardsStart >= 0 && cardsStart + first < page.options.Count) page.focused = cardsStart + first;
             }
             foreach (Option o in page.options) { o.focus = 0f; ResetVisual(o); }
+            // The modes that don't go up to this many players, greyed out.
+            if (page == mode)
+                foreach (Option o in page.options)
+                    if (o.data != null && o.data.action == MenuAction.StartMode && o.visual != null)
+                        o.visual.style.opacity = Accepts(o.data.mode) ? 1f : 0.35f;
             shooting = null;
             lastFocused = null;
 
-            string context = local ? cfg.localContext : cfg.justForFunContext;
+            string context = local ? Format(cfg.localContextFormat, MenuPlayers) : cfg.justForFunContext;
             if (level.context != null) TextFx.Set(level.context, context);
             foreach (Page p in new[] { gameChoice, mode, boogie })
                 if (p.context != null) TextFx.Set(p.context, context + " · " + levelName);
@@ -519,31 +532,32 @@ namespace UntitledPoolGame.Core
             lastFocused = o;
         }
 
-        // J2 = the first other device to press its button (A / Start, or
-        // Enter / Space when J1 is on a pad).
+        // J2 to J4 = the next other devices to press their button (A / Start,
+        // or Enter / Space for the keyboard when nobody has it yet).
         private void UpdateSlots()
         {
             joinedThisFrame = false;
             if (slotDevices[0] == null) slotDevices[0] = menuDevice ?? (InputDevice)Keyboard.current ?? Gamepad.current;
-            if (slotDevices[1] == null)
+            int players = 0;
+            while (players < slotDevices.Length && slotDevices[players] != null) players++;
+            if (players < slotDevices.Length)
             {
                 foreach (Gamepad pad in Gamepad.all)
-                    if (pad != slotDevices[0] && (pad.buttonSouth.wasPressedThisFrame || pad.startButton.wasPressedThisFrame))
-                    { slotDevices[1] = pad; joinedThisFrame = true; break; }
+                    if (!HasJoined(pad) && (pad.buttonSouth.wasPressedThisFrame || pad.startButton.wasPressedThisFrame))
+                    { slotDevices[players++] = pad; joinedThisFrame = true; break; }
                 Keyboard kb = Keyboard.current;
-                if (slotDevices[1] == null && kb != null && !(slotDevices[0] is Keyboard)
+                if (!joinedThisFrame && kb != null && !HasJoined(kb)
                     && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
-                { slotDevices[1] = kb; joinedThisFrame = true; }
+                { slotDevices[players++] = kb; joinedThisFrame = true; }
             }
 
-            int players = slotDevices[1] != null ? 2 : slotDevices[0] != null ? 1 : 0;
             float pulse = 1f + 0.06f * Mathf.Sin(Time.unscaledTime * 4.5f);
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < slots.Length; i++)
                 if (slots[i] != null && i >= players) slots[i].style.scale = new Scale(new Vector3(pulse, pulse, 1f));
             if (players == knownPlayers) return;
             knownPlayers = players;
-            if (joinedThisFrame) Toast(cfg.player2Joined);
-            for (int i = 0; i < 2; i++)
+            if (joinedThisFrame) Toast(Format(cfg.playerJoinedFormat, players));
+            for (int i = 0; i < slots.Length; i++)
             {
                 if (slots[i] == null) continue;
                 slots[i].Clear();
@@ -551,7 +565,7 @@ namespace UntitledPoolGame.Core
                 float size = Mathf.Max(40f, slots[i].resolvedStyle.width > 1f ? slots[i].resolvedStyle.width : 170f);
                 if (i < players)
                 {
-                    K.BallVisual(slots[i], size, i == 0 ? K.P1 : K.P2, "J" + (i + 1), false);
+                    K.BallVisual(slots[i], size, K.PlayerColor(i), "J" + (i + 1), false);
                     if (slotLabels[i] != null) TextFx.Reveal(slotLabels[i], Format(cfg.readyFormat, DeviceName(slotDevices[i])));
                 }
                 else
@@ -566,6 +580,12 @@ namespace UntitledPoolGame.Core
                     if (slotLabels[i] != null) TextFx.Set(slotLabels[i], cfg.joinHint);
                 }
             }
+        }
+
+        private bool HasJoined(InputDevice device)
+        {
+            foreach (InputDevice d in slotDevices) if (d == device) return true;
+            return false;
         }
 
         private string DeviceName(InputDevice device) => device is Gamepad ? cfg.gamepadName : cfg.keyboardName;
@@ -594,11 +614,27 @@ namespace UntitledPoolGame.Core
             string text = type;
             if (PoolMatchSetup.HasPowers(gameMode)) text += "\n" + (powers ? cfg.powersOnOption : cfg.powersOffOption);
             if (gameMode == PoolGameMode.FourteenOne) text += "\n" + Format(cfg.targetScoreFormat, targetScore);
+            if (!Accepts(gameMode)) text += "\n" + Format(cfg.modeMaxPlayersFormat, PoolMatchSetup.MaxPlayers(gameMode));
             return text;
         }
 
         private PoolMatchType TypeFor(PoolGameMode gameMode) =>
             chosenTypes.TryGetValue(gameMode, out PoolMatchType type) ? type : PoolMatchSetup.NativeType(gameMode);
+
+        // Players who joined in the lobby (1 off the multiplayer path).
+        private int MenuPlayers
+        {
+            get
+            {
+                if (!local) return 1;
+                int count = 0;
+                foreach (InputDevice d in slotDevices) if (d != null) count++;
+                return count;
+            }
+        }
+
+        // The mode is written for this many players (PoolMatchSetup.MaxPlayers).
+        private bool Accepts(PoolGameMode gameMode) => MenuPlayers <= PoolMatchSetup.MaxPlayers(gameMode);
 
         private PoolMatchSetup SetupFor(PoolGameMode gameMode) => new PoolMatchSetup(gameMode, TypeFor(gameMode), powers, targetScore);
 

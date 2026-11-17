@@ -82,6 +82,8 @@ namespace UntitledPoolGame.Core
         [Tooltip("Dessous du cube de craie.")] public Color cubeDark = Hex("#1f5c99");
         [Tooltip("Couleur du joueur 1.")] public Color player1 = Hex("#2f7cf6");
         [Tooltip("Couleur du joueur 2.")] public Color player2 = Hex("#ef4a3c");
+        [Tooltip("Couleur du joueur 3.")] public Color player3 = Hex("#2ec25a");
+        [Tooltip("Couleur du joueur 4.")] public Color player4 = Hex("#a25cf2");
 
         [Header("Polices (vide = Titan One / Bowlby One de Resources/UI/Fonts)")]
         [Tooltip("Police du texte courant et des libellés.")] public Font bodyFont;
@@ -120,7 +122,7 @@ namespace UntitledPoolGame.Core
         [Header("Combien de joueurs ?")]
         public string playersHeading = "Combien de joueurs ?";
         public MenuBall onePlayerBall = new MenuBall("1 joueur", "1", "#2f7cf6", false, "seul à la table · l'IA arrive");
-        public MenuBall twoPlayersBall = new MenuBall("2 joueurs", "2", "#ef4a3c", false, "écran partagé");
+        public MenuBall twoPlayersBall = new MenuBall("2 à 4 joueurs", "2", "#ef4a3c", false, "écran partagé");
 
         [Header("Mode de jeu (2 joueurs)")]
         public string gameChoiceHeading = "Mode de jeu";
@@ -148,8 +150,8 @@ namespace UntitledPoolGame.Core
         public string comingSoonToast = "Bientôt !";
         [Tooltip("Étiquette jaune quand on vient de « 1 joueur ».")]
         public string justForFunContext = "1 joueur";
-        [Tooltip("Étiquette jaune quand on vient de « 2 joueurs ».")]
-        public string localContext = "2 joueurs";
+        [Tooltip("Étiquette jaune quand on vient du salon. {0} = nombre de joueurs.")]
+        public string localContextFormat = "{0} joueurs";
 
         [Header("Type de partie")]
         public string modeHeading = "Quel type de partie ?";
@@ -198,7 +200,7 @@ namespace UntitledPoolGame.Core
 
         [Header("Multijoueur")]
         public string multiplayerHeading = "Multijoueur";
-        public MenuBall localBall = new MenuBall("Local", "J1", "#2f7cf6", false, "écran partagé · 2 manettes");
+        public MenuBall localBall = new MenuBall("Local", "J1", "#2f7cf6", false, "écran partagé · 2 à 4 manettes");
         public MenuBall onlineBall = new MenuBall("En ligne", "NET", "#ef4a3c", true, "héberger · rejoindre");
         public string onlineToast = "Le jeu en ligne arrive plus tard";
 
@@ -212,8 +214,14 @@ namespace UntitledPoolGame.Core
         public string readyFormat = "{0} - prêt";
         public string gamepadName = "Manette";
         public string keyboardName = "Clavier & souris";
-        [Tooltip("Message quand J2 arrive.")]
-        public string player2Joined = "Salut J2 !";
+        [Tooltip("Message quand un joueur arrive. {0} = son numéro.")]
+        public string playerJoinedFormat = "Salut J{0} !";
+        [Tooltip("Mode choisi qui ne se joue pas encore avec autant de joueurs. {0} = nombre de joueurs.")]
+        public string modeTooManyFormat = "Pas encore à {0} joueurs";
+        [Tooltip("Sous les règles d'un mode qui ne se joue pas avec autant de joueurs. {0} = son maximum.")]
+        public string modeMaxPlayersFormat = "Se joue à {0} joueurs au plus";
+        [Tooltip("Boogie Night choisie à plus de 2 joueurs.")]
+        public string boogieTwoOnlyToast = "Boogie Night : à 2 joueurs pour l'instant";
 
         // ---------- Pause ----------
 

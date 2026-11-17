@@ -246,7 +246,7 @@ namespace UntitledPoolGame.Core
 
             // The invite, while a fourth player may still come.
             int joined = PlayerInput.all.Count;
-            bool invite = joined < PlayerDeviceRouter.JoinLimit(PlayerInputManager.instance);
+            bool invite = PlayerDeviceRouter.JoinByButtonOpen && joined < PlayerDeviceRouter.JoinLimit(PlayerInputManager.instance);
             freeInvite.style.display = invite ? DisplayStyle.Flex : DisplayStyle.None;
             if (invite)
             {

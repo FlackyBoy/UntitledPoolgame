@@ -211,7 +211,7 @@ Proposé le 05/10 dans le prototype [Parcours des menus](ui/parcours.html), int�
 
 - **Menu principal** (refait le 30/10 🔄, compilé, non testé) : **Jouer** · **Réglages** · **Quitter**.
   - **Jouer > 1 joueur** : niveau puis mode, seul à la table en attendant l'IA (qui n'est pas prête) ;
-  - **Jouer > 2 joueurs** : J2 rejoint (écran partagé), niveau, puis **Mode de jeu** :
+  - **Jouer > 2 à 4 joueurs** : J2, J3 et J4 rejoignent (écran partagé), niveau, puis **Mode de jeu** (à 3 ou 4, les modes qui ne se jouent pas encore à autant sont grisés ; Boogie Night reste à 2) :
     - **Sélection** : un mode (Classique, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size, Shooter miniature, Shooter Billard, Bowling Pool, Sumo Pool, Sumo Billard ; 9-ball et 14.1 retirés du menu et de la roue le 30/10, toujours jouables avec *Lancer sans le menu*), avec sur la ligne sélectionnée le type (Y / Tab : chacun son tour ou Speed Pool) et les pouvoirs (X / P) ;
     - **Boogie Night** : on choisit un nombre de parties (5 par défaut). Avant chaque partie, une **roue de la fortune** tire le mode, puis le type (chacun son tour ou Speed Pool) et les pouvoirs (avec ou sans), au hasard ; un mode peut sortir plusieurs fois ; Play Anywhere n'est sur la roue que si le niveau a un trou posé. Les joueurs peuvent **relancer la roue une fois** par tirage. Chaque partie gagnée rapporte un point ; la soirée s'arrête dès qu'un joueur ne peut plus être rattrapé. Égalité après la dernière partie : **ultime partie**, tirée elle aussi. Réglages dans `BoogieNightSettings`.
   - **Réglages** : pour l'instant les touches (clavier / souris et manette, réaffectables) ;

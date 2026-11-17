@@ -354,7 +354,7 @@ namespace UntitledPoolGame.Core
             pill.style.paddingTop = pill.style.paddingBottom = 8;
             pill.style.backgroundColor = new Color(0f, 0f, 0f, 0.45f);
             K.Radius(pill, 50);
-            VisualElement ball = K.BallVisual(pill, 64, index == 0 ? K.P1 : K.P2, "J" + (index + 1), false);
+            VisualElement ball = K.BallVisual(pill, 64, K.PlayerColor(index), "J" + (index + 1), false);
             ball.style.marginRight = 16;
             Label label = K.Text(pill, Format(cfg.pressFormat, index + 1, device is Gamepad ? "A" : "Entrée"), K.BodyFont, 36, K.Chalk, false);
             players.Add((device, pill, label, false));

@@ -45,12 +45,18 @@ namespace UntitledPoolGame.Core
 
         // Set by Assign: the devices were chosen in the menu.
         private static bool joinLocked;
+        private static PlayerDeviceRouter instance;
+
+        // A player can still arrive with a button in this level (not after
+        // the menu chose the devices, not without join by button).
+        public static bool JoinByButtonOpen => !joinLocked && instance != null && instance.joinOnPress;
 
         private PlayerInputManager manager;
         private bool joinOnPress;
 
         private void Awake()
         {
+            instance = this;
             joinLocked = false;
             manager = FindAnyObjectByType<PlayerInputManager>();
             // Runs after the scene's OnEnable: the manager already listens,

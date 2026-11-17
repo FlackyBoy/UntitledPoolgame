@@ -399,7 +399,7 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 | Nouvelle partie / Charger | Titres, « Emplacement {0} », « Libre », « Vide », les notes du cube, les messages |
 | Choix du niveau | « On joue où ? », le tampon et le message « Bientôt », les étiquettes « 1 joueur » et « 2 joueurs » |
 | Type de partie | « Quel type de partie ? », les lignes de la liste des modes, avec leur bille (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size) avec leurs règles, les lignes d'option sous les règles : type (*Turn Based Option*, *Speed Pool Option*, *Turn Based Only Option*), pouvoirs (*Powers On Option*, *Powers Off Option*), score du 14.1 (*Target Score Format*, « Premier à {0} ») |
-| Multijoueur et salon | Titres, billes Local et En ligne, « Qui joue ce soir ? », « C'est parti », « J{0} appuie ! », « {0} - prêt », noms des appareils, « Salut J2 ! » |
+| Multijoueur et salon | Titres, billes Local et En ligne, « Qui joue ce soir ? », « C'est parti », « J{0} appuie ! », « {0} - prêt », noms des appareils, « Salut J{0} ! » ; mode refusé (« Pas encore à {0} joueurs », « Se joue à {0} joueurs au plus »), Boogie Night à plus de 2 ; couleurs de J1 à J4 |
 | Pause | Titre, les trois pilules (Reprendre, Réglages, Menu principal), « J{0} a mis la partie en pause », la confirmation et ses deux pilules |
 | Réglages > Touches | Titre, onglets (le premier est actif, les autres reçoivent « · bientôt »), en-têtes de colonnes, boutons, et le nom de chaque action |
 | Durées | Petits messages (1,4 s), vitesse du tir sur une bille (×1), clignotement de « vise une bille » (0,7 s) |

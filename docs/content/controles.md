@@ -2,7 +2,7 @@
 
 ## Menu principal
 
-Jouer (1 joueur : niveau puis mode ; 2 joueurs : J2 rejoint, niveau, puis Sélection d'un mode ou Boogie Night) · Réglages · Quitter.
+Jouer (1 joueur : niveau puis mode ; 2 à 4 joueurs : J2, J3 et J4 rejoignent, niveau, puis Sélection d'un mode ou Boogie Night ; à 3 ou 4, seuls les modes qui se jouent à autant sont proposés, et pas la Boogie Night) · Réglages · Quitter.
 
 | Clavier / souris | Manette | Action |
 |---|---|---|
@@ -31,7 +31,7 @@ Quand le niveau est chargé, chaque joueur appuie sur **A / ✕** (manette) ou *
 
 - **Seul à la manette** : prendre une manette libre (un stick ou un bouton autre que Start) la donne au premier joueur qui n'en a pas, donc J1. Le joueur seul reprend le clavier et la souris dès qu'on s'en sert (une touche ou un clic, pas un simple mouvement de souris).
 - **Arrivée de J2 : Start** sur une manette libre, dans une scène lancée sans le menu (*Lancer sans le menu*, arène de R&D), même quand J1 joue au clavier. Quand tout le monde a déjà une manette, n'importe quel bouton d'une nouvelle manette fait aussi arriver un joueur. Jusqu'à *Max Player Count* du PlayerInputManager (2 s'il est illimité). Ce Start-là n'ouvre pas la pause.
-- **Depuis le menu**, ce sont les appareils choisis dans le menu (J1 = celui qui navigue, J2 = celui qui a rejoint dans la salle d'attente) ; aucun joueur n'arrive plus par un bouton ensuite, une manette libre va au joueur qui n'en a pas. C'est aussi le cas d'un niveau lancé directement depuis l'éditeur, qui passe par le menu.
+- **Depuis le menu**, ce sont les appareils choisis dans le menu (J1 = celui qui navigue, J2 à J4 = ceux qui ont rejoint dans la salle d'attente, dans l'ordre d'arrivée) ; aucun joueur n'arrive plus par un bouton ensuite, une manette libre va au joueur qui n'en a pas. C'est aussi le cas d'un niveau lancé directement depuis l'éditeur, qui passe par le menu.
 - **Clavier contre manette** : J1 au clavier, l'autre appuie sur Start ; ou choisir les deux appareils dans la salle d'attente du menu ; ou C + P en test.
 
 ## Pause (en partie)
