@@ -3,6 +3,9 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-11-17
+- **Validé en jeu** par l'utilisateur : la table interdite, la Bagarre, le Cache-cache (bouger, Sonar), la grenade et la cadence du Shooter, ainsi que la réorganisation du code des parties.
+
 ## 2026-11-16
 - **Réorganisation du code des parties** (aucun changement en jeu) : le gros fichier qui gère une partie est découpé en cinq, un par métier (partie et tirs, pouvoirs, trous de table, menu debug, menu provisoire), sans rien changer à ce qu'il fait. Première étape d'un nettoyage qui rendra les prochains modes plus simples à ajouter.
 

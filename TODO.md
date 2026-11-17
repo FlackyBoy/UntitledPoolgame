@@ -70,7 +70,7 @@ Le détail est plus bas, dans « Créateur de niveau » et les lignes des menus.
 
 ## En cours
 - 🔄 **Refacto de `PoolMatchRules`** (16/11 ; branche `chore/refacto-match-rules`, posée sur `feature/bagarre-cache-cache-grenade` ; pas dans Notion : espace plein) : audit du 16/11, six pistes classées par gain et par risque. Aucun changement en jeu attendu.
-  - 🔄 **Étape 1, découpage en fichiers `partial`** (compilé, non testé) : `PoolMatchRules.Powers.cs`, `.TableHoles.cs`, `.Debug.cs`, `.LegacyGui.cs`. Le code est déplacé tel quel, vérifié ligne à ligne : le fichier principal passe de 1 754 à 846 lignes.
+  - ✅ **Étape 1, découpage en fichiers `partial`** (validé en jeu par l'utilisateur le 17/11) : `PoolMatchRules.Powers.cs`, `.TableHoles.cs`, `.Debug.cs`, `.LegacyGui.cs`. Le code est déplacé tel quel, vérifié ligne à ligne : le fichier principal passe de 1 754 à 846 lignes.
     - **Comment tester** : une partie de 8-ball avec pouvoirs (un pouvoir de tour adverse, l'aimant, le Trou), une partie de Speed Pool, puis le menu debug (C + X, donner un pouvoir, changer de tour). Rien ne doit avoir changé ; la console ne doit montrer aucune erreur.
   - ⬜ **Étape 2, chaque mode répond lui-même** (« peut tirer ? », suivi à chaque image, après un tir, force du tir, réapparition de la blanche, nettoyage de début de partie) au lieu des `is XxxRuleSet` de `PoolMatchRules`. Une PR par groupe de réponses.
   - ⬜ **Étape 3, découper `MatchHud` en `partial`** (plaque, annonces et cartes, fin, dessin).
@@ -798,7 +798,7 @@ Le détail est plus bas, dans « Créateur de niveau » et les lignes des menus.
     - fin de manche : blanche sur la bonne bille, chute dans une poche, 5 tirs joués, 90 s écoulées ; rôles inversés ensuite, victoire à 3 points ;
     - Rejouer, puis un autre mode : joueurs à taille normale, une seule blanche, billes à leur place. Relever les lignes `[HideAndSeek]`.
   - **À surveiller** : aucun son n'annonce « Ouvre les yeux », le cacheur peut le dire à voix haute ; la plaque du cacheur est longue pour une moitié d'écran ; au clavier, rien ne confirme une ruse.
-- ✅ **Améliorations du 05/11** (demande du 05/11, compilé, non testé ; pas encore dans Notion : espace plein) :
+- ✅ **Améliorations du 05/11** (demande du 05/11 ; validé en jeu par l'utilisateur le 17/11, PR #51 ; pas encore dans Notion : espace plein) :
   - **Personne sur la table, tous modes confondus** : `LocalFpsPlayerController.KeepOffTable`, réglages *Table Keep Off…* dans `MovementSettings`. Les corps rétrécis sont exemptés.
   - **Frapper seulement par un pouvoir ou dans certains modes** : `CombatSettings` > *Melee Modes* (par défaut les deux Shooter), nouveau pouvoir *Bagarre* (`BrawlPower`, 20 s, 40 s au niveau 2). Choix faits sans demande (à valider) : la liste des modes, et Pocket Size n'en fait pas partie, le petit n'y donne donc plus de coups de pied.
   - **Sonar du chercheur (Cache-cache)** : `HideAndSeekSonarPower`, donné à chaque manche, une zone de 0,6 m de rayon pendant 4 s qui contient la bille cachée, vue par les deux joueurs. Le pouvoir lui-même est un choix fait sans demande (à valider).
