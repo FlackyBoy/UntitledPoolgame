@@ -40,7 +40,7 @@ Lancer `notion-todo start`. Notion est plein pour l'instant : si la création é
 | `UI/MenuSettings.cs` | Le champ `MenuModeBall` (nom, numéro, couleur, règles) et la ligne de `ModeBall()`. |
 | `UI/Menus/MenuDefaults.cs` | `ModeRow(...)` avec un id et un numéro de ligne libres. |
 | `UI/BoogieNightSettings.cs` | Le mode dans la liste par défaut de la roue. |
-| `UI/MatchHud.cs` | L'affichage propre au mode (score, manche, chrono), si `DescribePlayer` ne suffit pas. |
+| `UI/MatchHud.Plate.cs` | L'affichage propre au mode (score, manche, chrono), si `DescribePlayer` ne suffit pas. |
 | `UI/SkipMainMenu.cs` | La mention du mode dans le tooltip de *Mode*. |
 | `Editor/PoolTableBuilder.cs` | `Ensure<Mode>SettingsAsset()`, appelé avec les autres. |
 | `Pool/LocalPoolAimController.cs` | Seulement si le mode bloque ou change le tir. |
