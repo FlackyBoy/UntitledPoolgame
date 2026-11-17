@@ -60,6 +60,25 @@ namespace UntitledPoolGame.Core
         [Tooltip("Plaque pendant « Groupe identique » : remplace les billes restantes, qui trahiraient les groupes.")]
         public string groupsDisguisedText = "??? Billes brouillées";
         public string nextBallText = "Prochaine ";
+
+        [Header("Textes : plaque du 8-ball à 3 ou 4")]
+        [Tooltip("Taille des billes de la plaque, en pixels de référence ; le titre, le compte et « TA 8 ! » suivent.")]
+        [Range(24f, 64f)] public float sidePlateBallSize = 40f;
+        [Tooltip("Au-dessus des billes du joueur. {0} = le nom de ses billes.")]
+        public string yourBallsFormat = "TES BILLES · {0}";
+        [Tooltip("Nom des billes selon leur motif : pleines, bande, croix, carré, triangle (dans cet ordre).")]
+        public string[] ballPatternNames = { "PLEINES", "RAYÉES", "CROIX", "CARRÉS", "TRIANGLES" };
+        [Tooltip("Nom des billes quand elles gardent leur look (motifs coupés, à 3). {0} et {1} = première et dernière.")]
+        public string ballRangeFormat = "{0} À {1}";
+        [Tooltip("Sous le nombre de billes qui restent : une, plusieurs.")]
+        public string ballLeftText = "reste";
+        public string ballsLeftText = "restent";
+        [Tooltip("Remplace le compte une fois son groupe vide.")]
+        public string yourEightText = "TA 8 !";
+        [Tooltip("2 contre 2 : {0} = numéro de l'équipier.")]
+        public string teammateFormat = "AVEC J{0}";
+        [Tooltip("À 3 ou 4 chacun pour soi, après avoir rentré la 8 trop tôt.")]
+        public string eliminatedText = "ÉLIMINÉ";
         [Tooltip("Power Wash Pool : affiché à la place du chrono (en haut au centre) quand le temps est écoulé à égalité.")]
         public string overtimeText = "Prolongation !";
         public string powerGaugeText = "Puissance";
@@ -169,6 +188,9 @@ namespace UntitledPoolGame.Core
         [Header("Fin de partie")]
         [Tooltip("{0} = numéro du gagnant.")]
         public string winnerFormat = "J{0} gagne !";
+        [Tooltip("2 contre 2 : {0} et {1} = numéros des deux gagnants.")]
+        public string teamWinnerFormat = "J{0} et J{1} gagnent !";
+        public string teamTagFormat = "J{0} + J{1}";
         public string rematchText = "Revanche";
         public string rematchHint = "Entrée · E · A / Y · clic";
         public bool showConfetti = true;

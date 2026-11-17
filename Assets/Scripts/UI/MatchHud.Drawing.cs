@@ -133,11 +133,13 @@ namespace UntitledPoolGame.Core
         private void InkShadow(Label label, float drop) =>
             label.style.textShadow = new TextShadow { offset = new Vector2(drop * 0.75f, drop), blurRadius = 0f, color = Ink };
 
-        // A small pool ball with its number (1–15; stripes from 9).
-        private VisualElement MiniBall(VisualElement parent, float size, int number)
+        // A small pool ball with its number (1–15; stripes from 9), or with
+        // its owner's pattern in 8-ball at three or four (BallOwnerMarker).
+        private VisualElement MiniBall(VisualElement parent, float size, int number, BallOwnerMarker.Pattern? pattern = null)
         {
             Color color = BallColors[Mathf.Clamp((number - 1) % 8, 0, 7)];
-            bool stripe = number > 8;
+            BallOwnerMarker.Pattern look = number == 8 ? BallOwnerMarker.Pattern.Solid
+                : pattern ?? (number > 8 ? BallOwnerMarker.Pattern.Stripe : BallOwnerMarker.Pattern.Solid);
             VisualElement ball = Box(parent, "ball");
             ball.style.width = ball.style.height = size;
             ball.style.flexShrink = 0;
@@ -145,15 +147,38 @@ namespace UntitledPoolGame.Core
             ball.style.justifyContent = Justify.Center;
             ball.style.alignItems = Align.Center;
             Radius(ball, size / 2f);
-            ball.style.backgroundColor = stripe ? BallCream : color;
-            if (stripe)
+            ball.style.backgroundColor = look == BallOwnerMarker.Pattern.Solid ? color : BallCream;
+            // The patterns under the number's disc, clipped by the ball.
+            switch (look)
             {
-                VisualElement band = Box(ball, "band");
-                band.style.position = Position.Absolute;
-                band.style.left = band.style.right = 0;
-                band.style.top = Length.Percent(26);
-                band.style.bottom = Length.Percent(26);
-                band.style.backgroundColor = color;
+                case BallOwnerMarker.Pattern.Stripe:
+                    PatternPart(ball, color, 0f, 26f, 0f, 26f, 0f);
+                    break;
+                case BallOwnerMarker.Pattern.Square:
+                    PatternPart(ball, color, 16f, 16f, 16f, 16f, 0f);
+                    break;
+                case BallOwnerMarker.Pattern.Cross:
+                    PatternPart(ball, color, -20f, 38f, -20f, 38f, 45f);
+                    PatternPart(ball, color, -20f, 38f, -20f, 38f, -45f);
+                    break;
+                case BallOwnerMarker.Pattern.Triangle:
+                {
+                    VisualElement triangle = Box(ball, "triangle");
+                    Fill(triangle);
+                    triangle.generateVisualContent += context =>
+                    {
+                        Rect r = triangle.contentRect;
+                        Painter2D painter = context.painter2D;
+                        painter.fillColor = color;
+                        painter.BeginPath();
+                        painter.MoveTo(new Vector2(r.width * 0.5f, 0f));
+                        painter.LineTo(new Vector2(r.width, r.height * 0.88f));
+                        painter.LineTo(new Vector2(0f, r.height * 0.88f));
+                        painter.ClosePath();
+                        painter.Fill();
+                    };
+                    break;
+                }
             }
             VisualElement disc = Box(ball, "disc");
             disc.style.width = disc.style.height = size * 0.5f;
@@ -162,6 +187,19 @@ namespace UntitledPoolGame.Core
             disc.style.backgroundColor = BallCream;
             Text(disc, number.ToString(), bodyFont, size * (number > 9 ? 0.22f : 0.27f), Ink);
             return ball;
+        }
+
+        // A band of a pattern, insets in percent of the ball, turned by angle.
+        private static void PatternPart(VisualElement ball, Color color, float left, float top, float right, float bottom, float angle)
+        {
+            VisualElement part = Box(ball, "pattern");
+            part.style.position = Position.Absolute;
+            part.style.left = Length.Percent(left);
+            part.style.top = Length.Percent(top);
+            part.style.right = Length.Percent(right);
+            part.style.bottom = Length.Percent(bottom);
+            part.style.backgroundColor = color;
+            if (angle != 0f) part.style.rotate = new Rotate(angle);
         }
 
         private static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out Color c) ? c : Color.magenta;

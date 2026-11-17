@@ -18,8 +18,6 @@ namespace UntitledPoolGame.Pool
         private PowerWashPoolSettings wash;
         private PowerWashMudBall mudBall;
 
-        protected override bool KeepsEightBall => true;
-
         public override void Setup(PoolMatchRules match)
         {
             wash = PoolSettingsLoader.LoadOrDefault<PowerWashPoolSettings>("PowerWashPoolSettings");

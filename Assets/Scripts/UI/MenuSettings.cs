@@ -195,6 +195,9 @@ namespace UntitledPoolGame.Core
         [Tooltip("Pouvoirs, pour tous les modes, changés avec X / P.")]
         public string powersOnOption = "Avec pouvoirs   < >  (X / P)";
         public string powersOffOption = "Sans pouvoirs   < >  (X / P)";
+        [Tooltip("À 4 joueurs, dans les modes à groupes de billes (Speed Pool) : changé avec LB / RB ou + / -.")]
+        public string teamsOption = "2 contre 2 : J1 et J3 contre J2 et J4   < >  (LB RB / + -)";
+        public string freeForAllOption = "Chacun pour soi : deux triangles   < >  (LB RB / + -)";
         [Tooltip("Option du 14.1. {0} = score à atteindre.")]
         public string targetScoreFormat = "Premier à {0}   < >  (LB / RB, molette, - / +)";
 

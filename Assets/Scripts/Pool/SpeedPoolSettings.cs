@@ -12,12 +12,41 @@ namespace UntitledPoolGame.Pool
         public Color player1CueColor = new Color(0.2f, 0.45f, 1f);
         [Tooltip("Teinte de la blanche de J2.")]
         public Color player2CueColor = new Color(1f, 0.25f, 0.2f);
+        [Tooltip("Teinte de la blanche de J3 (parties à 3 ou 4).")]
+        public Color player3CueColor = new Color(0.2f, 0.8f, 0.35f);
+        [Tooltip("Teinte de la blanche de J4.")]
+        public Color player4CueColor = new Color(0.65f, 0.35f, 0.95f);
         [Tooltip("Écart de chaque blanche par rapport au point de départ habituel, en fraction de la demi-largeur du tapis (0 = au même endroit, 1 = contre la bande). J1 d'un côté, J2 de l'autre.")]
         [Range(0.1f, 0.9f)] public float cueSpread = 0.5f;
 
         [Header("Balls")]
-        [Tooltip("Billes en plus pour chaque joueur, en plus de ses 7 : des copies des billes de son groupe, ajoutées en rangées derrière le triangle (une bille de plus par rangée), ou à la place libre la plus proche quand on arrive à la bande. 0 = les billes habituelles (sans la 8).")]
+        [Tooltip("Billes en plus pour chaque joueur, en plus de ses 7 : des copies des billes de son groupe, ajoutées en rangées derrière le triangle (une bille de plus par rangée), ou à la place libre la plus proche quand on arrive à la bande. 0 = les billes habituelles.")]
         [Range(0, 14)] public int extraBallsPerPlayer = 0;
+        [Tooltip("À 4 joueurs chacun pour soi, quand les motifs des propriétaires sont coupés (Owner Markers From à 5) : teinte multipliée sur les billes du second triangle (pleines de J3, rayées de J4), pour les distinguer de celles de J1 et J2.")]
+        public Color secondRackTint = new Color(0.55f, 0.55f, 0.55f);
+
+        [Header("Owner marks")]
+        [Tooltip("À partir de combien de joueurs les billes de chaque propriétaire prennent son motif (J1, J2, J3, J4 ; en 2 contre 2, ceux de J1 et J2) au lieu de pleines et rayées. 2 = toujours.")]
+        [Range(2, 5)] public int ownerMarkersFrom = 3;
+        [Tooltip("Motif des billes de J1, J2, J3, J4, à la couleur de la bille autour de son numéro : pleine, bande (rayée), croix, carré ou triangle.")]
+        public BallOwnerMarker.Pattern[] ownerPatterns =
+            { BallOwnerMarker.Pattern.Solid, BallOwnerMarker.Pattern.Stripe, BallOwnerMarker.Pattern.Cross, BallOwnerMarker.Pattern.Square };
+
+        [Tooltip("À partir de combien de joueurs un anneau à la couleur du joueur entoure ses billes sur le tapis, visible seulement dans sa vue (et celle de son équipier). 2 = toujours, 5 = jamais.")]
+        [Range(2, 5)] public int ownBallHaloFrom = 3;
+        [Tooltip("Diamètre de l'anneau, en diamètres de bille.")]
+        [Range(1f, 3f)] public float ownBallHaloSize = 1.6f;
+
+        public BallOwnerMarker.Pattern PatternOf(int side) =>
+            ownerPatterns != null && side >= 0 && side < ownerPatterns.Length ? ownerPatterns[side] : BallOwnerMarker.Pattern.Solid;
+
+        public Color PlayerCueColor(int player) => player switch
+        {
+            0 => player1CueColor,
+            1 => player2CueColor,
+            2 => player3CueColor,
+            _ => player4CueColor,
+        };
 
         [Header("Scratch (cue ball potted)")]
         [Tooltip("Temps (secondes, temps réel) avant qu'une blanche rentrée revienne sur la table, à son point de départ ou au plus près s'il est occupé. Le joueur ne peut pas tirer pendant ce temps.")]

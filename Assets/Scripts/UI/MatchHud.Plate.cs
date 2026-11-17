@@ -35,8 +35,17 @@ namespace UntitledPoolGame.Core
             HideAndSeekRuleSet hideAndSeek = rules.Mode == PoolGameMode.HideAndSeek ? HideAndSeekRuleSet.Current : null;
             // Bit n set = ball n still on the table.
             int onTable = 0;
+            // 8-ball at three or four (PlayerBallGroups): the player's side's
+            // balls, bit n = its ball n (two racks share numbers).
+            SpeedPoolRuleSet speed = rules.SpeedPool;
+            int side = speed != null && PlayerBallGroups.Players >= 3
+                && (speed.IsEightBall || PlayerBallGroups.Split != GroupSplit.SolidsStripes) ? PlayerBallGroups.SideOf(p) : -1;
+            bool eliminated = side >= 0 && speed.IsEliminated(p);
             foreach (PoolBall ball in PoolBall.Active)
-                if (!ball.IsCueBall && ball.Number > 0 && ball.Number < 32) onTable |= 1 << ball.Number;
+            {
+                if (ball.IsCueBall || ball.Number <= 0 || ball.Number >= 32) continue;
+                if (side < 0 || PlayerBallGroups.OwnerOf(ball) == side) onTable |= 1 << ball.Number;
+            }
 
             // Groupe identique: the balls left would tell the groups apart.
             (int kind, int a, int b) key =
@@ -50,6 +59,7 @@ namespace UntitledPoolGame.Core
                 : hasScore ? (2, score, target)
                 : wash != null ? (6, Mathf.RoundToInt(wash.WashedShare(p) * 100f), 0)
                 : rules.Mode == PoolGameMode.NineBall ? (3, nextNine, 0)
+                : side >= 0 ? (13, side * 2 + (eliminated ? 1 : 0), onTable)
                 : group == BallGroup.Solid || group == BallGroup.Stripe ? (4, (int)group, onTable)
                 : (5, 0, 0);
             if (key == h.plateKey) return;
@@ -117,6 +127,7 @@ namespace UntitledPoolGame.Core
                 Text(h.plateBalls, cfg.nextBallText, bodyFont, 22, Ink);
                 if (nextNine > 0) MiniBall(h.plateBalls, 34, nextNine);
             }
+            else if (side >= 0) SidePlate(h, speed, side, onTable, eliminated);
             else if (group == BallGroup.Solid || group == BallGroup.Stripe)
             {
                 int first = group == BallGroup.Solid ? 1 : 9;
@@ -139,6 +150,80 @@ namespace UntitledPoolGame.Core
                 }
             }
             else Text(h.plateBalls, cfg.groupUndecidedText, bodyFont, 22, Ink);
+        }
+
+        // 8-ball at three or four (screen A of docs/ui/plaque-billes.html):
+        // "TES BILLES · CROIX" over the side's balls ringed with its colour,
+        // greyed once potted, then how many are left, or "TA 8 !" once
+        // they're all in; the teammate in 2 v 2; "ÉLIMINÉ" after an early 8.
+        private void SidePlate(Half h, SpeedPoolRuleSet speed, int side, int onTable, bool eliminated)
+        {
+            if (eliminated)
+            {
+                InkShadow(Text(h.plateBalls, cfg.eliminatedText, titleFont, cfg.sidePlateBallSize * 1.1f, Red), 2);
+                return;
+            }
+            float size = cfg.sidePlateBallSize;
+            int[] numbers = PlayerBallGroups.Numbers(side);
+            bool patterned = speed.TryGetPattern(side, out BallOwnerMarker.Pattern pattern);
+            Color ring = cfg.PlayerColor(side);
+
+            VisualElement column = Box(h.plateBalls, "side-balls");
+            column.style.flexDirection = FlexDirection.Column;
+            string name = patterned && (int)pattern < cfg.ballPatternNames.Length ? cfg.ballPatternNames[(int)pattern]
+                : numbers.Length > 0 ? Format(cfg.ballRangeFormat, numbers[0], numbers[numbers.Length - 1]) : "";
+            Text(column, Format(cfg.yourBallsFormat, name), bodyFont, size * 0.48f, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            VisualElement row = Box(column, "row");
+            row.style.flexDirection = FlexDirection.Row;
+            int left = 0;
+            foreach (int n in numbers)
+            {
+                VisualElement b = MiniBall(row, size, n, patterned ? pattern : (BallOwnerMarker.Pattern?)null);
+                b.style.marginRight = size * 0.1f;
+                Border(b, Mathf.Max(3f, size * 0.1f), ring);
+                if ((onTable & (1 << n)) != 0)
+                {
+                    left++;
+                    continue;
+                }
+                b.style.opacity = 0.25f;
+                b.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
+            }
+
+            if (left > 0)
+            {
+                VisualElement count = Box(h.plateBalls, "left");
+                count.style.alignItems = Align.Center;
+                count.style.marginLeft = 10;
+                Text(count, left.ToString(), titleFont, size * 1.1f, Ink);
+                Text(count, left > 1 ? cfg.ballsLeftText : cfg.ballLeftText, bodyFont, size * 0.42f, new Color(Ink.r, Ink.g, Ink.b, 0.6f));
+            }
+            else
+            {
+                VisualElement eight = Box(h.plateBalls, "your-eight");
+                eight.style.flexDirection = FlexDirection.Row;
+                eight.style.alignItems = Align.Center;
+                eight.style.marginLeft = 10;
+                eight.style.paddingLeft = 4;
+                eight.style.paddingRight = 10;
+                eight.style.backgroundColor = Yellow;
+                Radius(eight, 10);
+                Border(eight, 3, Ink);
+                MiniBall(eight, size, 8).style.marginRight = 6;
+                Text(eight, cfg.yourEightText, titleFont, size * 0.75f, Ink);
+            }
+
+            int mate = PlayerBallGroups.TeammateOf(h.player);
+            if (mate >= 0)
+            {
+                VisualElement tag = Box(h.plateBalls, "teammate");
+                tag.style.marginLeft = 10;
+                tag.style.paddingLeft = tag.style.paddingRight = 8;
+                tag.style.backgroundColor = cfg.PlayerColor(mate);
+                Radius(tag, 8);
+                Border(tag, 3, Ink);
+                InkShadow(Text(tag, Format(cfg.teammateFormat, mate + 1), titleFont, size * 0.55f, Color.white), 2);
+            }
         }
 
         // Power Wash Pool's clock, or Play Anywhere's in Speed Pool (the player

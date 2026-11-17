@@ -17,6 +17,11 @@ namespace UntitledPoolGame.Pool
         // Every frame of the match, before the shot loop (rounds, clocks, falls).
         public virtual void Tick(PoolMatchRules match) { }
 
+        // Each player has their own balls (PlayerBallGroups, Speed Pool): a
+        // player joining mid-match restarts it, to share them out again.
+        // False when the mode has no groups or makes room itself (Sumo Pool).
+        public virtual bool SharesBallsOut => false;
+
         // Whether this player may strike now, on top of the turn rules
         // (PoolMatchRules.CanPlayerShoot).
         public virtual bool AllowsShot(PoolMatchRules match, int playerIndex) => true;

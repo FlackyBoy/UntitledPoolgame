@@ -15,7 +15,7 @@ namespace UntitledPoolGame.Pool
 
         public override void Activate(PoolMatchRules match, int activatingPlayer)
         {
-            int opponent = 1 - activatingPlayer;
+            int opponent = match.TargetOf(activatingPlayer);
             match.QueueInvertedControls(opponent, sensitivityMultiplier);
         }
     }

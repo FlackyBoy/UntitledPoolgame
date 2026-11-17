@@ -101,6 +101,8 @@ namespace UntitledPoolGame.Core
         private readonly Dictionary<PoolGameMode, PoolMatchType> chosenTypes = new Dictionary<PoolGameMode, PoolMatchType>();
         // Powers on/off, the same for every mode (X / P).
         private bool powers;
+        // Four players, a mode with groups: 2 against 2 or each for themselves.
+        private bool teams = true;
         // Boogie Night: number of matches (left / right, LB / RB, wheel, - / +).
         private int boogieRounds = -1;
         private Label roundsLabel;
@@ -406,11 +408,7 @@ namespace UntitledPoolGame.Core
                 if (cardsStart >= 0 && cardsStart + first < page.options.Count) page.focused = cardsStart + first;
             }
             foreach (Option o in page.options) { o.focus = 0f; ResetVisual(o); }
-            // The modes that don't go up to this many players, greyed out.
-            if (page == mode)
-                foreach (Option o in page.options)
-                    if (o.data != null && o.data.action == MenuAction.StartMode && o.visual != null)
-                        o.visual.style.opacity = Accepts(o.data.mode) ? 1f : 0.35f;
+            if (page == mode) GreyOutModes();
             shooting = null;
             lastFocused = null;
 
@@ -614,12 +612,33 @@ namespace UntitledPoolGame.Core
             string text = type;
             if (PoolMatchSetup.HasPowers(gameMode)) text += "\n" + (powers ? cfg.powersOnOption : cfg.powersOffOption);
             if (gameMode == PoolGameMode.FourteenOne) text += "\n" + Format(cfg.targetScoreFormat, targetScore);
-            if (!Accepts(gameMode)) text += "\n" + Format(cfg.modeMaxPlayersFormat, PoolMatchSetup.MaxPlayers(gameMode));
+            if (HasTeamChoice(gameMode)) text += "\n" + (teams ? cfg.teamsOption : cfg.freeForAllOption);
+            if (!Accepts(gameMode)) text += "\n" + Format(cfg.modeMaxPlayersFormat, PoolMatchSetup.MaxPlayers(gameMode, TypeFor(gameMode)));
             return text;
         }
 
-        private PoolMatchType TypeFor(PoolGameMode gameMode) =>
-            chosenTypes.TryGetValue(gameMode, out PoolMatchType type) ? type : PoolMatchSetup.NativeType(gameMode);
+        // The type picked for the mode, else its own; at three or four, the
+        // other one if only that one takes this many (8-ball: Speed Pool).
+        private PoolMatchType TypeFor(PoolGameMode gameMode)
+        {
+            if (chosenTypes.TryGetValue(gameMode, out PoolMatchType type)) return type;
+            type = PoolMatchSetup.NativeType(gameMode);
+            PoolMatchType other = PoolMatchSetup.OtherType(type);
+            if (MenuPlayers > PoolMatchSetup.MaxPlayers(gameMode, type) && PoolMatchSetup.Supports(gameMode, other)
+                && MenuPlayers <= PoolMatchSetup.MaxPlayers(gameMode, other)) return other;
+            return type;
+        }
+
+        private bool HasTeamChoice(PoolGameMode gameMode) =>
+            MenuPlayers == 4 && PoolMatchSetup.HasTeamChoice(gameMode, TypeFor(gameMode));
+
+        // The modes that don't go up to this many players in their type, greyed out.
+        private void GreyOutModes()
+        {
+            foreach (Option o in mode.options)
+                if (o.data != null && o.data.action == MenuAction.StartMode && o.visual != null)
+                    o.visual.style.opacity = Accepts(o.data.mode) ? 1f : 0.35f;
+        }
 
         // Players who joined in the lobby (1 off the multiplayer path).
         private int MenuPlayers
@@ -634,9 +653,10 @@ namespace UntitledPoolGame.Core
         }
 
         // The mode is written for this many players (PoolMatchSetup.MaxPlayers).
-        private bool Accepts(PoolGameMode gameMode) => MenuPlayers <= PoolMatchSetup.MaxPlayers(gameMode);
+        private bool Accepts(PoolGameMode gameMode) => MenuPlayers <= PoolMatchSetup.MaxPlayers(gameMode, TypeFor(gameMode));
 
-        private PoolMatchSetup SetupFor(PoolGameMode gameMode) => new PoolMatchSetup(gameMode, TypeFor(gameMode), powers, targetScore);
+        private PoolMatchSetup SetupFor(PoolGameMode gameMode) =>
+            new PoolMatchSetup(gameMode, TypeFor(gameMode), powers, targetScore) { teams = teams };
 
         private void SetBoogieRounds(int rounds)
         {
@@ -723,7 +743,9 @@ namespace UntitledPoolGame.Core
                 {
                     PoolMatchType other = PoolMatchSetup.OtherType(TypeFor(aimed.mode));
                     if (PoolMatchSetup.Supports(aimed.mode, other)) chosenTypes[aimed.mode] = other;
+                    GreyOutModes();
                 }
+                if (adjust != 0 && HasTeamChoice(aimed.mode)) teams = !teams;
                 if (switchPowers) powers = !powers;
             }
             if (current == boogie)

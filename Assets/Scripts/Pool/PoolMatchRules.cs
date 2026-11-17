@@ -31,10 +31,14 @@ namespace UntitledPoolGame.Pool
         // player still plays both sides, J2 joins later), and no more than the
         // mode is written for (PoolMatchSetup.MaxPlayers).
         public int PlayerCount =>
-            Mathf.Clamp(PlayerInput.all.Count, 2, MatchStarted ? PoolMatchSetup.MaxPlayers(Mode) : 2);
+            Mathf.Clamp(PlayerInput.all.Count, 2, MatchStarted ? PoolMatchSetup.MaxPlayers(Mode, Setup.type) : 2);
 
         // Whose turn comes after this player's (turn order J1, J2, J3, J4).
         public int NextPlayer(int player) => (player + 1) % PlayerCount;
+
+        // Who an attack power from this player hits: the next player, an
+        // opponent in 2 against 2 too. Picking the target is lot 6's.
+        public int TargetOf(int player) => NextPlayer(player);
         public bool GameOver { get; private set; }
         public int Winner { get; private set; } = -1;
         public bool MatchStarted { get; private set; }
@@ -49,6 +53,8 @@ namespace UntitledPoolGame.Pool
         public bool BallInHand { get; private set; }
 
         private PoolRuleSet ruleSet;
+        // Speed Pool and the modes built on it (null otherwise), for the HUD.
+        public SpeedPoolRuleSet SpeedPool => ruleSet as SpeedPoolRuleSet;
 
         // Speed Pool: no turns, both players shoot whenever their own cue ball
         // is still. No shot is ever resolved: the rule set judges each pot as
@@ -79,7 +85,7 @@ namespace UntitledPoolGame.Pool
         }
         private readonly int[] selectedSlot = new int[MaxPlayers];
         // Set by Boosted Shot, read once by the next shot.
-        private readonly float[] shotPowerMultiplier = { 1f, 1f };
+        private readonly float[] shotPowerMultiplier = { 1f, 1f, 1f, 1f };
 
         private readonly List<PoolBall> pocketedThisShot = new List<PoolBall>();
         // Pocket each ball of this shot fell into (8-ball call check).
@@ -102,6 +108,8 @@ namespace UntitledPoolGame.Pool
         private bool pendingStart;
         private bool pendingRestart;
         private PoolMatchSetup? restartSetup;
+        // Players the balls were shared out for (PlayerBallGroups).
+        private int playersAtStart = 2;
 
         // Set by a menu drawn elsewhere (the Synthèse menu, UI Toolkit): the
         // provisional OnGUI mode select is then not drawn.
@@ -307,7 +315,9 @@ namespace UntitledPoolGame.Pool
         public bool IsOwnBall(int player, PoolBall ball)
         {
             if (ball.IsCueBall) return false;
-            if (ruleSet is SpeedPoolRuleSet) return ball.Group == GetGroup(player);
+            // Speed Pool: their side's, and the 8 once that's empty.
+            if (ruleSet is SpeedPoolRuleSet speed)
+                return PlayerBallGroups.Owns(player, ball) || (ball.Group == BallGroup.Eight && speed.IsGoingForEight(player));
             if (!(ruleSet is EightBallRuleSet)) return true;
             if (IsShootingForEightBall(player)) return ball.Group == BallGroup.Eight;
             BallGroup group = GetGroup(player);
@@ -326,7 +336,14 @@ namespace UntitledPoolGame.Pool
         public PotMeaning MeaningOfPot(PoolBall ball)
         {
             // Speed Pool: good when the shooter who sent it in (PotOwner) owns it.
-            if (IsSimultaneous) return SpeedPoolRuleSet.OwnerOf(ball) == PotOwner(ball) ? PotMeaning.Good : PotMeaning.Opponent;
+            if (IsSimultaneous)
+            {
+                int owner = PotOwner(ball);
+                if (IsOwnBall(owner, ball)) return PotMeaning.Good;
+                // The 8 ends the match in 8-ball (SpeedPoolRuleSet.IsGoingForEight).
+                bool eightCounts = ball.Group == BallGroup.Eight && ruleSet.GetType() == typeof(SpeedPoolRuleSet);
+                return eightCounts ? PotMeaning.EarlyEight : PotMeaning.Opponent;
+            }
             if (IsOwnBall(CurrentPlayer, ball)) return PotMeaning.Good;
             // Own cue balls in turns: the 8 never loses on the spot there.
             if (HasPlayerCueBalls) return PotMeaning.Opponent;
@@ -449,7 +466,7 @@ namespace UntitledPoolGame.Pool
 
         private void BeginPlayerShot(PoolBall cueBall)
         {
-            int p = cueBall != null ? Mathf.Clamp(cueBall.CueOwner, 0, 1) : 0;
+            int p = cueBall != null ? Mathf.Clamp(cueBall.CueOwner, 0, MaxPlayers - 1) : 0;
             if (rollingCueBall[p] != null) EndPlayerShot(p);
             rollingCueBall[p] = cueBall;
             rollingSince[p] = Time.time;
@@ -636,6 +653,13 @@ namespace UntitledPoolGame.Pool
             }
 
             if (!MatchStarted || GameOver) return;
+            // Someone joined mid-match (no menu): the balls are shared out again.
+            if (ruleSet.SharesBallsOut && PlayerCount != playersAtStart)
+            {
+                if (traceShots) Debug.Log($"[Match] {PlayerCount} joueurs au lieu de {playersAtStart} : la partie repart.", this);
+                pendingRestart = true;
+                return;
+            }
             // The mode's own clock: rounds, falls, the cup, the pins...
             ruleSet.Tick(this);
             if (IsSimultaneous)
@@ -727,17 +751,15 @@ namespace UntitledPoolGame.Pool
             ClearHeldPowers();
             ClearTableHoles();
             MatchGeneration++;
-            shotPowerMultiplier[0] = 1f;
-            shotPowerMultiplier[1] = 1f;
-
-            visionImpaired[0] = false;
-            visionImpaired[1] = false;
-            visionImpairPending[0] = false;
-            visionImpairPending[1] = false;
-            invertedControls[0] = false;
-            invertedControls[1] = false;
-            invertedControlsPending[0] = false;
-            invertedControlsPending[1] = false;
+            for (int p = 0; p < MaxPlayers; p++)
+            {
+                shotPowerMultiplier[p] = 1f;
+                visionImpaired[p] = visionImpairPending[p] = false;
+                invertedControls[p] = invertedControlsPending[p] = false;
+                ballBlastArmed[p] = ballBlastRolling[p] = null;
+                rollingCueBall[p] = null;
+                DisarmMagnet(p);
+            }
 
             if (closedPocket != null) closedPocket.SetClosed(false);
             closedPocket = null;
@@ -745,12 +767,7 @@ namespace UntitledPoolGame.Pool
             EndIdenticalGroups();
             pendingIdenticalGroups = null;
             calledEightBallPocket = null;
-            ballBlastArmed[0] = ballBlastArmed[1] = null;
             ballBlastThisShot = null;
-            ballBlastRolling[0] = ballBlastRolling[1] = null;
-            rollingCueBall[0] = rollingCueBall[1] = null;
-            DisarmMagnet(0);
-            DisarmMagnet(1);
             EndMagnetShot();
 
             pocketedThisShot.Clear();
@@ -795,6 +812,11 @@ namespace UntitledPoolGame.Pool
             if (!(ruleSet is HideAndSeekRuleSet)) HideAndSeekRuleSet.Cleanup();
             // One shared cue ball again after a match with one each.
             if (!(ruleSet is SpeedPoolRuleSet)) SpeedPoolRuleSet.Cleanup();
+            // Who owns which balls, for this many players (MatchStarted is
+            // still false here: PlayerCount would say two).
+            playersAtStart = Mathf.Clamp(PlayerInput.all.Count, 2, PoolMatchSetup.MaxPlayers(Mode, Setup.type));
+            PlayerBallGroups.Configure(ruleSet.SharesBallsOut ? playersAtStart : 2, Setup.teams);
+            SpeedPoolRuleSet.FitToPlayers(PlayerBallGroups.Players);
             ruleSet.Setup(this);
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).

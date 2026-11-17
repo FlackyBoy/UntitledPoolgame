@@ -14,7 +14,7 @@ namespace UntitledPoolGame.Pool
 
         public override void Activate(PoolMatchRules match, int activatingPlayer)
         {
-            int opponent = 1 - activatingPlayer;
+            int opponent = match.TargetOf(activatingPlayer);
             // Starts when the opponent enters aim on their turn, ends with it.
             match.QueueVisionImpair(opponent, sensitivityMultiplier);
         }

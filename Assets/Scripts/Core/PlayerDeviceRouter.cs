@@ -175,7 +175,7 @@ namespace UntitledPoolGame.Core
         {
             int max = manager != null && manager.maxPlayerCount >= 0 ? manager.maxPlayerCount : PoolMatchRules.MaxPlayers;
             PoolMatchRules rules = PoolMatchRules.Instance;
-            if (rules != null && rules.MatchStarted) max = Mathf.Min(max, PoolMatchSetup.MaxPlayers(rules.Mode));
+            if (rules != null && rules.MatchStarted) max = Mathf.Min(max, PoolMatchSetup.MaxPlayers(rules.Mode, rules.Setup.type));
             return max;
         }
 

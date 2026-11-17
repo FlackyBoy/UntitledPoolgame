@@ -101,7 +101,10 @@ Si aucun des deux n'est coché, le mode se joue chacun son tour. Créé par *Too
 | Groupe | Champs | Défauts |
 |---|---|---|
 | Billes | billes en plus par joueur (*Extra Balls Per Player*, 0 à 14) : des copies des billes de son groupe, en rangées derrière le triangle, puis à la place libre la plus proche | 0 |
-| Blanches | teinte de la blanche de J1, de J2 ; écart de chaque blanche par rapport au point de départ habituel (*Cue Spread*, part de la demi-largeur du tapis) | bleu, rouge, 0,5 |
+| Second triangle | à 4 joueurs chacun pour soi, quand les motifs sont coupés (*Owner Markers From* à 5) : teinte multipliée sur les copies des pleines (J3) et des rayées (J4) (*Second Rack Tint*) | gris 0,55 |
+| Motifs des billes | en 8-ball Speed Pool, à partir de combien de joueurs les billes de chaque propriétaire prennent son motif au lieu de pleines et rayées (*Owner Markers From*, 2 = toujours, 5 = jamais) et motif de J1 à J4 (*Owner Patterns* : pleine, bande, croix, carré ou triangle, à la couleur de la bille autour de son numéro) ; en 2 contre 2, ceux de J1 et J2 | 3 ; pleine, bande, croix, carré |
+| Anneau sous ses billes | en 8-ball Speed Pool, un anneau à la couleur du joueur sous chacune de ses billes, visible seulement dans sa vue (et celle de son équipier) : à partir de combien de joueurs (*Own Ball Halo From*, 2 = toujours, 5 = jamais), diamètre en diamètres de bille (*Own Ball Halo Size*) | 3 ; 1,6 |
+| Blanches | teinte de la blanche de J1, de J2, de J3, de J4 (parties à 3 ou 4) ; écart de chaque blanche par rapport au point de départ habituel (*Cue Spread*, part de la demi-largeur du tapis) | bleu, rouge, 0,5 |
 | Blanche rentrée | délai avant son retour sur la table en Speed Pool (*Cue Respawn Delay*, temps réel ; chacun son tour, elle revient à la fin du tir), à son point de départ ou au plus près s'il est occupé ; la dernière bille de son groupe que le joueur a rentrée ressort à sa place du rack (*Respot Own Ball On Scratch*) | 5 s, oui |
 
 Créé par *Tools > Pool > Ensure Config Assets Exist* ; sans fichier, les valeurs par défaut s'appliquent.
@@ -398,7 +401,7 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 | Mode de jeu | Titre, billes Sélection et Boogie Night |
 | Nouvelle partie / Charger | Titres, « Emplacement {0} », « Libre », « Vide », les notes du cube, les messages |
 | Choix du niveau | « On joue où ? », le tampon et le message « Bientôt », les étiquettes « 1 joueur » et « 2 joueurs » |
-| Type de partie | « Quel type de partie ? », les lignes de la liste des modes, avec leur bille (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size) avec leurs règles, les lignes d'option sous les règles : type (*Turn Based Option*, *Speed Pool Option*, *Turn Based Only Option*), pouvoirs (*Powers On Option*, *Powers Off Option*), score du 14.1 (*Target Score Format*, « Premier à {0} ») |
+| Type de partie | « Quel type de partie ? », les lignes de la liste des modes, avec leur bille (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size) avec leurs règles, les lignes d'option sous les règles : type (*Turn Based Option*, *Speed Pool Option*, *Turn Based Only Option*), pouvoirs (*Powers On Option*, *Powers Off Option*), score du 14.1 (*Target Score Format*, « Premier à {0} »), à 4 joueurs 2 contre 2 ou chacun pour soi (*Teams Option*, *Free For All Option*) |
 | Multijoueur et salon | Titres, billes Local et En ligne, « Qui joue ce soir ? », « C'est parti », « J{0} appuie ! », « {0} - prêt », noms des appareils, « Salut J{0} ! » ; mode refusé (« Pas encore à {0} joueurs », « Se joue à {0} joueurs au plus »), Boogie Night à plus de 2 ; couleurs de J1 à J4 |
 | Pause | Titre, les trois pilules (Reprendre, Réglages, Menu principal), « J{0} a mis la partie en pause », la confirmation et ses deux pilules |
 | Réglages > Touches | Titre, onglets (le premier est actif, les autres reçoivent « · bientôt »), en-têtes de colonnes, boutons, et le nom de chaque action |
@@ -542,6 +545,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Couleurs | J1, J2, J3, J4, encre des contours, fond des cartes, mise en avant (jaune), danger (rouge), « BOUM ! », voile du joueur qui attend, jauge (début, milieu, fin) |
 | Quart libre (3 joueurs) | *Free Quarter* (activer), textes (« VUE DE DESSUS », « TOTAL », « Premier à {0} », « FIN DE MANCHE », « J{0} marque ! », « MANCHE SUIVANTE », « prêts ? », « J{0} : START POUR REJOINDRE »), *Free View Margin* (marge autour de la table, 1,15), *Free View Clear Above* (la vue commence 0,5 m au-dessus du tapis : lampe et plafond invisibles) |
 | Textes : tour et plaque | « À toi ! », « Tour de J{0} », « J{0} », groupe à décider, « Prochaine », « Prolongation ! » (Power Wash Pool, à la place du chrono), « Puissance », touche du pouvoir |
+| Textes : plaque du 8-ball à 3 ou 4 | taille des billes de la plaque (*Side Plate Ball Size*, 40, le reste suit), « TES BILLES · {0} », nom des billes par motif (PLEINES, RAYÉES, CROIX, CARRÉS, TRIANGLES), « {0} À {1} » quand les motifs sont coupés, « reste » / « restent », « TA 8 ! », « AVEC J{0} » (2 contre 2), « ÉLIMINÉ » |
 | Chrono (Power Wash Pool) | En haut au centre de l'écran de chaque joueur : taille (*Clock Font Size*, 64) ; les *Clock Final Seconds* dernières secondes (10), il passe au rouge, grossit à chaque seconde jusqu'à *Clock Final Scale* (×2,2) et fait un bond à chaque seconde (*Clock Bump*, +35 %, pendant *Clock Bump Time*, 0,3 s) |
 | Textes : bandeaux d'aide | Main libre, poche visée / à viser pour la 8, trop loin, poche annoncée / à annoncer, bille destructrice armée, choix du trou d'un pouvoir (trou visé / aucun), aimant prêt |
 | Texte de plaque « Groupe identique » | *Groups Disguised Text* : remplace les billes restantes pendant l'effet |
@@ -551,7 +555,7 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 | Carte sponsor | Afficher ou non, en-tête, suffixe du nom (™), ligne « Pouvoir {0} · Q / B pour le lancer », noms des catégories |
 | Pouvoir lancé : carte chez l'adversaire | Quand un joueur lance un pouvoir, une carte arrive sur l'écran de l'autre joueur (par la droite). Afficher ou non, aussi pour les Effets et Défenses ou non, en-têtes (« J{0} T'ENVOIE », « J{0} ACTIVE »), ligne sous le nom (« Tout de suite ! », « Au début de ton tour… », « Pour son prochain coup »), durée (2,6 s) |
 | Pouvoir refusé | Texte sous la pastille du pouvoir quand la touche est pressée au mauvais moment : rien en stock (vide = la pastille tremble sans texte), pendant son tour seulement, pendant le tour adverse seulement, billes qui roulent, placement de la blanche ou annonce de la 8 en cours ; durée (1,4 s) |
-| Fin de partie | « J{0} gagne ! », « Revanche », aide des touches, confettis |
+| Fin de partie | « J{0} gagne ! », « J{0} et J{1} gagnent ! » et l'étiquette « J{0} + J{1} » (2 contre 2), « Revanche », aide des touches, confettis |
 | Durées et mouvements | Interjections (1,3 s), rayons (1,1 s), carte sponsor (3,1 s), temps minimal à l'écran avant qu'une interjection ou une carte soit remplacée par la suivante (*Min Shout Time* 0,6 s, *Min Card Time* 1,2 s), délai faute → main libre (1,3 s), secousse (durée, force), balancement de « À toi ! » (hauteur, période), voile du joueur qui attend |
 
 - `{0}` est remplacé par le numéro du joueur, la poche ou la catégorie du pouvoir.
@@ -922,6 +926,7 @@ Une scène qui contient une table de billard, lancée directement depuis l'édit
 | Mode | Règles de la partie démarrée toute seule (*EightBall* = classique, *CatchTheHole* = 8-ball avec des trous vivants, réglés dans `CatchTheHoleSettings`, *HungryHole* = la blanche est un trou, réglée dans `HungryHoleSettings`, *SnakePool* = les billes ramassées suivent la blanche en file, réglé dans `SnakePoolSettings`, *PowerWashPool* = les billes lavent le tapis crasseux, réglé dans `PowerWashPoolSettings`, *PlayAnywhere* = golf dans le décor, réglé dans `PlayAnywhereSettings` et sur le trou de la scène). *Party* et *SpeedPool* sont les anciens modes, gardés pour les scènes déjà réglées : *Party* = *EightBall* avec les pouvoirs, *SpeedPool* = *EightBall* en Speed Pool | EightBall |
 | Powers | Caisses de pouvoirs et bille à pouvoir (la bille seulement chacun son tour) | non |
 | Target Score | Score à atteindre, si 14.1 | 150 |
+| Teams | À 4 joueurs en 8-ball Speed Pool : coché = 2 contre 2 (J1 et J3 les pleines, J2 et J4 les rayées), décoché = chacun pour soi avec un second triangle | oui |
 
 Le composant n'a aucun effet quand le niveau est lancé depuis le menu. Le retirer (ou le désactiver) fait revenir le menu.
 

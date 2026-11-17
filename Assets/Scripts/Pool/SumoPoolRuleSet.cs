@@ -49,6 +49,8 @@ namespace UntitledPoolGame.Pool
         private bool ready;
 
         public Phase CurrentPhase { get; private set; }
+        // No groups: a player who joins gets a ball and a new round (AddLatePlayers).
+        public override bool SharesBallsOut => false;
         // The HUD uses the score plate below rather than one of its own.
         public virtual bool ShowsPlate => true;
         // What a mode built on this one changes (SumoBilliardRuleSet).
