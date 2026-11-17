@@ -128,7 +128,7 @@ Assets/Scripts/
 │   ├── TextFx.cs                   texte animé lettre par lettre (balises <wave>, <shake>…, apparitions, machine à écrire)
 │   ├── TextFxSettings.cs           force et vitesse des effets de texte, apparition, machine à écrire, asset dans Resources
 │   ├── UiKit.cs                    palette et polices (lues dans MenuSettings), constructeurs d'éléments partagés par les menus
-│   ├── MatchHud.cs                 UI en jeu (UI Toolkit, direction Synthèse) : HUD par joueur, interjections, fin de partie ; créé tout seul
+│   ├── MatchHud.cs + .Build, .Plate, .Events, .Effects, .End, .Drawing   UI en jeu (une classe partial : construction, plaque, événements de la partie, annonces et cartes, fin, dessin) (UI Toolkit, direction Synthèse) : HUD par joueur, interjections, fin de partie ; créé tout seul
 │   ├── SkipMainMenu.cs             « Lancer sans le menu » : scène de test lancée directement, partie démarrée seule
 │   └── SyntheseMenu.cs             menu principal et ses pages (UI Toolkit, direction Synthèse), créé tout seul
 ├── Feel/                           pont avec le plugin Feel (sans le modifier)
