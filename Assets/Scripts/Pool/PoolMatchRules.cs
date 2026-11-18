@@ -687,7 +687,11 @@ namespace UntitledPoolGame.Pool
             wasMoving = moving;
         }
 
-        public void SwitchTurn()
+        public void SwitchTurn() => SwitchTurnTo(NextPlayer(CurrentPlayer));
+
+        // The turn to a given player rather than the next one (Play
+        // Anywhere: the farthest from the cup plays, at any count).
+        public void SwitchTurnTo(int next)
         {
             // Turn-bound debuffs end with the turn (normally already done by
             // ExitAim).
@@ -709,7 +713,7 @@ namespace UntitledPoolGame.Pool
 
             CloseTableHoles(turnEnding: true, shotResolved: false);
 
-            CurrentPlayer = NextPlayer(CurrentPlayer);
+            CurrentPlayer = next;
 
             LaunchPendingTableHoles();
 
@@ -815,9 +819,11 @@ namespace UntitledPoolGame.Pool
             // Who owns which balls, for this many players (MatchStarted is
             // still false here: PlayerCount would say two).
             playersAtStart = Mathf.Clamp(PlayerInput.all.Count, 2, PoolMatchSetup.MaxPlayers(Mode, Setup.type));
-            PlayerBallGroups.Configure(ruleSet.SharesBallsOut ? playersAtStart : 2, Setup.teams);
+            // 2 v 2 only where the menu offers it (the choice stays set for the other modes).
+            PlayerBallGroups.Configure(ruleSet.SharesBallsOut ? playersAtStart : 2, Setup.teams && PoolMatchSetup.HasTeamChoice(Mode, Setup.type));
             SpeedPoolRuleSet.FitToPlayers(PlayerBallGroups.Players);
             ruleSet.Setup(this);
+            PlayerTeamMarks.Refresh();
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).
             if (Mode == PoolGameMode.CatchTheHole) CatchTheHole.Ensure().Begin();

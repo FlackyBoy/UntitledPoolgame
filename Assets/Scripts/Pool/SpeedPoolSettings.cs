@@ -37,6 +37,23 @@ namespace UntitledPoolGame.Pool
         [Tooltip("Diamètre de l'anneau, en diamètres de bille.")]
         [Range(1f, 3f)] public float ownBallHaloSize = 1.6f;
 
+        [Tooltip("En 2 contre 2 (tous les modes à équipes sauf les Sumo, où la bille du joueur porte déjà la couleur de l'équipe) : une pointe à la couleur de l'équipe au-dessus de la tête de chaque joueur, vue par les autres, cachée derrière ce qui cache le joueur.")]
+        public bool teamChevrons = true;
+        [Tooltip("Taille de la pointe, en part de la taille du joueur.")]
+        [Range(0.05f, 0.6f)] public float teamChevronSize = 0.2f;
+        [Tooltip("Distance (en tailles de joueur) à laquelle la pointe a la taille Team Chevron Size. Plus près elle rapetisse, plus loin elle grossit, pour garder à peu près la même taille à l'écran.")]
+        [Range(0.5f, 10f)] public float teamChevronSizeAt = 3f;
+        [Tooltip("Taille minimale de la pointe de près, en part de Team Chevron Size.")]
+        [Range(0.1f, 1f)] public float teamChevronMinScale = 0.35f;
+        [Tooltip("Taille maximale de la pointe de loin, en part de Team Chevron Size.")]
+        [Range(1f, 10f)] public float teamChevronMaxScale = 4f;
+        [Tooltip("Espace entre le haut de la tête et la pointe, en part de la taille du joueur.")]
+        [Range(0f, 0.6f)] public float teamChevronHeight = 0.04f;
+        [Tooltip("En 2 contre 2 : un anneau à la couleur de l'équipe au sol autour de chaque joueur, vu par tous (coupé depuis le contour).")]
+        public bool teamRings = false;
+        [Tooltip("Diamètre de cet anneau, en largeurs du corps du joueur.")]
+        [Range(1f, 5f)] public float teamRingSize = 3f;
+
         public BallOwnerMarker.Pattern PatternOf(int side) =>
             ownerPatterns != null && side >= 0 && side < ownerPatterns.Length ? ownerPatterns[side] : BallOwnerMarker.Pattern.Solid;
 

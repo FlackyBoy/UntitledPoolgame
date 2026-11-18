@@ -232,6 +232,8 @@ namespace UntitledPoolGame.Core
         [Min(1f)] public float freeViewMargin = 1.15f;
         [Tooltip("Hauteur au-dessus du tapis en dessous de laquelle la vue de dessus commence (m) : la lampe et le plafond au-dessus ne cachent pas la table.")]
         [Min(0.05f)] public float freeViewClearAbove = 0.5f;
+        [Tooltip("Force des lumières au-dessus de la table dans la vue de dessus seulement (1 = comme dans les vues des joueurs). Vue d'en haut, le tapis renvoie la lampe droit dans la caméra et brûle ; les vues des joueurs ne changent pas.")]
+        [Range(0f, 1f)] public float freeViewLightScale = 0.6f;
 
         // J1 to J4 (index 0 to 3); past J4, J4's.
         public Color PlayerColor(int player) => player <= 0 ? player1Color : player == 1 ? player2Color : player == 2 ? player3Color : player4Color;

@@ -32,6 +32,10 @@ namespace UntitledPoolGame.Pool
 
         public static int SideOf(int player) => player < 0 ? -1 : Teams ? player % 2 : player;
 
+        // Whose colour a player wears (cue ball, halos): in 2 v 2, the team's
+        // (J1's for J1 and J3, J2's for J2 and J4); otherwise their own.
+        public static int ColourOf(int player) => Teams ? SideOf(player) : player;
+
         // The teammate in team play, -1 otherwise.
         public static int TeammateOf(int player) => Teams && player >= 0 ? (player + 2) % 4 : -1;
 

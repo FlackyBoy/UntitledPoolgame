@@ -40,8 +40,9 @@ namespace UntitledPoolGame.Pool
         // Potted too early: back on the table next frame (OnPocketed turns it
         // off just after HandlePocketed).
         private PoolBall eightToRespot;
-        // Each owner's pattern on their balls (BallOwnerMarker).
-        private bool ShowsOwnerMarkers => EightBallFinishes;
+        // Each owner's pattern on their balls (BallOwnerMarker), and the
+        // halos under them (OwnBallHalo): 8-ball, and Sumo Billard.
+        protected virtual bool ShowsOwnerMarkers => EightBallFinishes;
 
         // A potted cue ball comes back on its own spot (PoolMatchRules.RespawnCueBall).
         // False when the mode brings it back itself.
@@ -65,7 +66,7 @@ namespace UntitledPoolGame.Pool
             for (int p = 0; p < cueBalls.Count; p++)
             {
                 float t = cueBalls.Count == 1 ? 0f : Mathf.Lerp(-1f, 1f, p / (float)(cueBalls.Count - 1));
-                cueBalls[p].MakePlayerCueBall(p, spot + across * (offset * t), settings.PlayerCueColor(p));
+                cueBalls[p].MakePlayerCueBall(p, spot + across * (offset * t), settings.PlayerCueColor(PlayerBallGroups.ColourOf(p)));
             }
 
             SetupSecondRack();
@@ -304,12 +305,33 @@ namespace UntitledPoolGame.Pool
         private void AddOwnBallHalos()
         {
             var colours = new Color[PoolMatchRules.MaxPlayers];
-            for (int p = 0; p < colours.Length; p++) colours[p] = settings.PlayerCueColor(p);
+            for (int p = 0; p < colours.Length; p++) colours[p] = settings.PlayerCueColor(PlayerBallGroups.ColourOf(p));
             foreach (PoolBall ball in PoolBall.Active)
             {
                 int side = OwnerOf(ball);
                 if (side >= 0) OwnBallHalo.Add(ball, side, settings.ownBallHaloSize, colours);
             }
+        }
+
+        // For a mode that racks its own way (Sumo Billard), which doesn't go
+        // through Setup: the second rack's copies, then the owners' looks.
+        protected void AddSecondRack()
+        {
+            LoadSettings();
+            SetupSecondRack();
+        }
+
+        protected void AddOwnerLooks()
+        {
+            LoadSettings();
+            int players = PlayerBallGroups.Players;
+            if (ShowsOwnerMarkers && players >= settings.ownerMarkersFrom) AddOwnerMarkers();
+            if (ShowsOwnerMarkers && players >= settings.ownBallHaloFrom) AddOwnBallHalos();
+        }
+
+        private void LoadSettings()
+        {
+            if (settings == null) settings = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
         }
 
         protected void RespotLastPotted(PoolMatchRules match, int player)
@@ -567,7 +589,7 @@ namespace UntitledPoolGame.Pool
             return true;
         }
 
-        private static readonly string[] CueNames = { "Blanche bleue", "Blanche rouge", "Blanche verte", "Blanche violette" };
+        protected static readonly string[] CueNames = { "Blanche bleue", "Blanche rouge", "Blanche verte", "Blanche violette" };
 
         public override string DescribePlayer(int player)
         {
@@ -576,7 +598,7 @@ namespace UntitledPoolGame.Pool
             string balls = PlayerBallGroups.Split == GroupSplit.Thirds ? "Billes " + string.Join(", ", numbers)
                 : (side % 2 == 0 ? "Pleines" : "Rayées") + (side >= 2 ? " foncées" : "") + $" ({numbers[0]}-{numbers[numbers.Length - 1]})";
             string mate = PlayerBallGroups.Teams ? $" · avec J{PlayerBallGroups.TeammateOf(player) + 1}" : "";
-            return $"{CueNames[Mathf.Clamp(player, 0, CueNames.Length - 1)]} · {balls}{mate}";
+            return $"{CueNames[Mathf.Clamp(PlayerBallGroups.ColourOf(player), 0, CueNames.Length - 1)]} · {balls}{mate}";
         }
     }
 }

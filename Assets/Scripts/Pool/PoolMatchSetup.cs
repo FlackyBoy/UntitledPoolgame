@@ -89,6 +89,13 @@ namespace UntitledPoolGame.Pool
         {
             // Last one on the table scores (SumoPoolRuleSet).
             PoolGameMode.SumoPool => PoolMatchRules.MaxPlayers,
+            // The same balls as 8-ball in Speed Pool (SumoBilliardRuleSet).
+            PoolGameMode.SumoBilliard => PoolMatchRules.MaxPlayers,
+            // Each for themselves; Shooter Billard on 8-ball's groups.
+            PoolGameMode.ShooterMini => PoolMatchRules.MaxPlayers,
+            PoolGameMode.ShooterPool => PoolMatchRules.MaxPlayers,
+            // A cue ball and a tee each (PlayAnywhereRuleSet).
+            PoolGameMode.PlayAnywhere => PoolMatchRules.MaxPlayers,
             // Speed Pool: a cue ball and a group each (PlayerBallGroups). In
             // turns, the 8-ball formats at more than two are still to come.
             PoolGameMode.EightBall => type == PoolMatchType.SpeedPool ? PoolMatchRules.MaxPlayers : 2,
@@ -97,7 +104,7 @@ namespace UntitledPoolGame.Pool
 
         // At four, the mode can be played 2 against 2 or each for themselves.
         public static bool HasTeamChoice(PoolGameMode mode, PoolMatchType type) =>
-            Current(mode) == PoolGameMode.EightBall && type == PoolMatchType.SpeedPool;
+            (Current(mode) == PoolGameMode.EightBall && type == PoolMatchType.SpeedPool) || Current(mode) == PoolGameMode.SumoBilliard || Current(mode) == PoolGameMode.ShooterPool || Current(mode) == PoolGameMode.ShooterMini;
 
         // Bowling Pool: no balls on the table for the powers to work on. Sumo modes:
         // the players are the balls, nothing to shoot a power with. Hide and seek:

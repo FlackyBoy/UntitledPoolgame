@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using UntitledPoolGame.Pool;
@@ -184,11 +185,16 @@ namespace UntitledPoolGame.Core
             PoolMatchRules.TurnChanged += OnTurnChanged;
             PoolMatchRules.BallBlasted += OnBallBlasted;
             LocalPoolAimController.ShotTaken += OnShotTaken;
+            // The free quarter's dimmed lamp (MatchHud.FreeQuarter).
+            RenderPipelineManager.beginCameraRendering += DimForFreeCamera;
+            RenderPipelineManager.endCameraRendering += UndimAfterFreeCamera;
         }
 
         private void OnDisable()
         {
             HideFree();
+            RenderPipelineManager.beginCameraRendering -= DimForFreeCamera;
+            RenderPipelineManager.endCameraRendering -= UndimAfterFreeCamera;
             PoolMatchRules.ExternalHud = false;
             PoolBall.Pocketed -= OnPocketed;
             PoolMatchRules.Fouled -= OnFouled;
@@ -290,10 +296,12 @@ namespace UntitledPoolGame.Core
             h.dim.style.display = cfg.dimWaitingPlayer && !myTurn && !rules.GameOver ? DisplayStyle.Flex : DisplayStyle.None;
 
             // Plate.
-            if (h.shownWho != p)
+            // In 2 v 2, the team's colour (J1's or J2's): teammates match.
+            int whoKey = p + 8 * PlayerBallGroups.ColourOf(p);
+            if (h.shownWho != whoKey)
             {
-                h.shownWho = p;
-                h.who.style.backgroundColor = cfg.PlayerColor(p);
+                h.shownWho = whoKey;
+                h.who.style.backgroundColor = cfg.PlayerColor(PlayerBallGroups.ColourOf(p));
                 TextFx.Set(h.whoText, Format(cfg.playerTagFormat, p + 1));
             }
             UpdatePlate(h, rules);

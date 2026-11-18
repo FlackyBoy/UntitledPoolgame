@@ -147,7 +147,7 @@ namespace UntitledPoolGame.Pool
             // Arcade: its slowing down is all SumoPoolBall's, this one would add
             // a constant on top, down to a sudden stop.
             ball.RollingFrictionOverride = s.poolBallPhysics ? TableBallFriction(scale) : 0f;
-            ball.MakePlayerCueBall(player, center + Vector3.up * ball.Radius, s.PlayerColor(player));
+            ball.MakePlayerCueBall(player, center + Vector3.up * ball.Radius, s.PlayerColor(PlayerBallGroups.ColourOf(player)));
             SumoPoolBall sumo = ball.gameObject.AddComponent<SumoPoolBall>();
             sumo.Prepare(ball, s, scale, center);
             return sumo;

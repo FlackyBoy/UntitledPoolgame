@@ -39,7 +39,7 @@ namespace UntitledPoolGame.Core
             // balls, bit n = its ball n (two racks share numbers).
             SpeedPoolRuleSet speed = rules.SpeedPool;
             int side = speed != null && PlayerBallGroups.Players >= 3
-                && (speed.IsEightBall || PlayerBallGroups.Split != GroupSplit.SolidsStripes) ? PlayerBallGroups.SideOf(p) : -1;
+                && (speed.IsEightBall || PlayerBallGroups.Split != GroupSplit.SolidsStripes || PlayerBallGroups.Teams) ? PlayerBallGroups.SideOf(p) : -1;
             bool eliminated = side >= 0 && speed.IsEliminated(p);
             foreach (PoolBall ball in PoolBall.Active)
             {
@@ -219,7 +219,7 @@ namespace UntitledPoolGame.Core
                 VisualElement tag = Box(h.plateBalls, "teammate");
                 tag.style.marginLeft = 10;
                 tag.style.paddingLeft = tag.style.paddingRight = 8;
-                tag.style.backgroundColor = cfg.PlayerColor(mate);
+                tag.style.backgroundColor = cfg.PlayerColor(PlayerBallGroups.ColourOf(mate));
                 Radius(tag, 8);
                 Border(tag, 3, Ink);
                 InkShadow(Text(tag, Format(cfg.teammateFormat, mate + 1), titleFont, size * 0.55f, Color.white), 2);

@@ -37,6 +37,10 @@ namespace UntitledPoolGame.Pool
         [SerializeField] private Transform player1Tee;
         [Tooltip("Départ du joueur 2. Vide = à côté du départ du joueur 1.")]
         [SerializeField] private Transform player2Tee;
+        [Tooltip("Départ du joueur 3, à 3 ou 4 joueurs. Vide = dans l'alignement des deux premiers, de l'autre côté du départ du joueur 1.")]
+        [SerializeField] private Transform player3Tee;
+        [Tooltip("Départ du joueur 4, à 4 joueurs. Vide = dans l'alignement des deux premiers, de l'autre côté du départ du joueur 2.")]
+        [SerializeField] private Transform player4Tee;
         [Tooltip("Centre du trou, au sol.")]
         [SerializeField] private Transform cup;
         [Tooltip("Rayon du trou (mètres). Une bille dont le centre passe à moins de cette distance, assez lentement, tombe dedans.")]
@@ -85,6 +89,8 @@ namespace UntitledPoolGame.Pool
         public Transform Flag => flag;
         public Transform Player1Tee => player1Tee;
         public Transform Player2Tee => player2Tee;
+        public Transform Player3Tee => player3Tee;
+        public Transform Player4Tee => player4Tee;
         public float PathWidth => pathWidth;
         public bool CourseSigns => courseSigns;
         public int ArrowCount => flagArrowsCount;
@@ -164,12 +170,23 @@ namespace UntitledPoolGame.Pool
         }
 
         // Where the player's ball rests at the start: on the tee, raised by
-        // its radius. Player 2 without a tee stands a few balls aside.
+        // its radius. Player 2 without a tee stands a few balls aside;
+        // players 3 and 4 without one, in line with the first two, past
+        // J1's tee for J3 and past J2's for J4, as far again.
         public Vector3 TeePosition(int player, float ballRadius)
         {
-            Transform tee = player == 1 && player2Tee != null ? player2Tee : player1Tee != null ? player1Tee : transform;
-            Vector3 spot = tee.position;
-            if (player == 1 && player2Tee == null) spot += tee.right * ballRadius * 6f;
+            Transform own = player == 3 ? player4Tee : player == 2 ? player3Tee : player == 1 ? player2Tee : player1Tee;
+            Vector3 spot;
+            if (own != null) spot = own.position;
+            else
+            {
+                Transform first = player1Tee != null ? player1Tee : transform;
+                Vector3 one = first.position;
+                // From J1's tee to J2's: the spacing, at least six balls.
+                Vector3 step = player2Tee != null ? player2Tee.position - one : first.right * (ballRadius * 6f);
+                if (step.sqrMagnitude < 1e-6f) step = first.right * (ballRadius * 6f);
+                spot = player == 0 ? one : player == 1 ? one + step : player == 2 ? one - step : one + 2f * step;
+            }
             return spot + Vector3.up * ballRadius;
         }
 
@@ -286,6 +303,8 @@ namespace UntitledPoolGame.Pool
                 float y = CupPosition.y;
                 if (player1Tee != null) y = Mathf.Min(y, player1Tee.position.y);
                 if (player2Tee != null) y = Mathf.Min(y, player2Tee.position.y);
+                if (player3Tee != null) y = Mathf.Min(y, player3Tee.position.y);
+                if (player4Tee != null) y = Mathf.Min(y, player4Tee.position.y);
                 foreach (PlayAnywherePathPoint point in path)
                     y = Mathf.Min(y, transform.TransformPoint(point.position).y);
                 return y;
@@ -318,6 +337,10 @@ namespace UntitledPoolGame.Pool
             if (player1Tee != null) Gizmos.DrawLine(player1Tee.position, CupPosition);
             Gizmos.color = new Color(1f, 0.35f, 0.3f);
             if (player2Tee != null) Gizmos.DrawLine(player2Tee.position, CupPosition);
+            Gizmos.color = new Color(0.2f, 0.8f, 0.35f);
+            if (player3Tee != null) Gizmos.DrawLine(player3Tee.position, CupPosition);
+            Gizmos.color = new Color(0.65f, 0.35f, 0.95f);
+            if (player4Tee != null) Gizmos.DrawLine(player4Tee.position, CupPosition);
 
             // The course's corridor: out of it, out of bounds.
             if (pathWidth <= 0f) return;

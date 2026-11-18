@@ -21,6 +21,8 @@ namespace UntitledPoolGame.Pool
 
         public float FeltY => feltY;
         public LocalShooterWeapon WeaponOf(int player) => fighters[player].weapon;
+        // The shrunk body a player plays (null before it's placed).
+        public LocalPlayerShrink BodyOf(int player) => player >= 0 && player < fighterCount ? fighters[player].body : null;
 
         private void Keep(GameObject thing)
         {
@@ -66,7 +68,7 @@ namespace UntitledPoolGame.Pool
         {
             if (CurrentPhase != Phase.Fight) return false;
             float reach = Settings.crateReach;
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < fighterCount; p++)
             {
                 if (!CanFire(p) || Flat(fighters[p].body.transform.position - position).sqrMagnitude > reach * reach) continue;
                 match.GrantPower(p, power);
@@ -88,8 +90,8 @@ namespace UntitledPoolGame.Pool
             f.body.GetCapsule(out _, out _, out float bodyRadius);
             Vector3 at = f.body.transform.position + direction * (bodyRadius + spec.radius + Settings.ballHitMargin);
             at.y = feltY + spec.radius;
-            Fighter other = fighters[1 - player];
-            ShooterRollingBall ball = ShooterRollingBall.Launch(this, player, spec, at, direction, chaseOther && other.body != null ? other.body.transform : null);
+            LocalPlayerShrink chased = chaseOther ? NearestOpponent(player, f.body.transform.position) : null;
+            ShooterRollingBall ball = ShooterRollingBall.Launch(this, player, spec, at, direction, chased != null ? chased.transform : null);
             Keep(ball.gameObject);
         }
 
@@ -102,7 +104,7 @@ namespace UntitledPoolGame.Pool
             if (rolling.sqrMagnitude < s.minBallHitSpeed * s.minBallHitSpeed) return false;
             Vector3 c = roller.transform.position;
             bool hit = false;
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < fighterCount; p++)
             {
                 Fighter f = fighters[p];
                 if (f.body == null || f.eliminated || f.body.IsDown || Time.time < f.ballSafeUntil) continue;
@@ -113,6 +115,7 @@ namespace UntitledPoolGame.Pool
                 if ((c - nearest).sqrMagnitude > reach * reach) continue;
                 f.ballSafeUntil = Time.time + s.ballSafeTime;
                 float speed = Mathf.Min(rolling.magnitude * s.knockTransfer, s.knockMaxSpeed);
+                Credit(p, roller.Owner);
                 Hurt(p, roller.Damage, nearest, Push(rolling, speed), roller.Label, Vector3.zero);
                 hit = true;
                 if (CurrentPhase != Phase.Fight) return true;
@@ -122,16 +125,48 @@ namespace UntitledPoolGame.Pool
 
         // ---------- Grapple ----------
 
-        // The line brought player onto the other one: down they go.
-        public void GrappleLanded(int player, Vector3 direction, float damage, float knockSpeed, string by)
+        // The line brought player onto the one it caught: down they go.
+        public void GrappleLanded(int player, LocalPlayerShrink caught, Vector3 direction, float damage, float knockSpeed, string by)
         {
-            int victim = 1 - player;
+            int victim = FighterOf(caught);
+            if (victim < 0 || victim == player || CurrentPhase != Phase.Fight) return;
             Fighter f = fighters[victim];
-            if (CurrentPhase != Phase.Fight || f.body == null || f.eliminated || f.body.IsDown) return;
+            if (f.body == null || f.eliminated || f.body.IsDown) return;
+            Credit(victim, player);
             Hurt(victim, damage, f.body.BodyPosition, Push(direction, knockSpeed), by, Vector3.zero);
         }
 
-        public bool IsOpponent(int player, LocalPlayerShrink body) => body != null && fighters[1 - player].body == body;
+        // Anyone else's body (not a teammate's, in 2 v 2).
+        public bool IsOpponent(int player, LocalPlayerShrink body)
+        {
+            int other = FighterOf(body);
+            return other >= 0 && other != player && !SameTeam(player, other);
+        }
+
+        private int FighterOf(LocalPlayerShrink body)
+        {
+            if (body == null) return -1;
+            for (int q = 0; q < fighterCount; q++)
+                if (fighters[q].body == body) return q;
+            return -1;
+        }
+
+        // The homing ball's target.
+        private LocalPlayerShrink NearestOpponent(int player, Vector3 from)
+        {
+            LocalPlayerShrink best = null;
+            float bestDistance = float.MaxValue;
+            for (int q = 0; q < fighterCount; q++)
+            {
+                Fighter f = fighters[q];
+                if (q == player || SameTeam(player, q) || f.body == null || f.eliminated) continue;
+                float d = Flat(f.body.transform.position - from).sqrMagnitude;
+                if (d >= bestDistance) continue;
+                bestDistance = d;
+                best = f.body;
+            }
+            return best;
+        }
 
         // ---------- Mine ----------
 
@@ -187,7 +222,7 @@ namespace UntitledPoolGame.Pool
         // flat push the feet's friction ate, and the body fell where it stood.
         public void Blast(Vector3 at, int owner, float radius, float damage, float knockSpeed, float liftSpeed, float ballSpeed, string by)
         {
-            for (int p = 0; p < 2 && CurrentPhase == Phase.Fight; p++)
+            for (int p = 0; p < fighterCount && CurrentPhase == Phase.Fight; p++)
             {
                 Fighter f = fighters[p];
                 if (f.body == null || f.eliminated || f.body.IsDown) continue;
@@ -197,6 +232,7 @@ namespace UntitledPoolGame.Pool
                 if (distance > radius) continue;
                 float strength = Mathf.Lerp(1f, BlastEdgeStrength, distance / radius);
                 Vector3 knock = (Flat(nearest - at).normalized * knockSpeed + Vector3.up * liftSpeed) * strength;
+                Credit(p, owner);
                 if (Hurt(p, damage, nearest, knock, by, Vector3.zero) && Settings.debugLogs)
                     f.body.StartCoroutine(TraceThrow(f.body, by));
             }

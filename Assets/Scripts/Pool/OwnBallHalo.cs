@@ -38,7 +38,7 @@ namespace UntitledPoolGame.Pool
             halo.ball = ball;
             halo.side = side;
             halo.sprite = go.AddComponent<SpriteRenderer>();
-            halo.sprite.sprite = Ring();
+            halo.sprite.sprite = RingSprite();
             halo.sprite.shadowCastingMode = ShadowCastingMode.Off;
             halo.sprite.receiveShadows = false;
             halo.sprite.enabled = false;
@@ -96,7 +96,7 @@ namespace UntitledPoolGame.Pool
         }
 
         // A soft-edged white ring, tinted by the SpriteRenderer; made once.
-        private static Sprite Ring()
+        private static Sprite RingSprite()
         {
             if (ring != null) return ring;
             const int Size = 128;

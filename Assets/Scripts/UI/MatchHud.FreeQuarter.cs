@@ -1,5 +1,8 @@
 using UnityEngine;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UIElements;
 using UntitledPoolGame.Pool;
 
@@ -25,6 +28,16 @@ namespace UntitledPoolGame.Core
         private readonly FreeRow[] freeRowEntries = new FreeRow[PoolMatchRules.MaxPlayers];
         private readonly int[] freeOrder = new int[PoolMatchRules.MaxPlayers];
         private Camera freeCamera;
+        private UniversalAdditionalCameraData freeCameraData;
+        // The lights over the table, dimmed while the free camera draws, and
+        // their own intensities to give back once it's done.
+        private readonly List<Light> freeDimmed = new List<Light>();
+        private readonly List<float> freeDimmedIntensity = new List<float>();
+        private Vector3 freeDimCenter;
+        private bool freeDimFound;
+        // The players' camera it renders like (exposure, tone mapping, volumes).
+        private Camera freeLookSource;
+        private UniversalAdditionalCameraData freeLookSourceData;
         private int freeKey = int.MinValue;
         private float freePanelBlend;
 
@@ -383,6 +396,69 @@ namespace UntitledPoolGame.Core
             return false;
         }
 
+        // Rendered like the players' cameras: a bare camera has no
+        // post-processing, so no tone mapping, and the lamp above the table
+        // burnt the felt white where the players' views were fine. The
+        // volumes are picked from the player's camera, not from 20 m up.
+        // Copied every frame (a few fields): the quality level may change.
+        private void MatchPlayersLook()
+        {
+            if (freeLookSource == null)
+            {
+                foreach (Half h in halves)
+                {
+                    if (h == null || h.cam == null) continue;
+                    freeLookSource = h.cam;
+                    freeLookSourceData = h.cam.GetUniversalAdditionalCameraData();
+                    break;
+                }
+                if (freeLookSource == null) return;
+            }
+            freeCamera.allowHDR = freeLookSource.allowHDR;
+            freeCameraData.renderPostProcessing = freeLookSourceData.renderPostProcessing;
+            freeCameraData.antialiasing = freeLookSourceData.antialiasing;
+            freeCameraData.antialiasingQuality = freeLookSourceData.antialiasingQuality;
+            freeCameraData.volumeLayerMask = freeLookSourceData.volumeLayerMask;
+            freeCameraData.volumeTrigger = freeLookSource.transform;
+        }
+
+        // Looking straight down, the felt sends the lamp above it right back
+        // into the camera and burns white, a view the players never have:
+        // only for this camera, the lights over the table are dimmed
+        // (Free View Light Scale), then given back.
+        private void FindLightsOver(Vector3 center, Vector2 halfSize)
+        {
+            freeDimFound = true;
+            freeDimCenter = center;
+            freeDimmed.Clear();
+            float reach = Mathf.Max(halfSize.x, halfSize.y) * 1.5f;
+            foreach (Light light in FindObjectsByType<Light>(FindObjectsInactive.Exclude))
+            {
+                if (light.type == LightType.Directional) continue;
+                Vector3 offset = light.transform.position - center;
+                if (offset.y <= 0f || new Vector2(offset.x, offset.z).magnitude > reach) continue;
+                freeDimmed.Add(light);
+            }
+        }
+
+        private void DimForFreeCamera(ScriptableRenderContext context, Camera camera)
+        {
+            if (camera != freeCamera || cfg == null) return;
+            freeDimmedIntensity.Clear();
+            foreach (Light light in freeDimmed)
+            {
+                freeDimmedIntensity.Add(light != null ? light.intensity : 0f);
+                if (light != null) light.intensity *= cfg.freeViewLightScale;
+            }
+        }
+
+        private void UndimAfterFreeCamera(ScriptableRenderContext context, Camera camera)
+        {
+            if (camera != freeCamera) return;
+            for (int i = 0; i < freeDimmed.Count && i < freeDimmedIntensity.Count; i++)
+                if (freeDimmed[i] != null) freeDimmed[i].intensity = freeDimmedIntensity[i];
+        }
+
         // An orthographic camera straight above the play area, in the free
         // cell. The totals column covers the left of the quarter: the table is
         // framed a little to the right of the middle when there are totals.
@@ -399,8 +475,13 @@ namespace UntitledPoolGame.Core
                 go.transform.SetParent(transform, false);
                 freeCamera = go.AddComponent<Camera>();
                 freeCamera.orthographic = true;
+                freeCameraData = freeCamera.GetUniversalAdditionalCameraData();
             }
+            // The lights over this table, looked up again when it moves (Sumo
+            // Pool's small table, another level).
+            if (!freeDimFound || (center - freeDimCenter).sqrMagnitude > 0.01f) FindLightsOver(center, halfSize);
             freeCamera.enabled = true;
+            MatchPlayersLook();
             freeCamera.rect = cell;
 
             const float Height = 20f;
