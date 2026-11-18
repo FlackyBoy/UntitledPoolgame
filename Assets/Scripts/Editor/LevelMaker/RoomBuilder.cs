@@ -227,59 +227,171 @@ namespace UntitledPoolGame.PoolEditor
                 for (int c = 0; c < cells; c++) BuildWallCell(room, s, c, walls);
             }
 
-            GameObject pillar = room.hasWalls && room.pillarVariant >= 0 ? palette.Pillar(room.pillarVariant) : null;
-            if (pillar != null)
+            BuildPart(room, RoomModuleKind.Pillar);
+            BuildPart(room, RoomModuleKind.Floor);
+            BuildPart(room, RoomModuleKind.Railing);
+            BuildPart(room, RoomModuleKind.Ceiling);
+            BuildPart(room, RoomModuleKind.Stairs);
+        }
+
+        // Rebuilds only one part of a room — its pillars, floor, void
+        // railings, ceiling or stairs — so changes made by hand to the rest
+        // of it (or to the rooms around) stay.
+        public static void RebuildPart(RoomOutline room, RoomModuleKind part)
+        {
+            if (room == null || room.palette == null) return;
+            ClearMeasures();
+            Undo.RecordObject(room, "Construire la salle");
+            foreach (RoomModule module in room.GetComponentsInChildren<RoomModule>(true).ToList())
+                if (module != null && module.kind == part && (part != RoomModuleKind.Railing || module.segment < 0))
+                    Undo.DestroyObjectImmediate(module.gameObject);
+            BuildPart(room, part);
+        }
+
+        private static void BuildPart(RoomOutline room, RoomModuleKind part)
+        {
+            PrefabPalette palette = room.palette;
+            switch (part)
             {
-                Transform pillars = Folder(room.transform, "Poteaux");
-                for (int i = 0; i < room.points.Count; i++)
+                case RoomModuleKind.Pillar:
+                    if (!room.hasWalls) return;
+                    Transform pillars = null;
+                    for (int i = 0; i < room.points.Count; i++)
+                    {
+                        int variant = room.PieceVariant(RoomModuleKind.Pillar, room.points[i], room.pillarVariant, out PrefabPalette from);
+                        GameObject pillar = variant >= 0 && from != null ? from.Pillar(variant) : null;
+                        if (pillar == null) continue;
+                        if (pillars == null) pillars = Folder(room.transform, "Poteaux");
+                        int seg = i < room.SegmentCount ? i : room.SegmentCount - 1;
+                        Place(pillar, pillars, room.points[i], SegmentYaw(room, seg), room.points[i].y, false, palette,
+                            RoomModuleKind.Pillar, -1, -1);
+                    }
+                    return;
+
+                case RoomModuleKind.Floor:
                 {
-                    int seg = i < room.SegmentCount ? i : room.SegmentCount - 1;
-                    Place(pillar, pillars, room.points[i], SegmentYaw(room, seg), room.points[i].y, false, palette,
-                        RoomModuleKind.Pillar, -1, -1);
+                    // Holed where stairs from the level below come up.
+                    GameObject floorTile = room.FloorPalette.FloorTile(room.floorVariant);
+                    if (!room.closed || !room.hasFloor || floorTile == null) return;
+                    List<RoomOutline> rooms = AllRooms();
+                    List<StairsFootprint> arriving = rooms.Where(r => r.level == room.level - 1 && r.palette != null)
+                        .SelectMany(Footprints).ToList();
+                    List<RoomOutline> ownFloors = Guests(room, rooms).Where(g => g.hasFloor).ToList();
+                    FillOutline(room, floorTile, Folder(room.transform, "Sol"), room.points[0].y, true, RoomModuleKind.Floor,
+                        (center, half) => (room.HasVoid && Inside(center, room.floorVoid)) || arriving.Any(f => f.Overlaps(center, half))
+                                          || ownFloors.Any(g => Inside(center, g.points)));
+                    return;
                 }
-            }
 
-            List<RoomOutline> rooms = AllRooms();
-            // Rooms traced inside this one with their own floor or ceiling:
-            // this room's tiles leave them the space, or two floors overlap.
-            List<RoomOutline> guests = rooms.Where(r => r != room && r.level == room.level && IsInside(r, room)).ToList();
+                case RoomModuleKind.Railing:
+                    if (room.HasVoid) BuildVoidRailings(room, Folder(room.transform, "Garde-corps"));
+                    return;
 
-            // Floor: holed where stairs from the level below come up.
-            GameObject floorTile = palette.FloorTile(room.floorVariant);
-            if (room.closed && room.hasFloor && floorTile != null)
-            {
-                List<StairsFootprint> arriving = rooms.Where(r => r.level == room.level - 1 && r.palette != null)
-                    .SelectMany(Footprints).ToList();
-                List<RoomOutline> ownFloors = guests.Where(g => g.hasFloor).ToList();
-                FillOutline(room, floorTile, Folder(room.transform, "Sol"), room.points[0].y, true, RoomModuleKind.Floor,
-                    (center, half) => (room.HasVoid && Inside(center, room.floorVoid)) || arriving.Any(f => f.Overlaps(center, half))
-                                      || ownFloors.Any(g => Inside(center, g.points)));
-            }
-            if (room.HasVoid) BuildVoidRailings(room, Folder(room.transform, "Garde-corps"));
+                case RoomModuleKind.Ceiling:
+                {
+                    // Not under a room of the level above (its floor is the ceiling).
+                    GameObject ceilingTile = room.CeilingPalette.CeilingTile(room.ceilingVariant);
+                    if (!room.closed || !room.hasCeiling || ceilingTile == null) return;
+                    List<RoomOutline> rooms = AllRooms();
+                    List<RoomOutline> above = rooms.Where(r => r.level == room.level + 1 && r.closed && r.hasFloor).ToList();
+                    List<RoomOutline> ownCeilings = Guests(room, rooms).Where(g => g.hasCeiling).ToList();
+                    FillOutline(room, ceilingTile, Folder(room.transform, "Plafond"),
+                        room.points[0].y + WallHeight(palette, room.wallVariant), false, RoomModuleKind.Ceiling,
+                        (center, half) => above.Any(r => Inside(center, r.points)) || ownCeilings.Any(g => Inside(center, g.points)));
+                    return;
+                }
 
-            // Ceiling: not under a room of the level above (its floor is the ceiling).
-            GameObject ceilingTile = palette.CeilingTile(room.ceilingVariant);
-            if (room.closed && room.hasCeiling && ceilingTile != null)
-            {
-                List<RoomOutline> above = rooms.Where(r => r.level == room.level + 1 && r.closed && r.hasFloor).ToList();
-                List<RoomOutline> ownCeilings = guests.Where(g => g.hasCeiling).ToList();
-                FillOutline(room, ceilingTile, Folder(room.transform, "Plafond"),
-                    room.points[0].y + WallHeight(palette, room.wallVariant), false, RoomModuleKind.Ceiling,
-                    (center, half) => above.Any(r => Inside(center, r.points)) || ownCeilings.Any(g => Inside(center, g.points)));
-            }
-
-            if (room.stairs.Count > 0)
-            {
-                Transform folder = Folder(room.transform, "Escaliers");
-                foreach (RoomStairs flight in room.stairs) PlaceStairs(room, flight, folder);
+                case RoomModuleKind.Stairs:
+                    if (room.stairs.Count == 0) return;
+                    Transform folder = Folder(room.transform, "Escaliers");
+                    foreach (RoomStairs flight in room.stairs) PlaceStairs(room, flight, folder);
+                    return;
             }
         }
 
-        // Rebuilds a room and the rooms whose build depends on it.
+        // Rooms traced inside this one with their own floor or ceiling: this
+        // room's tiles leave them the space, or two floors overlap.
+        private static List<RoomOutline> Guests(RoomOutline room, List<RoomOutline> rooms) =>
+            rooms.Where(r => r != room && r.level == room.level && IsInside(r, room)).ToList();
+
+        // Rebuilds one wall cell (the piece starting there and the one nested
+        // in it) and nothing else.
+        public static GameObject RebuildWallCell(RoomOutline room, int segment, int cell)
+        {
+            ClearMeasures();
+            foreach (RoomModule module in room.GetComponentsInChildren<RoomModule>(true).ToList())
+                if (module.segment == segment && module.cell == cell)
+                    Undo.DestroyObjectImmediate(module.gameObject);
+            return BuildWallCell(room, segment, cell, Folder(room.transform, "Murs"));
+        }
+
+        // Puts prefab where old stands — same spot, same turn, same base (top
+        // for a floor tile), a tile stretched to the old one's footprint — and
+        // removes old. Nothing else is rebuilt.
+        public static GameObject SwapPiece(GameObject old, GameObject prefab, RoomModuleKind kind, PrefabPalette palette)
+        {
+            if (old == null || prefab == null) return null;
+            ClearMeasures();
+            SwapPose(old, prefab, kind, out Vector3 center, out float yaw, out float y, out bool topAtY, out Vector3? stretch);
+            RoomModule marker = old.GetComponent<RoomModule>();
+            int segment = marker != null ? marker.segment : -1, cell = marker != null ? marker.cell : -1;
+            Transform parent = old.transform.parent;
+            int sibling = old.transform.GetSiblingIndex();
+            Undo.DestroyObjectImmediate(old);
+            GameObject go = Place(prefab, parent, center, yaw, y, topAtY, palette, kind, segment, cell, stretch);
+            if (go != null) go.transform.SetSiblingIndex(sibling);
+            return go;
+        }
+
+        // Where SwapPiece puts prefab: old's spot, turn and base (top for a
+        // floor tile); a tile is stretched to old's footprint.
+        private static void SwapPose(GameObject old, GameObject prefab, RoomModuleKind kind,
+            out Vector3 center, out float yaw, out float y, out bool topAtY, out Vector3? stretch)
+        {
+            GameObject source = PrefabUtility.GetCorrespondingObjectFromSource(old);
+            Quaternion sourceRotation = source != null ? source.transform.localRotation : Quaternion.identity;
+            yaw = (old.transform.rotation * Quaternion.Inverse(sourceRotation)).eulerAngles.y;
+            if (!LevelBuilder.TryGetBounds(old, out Bounds ob)) ob = new Bounds(old.transform.position, Vector3.zero);
+            stretch = null;
+            if (kind == RoomModuleKind.Floor || kind == RoomModuleKind.Ceiling)
+            {
+                Vector2 native = TileSize(prefab);
+                stretch = new Vector3(ob.size.x / native.x, 1f, ob.size.z / native.y);
+            }
+            topAtY = kind == RoomModuleKind.Floor;
+            y = topAtY ? ob.max.y : ob.min.y;
+            center = new Vector3(ob.center.x, 0f, ob.center.z);
+        }
+
+        // Rebuilds a room and what of the rooms around depends on it.
         public static void BuildWithNeighbours(RoomOutline room)
         {
             Build(room);
-            foreach (RoomOutline other in Related(room)) Build(other);
+            RebuildNeighbourTiles(room);
+        }
+
+        // Rebuilds only some parts of a room (Wall = the whole room), then
+        // the floors and ceilings around that depend on them.
+        public static void RebuildWithNeighbours(RoomOutline room, IEnumerable<RoomModuleKind> parts)
+        {
+            List<RoomModuleKind> list = parts.Distinct().ToList();
+            if (list.Count == 0) return;
+            if (list.Contains(RoomModuleKind.Wall)) { BuildWithNeighbours(room); return; }
+            foreach (RoomModuleKind part in list) RebuildPart(room, part);
+            RebuildNeighbourTiles(room);
+        }
+
+        // What of another room depends on this one is only its floor (holes
+        // for stairs coming up, space left to a room inside) and its ceiling
+        // (none under a floor): the rest of it, and the changes made to it
+        // by hand, stay.
+        public static void RebuildNeighbourTiles(RoomOutline room)
+        {
+            foreach (RoomOutline other in Related(room))
+            {
+                RebuildPart(other, RoomModuleKind.Floor);
+                RebuildPart(other, RoomModuleKind.Ceiling);
+            }
         }
 
         // The levels just above and below (floor holes, ceilings), and on the
@@ -368,7 +480,7 @@ namespace UntitledPoolGame.PoolEditor
         {
             foreach (RoomStairs flight in room.stairs)
             {
-                GameObject prefab = room.palette.Stairs(flight.variant);
+                GameObject prefab = (flight.palette != null ? flight.palette : room.palette).Stairs(flight.variant);
                 if (prefab == null || !TryStairsShape(room.palette, prefab, out Bounds b, out Vector3 uphillLocal)) continue;
                 yield return Footprint(flight, b, uphillLocal);
             }
@@ -418,7 +530,7 @@ namespace UntitledPoolGame.PoolEditor
         private static void PlaceStairs(RoomOutline room, RoomStairs flight, Transform parent)
         {
             PrefabPalette palette = room.palette;
-            GameObject prefab = palette.Stairs(flight.variant);
+            GameObject prefab = (flight.palette != null ? flight.palette : palette).Stairs(flight.variant);
             if (prefab == null || !TryStairsShape(palette, prefab, out Bounds b, out Vector3 uphillLocal)) return;
 
             float floorY = room.points[0].y;
@@ -468,7 +580,7 @@ namespace UntitledPoolGame.PoolEditor
         {
             Undo.RecordObject(room, "Escalier");
             room.stairs.Add(flight);
-            BuildWithNeighbours(room);
+            RebuildWithNeighbours(room, new[] { RoomModuleKind.Stairs });
         }
 
         // Removes the flight closest to point (within maxDistance) from any room.
@@ -486,7 +598,7 @@ namespace UntitledPoolGame.PoolEditor
             if (best == null) return false;
             Undo.RecordObject(best, "Retirer l'escalier");
             best.stairs.RemoveAt(bestIndex);
-            BuildWithNeighbours(best);
+            RebuildWithNeighbours(best, new[] { RoomModuleKind.Stairs });
             return true;
         }
 
@@ -578,21 +690,24 @@ namespace UntitledPoolGame.PoolEditor
             int span = Mathf.Min(choice.Span, cells - cell);
             Vector3 center = Vector3.Lerp(a, b, (cell + span / 2f) / cells);
 
-            GameObject prefab = PieceFor(palette, choice.kind, choice.variant);
+            PrefabPalette piecePalette = choice.palette != null ? choice.palette : palette;
+            GameObject prefab = PieceFor(piecePalette, choice.kind, choice.variant);
             RoomModuleKind kind = choice.kind;
             // A kit without railings: the side stays open rather than walled.
             if (prefab == null && kind == RoomModuleKind.Railing) return null;
             // A kit without doors/windows: a plain wall keeps the room closed.
             if (prefab == null) { prefab = palette.Wall(room.wallVariant); kind = RoomModuleKind.Wall; }
             if (prefab == null) return null;
-            GameObject placed = Place(prefab, parent, center, SegmentYaw(room, segment, prefab), a.y, false, palette, kind, segment, cell);
+            // flipped: a model whose visible face is on its other side.
+            float yaw = SegmentYaw(room, segment, prefab) + (choice.flipped ? 180f : 0f);
+            GameObject placed = Place(prefab, parent, center, yaw, a.y, false, palette, kind, segment, cell);
 
             // A piece nested in this one (cage door in its frame): same spot, on the floor.
             if (choice.hasInsert)
             {
-                GameObject insert = PieceFor(palette, choice.insertKind, choice.insertVariant);
+                GameObject insert = PieceFor(piecePalette, choice.insertKind, choice.insertVariant);
                 if (insert != null)
-                    Place(insert, parent, center, SegmentYaw(room, segment, insert), a.y, false, palette, choice.insertKind, segment, cell);
+                    Place(insert, parent, center, SegmentYaw(room, segment, insert) + (choice.flipped ? 180f : 0f), a.y, false, palette, choice.insertKind, segment, cell);
             }
             return placed;
         }
@@ -621,7 +736,9 @@ namespace UntitledPoolGame.PoolEditor
         // Puts a piece in a wall cell (empty ones too). A wide piece takes
         // the cells it needs, centred when possible, replacing what was
         // there. insert = nest it in the existing piece (None removes it).
-        public static bool SetCell(RoomOutline room, int segment, int cell, RoomModuleKind kind, int variant, bool insert = false)
+        // from: the palette the piece comes from (null = the room's).
+        public static bool SetCell(RoomOutline room, int segment, int cell, RoomModuleKind kind, int variant, bool insert = false,
+            PrefabPalette from = null)
         {
             ClearMeasures();
             PrefabPalette palette = room.palette;
@@ -640,7 +757,8 @@ namespace UntitledPoolGame.PoolEditor
                 return true;
             }
 
-            int span = kind == RoomModuleKind.None ? 1 : SpanOf(palette, PieceFor(palette, kind, variant), ModuleWidth(room));
+            PrefabPalette piecePalette = from != null ? from : palette;
+            int span = kind == RoomModuleKind.None ? 1 : SpanOf(piecePalette, PieceFor(piecePalette, kind, variant), ModuleWidth(room));
             if (span > cells)
             {
                 Debug.LogWarning($"[Level Maker] {room.name} : la pièce fait {span} modules, ce côté n'en a que {cells}.", room);
@@ -648,7 +766,7 @@ namespace UntitledPoolGame.PoolEditor
             }
             int start = Mathf.Clamp(cell - (span - 1) / 2, 0, cells - span);
             for (int c = start; c < start + span; c++) FreeCell(room, segment, c);
-            room.SetCell(new RoomOpening { segment = segment, cell = start, kind = kind, variant = variant, span = span });
+            room.SetCell(new RoomOpening { segment = segment, cell = start, kind = kind, variant = variant, span = span, palette = from });
             for (int c = start + 1; c < start + span; c++)
                 room.SetCell(new RoomOpening { segment = segment, cell = c, kind = RoomModuleKind.Covered, variant = start });
             RebuildSide(room, segment);
@@ -736,12 +854,29 @@ namespace UntitledPoolGame.PoolEditor
         // to the module size is stretched to exactly one cell so the floor
         // meets the walls; others keep their size and run on under the walls.
         private static void FillOutline(RoomOutline room, GameObject tile, Transform parent, float y, bool topAtY, RoomModuleKind kind,
-            System.Func<Vector3, Vector2, bool> skip = null) =>
-            FillOutline(room.points, room.palette, room.wallVariant, room.hasWalls, room.name, tile, parent, y, topAtY, kind, skip);
+            System.Func<Vector3, Vector2, bool> skip = null)
+        {
+            // Tiles replaced one by one (RoomOutline.pieceVariants) keep their variant.
+            System.Func<Vector3, GameObject> tileAt = null;
+            if (room.pieceVariants != null && room.pieceVariants.Any(p => p.kind == kind))
+            {
+                int roomVariant = kind == RoomModuleKind.Ceiling ? room.ceilingVariant : room.floorVariant;
+                PrefabPalette part = room.PartPalette(kind);
+                tileAt = center =>
+                {
+                    int v = room.PieceVariant(kind, center, roomVariant, out PrefabPalette from);
+                    if (v == roomVariant && from == part) return null;
+                    return kind == RoomModuleKind.Ceiling ? from.CeilingTile(v) : from.FloorTile(v);
+                };
+            }
+            FillOutline(room.points, room.palette, room.wallVariant, room.hasWalls, room.name, tile, parent, y, topAtY, kind, skip, tileAt);
+        }
 
         // Same from an outline's data (a trace not yet turned into a room).
+        // tileAt: another tile for a cell (null = the outline's), stretched to the cell.
         private static void FillOutline(List<Vector3> points, PrefabPalette palette, int wallVariant, bool hasWalls, string label,
-            GameObject tile, Transform parent, float y, bool topAtY, RoomModuleKind kind, System.Func<Vector3, Vector2, bool> skip = null)
+            GameObject tile, Transform parent, float y, bool topAtY, RoomModuleKind kind, System.Func<Vector3, Vector2, bool> skip = null,
+            System.Func<Vector3, GameObject> tileAt = null)
         {
             Vector2 native = TileSize(tile);
             Vector2 size = native;
@@ -772,8 +907,14 @@ namespace UntitledPoolGame.PoolEditor
                 {
                     var center = new Vector3(origin.x + (ix + 0.5f) * size.x, y, origin.z + (iz + 0.5f) * size.y);
                     bool laid = fits ? Inside(center, points) : Touches(center, size / 2f, points);
-                    if (laid && (skip == null || !skip(center, size / 2f)))
-                        Place(tile, parent, center, 0f, y, topAtY, palette, kind, -1, -1, stretch);
+                    if (!laid || (skip != null && skip(center, size / 2f))) continue;
+                    GameObject own = tileAt?.Invoke(center);
+                    if (own == null) Place(tile, parent, center, 0f, y, topAtY, palette, kind, -1, -1, stretch);
+                    else
+                    {
+                        Vector2 n = TileSize(own);
+                        Place(own, parent, center, 0f, y, topAtY, palette, kind, -1, -1, new Vector3(size.x / n.x, 1f, size.y / n.y));
+                    }
                 }
         }
 
@@ -807,7 +948,7 @@ namespace UntitledPoolGame.PoolEditor
         // Base centered on point, standing along normal. parent = null: the
         // scene's props folder. mounted: see PropPose.
         public static GameObject PlaceProp(GameObject prefab, Vector3 point, Vector3 normal, float yaw, float scale,
-            PrefabPalette palette, Transform parent, bool mounted = false)
+            PrefabPalette palette, Transform parent, bool mounted = false, Vector2 tilt = default)
         {
             if (prefab == null) return null;
             if (parent == null)
@@ -821,7 +962,7 @@ namespace UntitledPoolGame.PoolEditor
                 parent = rootGo.transform;
             }
 
-            PropPose(prefab, point, normal, yaw, scale, out Vector3 position, out Quaternion rotation, out Vector3 localScale, mounted);
+            PropPose(prefab, point, normal, yaw, scale, out Vector3 position, out Quaternion rotation, out Vector3 localScale, mounted, tilt);
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.gameObject.scene);
             Undo.RegisterCreatedObjectUndo(go, "Placer un prop");
             go.transform.SetParent(parent, false);
@@ -900,15 +1041,16 @@ namespace UntitledPoolGame.PoolEditor
             Preview(into, () => Place(piece, null, center, SegmentYaw(room, segment, piece), a.y, false, palette, kind, segment, start));
         }
 
-        // The floor (and ceiling, ceilingVariant >= 0) the Floors tool would
-        // give the room. Holes for stairs and rooms above are not cut here.
+        // The floor (floorVariant >= 0) and ceiling (ceilingVariant >= 0) the
+        // Floors tool would give the room. Holes for stairs and rooms above
+        // are not cut here.
         public static void PreviewFloors(RoomOutline room, int floorVariant, int ceilingVariant, List<GhostPiece> into)
         {
             if (room == null || room.palette == null || !room.closed) return;
             PrefabPalette palette = room.palette;
             Preview(into, () =>
             {
-                GameObject floor = palette.FloorTile(floorVariant);
+                GameObject floor = floorVariant >= 0 ? palette.FloorTile(floorVariant) : null;
                 if (floor != null) FillOutline(room, floor, null, room.points[0].y, true, RoomModuleKind.Floor);
                 GameObject ceiling = ceilingVariant >= 0 ? palette.CeilingTile(ceilingVariant) : null;
                 if (ceiling != null)
@@ -925,16 +1067,36 @@ namespace UntitledPoolGame.PoolEditor
 
         // Pose of a prop placed with PlaceProp. Shared with the Props ghost.
         // mounted (lights): same orientation on every wall, see MountedTurn.
+        // tilt: degrees around the object's own X (x) and Z (y) after its yaw
+        // (for a light, X and Z of its frame on the surface). The tilted shape
+        // is measured again so its lowest point still rests on the surface
+        // instead of sinking into it.
         public static void PropPose(GameObject prefab, Vector3 point, Vector3 normal, float yaw, float scale,
-            out Vector3 position, out Quaternion rotation, out Vector3 localScale, bool mounted = false)
+            out Vector3 position, out Quaternion rotation, out Vector3 localScale, bool mounted = false, Vector2 tilt = default)
         {
-            Quaternion turn = mounted ? MountedTurn(normal, yaw)
+            Quaternion frame = mounted ? MountedTurn(normal, yaw)
                 : Quaternion.FromToRotation(Vector3.up, normal) * Quaternion.Euler(0f, yaw, 0f);
+            Quaternion tiltTurn = Quaternion.Euler(tilt.x, 0f, tilt.y);
             TryMeasure(prefab, out Bounds b);
-            Vector3 baseCenter = new Vector3(b.center.x, b.min.y, b.center.z) * scale;
-            position = point - turn * baseCenter;
-            rotation = turn * prefab.transform.localRotation;
+            Bounds tilted = RotatedBounds(new Bounds(b.center * scale, b.size * scale), tiltTurn);
+            Vector3 baseCenter = new Vector3(tilted.center.x, tilted.min.y, tilted.center.z);
+            position = point - frame * baseCenter;
+            rotation = frame * tiltTurn * prefab.transform.localRotation;
             localScale = prefab.transform.localScale * scale;
+        }
+
+        // Axis-aligned box around b once turned by rotation.
+        private static Bounds RotatedBounds(Bounds b, Quaternion rotation)
+        {
+            if (rotation == Quaternion.identity) return b;
+            var result = new Bounds(rotation * b.center, Vector3.zero);
+            Vector3 e = b.extents;
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = new Vector3((i & 1) == 0 ? -e.x : e.x, (i & 2) == 0 ? -e.y : e.y, (i & 4) == 0 ? -e.z : e.z);
+                result.Encapsulate(rotation * (b.center + corner));
+            }
+            return result;
         }
 
         // +Y out of the surface and, at yaw 0, +X level on a wall and along

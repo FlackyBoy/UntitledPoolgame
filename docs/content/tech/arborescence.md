@@ -99,6 +99,7 @@ Assets/Scripts/
 │   └── LevelMaker/                 Tools > Pool > Level Maker (outil de niveau)
 │       ├── LevelMakerWindow.cs     fenêtre en 6 étapes + outils de la vue Scène
 │       ├── LevelMakerWindow.Room.cs  étape Salle : tracé des murs, ouvertures, props
+│       ├── LevelMakerWindow.Replace.cs  étape Salle : remplacer la variante des pièces sélectionnées
 │       ├── LevelMakerWindow.Ambience.cs  étape Ambiance : ambiances et précalcul
 │       ├── PrefabPaletteEditor.cs  inspecteur de palette : cases de dépôt par type (plusieurs prefabs, dossiers)
 │       ├── AmbienceTools.cs        APV, préparation de la scène, ambiances de départ, précalcul enchaîné
