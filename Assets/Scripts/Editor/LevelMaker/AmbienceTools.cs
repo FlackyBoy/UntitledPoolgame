@@ -274,6 +274,10 @@ namespace UntitledPoolGame.PoolEditor
 
         public static bool IsBaking => baking != null || bakeQueue.Count > 0;
 
+        // Once every queued ambience is baked and the scene saved (the level
+        // lighting tool bakes the reflection probes after it).
+        public static event System.Action BakeFinished;
+
         // Each ambience in turn: applied, made the active scenario, its probes
         // baked; then the ambience that was on is put back.
         public static void Bake(AmbienceController controller, IEnumerable<AmbiencePreset> presets, LevelMakerSettings settings)
@@ -302,6 +306,7 @@ namespace UntitledPoolGame.PoolEditor
                 if (bakeController != null && restoreAfter != null) ApplyInEditor(bakeController, restoreAfter);
                 EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
                 Debug.Log("[Level Maker] Précalcul des ambiances terminé.");
+                BakeFinished?.Invoke();
                 return;
             }
 
@@ -342,7 +347,9 @@ namespace UntitledPoolGame.PoolEditor
 
         // ---------- Starting presets ----------
 
-        // Bar néon, Prison sombre, Jour neutre, each with its post-process
+        public const string LaboPresetName = "Labo R&D";
+
+        // Bar néon, Prison sombre, Jour neutre, Labo R&D, each with its post-process
         // profile, in Assets/LevelKits/Ambiances (existing ones are kept).
         public static List<AmbiencePreset> CreateDefaultPresets()
         {
@@ -416,9 +423,129 @@ namespace UntitledPoolGame.PoolEditor
                     AddBloom(profile, 0.2f, 1f);
                     AddTonemap(profile, TonemappingMode.Neutral);
                 }),
+                // The R&D level: a clean, readable test room. Cool soft fill,
+                // one warm key light, light fog for depth, a little contrast.
+                Preset(LaboPresetName, p =>
+                {
+                    p.skybox = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Skybox.mat");
+                    p.ambientMode = AmbientMode.Trilight;
+                    p.ambientSky = new Color(0.36f, 0.40f, 0.48f);
+                    p.ambientEquator = new Color(0.26f, 0.27f, 0.30f);
+                    p.ambientGround = new Color(0.12f, 0.11f, 0.10f);
+                    p.reflectionIntensity = 0.8f;
+                    p.mainLightColor = new Color(1f, 0.95f, 0.86f);
+                    p.mainLightIntensity = 1.2f;
+                    p.mainLightRotation = new Vector3(55f, -35f, 0f);
+                    p.applyMainLightRotation = false;
+                    p.mainLightShadowStrength = 0.85f;
+                    p.fog = true;
+                    p.fogColor = new Color(0.55f, 0.60f, 0.68f);
+                    p.fogMode = FogMode.Exponential;
+                    p.fogDensity = 0.012f;
+                    p.decorTintStrength = 0f;
+                    p.decorIntensity = 1f;
+                    p.dustIntensity = 1f;
+                    p.hazeIntensity = 0.6f;
+                }, profile =>
+                {
+                    AddBloom(profile, 0.4f, 1f);
+                    AddColorAdjust(profile, 0f, 12f, 8f);
+                    AddVignette(profile, 0.22f);
+                    AddTonemap(profile, TonemappingMode.Neutral);
+                    AddSplitLook(profile, new Vector4(0.92f, 0.97f, 1.08f, 0f), new Vector4(1.06f, 1f, 0.92f, 0f));
+                }),
             };
+            EnsureParticleMaterials(list);
             AssetDatabase.SaveAssets();
             return list;
+        }
+
+        // ---------- Ambient particles ----------
+
+        public const string ParticleFolder = AmbienceFolder + "/Particules";
+
+        // A soft round sprite and two URP particle materials (dust: additive,
+        // so grains catch the light; haze: alpha blended, soft against the
+        // floor and fading near the camera), given to the presets that have
+        // none. Existing files are kept.
+        public static void EnsureParticleMaterials(IEnumerable<AmbiencePreset> presets)
+        {
+            LevelBuilder.EnsureFolder(ParticleFolder);
+            Texture2D sprite = SoftSprite();
+            Material dust = ParticleMaterial("Ambiance_Poussiere", sprite, additive: true);
+            Material haze = ParticleMaterial("Ambiance_Brume", sprite, additive: false);
+            foreach (AmbiencePreset preset in presets)
+            {
+                if (preset == null || (preset.dustMaterial != null && preset.hazeMaterial != null)) continue;
+                if (preset.dustMaterial == null) preset.dustMaterial = dust;
+                if (preset.hazeMaterial == null) preset.hazeMaterial = haze;
+                EditorUtility.SetDirty(preset);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        // Every ambience of the project (Ensure Config Assets Exist).
+        public static void EnsureParticleMaterials() =>
+            EnsureParticleMaterials(AssetDatabase.FindAssets("t:AmbiencePreset")
+                .Select(g => AssetDatabase.LoadAssetAtPath<AmbiencePreset>(AssetDatabase.GUIDToAssetPath(g))));
+
+        private static Texture2D SoftSprite()
+        {
+            string path = ParticleFolder + "/Ambiance_Particule.png";
+            var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (existing != null) return existing;
+
+            const int size = 64;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x + 0.5f) / size * 2f - 1f, dy = (y + 0.5f) / size * 2f - 1f;
+                    float d = Mathf.Clamp01(Mathf.Sqrt(dx * dx + dy * dy));
+                    float a = 1f - d * d * (3f - 2f * d);   // smooth edge, no hard rim
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, a * a);
+                }
+            texture.SetPixels(pixels);
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(path);
+            if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+            {
+                importer.alphaIsTransparency = true;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        private static Material ParticleMaterial(string name, Texture2D sprite, bool additive)
+        {
+            string path = $"{ParticleFolder}/{name}.mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m != null) return m;
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null)
+            {
+                Debug.LogWarning("[Ambiance] Shader « Universal Render Pipeline/Particles/Unlit » introuvable : matériaux des particules non créés.");
+                return null;
+            }
+            m = new Material(shader) { name = name };
+            m.SetTexture("_BaseMap", sprite);
+            m.SetColor("_BaseColor", Color.white);
+            m.SetFloat("_Surface", 1f);                      // Transparent
+            m.SetFloat("_Blend", additive ? 2f : 0f);        // Additive / Alpha
+            // Soft against walls and floor (needs the depth texture, on) and
+            // fading out when the camera walks through.
+            m.SetFloat("_SoftParticlesEnabled", 1f);
+            m.SetFloat("_SoftParticlesNearFadeDistance", 0f);
+            m.SetFloat("_SoftParticlesFarFadeDistance", additive ? 0.2f : 1.5f);
+            m.SetFloat("_CameraFadingEnabled", 1f);
+            m.SetFloat("_CameraNearFadeDistance", additive ? 0.2f : 0.5f);
+            m.SetFloat("_CameraFarFadeDistance", additive ? 0.6f : 2.5f);
+            BaseShaderGUI.SetMaterialKeywords(m, null, UnityEditor.Rendering.Universal.ShaderGUI.ParticleGUI.SetMaterialKeywords);
+            AssetDatabase.CreateAsset(m, path);
+            return m;
         }
 
         private static AmbiencePreset Preset(string name, System.Action<AmbiencePreset> setup, System.Action<VolumeProfile> post)
@@ -459,6 +586,15 @@ namespace UntitledPoolGame.PoolEditor
             color.postExposure.Override(exposure);
             color.contrast.Override(contrast);
             color.saturation.Override(saturation);
+        }
+
+        // Shadows tinted one way, highlights the other (x, y, z = color,
+        // 1 = neutral; w = brightness offset).
+        private static void AddSplitLook(VolumeProfile profile, Vector4 shadows, Vector4 highlights)
+        {
+            var smh = profile.Add<ShadowsMidtonesHighlights>(true);
+            smh.shadows.Override(shadows);
+            smh.highlights.Override(highlights);
         }
 
         private static void AddVignette(VolumeProfile profile, float intensity)

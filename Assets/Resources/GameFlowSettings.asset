@@ -20,16 +20,19 @@ MonoBehaviour:
     menuLine: "N\xE9ons, billard, bagarre"
     twist: "Le twist : les n\xE9ons clignotent quand la partie s'emballe\u2026 et le barman lance des objets."
     comingSoon: 0
+    ambience: {fileID: 0}
   - displayName: La prison
     sceneName: 
     picture: {fileID: 0}
     menuLine: "Lumi\xE8res qui sautent\u2026 et un gardien"
     twist: "Le twist : la lumi\xE8re saute, et quelqu'un vous traque dans le noir."
     comingSoon: 1
+    ambience: {fileID: 0}
   - displayName: R&D
     sceneName: R&D
     picture: {fileID: 0}
     menuLine: "Le labo : d\xE9placement et combat en test"
-    twist: "Le twist : tout est en test, rien n'est promis."
+    twist: 'Le twist : tout est en test, rien n''est promis.'
     comingSoon: 0
+    ambience: {fileID: 11400000, guid: ca6e751be40b2034ead9fdaf6e853a67, type: 2}
   playerActions: {fileID: -944628639613478452, guid: dd0bdb68284799d4e956ab3c97581747, type: 3}

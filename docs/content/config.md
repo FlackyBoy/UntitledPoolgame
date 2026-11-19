@@ -319,6 +319,7 @@ La scène du menu (`MainMenu`) et la liste des **niveaux** proposés dans le men
 | Menu Line | Phrase courte sous le nom, sur la carte du menu |
 | Twist | Le twist du décor, écrit sur la carte postale pendant le chargement |
 | Coming Soon | Pas encore jouable : tampon « Bientôt », la carte ne lance rien |
+| Ambience | **Ambiance du type de niveau** (un fichier *AmbiencePreset*, dans `Assets/LevelKits/Ambiances`) : ciel, lumière ambiante, lumière principale, post-process, brouillard, lampes du décor. Plusieurs niveaux du même type pointent vers le même fichier : le modifier change tous ces niveaux. Appliquée au chargement de la scène, depuis le menu ou en lançant la scène directement ; vide = la scène telle quelle. Une scène qui a son *AmbienceController* (éclairage précalculé) prend cette ambiance comme ambiance active ; laisser vide pour un niveau du Level Maker qui choisit lui-même ses ambiances. Après un changement d'ambiance, relancer *Tools > Pool > Précalculer l'éclairage du niveau ouvert*. R&D : *Labo R&D* |
 
 Aussi : *Player Actions*, les actions des joueurs que l'écran des touches modifie dans le menu (avant que les joueurs existent).
 
@@ -399,7 +400,8 @@ Les couleurs et les polices de tous les menus (et de l'écran de chargement), et
 | Type de partie | « Quel type de partie ? », les lignes de la liste des modes, avec leur bille (Classique, 9-ball, 14.1, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size) avec leurs règles, les lignes d'option sous les règles : type (*Turn Based Option*, *Speed Pool Option*, *Turn Based Only Option*), pouvoirs (*Powers On Option*, *Powers Off Option*), score du 14.1 (*Target Score Format*, « Premier à {0} ») |
 | Multijoueur et salon | Titres, billes Local et En ligne, « Qui joue ce soir ? », « C'est parti », « J{0} appuie ! », « {0} - prêt », noms des appareils, « Salut J2 ! » |
 | Pause | Titre, les trois pilules (Reprendre, Réglages, Menu principal), « J{0} a mis la partie en pause », la confirmation et ses deux pilules |
-| Réglages > Touches | Titre, onglets (le premier est actif, les autres reçoivent « · bientôt »), en-têtes de colonnes, boutons, et le nom de chaque action |
+| Réglages > Touches | Titre, onglets (le premier est celui des touches, celui nommé comme *Video Tab* règle la qualité, les autres reçoivent « · bientôt »), en-têtes de colonnes, boutons, et le nom de chaque action |
+| Réglages > Vidéo | *Video Tab* (nom de l'onglet), *Quality Label* et *Quality Hint* (textes). Les choix proposés sont les niveaux listés dans `RenderQualitySettings` qui existent dans *Project Settings > Quality* ; le choix du joueur est gardé (PlayerPrefs `pool.quality`) et *Réinitialiser* revient au niveau par défaut de la plateforme |
 | Durées | Petits messages (1,4 s), vitesse du tir sur une bille (×1), clignotement de « vise une bille » (0,7 s) |
 
 **Une bille** (accueil, types de partie, pilules de la pause) se règle avec :
@@ -555,6 +557,18 @@ Les effets déjà codés (secousses de faute, interjections du HUD…) restent e
 - **Vider un texte** désactive l'interjection ou le bandeau correspondant.
 - Un format mal écrit (accolade en trop) s'affiche tel quel au lieu de casser le HUD.
 - **Un message à la fois** : sur un même écran, une interjection, une carte sponsor ou une carte « pouvoir reçu » qui arrive pendant qu'une autre du même genre est affichée attend son tour (au plus deux en attente, les plus anciennes sont abandonnées). En haut à droite, le bloc des pouvoirs, le message de refus et la carte « pouvoir reçu » s'empilent.
+
+### RenderQualitySettings — anticrénelage et post-process par niveau de qualité
+
+Le reste du rendu se règle par niveau de qualité, voir [Qualité graphique](config.html#config:qualite-graphique) plus bas. L'anticrénelage et le post-process sont propres à chaque caméra dans URP : ce fichier les donne à la caméra de chaque joueur (composant `CameraQuality`, ajouté en jeu), au lancement et à chaque changement de niveau.
+
+| Champ | Ce qu'il fait |
+|---|---|
+| *Levels* | Une ligne par niveau, retrouvée par son nom (*Quality Name*, écrit comme dans *Project Settings > Quality*) |
+| *Post Processing* | Étalonnage, Bloom des néons, vignette et volumes des ambiances. Coupé, l'anticrénelage et la mise à l'échelle FSR ne s'appliquent plus non plus |
+| *Antialiasing* | Bas : aucun · Moyen : FXAA (le moins cher, un peu flou) · Haut : SMAA (plus net) |
+| *Smaa Quality* | Qualité du SMAA (Haut : *High*) |
+| *Fallback* | Pour un niveau absent de la liste (FXAA) |
 
 ## Pouvoirs (un fichier par pouvoir)
 
@@ -932,7 +946,75 @@ Le récapitulatif des touches actuelles est dans [Contrôles](gdd.html#controles
 
 **Menu des pouvoirs** (test) : C + X ouvre le menu debug réduit aux pouvoirs que les caisses de ce mode peuvent donner (*Only In Modes*, *Own Powers Only*).
 
-**Menu debug** (test) : clic gauche maintenu + 4 clics droits rapides, lus directement sur la souris (pas une action de l'*Input Actions*). Le composant `DebugMenu` est créé tout seul dans toute scène de partie ; *Right Clicks To Toggle* (4) et *Combo Window* (1,5 s) se règlent sur l'objet « Debug Menu » en Play mode seulement. En éditeur il liste tous les assets de pouvoir du projet ; dans un build, ceux de PoolPowerSpawnSettings.
+**Menu debug** (test) : D + E ensemble, lus directement sur le clavier (pas une action de l'*Input Actions*). Le composant `DebugMenu` est créé tout seul dans toute scène de partie. En éditeur il liste tous les assets de pouvoir du projet ; dans un build, ceux de PoolPowerSpawnSettings.
+
+## Qualité graphique
+
+Trois niveaux dans *Project Settings > Quality* : **Bas**, **Moyen** (par défaut sur PC) et **Haut** (le niveau *Mobile* reste pour les téléphones). Chacun a son asset URP dans `Assets/Settings` et son renderer, qui porte l'occlusion ambiante (SSAO). Le joueur choisit dans *Réglages > Vidéo* (menu principal et pause), et son choix est gardé pour les parties suivantes. Le menu debug passe aussi de l'un à l'autre en jeu, pour comparer, sans rien enregistrer.
+
+| Réglage | Bas | Moyen | Haut | Où |
+|---|---|---|---|---|
+| Asset URP | `PC_Bas_RPAsset` | `PC_RPAsset` | `PC_Haut_RPAsset` | *Project Settings > Quality*, *Render Pipeline Asset* |
+| Résolution de rendu | 80 %, mise à l'échelle FSR | 100 % | 100 % | Asset URP, *Quality > Render Scale* |
+| Distance des ombres | 15 m, 1 cascade | 20 m, 2 cascades | 25 m, 2 cascades | Asset URP, *Shadows* |
+| Ombres de la lumière principale | 1024 | 2048 | 4096 | Asset URP, *Lighting > Main Light* |
+| Ombres des lumières additionnelles (néons, halos) | coupées | atlas 1024 | atlas 2048 | Asset URP, *Lighting > Additional Lights* |
+| Ombres douces | basses | moyennes | hautes | Asset URP, *Shadows > Soft Shadows* |
+| Occlusion ambiante (SSAO) | coupée | demi-résolution, source *Depth* | pleine, source *Depth Normals* | Renderer `PC_Bas_Renderer` / `PC_Renderer` / `PC_Haut_Renderer` |
+| Anticrénelage, post-process | aucun | FXAA | SMAA | `RenderQualitySettings` (plus haut) |
+
+- Tout coût de rendu est payé **deux fois** en écran partagé (une caméra par joueur).
+- Le post-process de base vient du profil du niveau (*Volume Profile* de l'asset URP, `Assets/Settings/SampleSceneProfile` : tonemapping Neutral, Bloom 0,25, vignette 0,2). Un niveau du Level Maker le remplace par celui de son ambiance.
+- Les néons ne projettent d'ombres que si *Cast Shadows* est coché sur eux, et seulement en Moyen et Haut.
+- **Le niveau de qualité règle le coût, l'ambiance règle l'aspect** : l'ambiance d'un type de niveau (*Ambience* dans GameFlowSettings) remplace le post-process de base par le sien, quel que soit le niveau de qualité.
+
+## Ambiance d'un niveau
+
+Un fichier d'ambiance (`Assets/LevelKits/Ambiances`, par exemple *Labo R&D*) et son profil de post-process (*Labo R&D Volume*). Le niveau la reçoit par *Ambience* dans GameFlowSettings. Les modifier **en Play mode** montre le résultat tout de suite ; les changements restent après l'arrêt (ce sont des fichiers).
+
+### Le fichier d'ambiance
+
+| Paramètre | Ce qu'il fait | Pour commencer |
+|---|---|---|
+| *Scenario Name* | Nom de l'éclairage précalculé (APV) de cette ambiance. Sans précalcul, sans effet | vide |
+| *Skybox* | Le ciel derrière les fenêtres et les trous du décor. Vide = fond uni | ciel par défaut |
+| *Ambient Mode* | D'où vient la **lumière ambiante**, celle qui éclaire tout un peu, même à l'ombre. *Trilight* : trois couleurs, le plus simple en intérieur | Trilight |
+| *Ambient Sky / Equator / Ground* | Lumière ambiante venant du dessus, des côtés, du dessous. Plus clair = ombres moins noires ; teinte froide = ombres bleutées | dessus le plus clair, dessous presque noir |
+| *Ambient Intensity* | Force de l'ambiante en mode *Skybox* seulement | 1 |
+| *Reflection Intensity* | Force des reflets sur les billes, le bois verni, le verre. À baisser si les billes paraissent grises | 0,6–1 |
+| *Main Light Color* | Couleur de la lumière principale (le « soleil » de la scène) : blanc chaud = accueillant, blanc froid = lune, néon | blanc légèrement orangé |
+| *Main Light Intensity* | Sa force. C'est elle qui fait les ombres nettes : plus forte = plus de contraste | 1–1,3 |
+| *Main Light Rotation* | Son orientation : X = hauteur (90 = midi, 20 = soleil couchant, ombres longues), Y = direction | 55, −35 |
+| *Apply Main Light Rotation* | Décoché : la lumière garde l'orientation de la scène | décoché si la scène a des fenêtres |
+| *Main Light Shadows* | Ombres douces, nettes ou aucune | Soft |
+| *Main Light Shadow Strength* | Noirceur des ombres : 1 = pleine, 0 = invisible | 0,8 |
+| *Volume Profile* | Le profil de post-process (tableau suivant) | *… Volume* |
+| *Fog* | Brouillard : le lointain se fond dans une couleur. Donne de la profondeur | oui en intérieur |
+| *Fog Color* | Couleur du lointain. Proche de celle des murs, sinon ça fait « filtre » | |
+| *Fog Mode* | *Exponential* : monte dès la caméra · *Exponential Squared* : clair de près, épais plus loin · *Linear* : entre deux distances | Exponential |
+| *Fog Density* | Épaisseur : 0,01 = à peine, 0,03 = salle enfumée, 0,08 = purée de pois | 0,01–0,03 |
+| *Fog Linear Range* | Début et fin du brouillard en mode *Linear*, en mètres | |
+| *Dust Intensity* | **Poussière** qui flotte dans toute la salle (en jeu seulement) : 0 = aucune, 1 = normal, 3 = très poussiéreux. Règle le nombre de grains et leur visibilité | Labo R&D : 1 |
+| *Dust Color* / *Dust Size* / *Dust Drift* | Couleur des grains (l'alpha = leur visibilité), taille en mètres (0,015), vitesse à laquelle ils dérivent | |
+| *Haze Intensity* | **Brume basse** : nappes douces qui flottent près du sol, en mouvement (le *Fog* au-dessus, lui, est fixe). 0 = aucune, 1 = légère, 3 = épaisse | Labo R&D : 0,6 |
+| *Haze Color* / *Haze Height* | Couleur de la brume (l'alpha = son épaisseur, garder vers 0,05–0,12), hauteur de la nappe au-dessus du sol (1,2 m) | |
+| *Dust Material* / *Haze Material* | Matériaux des particules (`Assets/LevelKits/Ambiances/Particules`, créés par *Ensure Config Assets Exist*). La brume est douce contre le sol et s'efface quand on la traverse | |
+| *Decor Tint* / *Decor Tint Strength* | Teinte appliquée aux lampes du décor (pas aux néons ni aux lumières des joueurs). Force 0 = couleur d'origine de chaque lampe | 0 |
+| *Decor Intensity* | Multiplie la force de toutes les lampes du décor | 1 |
+
+### Le profil de post-process (*… Volume*)
+
+Des effets appliqués à l'image entière. Chaque effet a ses réglages, **à cocher** pour qu'ils comptent (sinon la valeur par défaut s'applique). *Add Override* en ajoute un.
+
+| Effet | Ce qu'il fait | Réglages utiles |
+|---|---|---|
+| **Tonemapping** | Comment les lumières très fortes sont ramenées à l'écran. *Neutral* : fidèle ; *ACES* : plus contrasté et « cinéma », assombrit un peu | *Mode* |
+| **Bloom** | Halo autour de ce qui brille fort (néons, enseignes, lampes) | *Threshold* : à partir de quelle luminosité ça déborde (1 = seulement ce qui est plus clair que blanc) · *Intensity* : force du halo (0,3 discret, 1,5 très néon) · *Scatter* : étendue |
+| **Color Adjustments** | Réglages de base de l'image | *Post Exposure* : luminosité générale (+1 = deux fois plus clair) · *Contrast* · *Saturation* (−100 = noir et blanc) · *Color Filter* : teinte tout |
+| **Vignette** | Assombrit les bords de l'écran, ramène l'œil au centre | *Intensity* (0,2 discret, 0,45 oppressant) · *Smoothness* |
+| **Shadows Midtones Highlights** | Une teinte pour les ombres, une pour les lumières : le look « film » | *Shadows* / *Highlights* : la couleur de la boule (le point tiré vers une teinte), le curseur dessous = plus sombre / plus clair · *Shadows* / *Highlights Limits* : où s'arrêtent les ombres et commencent les lumières. *Labo R&D* : ombres légèrement bleutées, lumières légèrement chaudes |
+
+Autres effets utiles (*Add Override*) : **White Balance** (*Temperature* : image plus chaude ou plus froide sans toucher aux lampes), **Film Grain** (grain léger, 0,1–0,2). À éviter en jeu : *Depth Of Field* (flou, gêne la visée) et *Motion Blur* (écœurant en FPS).
 
 ## Caméra (Cinemachine)
 
@@ -947,7 +1029,7 @@ Le récapitulatif des touches actuelles est dans [Contrôles](gdd.html#controles
 | LevelMakerSettings | Assets du Level Maker | Fenêtre de l'outil de niveau | Prefabs joueur / table / queue, dossier des niveaux, profil de post-process, sol provisoire, palette de la salle, pas de la grille, hauteur du sol, nombre de queues, pas de rotation de la table, rotation des props et des escaliers à Ctrl + molette (*Prop Wheel Degrees*, 2° par unité de défilement ; Ctrl + Alt + molette = crans fixes de 45°) |
 | Palettes (PrefabPalette) | Où vous les créez (*Create > Pool > Level Maker Palette*) | Étape Salle | Variantes de murs, portes, fenêtres, piliers, sols, plafonds, escaliers, garde-corps, props, lumières ; axe des murs, retournement, largeur de module, ajustement des dalles |
 | Néon (Neon Light) | Sur chaque néon posé, ou sur le prefab `Assets/LevelKits/Greybox/GB_Neon` pour tous | Inspector du néon | *Color*, *Tube Brightness* (éclat du tube, 3), *Light Intensity* (1,5, total réparti entre les trois lumières du tube), *Light Range* (6 m), *Lamp Distance* (1 m : recule les lumières de la surface ; plus loin, la tache sur le mur est plus douce et moins brûlée, le reste de la pièce ne change presque pas), *Cast Shadows* (non ; coûteux, les trois lumières en calculent) ; les ambiances ne le teintent pas |
-| Ambiances (AmbiencePreset) | Créées par l'étape Ambiance (*Create > Pool > Level Maker Ambience*) | Étape Ambiance | Scénario d'éclairage, ciel, lumière ambiante, lumière principale, post-process, brouillard, teinte et intensité des lumières du décor |
+| Ambiances (AmbiencePreset) | `Assets/LevelKits/Ambiances` : *Bar néon*, *Prison sombre*, *Jour neutre*, *Labo R&D*, créées par l'étape Ambiance ou *Ensure Config Assets Exist* (*Create > Pool > Level Maker Ambience* pour une autre) | Inspector, étape Ambiance | Scénario d'éclairage, ciel, lumière ambiante, lumière principale (*Apply Main Light Rotation* : décoché, elle garde l'orientation de la scène), post-process (son fichier *… Volume* : Bloom, étalonnage, vignette, tonemapping), brouillard, teinte et intensité des lumières du décor. Un niveau la reçoit par son champ *Ambience* dans GameFlowSettings |
 
 Le détail de l'outil de niveau est dans [Outils > Level Maker](outils.html#level-maker), et tous les outils de *Tools > Pool* dans [Outils](outils.html).
 

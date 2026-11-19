@@ -100,6 +100,12 @@ namespace UntitledPoolGame.Player
                     vcam.gameObject.AddComponent<LocalFpsCameraCollision>();
             }
 
+            // Post-processing and anti-aliasing of the quality level in use
+            // (RenderQualitySettings): the prefab's camera has neither.
+            Camera view = GetComponentInChildren<Camera>(true);
+            if (view != null && view.GetComponent<UntitledPoolGame.Core.CameraQuality>() == null)
+                view.gameObject.AddComponent<UntitledPoolGame.Core.CameraQuality>();
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }

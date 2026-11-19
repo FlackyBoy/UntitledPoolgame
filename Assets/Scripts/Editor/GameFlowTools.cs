@@ -39,6 +39,21 @@ namespace UntitledPoolGame.PoolEditor
                 EditorUtility.SetDirty(flow);
             }
 
+            // First time only (preset not created yet): the R&D level gets
+            // the Labo ambience. Left alone afterwards, so clearing it sticks.
+            bool laboExisted = AssetDatabase.LoadAssetAtPath<AmbiencePreset>($"{AmbienceTools.AmbienceFolder}/{AmbienceTools.LaboPresetName}.asset") != null;
+            if (!laboExisted)
+            {
+                AmbiencePreset labo = AmbienceTools.CreateDefaultPresets().Find(p => p.name == AmbienceTools.LaboPresetName);
+                foreach (LevelEntry level in flow.levels)
+                    if (level.sceneName == "R&D" && level.ambience == null) level.ambience = labo;
+                EditorUtility.SetDirty(flow);
+                Debug.Log($"[GameFlow] Created the {AmbienceTools.LaboPresetName} ambience, given to the R&D level (GameFlowSettings > Levels > Ambience).");
+            }
+
+            // Dust and haze materials for every ambience that has none.
+            AmbienceTools.EnsureParticleMaterials();
+
             const string loadingPath = "Assets/Resources/LoadingScreenSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<LoadingScreenSettings>(loadingPath) == null)
             {

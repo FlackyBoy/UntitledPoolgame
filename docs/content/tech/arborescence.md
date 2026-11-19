@@ -70,7 +70,7 @@ Assets/Scripts/
 │   ├── SplitScreenCheatSpawner.cs  C+P : faire rejoindre un joueur ; Tab : passer le clavier au joueur suivant (créé tout seul)
 │   ├── PlayerDeviceRouter.cs       qui joue avec quel appareil : joueur seul qui suit l'appareil touché, 2e manette = J2 (créé tout seul)
 │   ├── EightBallEndgameCheat.cs    C+W : fin de partie 8-ball directe
-│   ├── DebugMenu.cs                menu debug en jeu (clic gauche maintenu + 4 clics droits)
+│   ├── DebugMenu.cs                menu debug en jeu (D + E)
 │   ├── RagdollDummySpawner.cs      G : mannequin de test pour le ragdoll
 │   ├── InertDummy.cs               rend inerte un joueur posé à la main dans une scène
 │   ├── ScenePlayerSpawner.cs       point d'apparition du joueur dans la scène
@@ -80,6 +80,7 @@ Assets/Scripts/
 │   │   ├── RoomModule.cs           marqueur des pièces posées
 │   │   ├── AmbiencePreset.cs       ambiance : ciel, lumières, post-process, brouillard, teinte du décor
 │   │   ├── AmbienceController.cs   applique une ambiance (éditeur et jeu) et son scénario d'éclairage APV
+│   │   ├── LevelAmbience.cs        donne au chargement l'ambiance de son type à chaque niveau (GameFlowSettings)
 │   │   ├── NeonLight.cs            néon : couleur du tube et de sa lumière
 │   │   └── AmbienceLight.cs        couleur et intensité d'origine d'une lampe du décor
 │   ├── NetworkBootstrap.cs         F1/F2/F3 : Host / Client / Server (online)

@@ -21,6 +21,8 @@ namespace UntitledPoolGame.Core
         [TextArea(2, 4)] public string twist = "Le twist : les néons clignotent quand la partie s'emballe… et le barman lance des objets.";
         [Tooltip("Pas encore jouable : la carte porte le tampon « Bientôt ».")]
         public bool comingSoon;
+        [Tooltip("Ambiance du type de niveau (Bar néon, Labo R&D…), partagée par les niveaux du même type : ciel, lumière ambiante, lumière principale, post-process, brouillard, lampes du décor. Appliquée au chargement (LevelAmbience). Vide = la scène telle qu'elle est. Une scène qui a son propre AmbienceController (Level Maker) le garde.")]
+        public AmbiencePreset ambience;
     }
 
     // From the menu to a level: the menu scene, the levels on offer, and the

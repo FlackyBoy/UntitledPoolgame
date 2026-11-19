@@ -41,10 +41,11 @@ Deux joueurs en écran partagé, 16 billes, une salle. Cible raisonnable : 60 im
 | Point | Commentaire | Piste |
 |---|---|---|
 | **Écran partagé** | Deux caméras : ombres, SSAO et post-process calculés deux fois | Principal poste de coût GPU ; à mesurer en premier |
-| Ombres sur 50 m, 4 cascades | Largement plus que la taille d'une salle | 15–20 m, 2 cascades : ombres plus nettes et moins chères |
-| Ombres des lumières additionnelles | Halos de poches et billes à pouvoir : lumières ponctuelles | Couper les ombres de ces petites lumières (effet visuel quasi nul) |
-| SSAO | Passe plein écran par caméra | Réduire la résolution ou l'intensité si besoin |
-| Depth + Opaque texture | Copies d'image supplémentaires | Couper l'opaque texture si aucun effet ne l'utilise |
+| Ombres sur 50 m, 4 cascades | Largement plus que la taille d'une salle | ✅ 20 m, 2 cascades en Moyen (17/11, non mesuré) |
+| Ombres des lumières additionnelles | Halos de poches, billes à pouvoir et lumières du Trou : créées sans ombres par le code. Néons : seulement avec *Cast Shadows* | ✅ Atlas réduit à 1024 en Moyen, ombres coupées en Bas (17/11) |
+| SSAO | Passe plein écran par caméra, en source *Depth Normals* : une passe de plus qui redessine la scène | ✅ Moyen : demi-résolution, source *Depth* ; Bas : coupé (17/11) |
+| Depth + Opaque texture | Copies d'image supplémentaires | Gardées : les particules à distorsion (Hovl `HS_Distortion`, CFXR) lisent l'opaque texture |
+| Post-process | Était coupé sur la caméra des joueurs ; allumé le 17/11 (tonemapping, Bloom, vignette, FXAA/SMAA) | Coût modeste, payé deux fois ; à couper dans `RenderQualitySettings` si la mesure le demande |
 | Éclairage entièrement temps réel | — | Précalculer (lightmaps) l'éclairage fixe de la salle |
 | Personnage | Maillage skinné + FBBIK + Look At IK + PuppetMaster, ×2 joueurs | Les solveurs IK tournent chaque image ; désactiver ceux qui ne servent pas selon l'état (déjà fait pendant le ragdoll) |
 

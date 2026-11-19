@@ -13,6 +13,8 @@ namespace UntitledPoolGame.Core
     // player's actions; KeyBindings saves the overrides and copies them to the
     // other players). A key already used by another action is swapped with
     // it. Movement, look and pause are shown but not rebindable here.
+    // The "Vidéo" tab (MenuSettings.videoTab) picks the quality level
+    // (QualityPreference, saved); the other tabs are marked "bientôt".
     // Reads its own input (keyboard, any gamepad, mouse) while open; the host
     // calls Tick every frame and closes it when Tick returns false.
     public class KeyBindingsPanel
@@ -32,7 +34,11 @@ namespace UntitledPoolGame.Core
             public VisualElement element;
             public Label label;
             public Action activate;
+            // Shown inked when not focused: the open tab, the quality in use.
+            public Func<bool> selected;
         }
+
+        private enum Page { Keys, Video }
 
         private readonly List<Row> rows = new List<Row>
         {
@@ -56,7 +62,12 @@ namespace UntitledPoolGame.Core
 
         public VisualElement Root { get; }
         private readonly MenuElement frame;
+        // What arrows move through: the tabs, the open page's rows, the foot.
         private readonly List<List<Cell>> grid = new List<List<Cell>>();
+        private readonly List<Cell> tabCells = new List<Cell>(), footCells = new List<Cell>();
+        private readonly List<List<Cell>> keyGrid = new List<List<Cell>>(), videoGrid = new List<List<Cell>>();
+        private VisualElement keysPage, videoPage;
+        private Page page;
         private int focusRow, focusCol;
         private Label message;
 
@@ -116,29 +127,67 @@ namespace UntitledPoolGame.Core
             tabs.style.flexDirection = FlexDirection.Row;
             tabs.style.marginTop = 8;
             tabs.style.marginBottom = 14;
-            var tabNames = new List<(string, bool)>();
-            for (int i = 0; i < cfg.settingsTabs.Count; i++) tabNames.Add((cfg.settingsTabs[i], i == 0));
-            foreach (var (name, on) in tabNames)
+            bool videoDone = false;
+            for (int i = 0; i < cfg.settingsTabs.Count; i++)
             {
+                string name = cfg.settingsTabs[i];
+                Page? target = i == 0 ? Page.Keys
+                    : !videoDone && string.Equals(name, cfg.videoTab, StringComparison.OrdinalIgnoreCase) ? Page.Video
+                    : (Page?)null;
+                if (target == Page.Video) videoDone = true;
+                bool live = target.HasValue;
+
                 VisualElement tab = UiKit.Box(tabs, "tab");
                 UiKit.Pad(tab, 22, 6);
                 tab.style.marginRight = 12;
                 UiKit.Radius(tab, 12);
-                UiKit.Border(tab, 3, on ? UiKit.Ink : new Color(UiKit.Ink.r, UiKit.Ink.g, UiKit.Ink.b, 0.35f));
-                tab.style.backgroundColor = on ? UiKit.Yellow : Color.white;
-                if (on) tab.style.borderBottomWidth = 6;
-                Label l = UiKit.Text(tab, on ? name : name + cfg.tabSoonSuffix, UiKit.BodyFont, 24, on ? UiKit.Ink : new Color(UiKit.Ink.r, UiKit.Ink.g, UiKit.Ink.b, 0.45f), false);
+                UiKit.Border(tab, 3, live ? UiKit.Ink : new Color(UiKit.Ink.r, UiKit.Ink.g, UiKit.Ink.b, 0.35f));
+                tab.style.backgroundColor = Color.white;
+                if (live) tab.style.borderBottomWidth = 6;
+                Label l = UiKit.Text(tab, live ? name : name + cfg.tabSoonSuffix, UiKit.BodyFont, 24, live ? UiKit.Ink : new Color(UiKit.Ink.r, UiKit.Ink.g, UiKit.Ink.b, 0.45f), false);
+                if (!live) continue;
+                Page p = target.Value;
+                int column = tabCells.Count;
+                // Focus stays on the tab: left / right then confirm to browse.
+                tabCells.Add(new Cell { element = tab, label = l, activate = () => { ShowPage(p); focusRow = 0; focusCol = column; }, selected = () => page == p });
             }
 
+            keysPage = PageBox(Root, "keys");
+            BuildKeys(cfg);
+            videoPage = PageBox(Root, "video");
+            BuildVideo(cfg);
+
+            VisualElement foot = UiKit.Box(Root, "foot");
+            foot.style.flexDirection = FlexDirection.Row;
+            foot.style.alignItems = Align.Center;
+            foot.style.marginTop = StyleKeyword.Auto;
+            footCells.Add(Pill(foot, cfg.resetButton, ResetPage));
+            footCells.Add(Pill(foot, cfg.backButton, () => closeRequested = true));
+            message = UiKit.Text(foot, "", UiKit.BodyFont, 22, new Color(UiKit.Ink.r, UiKit.Ink.g, UiKit.Ink.b, 0.7f), false);
+            message.style.flexGrow = 1;
+            message.style.unityTextAlign = TextAnchor.MiddleRight;
+            message.style.whiteSpace = WhiteSpace.Normal;
+            ShowPage(Page.Keys);
+        }
+
+        private static VisualElement PageBox(VisualElement parent, string name)
+        {
+            VisualElement page = UiKit.Box(parent, name);
+            page.style.flexDirection = FlexDirection.Column;
+            return page;
+        }
+
+        private void BuildKeys(MenuSettings cfg)
+        {
             // Column headers
-            VisualElement head = Line(Root);
+            VisualElement head = Line(keysPage);
             HeadText(head, cfg.actionColumn, true);
             HeadText(head, cfg.keyboardColumn, false);
             HeadText(head, cfg.gamepadColumn, false);
 
             foreach (Row row in rows)
             {
-                VisualElement line = Line(Root);
+                VisualElement line = Line(keysPage);
                 VisualElement text = UiKit.Box(line, "label");
                 text.style.flexGrow = 1;
                 text.style.flexDirection = FlexDirection.Row;
@@ -178,23 +227,68 @@ namespace UntitledPoolGame.Core
                         cells.Add(new Cell { element = cap, label = capText, activate = () => RequestRebind(r, c) });
                     }
                 }
-                if (cells.Count > 0) grid.Add(cells);
+                if (cells.Count > 0) keyGrid.Add(cells);
             }
 
-            VisualElement foot = UiKit.Box(Root, "foot");
-            foot.style.flexDirection = FlexDirection.Row;
-            foot.style.alignItems = Align.Center;
-            foot.style.marginTop = StyleKeyword.Auto;
-            var footCells = new List<Cell>
+        }
+
+        // Réglages > Vidéo: one pill per quality level of RenderQualitySettings
+        // that exists in Project Settings > Quality; the one in use is inked.
+        private void BuildVideo(MenuSettings cfg)
+        {
+            Label label = UiKit.Text(videoPage, cfg.qualityLabel, UiKit.BodyFont, 30, UiKit.Ink, false);
+            label.style.unityTextAlign = TextAnchor.MiddleLeft;
+            label.style.marginTop = 10;
+            label.style.marginBottom = 12;
+
+            VisualElement choices = UiKit.Box(videoPage, "quality");
+            choices.style.flexDirection = FlexDirection.Row;
+            var cells = new List<Cell>();
+            foreach (RenderQualitySettings.Level level in QualityPreference.Choices)
             {
-                Pill(foot, cfg.resetButton, () => { CancelRebind(); KeyBindings.ResetAll(); Refresh(); Say("Touches par défaut rétablies"); }),
-                Pill(foot, cfg.backButton, () => closeRequested = true),
-            };
+                if (level == null || Array.FindIndex(QualitySettings.names, n => string.Equals(n, level.qualityName, StringComparison.OrdinalIgnoreCase)) < 0) continue;
+                string quality = level.qualityName;
+                cells.Add(Pill(choices, quality, () => { QualityPreference.Set(quality); Say($"{cfg.qualityLabel} : {quality}"); }, () => QualityPreference.IsCurrent(quality)));
+            }
+            if (cells.Count > 0) videoGrid.Add(cells);
+
+            Label hint = UiKit.Text(videoPage, cells.Count > 0 ? cfg.qualityHint : "Aucun niveau de RenderQualitySettings ne correspond à Project Settings > Quality.",
+                UiKit.BodyFont, 22, new Color(UiKit.Ink.r, UiKit.Ink.g, UiKit.Ink.b, 0.6f), false);
+            hint.style.unityTextAlign = TextAnchor.MiddleLeft;
+            hint.style.whiteSpace = WhiteSpace.Normal;
+            hint.style.marginTop = 14;
+        }
+
+        // Shows one page and rebuilds what the arrows move through; focus goes
+        // to the page's first row (the tabs are just above).
+        private void ShowPage(Page shown)
+        {
+            if (shown != page) CancelRebind();
+            page = shown;
+            keysPage.style.display = page == Page.Keys ? DisplayStyle.Flex : DisplayStyle.None;
+            videoPage.style.display = page == Page.Video ? DisplayStyle.Flex : DisplayStyle.None;
+            grid.Clear();
+            if (tabCells.Count > 1) grid.Add(tabCells);
+            grid.AddRange(page == Page.Keys ? keyGrid : videoGrid);
             grid.Add(footCells);
-            message = UiKit.Text(foot, "", UiKit.BodyFont, 22, new Color(UiKit.Ink.r, UiKit.Ink.g, UiKit.Ink.b, 0.7f), false);
-            message.style.flexGrow = 1;
-            message.style.unityTextAlign = TextAnchor.MiddleRight;
-            message.style.whiteSpace = WhiteSpace.Normal;
+            focusRow = Mathf.Min(grid.Count - 1, tabCells.Count > 1 ? 1 : 0);
+            focusCol = 0;
+            if (message != null) Say(Hint());
+            UpdateFocusVisuals();
+        }
+
+        private string Hint() => page == Page.Video
+            ? "Entrée / A pour choisir · Échap / B : retour"
+            : SourceActions == null ? "Actions des joueurs introuvables : assigne-les dans GameFlowSettings (Player Actions)."
+            : "Entrée / A sur une case pour la changer · Échap / B : retour";
+
+        private void ResetPage()
+        {
+            if (page == Page.Video) { QualityPreference.Reset(); Say($"{MenuSettings.Instance.qualityLabel} par défaut rétablie : {QualityPreference.Current}"); return; }
+            CancelRebind();
+            KeyBindings.ResetAll();
+            Refresh();
+            Say("Touches par défaut rétablies");
         }
 
         private static VisualElement Line(VisualElement parent)
@@ -213,7 +307,7 @@ namespace UntitledPoolGame.Core
             else { l.style.width = 290; l.style.marginLeft = 16; }
         }
 
-        private Cell Pill(VisualElement parent, string text, Action activate)
+        private Cell Pill(VisualElement parent, string text, Action activate, Func<bool> selected = null)
         {
             VisualElement pill = UiKit.Box(parent, "pill");
             UiKit.Pad(pill, 30, 8);
@@ -223,7 +317,7 @@ namespace UntitledPoolGame.Core
             pill.style.borderBottomWidth = 6;
             pill.style.backgroundColor = Color.white;
             Label l = UiKit.Text(pill, text, UiKit.BodyFont, 28, UiKit.Ink, false);
-            return new Cell { element = pill, label = l, activate = activate };
+            return new Cell { element = pill, label = l, activate = activate, selected = selected };
         }
 
         // ---------- Open / close ----------
@@ -232,11 +326,9 @@ namespace UntitledPoolGame.Core
         {
             Root.style.display = DisplayStyle.Flex;
             closeRequested = false;
-            focusRow = 0; focusCol = 0;
             inputCooldown = 0.25f;
+            ShowPage(Page.Keys);
             Refresh();
-            Say(SourceActions == null ? "Actions des joueurs introuvables : assigne-les dans GameFlowSettings (Player Actions)."
-                                      : "Entrée / A sur une case pour la changer · Échap / B : retour");
         }
 
         public void Close()
@@ -293,8 +385,9 @@ namespace UntitledPoolGame.Core
                     Cell cell = grid[r][c];
                     bool focused = r == focusRow && c == focusCol;
                     bool waiting = pending.HasValue && cell.element == CellFor(pending.Value.row, pending.Value.col)?.element;
-                    cell.element.style.backgroundColor = waiting ? UiKit.Ink : focused ? UiKit.Yellow : Color.white;
-                    cell.label.style.color = waiting ? UiKit.Yellow : UiKit.Ink;
+                    bool inked = waiting || (!focused && cell.selected != null && cell.selected());
+                    cell.element.style.backgroundColor = inked ? UiKit.Ink : focused ? UiKit.Yellow : Color.white;
+                    cell.label.style.color = inked ? UiKit.Yellow : UiKit.Ink;
                     float s = focused ? 1.05f : 1f;
                     cell.element.style.scale = new Scale(new Vector3(s, s, 1f));
                 }
@@ -306,7 +399,7 @@ namespace UntitledPoolGame.Core
             foreach (Row each in rows)
             {
                 if (each.Fixed) continue;
-                if (each == row) return grid[r][col];
+                if (each == row) return keyGrid[r][col];
                 r++;
             }
             return null;

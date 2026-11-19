@@ -23,7 +23,7 @@ Le code avance plus vite que les essais en jeu. Ce skill réduit l'effort de tes
    Mise en place : scène X, composant Lancer sans le menu, Mode = Y
    1. Faire ceci → on doit voir cela
    2. …
-   Cheats utiles : C + X (pouvoirs), menu debug (clic gauche maintenu + 4 clics droits)
+   Cheats utiles : C + X (pouvoirs), menu debug (D + E)
    Logs lus après coup : [Bowling], [Devices]
    ```
 

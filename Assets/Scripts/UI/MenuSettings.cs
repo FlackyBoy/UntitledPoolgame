@@ -234,7 +234,7 @@ namespace UntitledPoolGame.Core
 
         [Header("Réglages > Touches")]
         public string settingsTitle = "Réglages";
-        [Tooltip("Onglets : le premier est celui des touches, les autres sont marqués « bientôt ».")]
+        [Tooltip("Onglets : le premier est celui des touches, celui qui porte le nom de Video Tab règle la qualité graphique, les autres sont marqués « bientôt ».")]
         public List<string> settingsTabs = new List<string> { "Touches", "Audio", "Vidéo", "Jeu" };
         [Tooltip("Ajouté aux onglets pas encore faits.")]
         public string tabSoonSuffix = " · bientôt";
@@ -243,6 +243,14 @@ namespace UntitledPoolGame.Core
         public string gamepadColumn = "Manette";
         public string resetButton = "Réinitialiser";
         public string backButton = "Retour";
+
+        [Header("Réglages > Vidéo")]
+        [Tooltip("Nom de l'onglet (dans Settings Tabs) qui règle la qualité graphique.")]
+        public string videoTab = "Vidéo";
+        public string qualityLabel = "Qualité graphique";
+        [Tooltip("Texte sous les choix de qualité. Les choix eux-mêmes sont les niveaux listés dans RenderQualitySettings.")]
+        public string qualityHint = "Bas : plus fluide · Haut : plus beau (ombres plus fines, bords plus nets). Gardé pour les prochaines parties.";
+
         [Tooltip("Noms des actions. Une ligne absente garde son nom par défaut.")]
         public List<KeyRowText> keyRows = new List<KeyRowText>
         {
