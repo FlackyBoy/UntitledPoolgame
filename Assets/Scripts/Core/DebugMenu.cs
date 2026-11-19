@@ -7,8 +7,9 @@ using UntitledPoolGame.Pool;
 
 namespace UntitledPoolGame.Core
 {
-    // In-game test menu: hold the left mouse button and press the right one 4
-    // times quickly (same gesture or "Fermer" to close). It can:
+    // In-game test menu: D + E held together (same keys or "Fermer" to
+    // close). Read on the keyboard directly, not through the Input Actions,
+    // so it works whoever has the keyboard. It can:
     //   - give any power to player 1 or 2, or empty their slots;
     //   - make the current player win or lose;
     //   - jump to the "pot the 8" phase (like C+W);
@@ -37,11 +38,6 @@ namespace UntitledPoolGame.Core
             new GameObject("Debug Menu").AddComponent<DebugMenu>();
         }
 
-        [Tooltip("Nombre de clics droits, clic gauche maintenu, pour ouvrir / fermer le menu.")]
-        [SerializeField] private int rightClicksToToggle = 4;
-        [Tooltip("Temps (secondes) pour faire tous les clics droits.")]
-        [SerializeField] private float comboWindow = 1.5f;
-
         // Any id unique among this project's GUI windows (only one menu exists).
         private const int WindowId = 0x0DEB06;
 
@@ -49,7 +45,6 @@ namespace UntitledPoolGame.Core
         private static readonly string[] ErrorKindLabels = { "Faute", "Empoche une bille", "1re bille touchée" };
 
         private bool open;
-        private readonly List<float> rightClicks = new List<float>();
         private readonly List<PoolPower> powers = new List<PoolPower>();
         private ErrorKind errorKind;
         private string status = "";
@@ -57,6 +52,7 @@ namespace UntitledPoolGame.Core
         private Vector2 scroll;
         private bool powersOnly;
         private bool powersComboWasActive;
+        private bool menuComboWasActive;
 
         private void Update()
         {
@@ -69,25 +65,14 @@ namespace UntitledPoolGame.Core
             }
             powersComboWasActive = powersCombo;
 
-            Mouse mouse = Mouse.current;
-            if (mouse == null) return;
-
-            // The right clicks only count while the left button is held, and
-            // all within comboWindow.
-            if (!mouse.leftButton.isPressed)
+            // Toggles once per press of the pair, not every frame it is held.
+            bool menuCombo = keyboard != null && keyboard.dKey.isPressed && keyboard.eKey.isPressed;
+            if (menuCombo && !menuComboWasActive)
             {
-                rightClicks.Clear();
-                return;
+                powersOnly = false;
+                SetOpen(!open);
             }
-            if (!mouse.rightButton.wasPressedThisFrame) return;
-
-            float now = Time.unscaledTime;
-            rightClicks.Add(now);
-            rightClicks.RemoveAll(t => now - t > comboWindow);
-            if (rightClicks.Count < rightClicksToToggle) return;
-            rightClicks.Clear();
-            powersOnly = false;
-            SetOpen(!open);
+            menuComboWasActive = menuCombo;
         }
 
         private void OnDisable()
@@ -168,6 +153,7 @@ namespace UntitledPoolGame.Core
             else
             {
                 DrawPlayers();
+                DrawQuality();
                 DrawPowers(rules);
                 DrawMatch(rules, current);
                 DrawErrors(rules, current);
@@ -178,6 +164,27 @@ namespace UntitledPoolGame.Core
 
             if (!string.IsNullOrEmpty(status)) GUILayout.Label(status);
             GUI.DragWindow();
+        }
+
+        // Compare the quality levels in play (CameraQuality follows the change).
+        private void DrawQuality()
+        {
+            Section("Qualité graphique");
+            string[] names = QualitySettings.names;
+            int current = QualitySettings.GetQualityLevel();
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (names[i] == "Mobile") continue;
+                GUI.enabled = i != current;
+                if (GUILayout.Button(names[i], GUILayout.Width(70f)))
+                {
+                    QualitySettings.SetQualityLevel(i, applyExpensiveChanges: true);
+                    status = $"Qualité : {names[i]}.";
+                }
+                GUI.enabled = true;
+            }
+            GUILayout.EndHorizontal();
         }
 
         // Split-screen tests with one keyboard (same as C+P and Tab).

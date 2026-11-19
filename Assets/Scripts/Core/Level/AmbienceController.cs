@@ -33,6 +33,17 @@ namespace UntitledPoolGame.Core
             if (Instance == this) Instance = null;
         }
 
+        private void OnEnable() => AmbiencePreset.Edited += OnPresetEdited;
+
+        private void OnDisable() => AmbiencePreset.Edited -= OnPresetEdited;
+
+        // Tweaking the ambience in use while playing shows at once (fog,
+        // lights, sky, particles); out of play, nothing is written to the scene.
+        private void OnPresetEdited(AmbiencePreset preset)
+        {
+            if (Application.isPlaying && preset == active && blend == null) Apply(preset);
+        }
+
         private void Start()
         {
             if (applyOnStart && active != null) Apply(active);
@@ -63,7 +74,7 @@ namespace UntitledPoolGame.Core
             {
                 mainLight.color = preset.mainLightColor;
                 mainLight.intensity = preset.mainLightIntensity;
-                mainLight.transform.rotation = Quaternion.Euler(preset.mainLightRotation);
+                if (preset.applyMainLightRotation) mainLight.transform.rotation = Quaternion.Euler(preset.mainLightRotation);
                 mainLight.shadows = preset.mainLightShadows;
                 mainLight.shadowStrength = preset.mainLightShadowStrength;
                 RenderSettings.sun = mainLight;
@@ -81,6 +92,8 @@ namespace UntitledPoolGame.Core
 
             DynamicGI.UpdateEnvironment();
             SetScenario(preset.Scenario);
+            // Play only: in the editor they would be saved into the scene.
+            if (Application.isPlaying) AmbienceParticles.For(this).Show(preset);
         }
 
         // While playing: sky, lights and post-process switch at once, the

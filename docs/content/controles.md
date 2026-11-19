@@ -75,7 +75,7 @@ Menu principal > Réglages, ou Pause > Réglages. Entrée / A sur une case, puis
 | C + W | Test : aller directement à la fin d'une partie de 8-ball |
 | C + A | Test, en Play Anywhere : ouvrir / fermer la liste des objets de la caisse. Un clic en pose un là où regarde le joueur au clavier (il marche tout de suite, sans caisse ni manche) ; *Tout retirer* les enlève ; Échap ferme. Pendant que la liste est ouverte, le joueur au clavier ne bouge plus. Éditeur et versions de développement seulement |
 | C + X | Test : ouvrir / fermer la liste des pouvoirs de ce mode, à donner à J1 ou J2 (niveau 1 ou 2) ou pour vider leur stock |
-| Clic gauche maintenu + 4 clics droits rapides | Test : ouvrir / fermer le **menu debug** (donner un pouvoir, victoire / défaite, phase « empocher la 8 », fautes et erreurs de groupe, Catch the Hole ; en Play Anywhere, rubrique *Objet en main* : un objet de la caisse directement dans les mains de J1 ou J2, à poser comme d'habitude, hors manche) |
+| D + E | Test : ouvrir / fermer le **menu debug** (donner un pouvoir, victoire / défaite, phase « empocher la 8 », fautes et erreurs de groupe, Catch the Hole ; en Play Anywhere, rubrique *Objet en main* : un objet de la caisse directement dans les mains de J1 ou J2, à poser comme d'habitude, hors manche) |
 
 ## Manette
 

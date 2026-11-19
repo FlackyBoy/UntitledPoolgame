@@ -23,6 +23,7 @@ MonoBehaviour:
   mainLightColor: {r: 0.85, g: 0.92, b: 1, a: 1}
   mainLightIntensity: 0.8
   mainLightRotation: {x: 60, y: 20, z: 0}
+  applyMainLightRotation: 1
   mainLightShadows: 1
   mainLightShadowStrength: 1
   volumeProfile: {fileID: 11400000, guid: e09e5b28f556c8a419d622038a331eac, type: 2}
@@ -31,6 +32,15 @@ MonoBehaviour:
   fogMode: 2
   fogDensity: 0.035
   fogLinearRange: {x: 5, y: 40}
+  dustIntensity: 0
+  dustColor: {r: 1, g: 0.95, b: 0.85, a: 0.35}
+  dustSize: 0.015
+  dustDrift: 0.15
+  hazeIntensity: 0
+  hazeColor: {r: 0.75, g: 0.78, b: 0.85, a: 0.08}
+  hazeHeight: 1.2
+  dustMaterial: {fileID: 2100000, guid: db6ed86bab048464b9b813b244672124, type: 2}
+  hazeMaterial: {fileID: 2100000, guid: 1a0884c14e3560d4889b5c6c55794e15, type: 2}
   decorTint: {r: 0.8, g: 0.9, b: 1, a: 1}
   decorTintStrength: 0.4
   decorIntensity: 0.8

@@ -65,6 +65,7 @@ namespace UntitledPoolGame.PoolEditor
             // The powers' tokens on the table, for those that have none yet.
             PowerTokenGenerator.Generate(onlyMissing: true);
             EnsureHudSettingsAsset();
+            EnsureRenderQualitySettingsAsset();
             GameFlowTools.EnsureAssets();
             Debug.Log("[PoolTableBuilder] Config assets ready in Assets/Resources (created any that were missing, left existing ones untouched).");
         }
@@ -76,6 +77,15 @@ namespace UntitledPoolGame.PoolEditor
             const string path = "Assets/Resources/HudSettings.asset";
             if (AssetDatabase.LoadAssetAtPath<UntitledPoolGame.Core.HudSettings>(path) != null) return;
             AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<UntitledPoolGame.Core.HudSettings>(), path);
+        }
+
+        // Post-processing and anti-aliasing per quality level (CameraQuality).
+        private static void EnsureRenderQualitySettingsAsset()
+        {
+            EnsureFolder("Assets/Resources");
+            const string path = "Assets/Resources/RenderQualitySettings.asset";
+            if (AssetDatabase.LoadAssetAtPath<UntitledPoolGame.Core.RenderQualitySettings>(path) != null) return;
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<UntitledPoolGame.Core.RenderQualitySettings>(), path);
         }
 
         // "Bille destructrice", with the CFXR2 WW Explosion, added to the
