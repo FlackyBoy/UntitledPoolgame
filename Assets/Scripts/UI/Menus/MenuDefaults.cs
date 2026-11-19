@@ -242,12 +242,13 @@ namespace UntitledPoolGame.Core
             s.backScreen = MenuLayouts.Players;
             Cue(s, 17f, 82f, 70f);
             Heading(s, "heading", m.lobbyHeading, 50f, 24f, 84f);
-            for (int i = 0; i < 2; i++)
+            // J1 to J4 across the table.
+            for (int i = 0; i < 4; i++)
             {
-                float x = i == 0 ? 32f : 68f;
-                Add(s, "slot" + (i + 1), MenuElementKind.Slot, x, 48f, 170f, 170f).entrance = MenuEntrance.None;
-                MenuElement label = Add(s, "slot" + (i + 1) + "-label", MenuElementKind.Text, x, 66f, 0f, 0f);
-                label.textSize = 40f;
+                float x = 20f + i * 20f;
+                Add(s, "slot" + (i + 1), MenuElementKind.Slot, x, 48f, 150f, 150f).entrance = MenuEntrance.None;
+                MenuElement label = Add(s, "slot" + (i + 1) + "-label", MenuElementKind.Text, x, 64f, 0f, 0f);
+                label.textSize = 30f;
                 label.entrance = MenuEntrance.Fade;
             }
             MenuElement go = Add(s, "go", MenuElementKind.Pill, 50f, 84f, 430f, 88f);

@@ -33,7 +33,7 @@ namespace UntitledPoolGame.Pool
 
         public override void Activate(PoolMatchRules match, int activatingPlayer)
         {
-            match.QueueIdenticalGroups(1 - activatingPlayer, this);
+            match.QueueIdenticalGroups(match.TargetOf(activatingPlayer), this);
         }
 
         // The materials every disguised ball takes (see BallDisguise.Apply);

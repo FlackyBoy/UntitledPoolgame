@@ -31,6 +31,14 @@ namespace UntitledPoolGame.Core
                 int w = Mathf.Max(0, rules.Winner);
                 string subtitle = rules.Setup.Describe();
                 string title = Format(cfg.winnerFormat, w + 1);
+                string tag = Format(cfg.playerTagFormat, w + 1);
+                // 2 against 2: the winner's teammate wins too.
+                int mate = PlayerBallGroups.TeammateOf(w);
+                if (mate >= 0)
+                {
+                    title = Format(cfg.teamWinnerFormat, w + 1, mate + 1);
+                    tag = Format(cfg.teamTagFormat, w + 1, mate + 1);
+                }
                 string button = cfg.rematchText;
                 if (BoogieNight.Active)
                 {
@@ -47,11 +55,12 @@ namespace UntitledPoolGame.Core
                     {
                         w = BoogieNight.Leader;
                         title = Format(boogie.nightWinnerFormat, w + 1);
+                        tag = Format(cfg.playerTagFormat, w + 1);
                         button = boogie.menuButton;
                     }
                 }
-                endWhoBox.style.backgroundColor = w == 0 ? P1 : P2;
-                TextFx.Set(endWho, Format(cfg.playerTagFormat, w + 1));
+                endWhoBox.style.backgroundColor = cfg.PlayerColor(w);
+                TextFx.Set(endWho, tag);
                 TextFx.Reveal(endTitle, title);
                 TextFx.Set(endSubtitle, subtitle);
                 TextFx.Set(endButtonText, button);

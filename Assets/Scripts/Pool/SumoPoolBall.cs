@@ -27,7 +27,6 @@ namespace UntitledPoolGame.Pool
 
         // Set by the rules: in Play, and for the survivor until the next round.
         public bool Controllable { get; set; }
-        public SumoPoolBall Opponent { get; set; }
         public PoolBall Ball { get; private set; }
         public bool IsBound => input != null;
 
@@ -241,7 +240,15 @@ namespace UntitledPoolGame.Pool
 
             float speed = velocity.magnitude;
 
-            if (pushed && speed <= maxSpeed)
+            if (settings.poolBallPhysics)
+            {
+                // A table ball's: the felt (PoolBall) slows it, nothing steers
+                // or brakes it. The stick only pushes, up to Max Speed along
+                // where it points; pushing the other way is what brakes.
+                if (pushed && Vector3.Dot(velocity, heading) < amount * maxSpeed)
+                    Roll(heading * (settings.acceleration * scale * amount * Time.fixedDeltaTime));
+            }
+            else if (pushed && speed <= maxSpeed)
             {
                 // At rolling speed the ball goes where it's told: sideways speed
                 // is taken off as much as forward speed is added, or turning
@@ -287,15 +294,17 @@ namespace UntitledPoolGame.Pool
 
         // The bounce already gives most of the other's speed (a pool collision,
         // nearly elastic). This is on top, for each ball from what the other
-        // brought: both get here, and nobody has to work out who hit whom.
+        // brought: both get here, and nobody has to work out who hit whom. Any
+        // other player's ball (up to four on the table).
         private void OnCollisionEnter(Collision collision)
         {
-            if (Opponent == null || collision.rigidbody != Opponent.rb || rb.isKinematic) return;
-            Vector3 away = transform.position - Opponent.transform.position;
+            // Pool physics: the bounce alone, as between two table balls.
+            if (settings.poolBallPhysics || rb.isKinematic || collision.rigidbody == null || !collision.rigidbody.TryGetComponent(out SumoPoolBall other)) return;
+            Vector3 away = transform.position - other.transform.position;
             away.y = 0f;
             if (away.sqrMagnitude < 1e-8f) return;
             away.Normalize();
-            float brought = Mathf.Max(0f, Vector3.Dot(Opponent.velocityBeforeContact, away));
+            float brought = Mathf.Max(0f, Vector3.Dot(other.velocityBeforeContact, away));
             Roll(away * (brought * settings.bumpBoost));
         }
 

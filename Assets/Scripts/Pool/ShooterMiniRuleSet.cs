@@ -8,11 +8,13 @@ using UntitledPoolGame.Player;
 
 namespace UntitledPoolGame.Pool
 {
-    // Shooter miniature: both players shrunk on the felt, shooting at each
+    // Shooter miniature: the players shrunk on the felt, shooting at each
     // other with the cue held as a rifle (LocalShooterWeapon). Health runs out
     // through shots, kicks, balls rolling into you and falls; each elimination is a
-    // point for the other player, first to Eliminations To Win. A fall only
-    // costs health: the player comes back on the felt.
+    // point, first to Eliminations To Win. With two, the point goes to the
+    // other player; with three or four (each for themselves), to the last one
+    // who hurt them (a fall nobody caused scores nothing). A fall only costs
+    // health: the player comes back on the felt.
     //
     // The table's balls are cover, made body-high (Cover Ball Scale): shots and
     // kicks move them, and one rolling into a player hurts them. Speed Pool
@@ -43,6 +45,8 @@ namespace UntitledPoolGame.Pool
             public float slowUntil;
             public int hitsInARow;
             public float lastHitTime = -100f;
+            // Who hurt them last since they came back (-1 = nobody): gets the point.
+            public int lastAttacker = -1;
             public float impactUntil;
             public float frozenUntil;
             public GameObject ice;
@@ -61,7 +65,9 @@ namespace UntitledPoolGame.Pool
         // The model goes back to the clean animation over this long.
         private const float ImpactFade = 0.2f;
 
-        protected readonly Fighter[] fighters = { new Fighter(), new Fighter() };
+        protected readonly Fighter[] fighters = { new Fighter(), new Fighter(), new Fighter(), new Fighter() };
+        // Players in the match (2 to 4), set at Setup: a player joining restarts it (SharesBallsOut).
+        protected int fighterCount = 2;
         private readonly List<(PoolBall ball, float time)> respots = new List<(PoolBall, float)>();
         private readonly List<Vector3> placed = new List<Vector3>();
         // Each ball's velocity last frame (CheckBalls).
@@ -79,6 +85,7 @@ namespace UntitledPoolGame.Pool
         protected virtual bool KeepsBall(PoolBall ball) => true;
         protected virtual void OnBallsPlaced() { }
         protected virtual void UpdateEffects(Fighter f) { }
+        protected virtual void BeforeBallsPlaced() { }
 
         protected int CountdownLeft => Mathf.CeilToInt(Mathf.Max(0f, Settings.countdown - phaseTime));
 
@@ -107,28 +114,43 @@ namespace UntitledPoolGame.Pool
                 return;
             }
 
-            // Two players or nothing, as in Pocket Size.
+            // Two players at least, as in Pocket Size.
             if (PlayerInput.all.Count < 2)
                 Debug.Log($"[ShooterMini] Un seul joueur : écran partagé. {Core.SplitScreenCheatSpawner.JoinPlayer()}");
             if (PlayerInput.all.Count < 2)
                 Debug.LogWarning("[ShooterMini] Il faut deux joueurs : le deuxième sera posé sur la table dès qu'il arrive (C+P).");
 
             feltY = surface.FeltTopY;
+            fighterCount = Mathf.Clamp(PlayerBallGroups.Players, 2, fighters.Length);
             Vector3 center = surface.transform.position;
             Vector3 along = surface.transform.rotation * Vector3.right;
-            fighters[0].spawn = center - along * (surface.HalfLength * 0.6f);
-            fighters[1].spawn = center + along * (surface.HalfLength * 0.6f);
-            foreach (Fighter f in fighters)
+            Vector3 across = surface.transform.rotation * Vector3.forward;
+            // Evenly round the middle on an oval the table's shape, J1 at one
+            // end: with two, face to face along the table as before.
+            for (int p = 0; p < fighterCount; p++)
             {
+                Fighter f = fighters[p];
+                if (PlayerBallGroups.Teams)
+                {
+                    // 2 v 2: each team side by side at its end of the table.
+                    float end = PlayerBallGroups.SideOf(p) == 0 ? 1f : -1f, beside = p < 2 ? -1f : 1f;
+                    f.spawn = center - along * (end * surface.HalfLength * 0.6f) + across * (beside * surface.HalfWidth * 0.4f);
+                }
+                else
+                {
+                    float angle = Mathf.PI * 2f * p / fighterCount;
+                    f.spawn = center - along * (Mathf.Cos(angle) * surface.HalfLength * 0.6f) + across * (Mathf.Sin(angle) * surface.HalfWidth * 0.6f);
+                }
                 f.spawn.y = feltY + 0.01f;
                 f.health = Settings.maxHealth;
             }
 
             CurrentPhase = Phase.Countdown;
+            BeforeBallsPlaced();
             ScatterBalls();
             OnBallsPlaced();
             ready = true;
-            for (int p = 0; p < 2; p++) TryPlace(p);
+            for (int p = 0; p < fighterCount; p++) TryPlace(p);
         }
 
         // Another mode comes next: everyone full size, the cue ball back.
@@ -223,8 +245,8 @@ namespace UntitledPoolGame.Pool
                 Vector3 p = RandomFeltPoint(margin);
                 p.y = y;
                 bool clear = true;
-                foreach (Fighter f in fighters)
-                    clear &= Flat(p - f.spawn).sqrMagnitude >= clearance * clearance;
+                for (int q = 0; q < fighterCount; q++)
+                    clear &= Flat(p - fighters[q].spawn).sqrMagnitude >= clearance * clearance;
                 foreach (Vector3 other in placed)
                     clear &= Flat(p - other).sqrMagnitude >= apart * apart;
                 if (clear) return p;
@@ -244,19 +266,32 @@ namespace UntitledPoolGame.Pool
         }
 
         // Where a player comes back: a free spot of the felt, away from the
-        // other player when there's one to be found. Falls back on their start.
+        // others when there's one to be found. Falls back on their start.
         private Vector3 RespawnSpot(int p)
         {
-            Fighter other = fighters[1 - p];
             float clearance = Settings.respawnClearance;
             for (int attempt = 0; attempt < 40; attempt++)
             {
                 Vector3 spot = RandomFeltPoint(0.05f);
                 spot.y = feltY + 0.01f;
-                if (other.body != null && Flat(spot - other.body.BodyPosition).sqrMagnitude < clearance * clearance) continue;
-                if (IsClearOfBalls(spot)) return spot;
+                bool clear = true;
+                for (int q = 0; q < fighterCount && clear; q++)
+                {
+                    Fighter other = fighters[q];
+                    clear = q == p || other.body == null || Flat(spot - other.body.BodyPosition).sqrMagnitude >= clearance * clearance;
+                }
+                if (clear && IsClearOfBalls(spot)) return spot;
             }
             return fighters[p].spawn;
+        }
+
+        // Teammates (2 v 2) don't hurt each other with their own shots and kicks.
+        protected static bool SameTeam(int a, int b) => a >= 0 && b >= 0 && a != b && PlayerBallGroups.TeammateOf(a) == b;
+
+        // Who gets the point if this blow puts them out (Eliminate).
+        protected void Credit(int victim, int attacker)
+        {
+            if (attacker >= 0 && attacker != victim && attacker < fighterCount && !SameTeam(victim, attacker)) fighters[victim].lastAttacker = attacker;
         }
 
         private static bool IsClearOfBalls(Vector3 spot)
@@ -282,14 +317,17 @@ namespace UntitledPoolGame.Pool
             ShooterMiniSettings s = Settings;
             phaseTime += Time.deltaTime;
             UpdateRespots();
-            for (int p = 0; p < 2; p++) TryPlace(p);
+            for (int p = 0; p < fighterCount; p++) TryPlace(p);
 
             switch (CurrentPhase)
             {
                 case Phase.Countdown:
                     // Free to find their footing: a body off the table goes back on it.
-                    foreach (Fighter f in fighters)
+                    for (int p = 0; p < fighterCount; p++)
+                    {
+                        Fighter f = fighters[p];
                         if (f.body != null && !OnTable(f.body)) f.body.Teleport(f.spawn, FacingCenter(f.spawn));
+                    }
                     if (phaseTime < s.countdown) break;
                     CurrentPhase = Phase.Fight;
                     phaseTime = 0f;
@@ -299,13 +337,13 @@ namespace UntitledPoolGame.Pool
                 case Phase.Fight:
                     UpdatePowerEffects();
                     CheckBalls();
-                    for (int p = 0; p < 2 && CurrentPhase == Phase.Fight; p++) UpdateFighter(p);
+                    for (int p = 0; p < fighterCount && CurrentPhase == Phase.Fight; p++) UpdateFighter(p);
                     break;
 
                 case Phase.Over:
                     if (phaseTime < s.endDelay) break;
                     LocalPlayerShrink.RestoreAll();
-                    if (s.debugLogs) Debug.Log($"[ShooterMini] Victoire de J{winner + 1} ({fighters[0].eliminations}-{fighters[1].eliminations}).");
+                    if (s.debugLogs) Debug.Log($"[ShooterMini] Victoire de J{winner + 1} ({DescribeEliminations()}).");
                     match.Win(winner);
                     break;
             }
@@ -345,10 +383,14 @@ namespace UntitledPoolGame.Pool
                 if (Time.time >= f.respawnAt && !f.body.IsDown) Respawn(p);
                 return;
             }
-            LocalShooterWeapon shooter = fighters[1 - p].weapon;
-            if (shooter != null && shooter.FindHit(f.body, out Vector3 point, out Vector3 direction, out float freeze)
-                && Hurt(p, Settings.shotDamage, point, Vector3.zero, "un tir", Push(direction, Settings.shotKnockSpeed)) && !f.eliminated)
+            // Everyone else's shots.
+            for (int q = 0; q < fighterCount && !f.eliminated; q++)
             {
+                LocalShooterWeapon shooter = fighters[q].weapon;
+                if (q == p || shooter == null || SameTeam(p, q)) continue;
+                if (!shooter.FindHit(f.body, out Vector3 point, out Vector3 direction, out float freeze)) continue;
+                Credit(p, q);
+                if (!Hurt(p, Settings.shotDamage, point, Vector3.zero, "un tir", Push(direction, Settings.shotKnockSpeed)) || f.eliminated) continue;
                 ReactToShot(f, point, direction);
                 if (freeze > 0f && !f.body.IsDown) Freeze(f, freeze);
             }
@@ -433,9 +475,11 @@ namespace UntitledPoolGame.Pool
         private static void OnPlayerKicked(int attacker, int victim, Vector3 point, float strength)
         {
             ShooterMiniRuleSet rules = Current;
-            if (rules == null || rules.CurrentPhase != Phase.Fight || victim < 0 || victim > 1 || rules.fighters[victim].body == null) return;
+            if (rules == null || rules.CurrentPhase != Phase.Fight || victim < 0 || victim >= rules.fighterCount || rules.fighters[victim].body == null) return;
+            if (SameTeam(victim, attacker)) return;
+            rules.Credit(victim, attacker);
             // Thrown away from the kicker if this is what puts them down.
-            Fighter from = attacker >= 0 && attacker <= 1 ? rules.fighters[attacker] : null;
+            Fighter from = attacker >= 0 && attacker < rules.fighterCount ? rules.fighters[attacker] : null;
             Vector3 away = from != null && from.body != null ? point - from.body.transform.position : Vector3.zero;
             rules.Hurt(victim, Settings.kickDamage * strength, point, Vector3.zero, "un coup de pied", Push(away, Settings.shotKnockSpeed * strength * 2f));
         }
@@ -450,6 +494,7 @@ namespace UntitledPoolGame.Pool
             Vector3 spot = RespawnSpot(p);
             f.body.Teleport(spot, FacingCenter(spot));
             f.eliminated = false;
+            f.lastAttacker = -1;
             f.health = Settings.maxHealth;
             f.safeUntil = Time.time + Settings.respawnSafeTime;
             if (Settings.debugLogs) Debug.Log($"[ShooterMini] J{p + 1} réapparaît à {spot}.", f.body);
@@ -481,7 +526,7 @@ namespace UntitledPoolGame.Pool
                 lastVelocity[ball] = now;
                 if (ball.Rigidbody.isKinematic) continue;
 
-                for (int p = 0; p < 2; p++)
+                for (int p = 0; p < fighterCount; p++)
                 {
                     Fighter f = fighters[p];
                     if (f.body == null || f.eliminated) continue;
@@ -500,6 +545,8 @@ namespace UntitledPoolGame.Pool
                     f.ballSafeUntil = Time.time + s.ballSafeTime;
                     Vector3 rolling = Flat(incoming);
                     float speed = Mathf.Min(rolling.magnitude * s.knockTransfer, s.knockMaxSpeed);
+                    // Whoever last sent it, by a shot, a kick or a blast.
+                    Credit(p, ball.LastShooter);
                     Hurt(p, s.ballDamage, nearest, Push(rolling, speed), $"la bille {ball.Number}", Vector3.zero);
                     if (CurrentPhase != Phase.Fight) return;
                 }
@@ -535,12 +582,48 @@ namespace UntitledPoolGame.Pool
         private void Eliminate(int p)
         {
             Fighter f = fighters[p];
-            Fighter other = fighters[1 - p];
             f.eliminated = true;
             f.respawnAt = Time.time + Settings.respawnDelay;
+            // 2 v 2 as with two: whatever put them out, the other team scores.
+            int scorer = fighterCount == 2 ? 1 - p
+                : f.lastAttacker >= 0 ? f.lastAttacker
+                : PlayerBallGroups.Teams ? 1 - PlayerBallGroups.SideOf(p) : -1;
+            if (scorer < 0)
+            {
+                if (Settings.debugLogs) Debug.Log($"[ShooterMini] J{p + 1} éliminé tout seul : pas de point ({DescribeEliminations()}).", f.body);
+                return;
+            }
+            Fighter other = fighters[scorer];
             other.eliminations++;
-            if (Settings.debugLogs) Debug.Log($"[ShooterMini] J{p + 1} éliminé : {fighters[0].eliminations}-{fighters[1].eliminations}.", f.body);
-            if (other.eliminations >= Settings.eliminationsToWin) EndWith(1 - p);
+            if (Settings.debugLogs) Debug.Log($"[ShooterMini] J{p + 1} éliminé par J{scorer + 1} : {DescribeEliminations()}.", f.body);
+            if (TeamEliminations(scorer) >= Settings.eliminationsToWin) EndWith(scorer);
+        }
+
+        // "2-1" with two, "2-1-0-1" with four (console).
+        private string DescribeEliminations()
+        {
+            string text = fighters[0].eliminations.ToString();
+            for (int q = 1; q < fighterCount; q++) text += "-" + fighters[q].eliminations;
+            return text;
+        }
+
+        // A player's points, their teammate's added in 2 v 2: a team plays
+        // for Eliminations To Win together.
+        private int TeamEliminations(int player)
+        {
+            int total = fighters[player].eliminations;
+            int mate = PlayerBallGroups.TeammateOf(player);
+            if (mate >= 0 && mate < fighterCount) total += fighters[mate].eliminations;
+            return total;
+        }
+
+        // The best among the others (the other team in 2 v 2): with two, the other player's.
+        private int BestOtherEliminations(int player)
+        {
+            int best = 0;
+            for (int q = 0; q < fighterCount; q++)
+                if (q != player && !SameTeam(player, q)) best = Mathf.Max(best, TeamEliminations(q));
+            return best;
         }
 
         protected void EndWith(int player)
@@ -572,7 +655,7 @@ namespace UntitledPoolGame.Pool
             ShooterMiniSettings s = Settings;
             if (CurrentPhase == Phase.Countdown)
                 return string.Format(s.countdownFormat, CountdownLeft);
-            return string.Format(s.scoreFormat, fighters[player].eliminations, fighters[1 - player].eliminations, s.eliminationsToWin);
+            return string.Format(s.scoreFormat, TeamEliminations(player), BestOtherEliminations(player), s.eliminationsToWin);
         }
 
         // Changes whenever the texts above would.
@@ -580,7 +663,7 @@ namespace UntitledPoolGame.Pool
         {
             Fighter f = fighters[player];
             int countdown = CurrentPhase == Phase.Countdown ? CountdownLeft : 0;
-            return (((f.eliminations * 32 + fighters[1 - player].eliminations) * 512 + Mathf.CeilToInt(f.health)) * 16 + countdown) * 2 + (f.eliminated ? 1 : 0);
+            return (((TeamEliminations(player) * 32 + BestOtherEliminations(player)) * 512 + Mathf.CeilToInt(f.health)) * 16 + countdown) * 2 + (f.eliminated ? 1 : 0);
         }
 
         public override string DescribePlayer(int player) => $"{HealthLabel(player)} · {DescribeScore(player)}";

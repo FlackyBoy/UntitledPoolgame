@@ -7,7 +7,7 @@ namespace UntitledPoolGame.Pool
 {
     // Play Anywhere's rounds. Each round: Build (the crate offers a few
     // objects, each player takes one, first come first served, and places
-    // it, both at once), then Shoot (each player plays Strokes Per Round
+    // it, all at once), then Shoot (each player plays Strokes Per Round
     // strokes, in turns or in Speed Pool). Placed objects stay for the whole
     // hole. After the last round, a player who hasn't holed out scores their
     // strokes plus Unfinished Penalty.
@@ -19,22 +19,22 @@ namespace UntitledPoolGame.Pool
         private PoolMatchRules match;
         private Phase phase;
         private int round;
-        private readonly int[] roundStrokes = new int[2];
-        private readonly bool[] propTaken = new bool[2];
-        private readonly bool[] propPlaced = new bool[2];
+        private readonly int[] roundStrokes = new int[PoolMatchRules.MaxPlayers];
+        private readonly bool[] propTaken = new bool[PoolMatchRules.MaxPlayers];
+        private readonly bool[] propPlaced = new bool[PoolMatchRules.MaxPlayers];
         private float buildStartedAt;
         private bool buildWarned;
         // The round started with no player yet: its build starts when one
         // joins, if nobody has shot by then.
         private bool buildAwaitsPlayers;
         // Per player index, their hands (pickup); null = no such player.
-        private readonly LocalPlayerHandController[] hands = new LocalPlayerHandController[2];
+        private readonly LocalPlayerHandController[] hands = new LocalPlayerHandController[PoolMatchRules.MaxPlayers];
         // How many PlayerInputs there were when the hands were last looked
         // up: a player who joins after the round started is found then.
         private int handsFoundFor = -1;
         // Per player index, the colliders crate objects let through: the
         // capsule and the ragdoll, not what the player carries.
-        private readonly Collider[][] playerColliders = new Collider[2][];
+        private readonly Collider[][] playerColliders = new Collider[PoolMatchRules.MaxPlayers][];
         // This round's offer, still in the crate or being carried.
         private readonly List<PlayAnywhereProp> crateProps = new List<PlayAnywhereProp>();
         private readonly HashSet<Rigidbody> placedBodies = new HashSet<Rigidbody>();
@@ -58,21 +58,28 @@ namespace UntitledPoolGame.Pool
             CanShoot(match.IsSimultaneous || PlayerInput.all.Count > 1 ? playerIndex : match.CurrentPlayer);
 
         public bool CanShoot(int player) =>
-            phase == Phase.Shoot && player >= 0 && player < 2 && !finished[player] && roundStrokes[player] < settings.strokesPerRound;
+            phase == Phase.Shoot && player >= 0 && player < ballCount && !finished[player] && roundStrokes[player] < settings.strokesPerRound;
 
         public bool CanTakeProp(int player)
         {
-            if (phase != Phase.Build || player < 0 || player >= 2) return false;
+            if (phase != Phase.Build || player < 0 || player >= ballCount) return false;
             int p = PlacerFor(player);
-            return !propTaken[p] && !propPlaced[p];
+            return p >= 0 && !propTaken[p] && !propPlaced[p];
         }
 
-        // Alone (a single PlayerInput plays both balls in turns), that
-        // player places both objects: J1's, then J2's.
+        // Alone (a single PlayerInput plays every ball in turns), that
+        // player places every object: J1's, then J2's...
         private bool Solo => PlayerInput.all.Count <= 1;
 
-        // Whose object a pickup by this player is.
-        public int PlacerFor(int handIndex) => Solo ? (propTaken[0] || propPlaced[0] ? 1 : 0) : handIndex;
+        // Whose object a pickup by this player is (alone: the first ball
+        // still without one, -1 when all have theirs).
+        public int PlacerFor(int handIndex)
+        {
+            if (!Solo) return handIndex;
+            for (int p = 0; p < ballCount; p++)
+                if (!propTaken[p] && !propPlaced[p]) return p;
+            return -1;
+        }
 
         public bool IsPlacedProp(Rigidbody body) => placedBodies.Contains(body);
 
@@ -112,7 +119,7 @@ namespace UntitledPoolGame.Pool
             return count;
         }
 
-        // Far enough (horizontally) from the cup, the tees and both balls.
+        // Far enough (horizontally) from the cup, the tees and the balls.
         // The widest an object may be placed here, for the play area's width
         // at that spot: a plate fit for a hall would plug a corridor. Small
         // ones stay as they are, and none gets too small for a ball to matter.
@@ -141,7 +148,7 @@ namespace UntitledPoolGame.Pool
         {
             if (hole == null) return true;
             if (FlatDistance(point, hole.CupPosition) < radius) return false;
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
             {
                 if (FlatDistance(point, hole.TeePosition(p, 0f)) < radius) return false;
                 if (balls[p] != null && FlatDistance(point, balls[p].transform.position) < radius) return false;
@@ -169,7 +176,7 @@ namespace UntitledPoolGame.Pool
         {
             round++;
             buildAwaitsPlayers = false;
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < roundStrokes.Length; p++)
             {
                 roundStrokes[p] = 0;
                 propTaken[p] = false;
@@ -178,7 +185,7 @@ namespace UntitledPoolGame.Pool
 
             PlayAnywhereCrate crate = hole.Crate;
             FindHands();
-            if (crate == null || !HasPropChoices() || (hands[0] == null && hands[1] == null))
+            if (crate == null || !HasPropChoices() || PlayersPresent() == 0)
             {
                 // The match starts before the players join: the build waits
                 // for them (TickAwaitingPlayers) instead of being skipped.
@@ -195,7 +202,7 @@ namespace UntitledPoolGame.Pool
             UntitledPoolGame.Core.MatchHud.ShowShout(-1, settings.buildShout);
             crate.ShowArrows();
             List<PlayAnywherePropChoice> all = settings.crateOffersAll ? settings.props.FindAll(c => c != null && c.prefab != null) : null;
-            int count = all != null ? all.Count : Mathf.Max(settings.crateChoices, Solo ? 2 : PlayersPresent());
+            int count = all != null ? all.Count : Mathf.Max(settings.crateChoices, Solo ? ballCount : PlayersPresent());
             for (int i = 0; i < count; i++)
             {
                 PlayAnywherePropChoice choice = all != null ? all[i] : PickChoice();
@@ -209,7 +216,7 @@ namespace UntitledPoolGame.Pool
                 Debug.Log($"[PlayAnywhere] Manche {round}{RoundsLabel()} : pose. La caisse '{crate.name}' à {crate.transform.position} propose {crateProps.Count} objets ; chacun en prend un (Interact) et le pose (Attack ou Interact, molette / croix pour tourner).", crate);
                 foreach (PlayAnywhereProp prop in crateProps)
                     Debug.Log($"[PlayAnywhere]   {prop.Describe()}", prop);
-                for (int p = 0; p < 2; p++)
+                for (int p = 0; p < hands.Length; p++)
                     if (hands[p] != null)
                         Debug.Log($"[PlayAnywhere]   J{p + 1} est à {hands[p].transform.position}, à {Vector3.Distance(hands[p].transform.position, crate.transform.position):0.0} m de la caisse.", hands[p]);
             }
@@ -237,13 +244,14 @@ namespace UntitledPoolGame.Pool
         private void TickAwaitingPlayers()
         {
             if (!buildAwaitsPlayers || phase != Phase.Shoot) return;
-            if (roundStrokes[0] > 0 || roundStrokes[1] > 0)
-            {
-                buildAwaitsPlayers = false;
-                return;
-            }
+            for (int p = 0; p < ballCount; p++)
+                if (roundStrokes[p] > 0)
+                {
+                    buildAwaitsPlayers = false;
+                    return;
+                }
             RefreshHands();
-            if (hands[0] == null && hands[1] == null) return;
+            if (PlayersPresent() == 0) return;
             buildAwaitsPlayers = false;
             if (settings.debugLogs) Debug.Log($"[PlayAnywhere] Manche {round}{RoundsLabel()} : un joueur est arrivé, la pose commence.");
             round--;
@@ -269,7 +277,7 @@ namespace UntitledPoolGame.Pool
             Rigidbody body = prop.GetComponent<Rigidbody>();
             if (body != null) placedBodies.Add(body);
             RefreshHands();
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
                 if ((Solo ? balls[p] != null : hands[p] != null) && !propPlaced[p]) return;
             EndBuild();
         }
@@ -279,7 +287,7 @@ namespace UntitledPoolGame.Pool
         // Returns what happened, for the menu.
         public string GiveProp(PlayAnywherePropChoice choice, int player)
         {
-            LocalPlayerHandController hand = player >= 0 && player < 2 ? Hands[player] : null;
+            LocalPlayerHandController hand = player >= 0 && player < hands.Length ? Hands[player] : null;
             if (hand == null) return $"Pas de J{player + 1}.";
             if (hand.HeldObject != null || hand.HandsMoving)
                 return $"J{player + 1} a déjà quelque chose en main (la queue ?) : qu'il le lâche d'abord.";
@@ -334,14 +342,14 @@ namespace UntitledPoolGame.Pool
             int next = NextShooter();
             if (next < 0) EndRound();
             // Not from Setup (no crate): the match isn't started, player 1 begins.
-            else if (next != match.CurrentPlayer && match.MatchStarted) match.SwitchTurn();
+            else if (next != match.CurrentPlayer && match.MatchStarted) match.SwitchTurnTo(next);
         }
 
         // Speed Pool, every frame during Shoot (from Tick): the round ends
         // once nobody has a stroke left and every ball has stopped.
         private void TickShootSimultaneous()
         {
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
             {
                 if (balls[p] == null || finished[p]) continue;
                 if (roundStrokes[p] < settings.strokesPerRound || rolling[p]) return;
@@ -356,7 +364,7 @@ namespace UntitledPoolGame.Pool
         {
             int best = -1;
             float bestSqr = -1f;
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
             {
                 if (!CanShoot(p) || balls[p] == null) continue;
                 Vector3 offset = balls[p].transform.position - hole.CupPosition;
@@ -377,7 +385,7 @@ namespace UntitledPoolGame.Pool
                 return;
             }
             if (settings.debugLogs) Debug.Log($"[PlayAnywhere] Dernière manche jouée.");
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
             {
                 if (finished[p] || balls[p] == null) continue;
                 strokes[p] += settings.unfinishedPenalty;
@@ -395,14 +403,14 @@ namespace UntitledPoolGame.Pool
         private void FindHands()
         {
             handsFoundFor = PlayerInput.all.Count;
-            hands[0] = hands[1] = null;
+            System.Array.Clear(hands, 0, hands.Length);
             foreach (LocalPlayerHandController h in Object.FindObjectsByType<LocalPlayerHandController>())
             {
                 PlayerInput input = h.GetComponent<PlayerInput>();
                 int index = input != null ? input.playerIndex : -1;
-                if (index >= 0 && index < 2) hands[index] = h;
+                if (index >= 0 && index < hands.Length) hands[index] = h;
             }
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < hands.Length; p++)
                 playerColliders[p] = hands[p] != null ? OwnColliders(hands[p]) : null;
             foreach (PlayAnywhereProp prop in spawnedProps)
                 if (prop != null) prop.IgnorePlayers();
@@ -418,7 +426,13 @@ namespace UntitledPoolGame.Pool
             return own.ToArray();
         }
 
-        private int PlayersPresent() => (hands[0] != null ? 1 : 0) + (hands[1] != null ? 1 : 0);
+        private int PlayersPresent()
+        {
+            int present = 0;
+            foreach (LocalPlayerHandController h in hands)
+                if (h != null) present++;
+            return present;
+        }
 
         private bool HasPropChoices()
         {

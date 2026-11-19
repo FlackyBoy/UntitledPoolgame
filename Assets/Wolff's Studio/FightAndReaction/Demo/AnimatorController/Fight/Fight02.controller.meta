@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0f2cbdeb9b8291045bc530352e77dad4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 327838
+  packageName: Fight And Reaction Animations
+  packageVersion: 1.1
+  assetPath: Assets/Wolff's Studio/FightAndReaction/Demo/AnimatorController/Fight/Fight02.controller
+  uploadId: 949040

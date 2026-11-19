@@ -14,7 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UntitledPoolGame.Pool.SpeedPoolSettings
   player1CueColor: {r: 0.2, g: 0.45, b: 1, a: 1}
   player2CueColor: {r: 1, g: 0.25, b: 0.2, a: 1}
+  player3CueColor: {r: 0.2, g: 0.8, b: 0.35, a: 1}
+  player4CueColor: {r: 0.65, g: 0.35, b: 0.95, a: 1}
   cueSpread: 0.5
   extraBallsPerPlayer: 0
+  secondRackTint: {r: 0.55, g: 0.55, b: 0.55, a: 1}
+  ownerMarkersFrom: 3
+  ownerPatterns: 00000000010000000400000003000000i
+  ownBallHaloFrom: 3
+  ownBallHaloSize: 1.6
   cueRespawnDelay: 5
   respotOwnBallOnScratch: 1

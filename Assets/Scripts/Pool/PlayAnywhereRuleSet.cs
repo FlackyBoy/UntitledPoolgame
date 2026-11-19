@@ -14,8 +14,9 @@ namespace UntitledPoolGame.Pool
     // the hole for that player. The hole is played in rounds of placing and
     // shooting (PlayAnywhereRuleSet.Rounds.cs), the match in several holes
     // with a score card between them (PlayAnywhereRuleSet.Course.cs). In turns, the player
-    // farthest from the cup plays next, as in golf; in Speed Pool, both
-    // play whenever they like. Surfaces: this file, after the cup.
+    // farthest from the cup plays next, as in golf; in Speed Pool, all
+    // play whenever they like. 2 to 4 players, each for themselves (one
+    // cue ball each, PlayerBallGroups.Players). Surfaces: this file, after the cup.
     public partial class PlayAnywhereRuleSet : SpeedPoolRuleSet
     {
         // Set while a Play Anywhere match is on (PoolMatchRules asks).
@@ -27,17 +28,21 @@ namespace UntitledPoolGame.Pool
 
         private PlayAnywhereSettings settings;
         private PlayAnywhereHole hole;
-        private readonly PoolBall[] balls = new PoolBall[2];
-        private readonly int[] strokes = new int[2];
-        private readonly bool[] finished = new bool[2];
+        // One cue ball per player, ballCount of them.
+        private readonly PoolBall[] balls = new PoolBall[PoolMatchRules.MaxPlayers];
+        private int ballCount;
+        private readonly List<PoolBall> cueList = new List<PoolBall>();
+        private readonly int[] strokes = new int[PoolMatchRules.MaxPlayers];
+        private readonly bool[] finished = new bool[PoolMatchRules.MaxPlayers];
         // Where each ball last stood still: back there when out of bounds
         // (struck, or knocked by the other ball).
-        private readonly Vector3[] lastRest = new Vector3[2];
+        private readonly Vector3[] lastRest = new Vector3[PoolMatchRules.MaxPlayers];
         // Speed Pool: the stroke under way, until the ball stops (Tick).
-        private readonly bool[] rolling = new bool[2];
-        private readonly float[] struckAt = new float[2];
-        // Who finished first, the tie-break.
-        private int firstFinisher = -1;
+        private readonly bool[] rolling = new bool[PoolMatchRules.MaxPlayers];
+        private readonly float[] struckAt = new float[PoolMatchRules.MaxPlayers];
+        // Who holed out (or ran out of strokes) in what order on this
+        // hole: the last tie-break.
+        private readonly List<int> finishOrder = new List<int>();
 
         // The ball reads as still for a frame or two after the strike.
         private const float MinStrokeTime = 0.3f;
@@ -48,17 +53,18 @@ namespace UntitledPoolGame.Pool
         // Diagnostics: passes within this distance of the cup's edge are logged.
         private const float CupTraceRange = 0.3f;
         // Per player, closest approach of the current pass: distance, height, speed.
-        private readonly Vector3[] closestPass = { Vector3.positiveInfinity, Vector3.positiveInfinity };
+        // (Set to infinity by ResetHoleState.)
+        private readonly Vector3[] closestPass = new Vector3[PoolMatchRules.MaxPlayers];
         // Per player, the lip was already hit on this pass over the cup.
-        private readonly bool[] lipped = new bool[2];
+        private readonly bool[] lipped = new bool[PoolMatchRules.MaxPlayers];
         // Per player, the ball's BallContacts when it last stood still: more
-        // now, and the other ball set it moving.
-        private readonly int[] contactsAtRest = new int[2];
-        // Speed Pool: when the player still out of the cup runs out of time
-        // (Time.time), -1 when no clock runs.
+        // now, and another ball set it moving.
+        private readonly int[] contactsAtRest = new int[PoolMatchRules.MaxPlayers];
+        // Speed Pool: once someone holes out, when those still out of the
+        // cup run out of time (Time.time), -1 when no clock runs.
         private float finishClockEnd = -1f;
         // Per player, the ground last rolled on (null = the felt).
-        private readonly PlayAnywhereSurfaceType[] ground = new PlayAnywhereSurfaceType[2];
+        private readonly PlayAnywhereSurfaceType[] ground = new PlayAnywhereSurfaceType[PoolMatchRules.MaxPlayers];
         // Each collider's ground, looked up once (null = the felt).
         private readonly Dictionary<Collider, PlayAnywhereSurfaceType> groundOf = new Dictionary<Collider, PlayAnywhereSurfaceType>();
         // Every surface type (Resources/PlayAnywhereSurfaces), and which
@@ -76,7 +82,7 @@ namespace UntitledPoolGame.Pool
         private const float GroundProbe = 0.03f;
 
         public override float ShotPowerScale => settings != null ? settings.shotPowerMultiplier : 1f;
-        public int StrokesOf(int player) => strokes[player];
+        public int StrokesOf(int player) => player >= 0 && player < ballCount ? strokes[player] : 0;
         public int Par => hole != null ? hole.Par : 0;
 
         // Strokes over the hole's par.
@@ -100,7 +106,7 @@ namespace UntitledPoolGame.Pool
         // course, not holed out, not parked. null otherwise.
         public PoolBall PlayableBall(int player)
         {
-            if (hole == null || phase == Phase.Intermission || player < 0 || player >= 2 || finished[player]) return null;
+            if (hole == null || phase == Phase.Intermission || player < 0 || player >= ballCount || finished[player]) return null;
             PoolBall ball = balls[player];
             return ball != null && !ball.Rigidbody.isKinematic ? ball : null;
         }
@@ -127,14 +133,18 @@ namespace UntitledPoolGame.Pool
             // Copy: deactivating a ball removes it from Active.
             foreach (PoolBall ball in new List<PoolBall>(PoolBall.Active))
                 if (!ball.IsCueBall) ball.gameObject.SetActive(false);
-            if (!FindPlayerCueBalls(out balls[0], out balls[1])) return;
+            System.Array.Clear(balls, 0, balls.Length);
+            ballCount = 0;
+            if (!FindPlayerCueBalls(PlayerBallGroups.Players, cueList)) return;
+            ballCount = cueList.Count;
+            cueList.CopyTo(balls);
 
             SpeedPoolSettings colours = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
             {
                 PoolBall ball = balls[p];
                 Vector3 tee = hole != null ? hole.TeePosition(p, ball.Radius) : ball.SpawnPosition;
-                ball.MakePlayerCueBall(p, tee, p == 0 ? colours.player1CueColor : colours.player2CueColor);
+                ball.MakePlayerCueBall(p, tee, colours.PlayerCueColor(PlayerBallGroups.ColourOf(p)));
                 // Off the felt is the whole point: the mode judges out of bounds.
                 ball.FreeRoaming = true;
             }
@@ -146,15 +156,22 @@ namespace UntitledPoolGame.Pool
                 return;
             }
             if (settings.debugLogs)
-                Debug.Log($"[PlayAnywhere] Départ : trou '{hole.name}' par {hole.Par}, J1 {balls[0].transform.position}, J2 {balls[1].transform.position}.", hole);
+                Debug.Log($"[PlayAnywhere] Départ à {ballCount} : trou '{hole.name}' par {hole.Par}, {DescribeBalls()}.", hole);
             CheckTees();
             StartRounds(match);
+        }
+
+        private string DescribeBalls()
+        {
+            var parts = new string[ballCount];
+            for (int p = 0; p < ballCount; p++) parts[p] = $"J{p + 1} {balls[p].transform.position}";
+            return string.Join(", ", parts);
         }
 
         // A new hole: nothing played yet, the balls on their tees.
         private void ResetHoleState()
         {
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < balls.Length; p++)
             {
                 strokes[p] = 0;
                 finished[p] = false;
@@ -167,7 +184,7 @@ namespace UntitledPoolGame.Pool
                 ground[p] = null;
                 ApplyGround(balls[p], null);
             }
-            firstFinisher = -1;
+            finishOrder.Clear();
             finishClockEnd = -1f;
         }
 
@@ -190,7 +207,7 @@ namespace UntitledPoolGame.Pool
         {
             if (hole == null || match.GameOver || phase == Phase.Intermission) return;
             if (TickFinishClock(match)) return;
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
             {
                 PoolBall ball = balls[p];
                 if (ball == null || finished[p] || ball.Rigidbody.isKinematic) continue;
@@ -225,9 +242,10 @@ namespace UntitledPoolGame.Pool
         }
 
         // Speed Pool's clock: stopped during a build, a player can't be cut
-        // short while placing. Run out: the penalty, the ball back where it
-        // last stood still, and the round is over; the next one starts it
-        // again. Returns whether it just ran out.
+        // short while placing. Run out: every player still out of the cup
+        // pays the penalty, their ball back where it last stood still, and
+        // the round is over; the next one starts it again. Returns whether
+        // it just ran out.
         private bool TickFinishClock(PoolMatchRules match)
         {
             if (finishClockEnd < 0f) return false;
@@ -238,30 +256,37 @@ namespace UntitledPoolGame.Pool
             }
             if (Time.time < finishClockEnd) return false;
 
-            int late = finished[0] ? 1 : 0;
-            PoolBall ball = balls[late];
             // After the last round, EndRound charges this same penalty.
             bool lastRound = settings.rounds > 0 && round >= settings.rounds;
-            if (!lastRound) strokes[late] += settings.unfinishedPenalty;
-            if (settings.debugLogs) Debug.Log($"[PlayAnywhere] Chrono écoulé pour J{late + 1} : +{settings.unfinishedPenalty} (total {strokes[late] + (lastRound ? settings.unfinishedPenalty : 0)}), fin de la manche.", ball);
-            Shout(late, settings.finishClockEndShout, true, settings.unfinishedPenalty);
-            ball.BeginBallInHand();
-            ball.PlaceAt(lastRest[late]);
-            ball.EndBallInHand();
-            rolling[late] = false;
             finishClockEnd = Time.time + settings.finishClockTime;
-            CheckStrokeLimit(match, late);
-            if (!finished[late] && phase != Phase.Intermission) EndRound();
+            bool anyLeft = false;
+            for (int late = 0; late < ballCount; late++)
+            {
+                PoolBall ball = balls[late];
+                if (finished[late] || ball == null) continue;
+                if (!lastRound) strokes[late] += settings.unfinishedPenalty;
+                if (settings.debugLogs) Debug.Log($"[PlayAnywhere] Chrono écoulé pour J{late + 1} : +{settings.unfinishedPenalty} (total {strokes[late] + (lastRound ? settings.unfinishedPenalty : 0)}), fin de la manche.", ball);
+                Shout(late, settings.finishClockEndShout, true, settings.unfinishedPenalty);
+                ball.BeginBallInHand();
+                ball.PlaceAt(lastRest[late]);
+                ball.EndBallInHand();
+                rolling[late] = false;
+                CheckStrokeLimit(match, late);
+                if (match.GameOver || phase == Phase.Intermission) return true;
+                if (!finished[late]) anyLeft = true;
+            }
+            if (anyLeft) EndRound();
             return true;
         }
 
         // A big message on this player's half. {0}: the penalty or the clock's
-        // seconds, {1}: the other player's number.
-        private void Shout(int player, string text, bool bad, int value = -1)
+        // seconds, {1}: the other player's number (other; at two, guessed).
+        private void Shout(int player, string text, bool bad, int value = -1, int other = -1)
         {
             if (string.IsNullOrEmpty(text)) return;
             if (value < 0) value = settings.outOfBoundsPenalty;
-            string shown = text.Replace("{0}", value.ToString()).Replace("{1}", (2 - player).ToString());
+            if (other < 0 && ballCount == 2) other = 1 - player;
+            string shown = text.Replace("{0}", value.ToString()).Replace("{1}", other >= 0 ? (other + 1).ToString() : "?");
             Color? colour = bad ? PoolSettingsLoader.LoadOrDefault<UntitledPoolGame.Core.HudSettings>("HudSettings").dangerColor : (Color?)null;
             UntitledPoolGame.Core.MatchHud.ShowShout(player, shown, colour);
         }
@@ -432,9 +457,12 @@ namespace UntitledPoolGame.Pool
             ball.FallIntoTableHole(hole.CupPosition + Vector3.up * ball.Radius, settings.cupSinkTime);
             if (settings.debugLogs) Debug.Log($"[PlayAnywhere] J{p + 1} rentre sa bille en {strokes[p]} coups (par {hole.Par}).", ball);
             Finish(match, p);
-            int other = 1 - p;
-            if (match.IsSimultaneous && settings.finishClockTime > 0f && !finished[other] && balls[other] != null)
+            // The first one in starts the clock for all the others (the
+            // ones who hole out next don't start it again).
+            if (!match.IsSimultaneous || settings.finishClockTime <= 0f || finishClockEnd >= 0f || match.GameOver || phase == Phase.Intermission) return;
+            for (int other = 0; other < ballCount; other++)
             {
+                if (finished[other] || balls[other] == null) continue;
                 finishClockEnd = Time.time + settings.finishClockTime;
                 Shout(other, settings.finishClockShout, true, Mathf.CeilToInt(settings.finishClockTime));
                 if (settings.debugLogs) Debug.Log($"[PlayAnywhere] Chrono : J{other + 1} a {settings.finishClockTime:0.#} s pour finir.", balls[other]);
@@ -456,7 +484,7 @@ namespace UntitledPoolGame.Pool
                 ? $"[PlayAnywhere] Fin du coup de J{player + 1} → J{next + 1} joue (le plus loin du trou)."
                 : $"[PlayAnywhere] Fin du coup de J{player + 1} : plus de coups dans cette manche.");
             if (next < 0) EndRound();
-            else if (next != player) match.SwitchTurn();
+            else if (next != player) match.SwitchTurnTo(next);
         }
 
         private void CheckStrokeLimit(PoolMatchRules match, int p)
@@ -485,24 +513,27 @@ namespace UntitledPoolGame.Pool
         }
 
         // The ball's owner pays, for their own stroke or for being knocked out
-        // by the other ball alike. A ball nobody touched (falling off its
+        // by another ball alike. A ball nobody touched (falling off its
         // tee) just comes back: that's the level's fault.
         private void OutOfBounds(PoolMatchRules match, int p, string where)
         {
             PoolBall ball = balls[p];
             bool own = rolling[p];
             bool knocked = ball.BallContacts != contactsAtRest[p];
+            // Whose stroke sent it out: a struck cue ball passes its owner on
+            // to the balls it hits (PoolBall.LastShooter).
+            int knocker = knocked && !own && ball.LastShooter != p ? ball.LastShooter : -1;
             contactsAtRest[p] = ball.BallContacts;
             if (own || knocked) strokes[p] += settings.outOfBoundsPenalty;
             if (settings.debugLogs || !(own || knocked))
                 Debug.Log(own || knocked
-                    ? $"[PlayAnywhere] J{p + 1} {where}{(own ? "" : ", sortie par l'autre bille")} : +{settings.outOfBoundsPenalty} (total {strokes[p]}), la bille revient à {lastRest[p]}."
+                    ? $"[PlayAnywhere] J{p + 1} {where}{(own ? "" : knocker >= 0 ? $", sortie par la bille de J{knocker + 1}" : ", sortie par une autre bille")} : +{settings.outOfBoundsPenalty} (total {strokes[p]}), la bille revient à {lastRest[p]}."
                     : $"[PlayAnywhere] J{p + 1} {where} sans avoir été tirée ni touchée (tombée de sa place : vérifie le sol sous le départ) : pas de pénalité, elle revient à {lastRest[p]}.", ball);
             if (own) Shout(p, settings.outOfBoundsShout, true);
             else if (knocked)
             {
-                Shout(p, settings.knockedOutShout, true);
-                if (!Solo) Shout(1 - p, settings.knockOutCheerShout, false);
+                Shout(p, settings.knockedOutShout, true, -1, knocker);
+                if (!Solo && knocker >= 0 && knocker < ballCount) Shout(knocker, settings.knockOutCheerShout, false);
             }
             // Parked first: a kinematic body takes the move without a sweep.
             ball.BeginBallInHand();
@@ -516,17 +547,24 @@ namespace UntitledPoolGame.Pool
         {
             finished[p] = true;
             rolling[p] = false;
+            if (!finishOrder.Contains(p)) finishOrder.Add(p);
+            for (int other = 0; other < ballCount; other++)
+                if (!finished[other] && balls[other] != null) return;
             finishClockEnd = -1f;
-            if (firstFinisher < 0) firstFinisher = p;
-            if (!finished[1 - p]) return;
             EndCourse();
         }
 
-        private int PlayerOf(PoolBall ball) => ball == balls[0] ? 0 : ball == balls[1] ? 1 : -1;
+        private int PlayerOf(PoolBall ball)
+        {
+            for (int p = 0; p < ballCount; p++)
+                if (ball == balls[p]) return p;
+            return -1;
+        }
 
         public override string DescribePlayer(int player)
         {
-            string colour = player == 0 ? "Blanche bleue" : "Blanche rouge";
+            if (player < 0 || player >= ballCount) return "";
+            string colour = CueNames[Mathf.Clamp(PlayerBallGroups.ColourOf(player), 0, CueNames.Length - 1)];
             return hole == null ? colour : $"{colour} · {strokes[player]} coup{(strokes[player] > 1 ? "s" : "")} (par {hole.Par}){(finished[player] ? " · fini" : "")} · {DescribeRound(player)}";
         }
 

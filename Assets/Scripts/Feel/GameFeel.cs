@@ -152,7 +152,9 @@ namespace UntitledPoolGame.Core
         private void OnPowerActivated(int player, PoolPower power, bool waitsForOpponentTurn)
         {
             Play(GameFeelEvent.PowerActivated, player, Vector3.zero);
-            if (power != null && power.TargetsOpponent) Play(GameFeelEvent.PowerReceived, 1 - player, Vector3.zero);
+            if (power == null || !power.TargetsOpponent) return;
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            Play(GameFeelEvent.PowerReceived, rules != null ? rules.TargetOf(player) : 1 - player, Vector3.zero);
         }
 
         private void OnPowerRefused(int player, PowerRefusal reason) => Play(GameFeelEvent.PowerRefused, player, Vector3.zero);

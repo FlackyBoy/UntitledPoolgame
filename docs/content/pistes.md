@@ -35,6 +35,7 @@ Autres idées autour des pouvoirs :
 
 ### Modes de jeu
 
+- **Direction « Mario Party »** (18/11) : le jeu va vers un party game à mini-jeux, en **gardant la logique des environnements** (chaque décor détourne aussi les mini-jeux). Propositions de Claude dans la partie 2, *Mini-jeux, modes et méta-jeux*.
 - **Bille « tic-tac »** qui explose après un délai.
 - **Pistolet** : la queue tire des billes blanches sur des billes en bulles ou mobiles.
 - **Wack-a-Ball** : toucher le plus vite possible des cibles qui sortent des trous.
@@ -101,7 +102,24 @@ Autres idées autour des pouvoirs :
   - **Variante à quatre** : un grand et trois petits, le dernier petit debout gagne.
   - **Points plutôt que manches** : en Boogie Night, une manche par joueur, et le score de chacun = temps tenu en petit.
 
-### Mode 4 joueurs en écran scindé (réflexion du 05/11, pas à développer pour l'instant)
+### Retours du playtest du 18/11
+
+Notes prises pendant la session, rien n'est décidé (le bug de Cache-cache est corrigé, voir la TODO).
+
+- **Snake Pool** : un objet qui empêche de casser le serpent. Peut-être que seul un pouvoir permette de couper (rejoint *Coupure en pouvoir* et *Bouclier*, plus haut).
+- **Power Wash** :
+  - retirer le decal ?
+  - une peinture en relief, à la Splatoon ?
+  - un splash quand la bille rebondit sur la bande ;
+  - un arroseur (type arrosage de jardin) qui apparaît au hasard pendant la partie.
+- **Play Anywhere** : le premier arrivé fixe la référence ; le joueur suivant gagne plus ou moins de points selon qu'il fait mieux ou moins bien en nombre de coups, et pareil avec le temps.
+- **Pocket Size** : plus asymétrique ? Une variante « chain together » (joueurs enchaînés) ?
+- **Nouveau mode « chain together »** : les joueurs attachés les uns aux autres.
+- **Sumo Pool** : agrandir la table selon le nombre de joueurs ; des obstacles dynamiques.
+- **Cache-cache** : un cooldown sur les pouvoirs.
+- **Pour tous les modes** : des objets qui apparaissent au hasard pendant la partie.
+
+### Mode 4 joueurs en écran scindé (réflexion du 05/11 ; décidé le 17/11, suivi dans `TODO.md` : « Jusqu'à 4 joueurs en écran partagé »)
 
 **Orientations données par l'utilisateur :**
 
@@ -214,6 +232,75 @@ Proposées sans retour pour l'instant : frapper le tireur pendant sa charge fait
 - **Bowling Pool, placer sa blanche** le long de la ligne de lancer avant chaque tir (aujourd'hui, toujours du même point). *Pourquoi :* c'est le geste du bowling, et ça rend les spares plus intéressants.
 - **Bowling Pool, un râteau** qui balaie les quilles tombées et une feuille de score façon écran de bowling en fin de partie. *Pourquoi :* c'est ce qui fait reconnaître le bowling, et les quilles disparaissent d'un coup pour l'instant.
 - **Bowling Pool, une piste au sol** dans les niveaux, à la façon de Play Anywhere, avec des bandes en gouttières. *Pourquoi :* le spectacle d'une grosse boule et de grandes quilles.
+
+### Mini-jeux, modes et méta-jeux (brainstorm du 18/11)
+
+> Suite à la direction « Mario Party » (partie 1). Rien n'est décidé.
+
+**Mini-jeu ou mode ?** Un mode est une partie complète de plusieurs minutes. Un mini-jeu a **une seule règle**, se comprend en 3 secondes, dure **30 à 90 s**, et existe en trois formats : **chacun pour soi**, **1 contre 3**, **2 contre 2**.
+
+#### Mini-jeux
+
+- **Chacun pour soi**
+  - **Dégaine !** — tout le monde en place, un signal (la lampe s'allume) : le premier qui rentre une bille gagne la manche ; tirer avant le signal élimine de la manche. Manches de 10 s, premier à 3. *Pourquoi :* presque rien de neuf, une règle de victoire posée sur le Speed Pool.
+  - **Curling Pool** — un seul tir chacun : la bille la plus proche de la 8 (ou d'une cible tracée sur le tapis) gagne ; on peut pousser celle des autres. *Pourquoi :* rapide même au tour par tour, à 4.
+  - **Chaises musicales** — une seule poche éclairée, qui change quand la musique s'arrête ; il faut y rentrer sa bille avant les autres, le dernier sort. *Pourquoi :* reprend la logique du pouvoir *Poche fermée*.
+  - **Pluie de billes** — tous rétrécis sur la table, des billes tombent du plafond (leur ombre prévient) ; le dernier debout gagne. *Pourquoi :* rétrécissement, ragdoll et élimination existent déjà (Pocket Size, Shooter).
+  - **Batting cage** — des billes sont crachées en l'air hors des poches ; on les frappe à la queue comme une batte vers des cibles du bar (bouteilles, fléchettes, jukebox). *Pourquoi :* réutilise le coup de queue du combat.
+- **1 contre 3**
+  - **Le videur** — les trois petits doivent sauter dans une poche pour s'échapper, le grand les en empêche à la blanche (Pocket Size inversé). Version prison : **Évasion**, le grand est le gardien, avec une lampe torche.
+  - **Boule de démolition** — un joueur pilote une bille géante (contrôles de Sumo), les trois autres, rétrécis, doivent tenir 45 s.
+- **2 contre 2**
+  - **Billard à deux mains** — dans chaque équipe, l'un choisit la direction, l'autre la puissance, en même temps. *Pourquoi :* du chaos entre amis, surtout un réglage d'entrée sur `LocalPoolAimController`.
+  - **Foot-billard** — une seule bille partagée, chaque équipe défend les poches de son côté, tout le monde tire en même temps.
+- **Dans la salle** (la liberté FPS)
+  - **Le serveur** — traverser le bar avec un plateau de billes posé sur la queue pendant que les autres lancent des objets ; une bille tombée coûte du temps.
+  - **Chasse à la craie** — une craie cachée dans la salle du Level Maker, le premier qui la trouve gagne. *Pourquoi :* chaque salle donne une manche différente, gratuitement.
+
+#### Garder la logique des environnements
+
+- **Mini-jeu + modificateurs de l'environnement** — un mini-jeu fixe la règle, l'environnement ajoute ses modificateurs (voir *Dimensions = pile de modificateurs*), et chaque mini-jeu dit lesquels il accepte (le noir va mal à la chasse à la craie, très bien à *Dégaine !*). Un même mini-jeu change d'une salle à l'autre : *Pluie de billes* en apesanteur, *Chaises musicales* dans le noir. *Pourquoi :* c'est le pilier « chaque décor, son twist » appliqué aux mini-jeux.
+
+  | Environnement | Modificateurs réutilisables | Mini-jeu signature |
+  |---|---|---|
+  | **Bar** | objets à lancer, barman qui annonce les événements | *Batting cage*, *Le serveur* |
+  | **Prison hantée** | coupures de lumière (seules les blanches brillent), gardien-Némésis qui met en ragdoll | **Évasion** (*Le videur* avec le gardien et sa lampe) |
+  | **Base spatiale** | gravité basse ou qui change, sas qui aspire | **Le sas** : un Sumo où le sas s'ouvre par moments et aspire ceux qui sont au bord |
+
+- **Technique** — un ScriptableObject `MiniGameDefinition` (formats possibles, durée, modificateurs acceptés) et un `EnvironmentModifier` par brique. La roue de Boogie Night pourrait tirer **mode ou mini-jeu**, avec un mini-jeu entre deux parties.
+- **Par où commencer** — *Dégaine !*, *Pluie de billes*, puis *Le videur / Évasion* : ce sont eux qui réutilisent le plus de code existant, et le dernier est le premier qui change vraiment selon l'environnement.
+
+#### Les idées de modes de la partie 1, complétées
+
+- **Bille tic-tac** — la bombe passe à celui dont la blanche la touche ; la mèche raccourcit à chaque bande touchée ; la rentrer dans une poche la lance sur la table d'un autre ; à 4, celui qui la tient à l'explosion est éliminé.
+- **Pistolet → Bubble Pool** — les billes flottent dans des bulles au-dessus de la table, la queue tire des blanches. Bulle crevée : la bille tombe, sur le tapis rien, dans une poche un point. Combos quand une bille en crève une autre en tombant. Bulles mobiles en apesanteur dans la base spatiale.
+- **Wack-a-Ball** — les billes sortent des poches et des trous vivants (Catch the Hole), on les frappe à la queue en mêlée ou à la blanche. Bille dorée = 3 points, bille bombe = ragdoll. À 4, tout le monde autour de la table en même temps.
+- **Façon Rocket League → Grand Prix de la salle** — on pilote sa bille (contrôles de Sumo) sur un circuit dans la salle du Level Maker, avec la tuyauterie de Play Anywhere ; des boosts au sol, des raccourcis sur les tables et le comptoir. Le circuit change avec chaque salle.
+- **Façon What the Golf → Absurd Pool** — chaque rack a un twist tiré dans la pile de modificateurs : table qui penche, blanche en cube, poches qui fuient, ta bille c'est toi. *Pourquoi :* la vitrine idéale de la pile de modificateurs, qui se nourrit de toutes les autres règles.
+- **Pool Ragdoll → Homme-canon** — un joueur en ragdoll sur le tapis, l'autre le tire à la queue comme une bille : faire rentrer des billes avec son corps, ou rentrer soi-même dans une poche géante. Le joueur lancé garde un petit contrôle en l'air (se cambrer).
+- **Combat avec barre de vie** — la barre de vie, ce sont **tes billes** : chaque coup reçu fait ressortir une de tes billes rentrées, un KO donne la main libre à l'autre. On ne gagne qu'au billard, mais le combat le défait. *Pourquoi :* on se demande sans arrêt s'il vaut mieux tirer ou frapper.
+- **Earthquake** — des secousses annoncées toutes les 20 s, avec compte à rebours et le côté qui va pencher ; les bons joueurs se servent de la pente. Prison : sans prévenir. Base spatiale : la gravité bascule au lieu de pencher.
+- **Billards face à face → table « Tetris »** — chaque bille envoyée sur la table d'en face s'y ajoute ; le premier à vider sa table gagne, celui dont la table déborde perd. En même temps : défendre et attaquer, c'est le même geste.
+- **Cache-cache déguisé** — chacun se déguise en objet du bar (bouteille, chaise, bille géante) ; le chercheur frappe à la queue et frapper un vrai objet lui coûte du temps. Twist : les déguisés ne bougent que quand le chercheur leur tourne le dos.
+
+#### Nouveaux modes
+
+- **B-I-L-L-E** — un joueur réussit un coup annoncé, les autres doivent le refaire ; un raté donne une lettre, un mot complet élimine. *Pourquoi :* du contenu sans fin à partir d'une seule règle, à 4 au tour par tour.
+- **Shuffle du comptoir** — on fait glisser sa bille sur le comptoir du bar ; la plus près du bord sans tomber gagne, on peut pousser les autres. *Pourquoi :* le décor sert de table.
+- **Pyramide** — des billes empilées ; chacun son tour, on en retire une au tir sans faire tomber les autres ; celui qui fait tout s'effondrer perd.
+- **Billard à l'aveugle** (prison, coop 2 contre 2) — noir complet, seule la lampe torche tenue par le coéquipier éclaire la table : il est tes yeux.
+
+#### Méta-jeux (au-dessus de Boogie Night)
+
+- **La tournée des bars** — une carte relie les lieux (bar, prison, base spatiale, puis les autres salles) comme un plateau ; le gagnant de chaque partie choisit l'étape suivante, qui impose sa salle et ses modificateurs ; la soirée se gagne en arrivant le premier au dernier bar. *Pourquoi :* la boucle méta « voyager d'une dimension à l'autre », rendue jouable. À faire quand le système de dimensions existera.
+- **L'ardoise** — chaque partie rapporte des jetons selon la place ; entre deux parties, on les dépense au comptoir : un pouvoir pour la partie suivante, un sabotage sur le premier, une relance de la roue, une « tournée générale » (un bonus pour tous, choisi par le lanceur). *Pourquoi :* un enjeu entre les parties.
+- **Le patron** — le dernier au classement devient le patron du bar pour la partie suivante : il ne joue pas mais déclenche les événements (panne de courant, table qui penche, happy hour). *Pourquoi :* le perdant reste dans le jeu, et ça teste le Némésis « incarné par l'autre joueur » de la prison.
+- **Les gages** — le perdant tire un handicap pour la partie suivante (queue courte, chapeau géant qui cache la vue, commandes inversées 10 s). *Pourquoi :* les moments qu'on raconte après, en réutilisant les attaques existantes.
+- **Le draft de règles** — avant chaque partie, chaque joueur choisit une carte de règle parmi trois, et elles s'additionnent ; à la cinquième partie, c'est n'importe quoi, et c'est voulu.
+- **Les paris** — pendant le tir d'un autre, on parie des jetons (« il rate », « il rentre ») : le *Pronostic* du rythme de partie, branché sur l'ardoise.
+- **Étoiles bonus de fin de soirée** — le plus de fautes, le plus long tir, le plus de ragdolls subis, « le traître » (le plus de billes rentrées pour les autres).
+- **Le mur des légendes** — des stats gardées d'une soirée à l'autre entre les mêmes amis, sur un mur du bar : records, rivalités, « némésis de J2 ». *Pourquoi :* donne envie de rejouer avec le même groupe.
+- **Par où commencer** — l'ardoise, le patron et les gages : ils s'ajoutent à Boogie Night sans toucher aux modes, et chacun règle un problème des party games (enjeu entre les parties, perdant gardé dans le jeu, moments à raconter).
 
 ### Expérience joueur
 
