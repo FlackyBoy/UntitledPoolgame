@@ -23,6 +23,10 @@ namespace UntitledPoolGame.Core
         public bool hasInsert;
         public RoomModuleKind insertKind;
         public int insertVariant;
+        [Tooltip("Palette d'où vient la pièce (vide = celle de la salle).")]
+        public PrefabPalette palette;
+        [Tooltip("Pièce tournée de 180° (un modèle dont la face visible est de l'autre côté).")]
+        public bool flipped;
 
         public int Span => Mathf.Max(1, span);
     }
@@ -34,6 +38,19 @@ namespace UntitledPoolGame.Core
         public Vector3 position;   // center of its footprint, on this room's floor
         public float uphillYaw;    // world direction it climbs toward (degrees, 0 = +Z)
         public int variant;
+        public PrefabPalette palette;   // null = the room's
+    }
+
+    // One floor tile, ceiling tile or pillar of another variant than the
+    // room's. position: centre of its cell (tiles) or the outline point
+    // (pillars), compared on the horizontal.
+    [Serializable]
+    public struct RoomPieceVariant
+    {
+        public RoomModuleKind kind;
+        public Vector3 position;
+        public int variant;
+        public PrefabPalette palette;   // null = the room's part palette (FloorPalette…)
     }
 
     // A room traced with the Level Maker: its outline, which variant of each
@@ -75,7 +92,62 @@ namespace UntitledPoolGame.Core
         [Tooltip("Modules du bord du vide laissés ouverts (arrivée d'un escalier), numérotés le long du vide.")]
         public List<int> openRailingCells = new List<int>();
 
+        [Tooltip("Dalles de sol, de plafond et poteaux remplacés un par un (autre variante que celle de la salle).")]
+        public List<RoomPieceVariant> pieceVariants = new List<RoomPieceVariant>();
+        [Tooltip("Palette d'où viennent le sol, le plafond, les poteaux (vide = celle de la salle) : une salle Greybox avec le sol d'un autre kit.")]
+        public PrefabPalette floorPalette, ceilingPalette, pillarPalette;
+
+        public PrefabPalette FloorPalette => floorPalette != null ? floorPalette : palette;
+        public PrefabPalette CeilingPalette => ceilingPalette != null ? ceilingPalette : palette;
+        public PrefabPalette PillarPalette => pillarPalette != null ? pillarPalette : palette;
+
+        // The palette a part of the room comes from (Floor, Ceiling, Pillar;
+        // the room's for the rest).
+        public PrefabPalette PartPalette(RoomModuleKind kind) => kind switch
+        {
+            RoomModuleKind.Floor => FloorPalette,
+            RoomModuleKind.Ceiling => CeilingPalette,
+            RoomModuleKind.Pillar => PillarPalette,
+            _ => palette,
+        };
+
+        // A piece's own palette, or the one it falls back to.
+        public PrefabPalette Own(PrefabPalette piecePalette, RoomModuleKind kind) => piecePalette != null ? piecePalette : PartPalette(kind);
+
         public bool HasVoid => floorVoid != null && floorVoid.Count > 2;
+
+        // Within 5 cm on the horizontal: tiles are at least tens of cm wide.
+        private static bool SameSpot(Vector3 a, Vector3 b)
+        {
+            float dx = a.x - b.x, dz = a.z - b.z;
+            return dx * dx + dz * dz < 0.0025f;
+        }
+
+        // The variant (and palette) of the piece of that kind at position:
+        // its own, else fallback and the part's palette.
+        public int PieceVariant(RoomModuleKind kind, Vector3 position, int fallback, out PrefabPalette from)
+        {
+            from = PartPalette(kind);
+            if (pieceVariants == null) return fallback;
+            foreach (RoomPieceVariant p in pieceVariants)
+                if (p.kind == kind && SameSpot(p.position, position))
+                {
+                    from = Own(p.palette, kind);
+                    return p.variant;
+                }
+            return fallback;
+        }
+
+        // roomVariant: the room's own variant for that kind; the room's own
+        // choice (same variant, same palette) isn't stored.
+        public void SetPieceVariant(RoomModuleKind kind, Vector3 position, int variant, PrefabPalette from, int roomVariant)
+        {
+            pieceVariants ??= new List<RoomPieceVariant>();
+            pieceVariants.RemoveAll(p => p.kind == kind && SameSpot(p.position, position));
+            PrefabPalette part = PartPalette(kind);
+            if (variant != roomVariant || (from != null && from != part))
+                pieceVariants.Add(new RoomPieceVariant { kind = kind, position = position, variant = variant, palette = from == part ? null : from });
+        }
 
         public int SegmentCount => points.Count < 2 ? 0 : closed ? points.Count : points.Count - 1;
 
@@ -116,7 +188,9 @@ namespace UntitledPoolGame.Core
         public void SetCell(RoomOpening entry)
         {
             openings.RemoveAll(o => o.segment == entry.segment && o.cell == entry.cell);
-            bool isDefault = entry.kind == RoomModuleKind.Wall && entry.variant == wallVariant && entry.Span == 1 && !entry.hasInsert;
+            if (entry.palette == palette) entry.palette = null;
+            bool isDefault = entry.kind == RoomModuleKind.Wall && entry.variant == wallVariant && entry.Span == 1 && !entry.hasInsert
+                             && entry.palette == null && !entry.flipped;
             if (!isDefault) openings.Add(entry);
         }
 

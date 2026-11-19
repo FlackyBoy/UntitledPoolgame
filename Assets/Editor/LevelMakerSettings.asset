@@ -20,7 +20,7 @@ MonoBehaviour:
   addTemporaryFloor: 1
   palette: {fileID: 11400000, guid: 3c1fa38ae9893af4a9d3010402711bfb, type: 2}
   gridStep: 0.5
-  floorHeight: 0
+  floorHeight: 3
   cueCount: 2
   tableRotationStep: 90
   propWheelDegrees: 2
