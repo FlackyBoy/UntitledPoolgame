@@ -23,6 +23,7 @@ namespace UntitledPoolGame.Core
             Fill(halvesLayer);
             halvesLayer.pickingMode = PickingMode.Ignore;
             for (int i = 0; i < halves.Length; i++) halves[i] = BuildHalf(i);
+            BuildFree();
 
             BuildEnd();
         }

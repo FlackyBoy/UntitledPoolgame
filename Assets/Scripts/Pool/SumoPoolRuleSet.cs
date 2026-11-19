@@ -6,16 +6,18 @@ using UntitledPoolGame.Interaction;
 namespace UntitledPoolGame.Pool
 {
     // Sumo Pool: each player is a ball on a small square table with six
-    // pockets, pushing the other in. A ball that falls is a point for the other
-    // player, however it fell; both go back to their start for the next round,
-    // first to Points To Win.
+    // pockets, pushing the others in. Two to four players: a ball that falls is
+    // out of the round, however it fell, and the last one on the table scores
+    // (with two, the other player). Everyone goes back to their start for the
+    // next round, first to Points To Win. A player who joins during the match
+    // gets a ball and a new round starts.
     //
     // Derived from SpeedPoolRuleSet for a cue ball each and because
     // PoolMatchRules sends the pots to its HandlePocketed. The other balls are
     // put away. The real table stays under the new one for its felt, but hidden
     // and with its pockets off (SumoPoolTable). Speed Pool only (no turns), no
     // powers (PoolMatchSetup). PoolMatchRules calls Tick every frame.
-    public class SumoPoolRuleSet : SpeedPoolRuleSet
+    public class SumoPoolRuleSet : SpeedPoolRuleSet, IMatchScoreboard
     {
         public enum Phase { Countdown, Play, RoundEnd, Over }
 
@@ -26,25 +28,39 @@ namespace UntitledPoolGame.Pool
         public static SumoPoolSettings Settings =>
             cfg != null ? cfg : cfg = PoolSettingsLoader.LoadOrDefault<SumoPoolSettings>("SumoPoolSettings");
 
-        protected readonly SumoPoolBall[] balls = new SumoPoolBall[2];
-        private readonly int[] points = new int[2];
-        private readonly PlayerInput[] waitedFor = new PlayerInput[2];
-        private readonly int[] readyFrame = new int[2];
+        protected readonly SumoPoolBall[] balls = new SumoPoolBall[PoolMatchRules.MaxPlayers];
+        private readonly int[] points = new int[PoolMatchRules.MaxPlayers];
+        private readonly bool[] fallen = new bool[PoolMatchRules.MaxPlayers];
+        private readonly PlayerInput[] waitedFor = new PlayerInput[PoolMatchRules.MaxPlayers];
+        private readonly int[] readyFrame = new int[PoolMatchRules.MaxPlayers];
+        // Balls in play (players 0 to ballCount - 1).
+        private int ballCount;
+        private PoolBall cueTemplate;
+        // Where the balls start, kept for a player who joins later.
+        private Vector3 tableCenter, alongTable;
+        private float startRadius, tableScale;
         // What's put away for the match, to bring back.
         private readonly List<Renderer> hiddenRenderers = new List<Renderer>();
         private readonly List<Cue> hiddenCues = new List<Cue>();
         private SumoPoolTable table;
         private float phaseTime;
         private int winner;
+        private int lastScorer = -1;
         private bool ready;
 
         public Phase CurrentPhase { get; private set; }
+        // No groups: a player who joins gets a ball and a new round (AddLatePlayers).
+        public override bool SharesBallsOut => false;
         // The HUD uses the score plate below rather than one of its own.
         public virtual bool ShowsPlate => true;
         // What a mode built on this one changes (SumoBilliardRuleSet).
         protected virtual bool KeepsTableBall(PoolBall ball) => false;
         protected virtual void PlaceTableBalls(Vector3 center, Quaternion rotation, float scale) { }
         protected virtual void UpdateRules(PoolMatchRules match) { }
+        // The table balls' rolling friction (m/s², RollingFrictionOverride),
+        // which a player's ball gets too with Pool Ball Physics. -1 = the
+        // normal table's.
+        protected virtual float TableBallFriction(float scale) => -1f;
 
         private int CountdownLeft => Mathf.CeilToInt(Mathf.Max(0f, Settings.countdown - phaseTime));
 
@@ -62,7 +78,7 @@ namespace UntitledPoolGame.Pool
             }
             Current = this;
 
-            // Two players or nothing, as in Pocket Size.
+            // Two players at least, as in Pocket Size.
             if (PlayerInput.all.Count < 2)
                 Debug.Log($"[SumoPool] Un seul joueur : écran partagé. {Core.SplitScreenCheatSpawner.JoinPlayer()}");
 
@@ -77,28 +93,61 @@ namespace UntitledPoolGame.Pool
             HideCues();
             table = SumoPoolTable.Build(surface, tableRoot, s, first.Radius * s.ballScale);
 
-            Vector3 center = table.transform.position;
-            Vector3 along = surface.transform.rotation * Vector3.right;
-            float offset = table.HalfSide * 0.5f;
-            balls[0] = PrepareBall(first, 0, center - along * offset, s.player1Color, center, surface.TableScale);
-            balls[1] = PrepareBall(second, 1, center + along * offset, s.player2Color, center, surface.TableScale);
-            balls[0].Opponent = balls[1];
-            balls[1].Opponent = balls[0];
-            PlaceTableBalls(center, surface.transform.rotation, surface.TableScale);
+            tableCenter = table.transform.position;
+            alongTable = surface.transform.rotation * Vector3.right;
+            startRadius = table.HalfSide * 0.5f;
+            tableScale = surface.TableScale;
+            // Copied before the first ball is changed (size, colour, its
+            // SumoPoolBall): what players 3 and 4 are cloned from.
+            cueTemplate = Object.Instantiate(first, first.transform.parent);
+            cueTemplate.name = "CueBall_Template (Sumo Pool)";
+            cueTemplate.gameObject.SetActive(false);
+            balls[0] = PrepareBall(first, 0, tableCenter, tableScale);
+            balls[1] = PrepareBall(second, 1, tableCenter, tableScale);
+            ballCount = 2;
+            for (int p = 2; p < match.PlayerCount; p++) AddBall(p);
+            PlaceStarts();
+            PlaceTableBalls(tableCenter, surface.transform.rotation, tableScale);
 
             CurrentPhase = Phase.Countdown;
             ready = true;
-            for (int p = 0; p < 2; p++) TryBind(p);
+            for (int p = 0; p < ballCount; p++) TryBind(p);
         }
 
-        private static SumoPoolBall PrepareBall(PoolBall ball, int player, Vector3 onFelt, Color color, Vector3 center, float scale)
+        // Players 3 and 4: a clone of the table's cue ball, gone with the
+        // match (TearDown).
+        private void AddBall(int player)
+        {
+            PoolBall clone = Object.Instantiate(cueTemplate, cueTemplate.transform.parent);
+            clone.gameObject.SetActive(true);
+            clone.name = $"CueBall_P{player + 1} (Sumo Pool)";
+            balls[player] = PrepareBall(clone, player, tableCenter, tableScale);
+            ballCount = player + 1;
+        }
+
+        // Evenly round the middle, J1 on one side: with two, J1 and J2 face
+        // each other across the table, as before.
+        private void PlaceStarts()
+        {
+            for (int p = 0; p < ballCount; p++)
+            {
+                Vector3 dir = Quaternion.AngleAxis(360f * p / ballCount, Vector3.up) * -alongTable;
+                PoolBall ball = balls[p].Ball;
+                ball.SetSpawn(tableCenter + dir * startRadius + Vector3.up * ball.Radius);
+                balls[p].BackToStart();
+            }
+        }
+
+        // Its start is set by PlaceStarts.
+        private SumoPoolBall PrepareBall(PoolBall ball, int player, Vector3 center, float scale)
         {
             SumoPoolSettings s = Settings;
             ball.SetSize(s.ballScale, 0f);
-            // Its slowing down is all SumoPoolBall's: this one would add a constant
-            // on top, down to a sudden stop.
-            ball.RollingFrictionOverride = 0f;
-            ball.MakePlayerCueBall(player, onFelt + Vector3.up * ball.Radius, color);
+            // Pool physics: the felt slows it as it does the table's balls.
+            // Arcade: its slowing down is all SumoPoolBall's, this one would add
+            // a constant on top, down to a sudden stop.
+            ball.RollingFrictionOverride = s.poolBallPhysics ? TableBallFriction(scale) : 0f;
+            ball.MakePlayerCueBall(player, center + Vector3.up * ball.Radius, s.PlayerColor(PlayerBallGroups.ColourOf(player)));
             SumoPoolBall sumo = ball.gameObject.AddComponent<SumoPoolBall>();
             sumo.Prepare(ball, s, scale, center);
             return sumo;
@@ -149,16 +198,29 @@ namespace UntitledPoolGame.Pool
 
         protected virtual void TearDown()
         {
-            foreach (SumoPoolBall sumo in balls)
+            for (int p = 0; p < balls.Length; p++)
             {
+                SumoPoolBall sumo = balls[p];
                 if (sumo == null) continue;
+                balls[p] = null;
                 sumo.Release();
                 PoolBall ball = sumo.Ball;
                 Object.Destroy(sumo);
+                // The clones of players 3 and 4 (inactive first: the next
+                // mode's Setup, this same frame, would still find them).
+                if (p >= 2)
+                {
+                    ball.gameObject.SetActive(false);
+                    Object.Destroy(ball.gameObject);
+                    continue;
+                }
                 ball.RollingFrictionOverride = -1f;
                 ball.ResetSize();
                 ball.ResetToSpawn();
             }
+            ballCount = 0;
+            if (cueTemplate != null) Object.Destroy(cueTemplate.gameObject);
+            cueTemplate = null;
             if (table != null)
             {
                 // Inactive first: the next mode's Setup, this same frame, would
@@ -207,7 +269,8 @@ namespace UntitledPoolGame.Pool
             if (!ready || match.GameOver) return;
             SumoPoolSettings s = Settings;
             phaseTime += Time.deltaTime;
-            for (int p = 0; p < 2; p++) TryBind(p);
+            if (match.PlayerCount > ballCount && CurrentPhase != Phase.Over) AddLatePlayers(match);
+            for (int p = 0; p < ballCount; p++) TryBind(p);
             UpdateRules(match);
 
             switch (CurrentPhase)
@@ -225,7 +288,7 @@ namespace UntitledPoolGame.Pool
 
                 case Phase.Over:
                     if (phaseTime < s.endDelay) break;
-                    if (s.debugLogs) Debug.Log($"[SumoPool] Victoire de J{winner + 1} ({points[0]}-{points[1]}).");
+                    if (s.debugLogs) Debug.Log($"[SumoPool] Victoire de J{winner + 1} ({DescribePoints()}).");
                     match.Win(winner);
                     break;
             }
@@ -237,17 +300,25 @@ namespace UntitledPoolGame.Pool
             phaseTime = 0f;
         }
 
+        // Someone joined (C+P, a free gamepad): their ball, everyone back to a
+        // start spread for the new count, and a new round from the countdown.
+        private void AddLatePlayers(PoolMatchRules match)
+        {
+            for (int p = ballCount; p < match.PlayerCount; p++) AddBall(p);
+            if (Settings.debugLogs) Debug.Log($"[SumoPool] {ballCount} joueurs : nouvelle manche.");
+            StartRound();
+        }
+
         protected void SetControllable(bool controllable)
         {
-            balls[0].Controllable = controllable;
-            balls[1].Controllable = controllable;
+            for (int p = 0; p < ballCount; p++) balls[p].Controllable = controllable;
         }
 
         private void StartRound()
         {
             SetControllable(false);
-            balls[0].BackToStart();
-            balls[1].BackToStart();
+            System.Array.Clear(fallen, 0, fallen.Length);
+            PlaceStarts();
             Enter(Phase.Countdown);
         }
 
@@ -258,26 +329,81 @@ namespace UntitledPoolGame.Pool
         public override void HandlePocketed(PoolMatchRules match, PoolBall ball)
         {
             int p = ball.CueOwner;
-            if (p < 0 || p > 1) return;
+            if (p < 0 || p >= ballCount) return;
             if (ball.LastPocket != null) ball.FallIntoTableHole(ball.LastPocket.transform.position, Settings.sinkTime);
-            if (CurrentPhase != Phase.Play) return;
+            if (CurrentPhase != Phase.Play || fallen[p]) return;
+            fallen[p] = true;
 
-            points[1 - p]++;
-            if (Settings.debugLogs) Debug.Log($"[SumoPool] J{p + 1} tombe : {points[0]}-{points[1]}.", ball);
-            if (points[1 - p] < Settings.pointsToWin)
+            // Out of the round, which goes on while two or more are left.
+            int standing = -1, left = 0;
+            for (int q = 0; q < ballCount; q++)
+                if (!fallen[q]) { left++; standing = q; }
+            if (left > 1)
+            {
+                if (Settings.debugLogs) Debug.Log($"[SumoPool] J{p + 1} tombe : encore {left} sur la table.", ball);
+                return;
+            }
+            if (standing < 0) return;
+
+            points[standing]++;
+            lastScorer = standing;
+            if (Settings.debugLogs) Debug.Log($"[SumoPool] J{p + 1} tombe : point pour J{standing + 1} ({DescribePoints()}).", ball);
+            if (points[standing] < Settings.pointsToWin)
             {
                 Enter(Phase.RoundEnd);
                 return;
             }
-            winner = 1 - p;
+            winner = standing;
             SetControllable(false);
             Enter(Phase.Over);
         }
 
+        // "2-1" with two players, "2-1-0-1" with four (console).
+        private string DescribePoints()
+        {
+            string text = points[0].ToString();
+            for (int q = 1; q < ballCount; q++) text += "-" + points[q];
+            return text;
+        }
+
+        // The best score among the others: with two, the other player's.
+        private int BestOtherPoints(int player)
+        {
+            int best = 0;
+            for (int q = 0; q < ballCount; q++)
+                if (q != player) best = Mathf.Max(best, points[q]);
+            return best;
+        }
+
         // ---------- HUD ----------
 
+        // The free quarter (IMatchScoreboard).
+        public int ScoreboardPlayers => ballCount;
+        public int Points(int player) => player >= 0 && player < ballCount ? points[player] : 0;
+        public int PointsToWin => Settings.pointsToWin;
+        public bool IsOut(int player) => player >= 0 && player < ballCount && fallen[player];
+        public int LastScorer => lastScorer;
+        int IMatchScoreboard.CountdownLeft => CountdownLeft;
+        public ScoreboardMoment Moment => CurrentPhase switch
+        {
+            Phase.Countdown => ScoreboardMoment.Countdown,
+            Phase.RoundEnd => ScoreboardMoment.RoundEnd,
+            Phase.Over => ScoreboardMoment.Over,
+            _ => ScoreboardMoment.Play,
+        };
+
+        // The small square table, not the real one under it.
+        public override bool GetOverview(out Vector3 center, out Vector2 halfSize, out Quaternion rotation)
+        {
+            if (table == null) return base.GetOverview(out center, out halfSize, out rotation);
+            center = tableCenter;
+            halfSize = new Vector2(table.HalfSide, table.HalfSide);
+            rotation = Quaternion.LookRotation(Vector3.Cross(alongTable, Vector3.up), Vector3.up);
+            return true;
+        }
+
         public virtual string DescribeScore(int player) =>
-            string.Format(Settings.scoreFormat, points[player], points[1 - player]);
+            string.Format(Settings.scoreFormat, points[player], BestOtherPoints(player));
 
         public virtual string DescribeRound() => CurrentPhase == Phase.Countdown
             ? string.Format(Settings.countdownFormat, CountdownLeft)
@@ -287,7 +413,7 @@ namespace UntitledPoolGame.Pool
         public int PlateKey(int player)
         {
             int countdown = CurrentPhase == Phase.Countdown ? CountdownLeft : 0;
-            return ((points[player] * 32 + points[1 - player]) * 16 + countdown) * 2 + (CurrentPhase == Phase.Countdown ? 1 : 0);
+            return ((points[player] * 32 + BestOtherPoints(player)) * 16 + countdown) * 2 + (CurrentPhase == Phase.Countdown ? 1 : 0);
         }
 
         public override string DescribePlayer(int player) => $"{DescribeScore(player)} · {DescribeRound()}";

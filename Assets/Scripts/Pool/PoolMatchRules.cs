@@ -22,6 +22,23 @@ namespace UntitledPoolGame.Pool
         public bool TraceShots => traceShots;
 
         public int CurrentPlayer { get; private set; }
+
+        // Split screen goes up to four players. Per-player state is sized for
+        // the most a match can have; PlayerCount is how many this one has.
+        public const int MaxPlayers = 4;
+
+        // Players in this match: the ones who joined, at least two (a solo
+        // player still plays both sides, J2 joins later), and no more than the
+        // mode is written for (PoolMatchSetup.MaxPlayers).
+        public int PlayerCount =>
+            Mathf.Clamp(PlayerInput.all.Count, 2, MatchStarted ? PoolMatchSetup.MaxPlayers(Mode, Setup.type) : 2);
+
+        // Whose turn comes after this player's (turn order J1, J2, J3, J4).
+        public int NextPlayer(int player) => (player + 1) % PlayerCount;
+
+        // Who an attack power from this player hits: the next player, an
+        // opponent in 2 against 2 too. Picking the target is lot 6's.
+        public int TargetOf(int player) => NextPlayer(player);
         public bool GameOver { get; private set; }
         public int Winner { get; private set; } = -1;
         public bool MatchStarted { get; private set; }
@@ -36,6 +53,8 @@ namespace UntitledPoolGame.Pool
         public bool BallInHand { get; private set; }
 
         private PoolRuleSet ruleSet;
+        // Speed Pool and the modes built on it (null otherwise), for the HUD.
+        public SpeedPoolRuleSet SpeedPool => ruleSet as SpeedPoolRuleSet;
 
         // Speed Pool: no turns, both players shoot whenever their own cue ball
         // is still. No shot is ever resolved: the rule set judges each pot as
@@ -54,11 +73,19 @@ namespace UntitledPoolGame.Pool
         // button launches (switched with the wheel / D-pad).
         public const int PowerSlots = 2;
         public const int MaxPowerLevel = 2;
-        private readonly PoolPower[,] heldPowers = new PoolPower[2, PowerSlots];
-        private readonly int[,] heldLevels = { { 1, 1 }, { 1, 1 } };
-        private readonly int[] selectedSlot = new int[2];
+        private readonly PoolPower[,] heldPowers = new PoolPower[MaxPlayers, PowerSlots];
+        private readonly int[,] heldLevels = NewLevels();
+        // A power picked up starts at level 1.
+        private static int[,] NewLevels()
+        {
+            var levels = new int[MaxPlayers, PowerSlots];
+            for (int p = 0; p < MaxPlayers; p++)
+                for (int s = 0; s < PowerSlots; s++) levels[p, s] = 1;
+            return levels;
+        }
+        private readonly int[] selectedSlot = new int[MaxPlayers];
         // Set by Boosted Shot, read once by the next shot.
-        private readonly float[] shotPowerMultiplier = { 1f, 1f };
+        private readonly float[] shotPowerMultiplier = { 1f, 1f, 1f, 1f };
 
         private readonly List<PoolBall> pocketedThisShot = new List<PoolBall>();
         // Pocket each ball of this shot fell into (8-ball call check).
@@ -81,6 +108,8 @@ namespace UntitledPoolGame.Pool
         private bool pendingStart;
         private bool pendingRestart;
         private PoolMatchSetup? restartSetup;
+        // Players the balls were shared out for (PlayerBallGroups).
+        private int playersAtStart = 2;
 
         // Set by a menu drawn elsewhere (the Synthèse menu, UI Toolkit): the
         // provisional OnGUI mode select is then not drawn.
@@ -118,6 +147,16 @@ namespace UntitledPoolGame.Pool
 
         // For the HUD: 8-ball group (Cue = undecided or not 8-ball), 14.1 score.
         public BallGroup GetGroup(int player) => ruleSet?.GroupOf(player) ?? BallGroup.Cue;
+
+        // Points and rounds of the mode, null if it has none (free quarter).
+        public IMatchScoreboard Scoreboard => ruleSet as IMatchScoreboard;
+
+        public bool GetOverview(out Vector3 center, out Vector2 halfSize, out Quaternion rotation)
+        {
+            if (ruleSet != null) return ruleSet.GetOverview(out center, out halfSize, out rotation);
+            center = Vector3.zero; halfSize = Vector2.zero; rotation = Quaternion.identity;
+            return false;
+        }
         public bool TryGetScore(int player, out int score, out int target)
         {
             score = target = 0;
@@ -276,7 +315,9 @@ namespace UntitledPoolGame.Pool
         public bool IsOwnBall(int player, PoolBall ball)
         {
             if (ball.IsCueBall) return false;
-            if (ruleSet is SpeedPoolRuleSet) return ball.Group == GetGroup(player);
+            // Speed Pool: their side's, and the 8 once that's empty.
+            if (ruleSet is SpeedPoolRuleSet speed)
+                return PlayerBallGroups.Owns(player, ball) || (ball.Group == BallGroup.Eight && speed.IsGoingForEight(player));
             if (!(ruleSet is EightBallRuleSet)) return true;
             if (IsShootingForEightBall(player)) return ball.Group == BallGroup.Eight;
             BallGroup group = GetGroup(player);
@@ -295,7 +336,14 @@ namespace UntitledPoolGame.Pool
         public PotMeaning MeaningOfPot(PoolBall ball)
         {
             // Speed Pool: good when the shooter who sent it in (PotOwner) owns it.
-            if (IsSimultaneous) return SpeedPoolRuleSet.OwnerOf(ball) == PotOwner(ball) ? PotMeaning.Good : PotMeaning.Opponent;
+            if (IsSimultaneous)
+            {
+                int owner = PotOwner(ball);
+                if (IsOwnBall(owner, ball)) return PotMeaning.Good;
+                // The 8 ends the match in 8-ball (SpeedPoolRuleSet.IsGoingForEight).
+                bool eightCounts = ball.Group == BallGroup.Eight && ruleSet.GetType() == typeof(SpeedPoolRuleSet);
+                return eightCounts ? PotMeaning.EarlyEight : PotMeaning.Opponent;
+            }
             if (IsOwnBall(CurrentPlayer, ball)) return PotMeaning.Good;
             // Own cue balls in turns: the 8 never loses on the spot there.
             if (HasPlayerCueBalls) return PotMeaning.Opponent;
@@ -411,14 +459,14 @@ namespace UntitledPoolGame.Pool
         // again (or potted). The effects that last "the opponent's turn" in
         // the other modes last until the end of the target's next shot.
 
-        private readonly PoolBall[] rollingCueBall = new PoolBall[2];
-        private readonly float[] rollingSince = new float[2];
+        private readonly PoolBall[] rollingCueBall = new PoolBall[MaxPlayers];
+        private readonly float[] rollingSince = new float[MaxPlayers];
         // The cue ball reads as still for a frame or two after the strike.
         private const float MinShotTime = 0.3f;
 
         private void BeginPlayerShot(PoolBall cueBall)
         {
-            int p = cueBall != null ? Mathf.Clamp(cueBall.CueOwner, 0, 1) : 0;
+            int p = cueBall != null ? Mathf.Clamp(cueBall.CueOwner, 0, MaxPlayers - 1) : 0;
             if (rollingCueBall[p] != null) EndPlayerShot(p);
             rollingCueBall[p] = cueBall;
             rollingSince[p] = Time.time;
@@ -441,7 +489,7 @@ namespace UntitledPoolGame.Pool
 
         private void UpdatePlayerShots()
         {
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < MaxPlayers; p++)
             {
                 PoolBall ball = rollingCueBall[p];
                 if (ball == null || Time.time - rollingSince[p] < MinShotTime) continue;
@@ -605,6 +653,13 @@ namespace UntitledPoolGame.Pool
             }
 
             if (!MatchStarted || GameOver) return;
+            // Someone joined mid-match (no menu): the balls are shared out again.
+            if (ruleSet.SharesBallsOut && PlayerCount != playersAtStart)
+            {
+                if (traceShots) Debug.Log($"[Match] {PlayerCount} joueurs au lieu de {playersAtStart} : la partie repart.", this);
+                pendingRestart = true;
+                return;
+            }
             // The mode's own clock: rounds, falls, the cup, the pins...
             ruleSet.Tick(this);
             if (IsSimultaneous)
@@ -632,7 +687,11 @@ namespace UntitledPoolGame.Pool
             wasMoving = moving;
         }
 
-        public void SwitchTurn()
+        public void SwitchTurn() => SwitchTurnTo(NextPlayer(CurrentPlayer));
+
+        // The turn to a given player rather than the next one (Play
+        // Anywhere: the farthest from the cup plays, at any count).
+        public void SwitchTurnTo(int next)
         {
             // Turn-bound debuffs end with the turn (normally already done by
             // ExitAim).
@@ -654,7 +713,7 @@ namespace UntitledPoolGame.Pool
 
             CloseTableHoles(turnEnding: true, shotResolved: false);
 
-            CurrentPlayer = 1 - CurrentPlayer;
+            CurrentPlayer = next;
 
             LaunchPendingTableHoles();
 
@@ -696,17 +755,15 @@ namespace UntitledPoolGame.Pool
             ClearHeldPowers();
             ClearTableHoles();
             MatchGeneration++;
-            shotPowerMultiplier[0] = 1f;
-            shotPowerMultiplier[1] = 1f;
-
-            visionImpaired[0] = false;
-            visionImpaired[1] = false;
-            visionImpairPending[0] = false;
-            visionImpairPending[1] = false;
-            invertedControls[0] = false;
-            invertedControls[1] = false;
-            invertedControlsPending[0] = false;
-            invertedControlsPending[1] = false;
+            for (int p = 0; p < MaxPlayers; p++)
+            {
+                shotPowerMultiplier[p] = 1f;
+                visionImpaired[p] = visionImpairPending[p] = false;
+                invertedControls[p] = invertedControlsPending[p] = false;
+                ballBlastArmed[p] = ballBlastRolling[p] = null;
+                rollingCueBall[p] = null;
+                DisarmMagnet(p);
+            }
 
             if (closedPocket != null) closedPocket.SetClosed(false);
             closedPocket = null;
@@ -714,12 +771,7 @@ namespace UntitledPoolGame.Pool
             EndIdenticalGroups();
             pendingIdenticalGroups = null;
             calledEightBallPocket = null;
-            ballBlastArmed[0] = ballBlastArmed[1] = null;
             ballBlastThisShot = null;
-            ballBlastRolling[0] = ballBlastRolling[1] = null;
-            rollingCueBall[0] = rollingCueBall[1] = null;
-            DisarmMagnet(0);
-            DisarmMagnet(1);
             EndMagnetShot();
 
             pocketedThisShot.Clear();
@@ -743,7 +795,7 @@ namespace UntitledPoolGame.Pool
         {
             Setup = setup.Normalized();
             ruleSet = CreateRuleSet(Setup);
-            meleeUntil[0] = meleeUntil[1] = 0f;
+            System.Array.Clear(meleeUntil, 0, meleeUntil.Length);
             // Normal balls again if the last match was Hungry Hole.
             if (!(ruleSet is HungryHoleRuleSet)) HungryHoleRuleSet.Cleanup();
             // No chain left from a Snake Pool match (Snake Pool clears its own).
@@ -764,7 +816,14 @@ namespace UntitledPoolGame.Pool
             if (!(ruleSet is HideAndSeekRuleSet)) HideAndSeekRuleSet.Cleanup();
             // One shared cue ball again after a match with one each.
             if (!(ruleSet is SpeedPoolRuleSet)) SpeedPoolRuleSet.Cleanup();
+            // Who owns which balls, for this many players (MatchStarted is
+            // still false here: PlayerCount would say two).
+            playersAtStart = Mathf.Clamp(PlayerInput.all.Count, 2, PoolMatchSetup.MaxPlayers(Mode, Setup.type));
+            // 2 v 2 only where the menu offers it (the choice stays set for the other modes).
+            PlayerBallGroups.Configure(ruleSet.SharesBallsOut ? playersAtStart : 2, Setup.teams && PoolMatchSetup.HasTeamChoice(Mode, Setup.type));
+            SpeedPoolRuleSet.FitToPlayers(PlayerBallGroups.Players);
             ruleSet.Setup(this);
+            PlayerTeamMarks.Refresh();
             MatchStarted = true;
             // The living holes open with the rack (Rejouer comes through here too).
             if (Mode == PoolGameMode.CatchTheHole) CatchTheHole.Ensure().Begin();

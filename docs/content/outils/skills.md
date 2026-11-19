@@ -12,6 +12,7 @@
 | [`/a-tester`](#a-tester) | Préparer une session de test, puis traiter le retour | « Qu'est-ce que je teste ce soir ? » |
 | [`/github`](#github) | Branche, commit, Pull Request, merge | « Prépare un commit » |
 | [`/refacto`](#refacto) | Auditer ou réorganiser le code sans changer le jeu | « Fais un audit de `PoolMatchRules` » |
+| [`/resteafaire`](#resteafaire) | Voir ce qui reste à faire, chantier par chantier | « Qu'est-ce qui reste sur les modes ? » |
 | `/notion-todo` | Tenir la base Notion à jour avec la TODO | « Démarre la tâche Curling Pool » |
 
 Une fonctionnalité passe en général par cette chaîne :
@@ -138,3 +139,56 @@ Le projet n'ayant pas de tests automatisés, le skill suit des règles strictes 
 - **Une refacto par PR**, en petites étapes : d'abord déplacer, ensuite simplifier.
 - **Il vérifie ce que le compilateur ne voit pas** : valeurs d'Inspector, références dans les scènes, ordre d'initialisation en écran partagé.
 - **Il finit par une liste de tests ciblés**, et la PR attend ces tests avant le merge.
+
+## resteafaire
+
+**Pour savoir ce qui reste à faire, sans relire toute la TODO.** Il trie les tâches ouvertes par chantier et ne modifie rien.
+
+Sans argument, il affiche tout de suite tous les chantiers, puis toutes les pistes. Dans la liste des commandes, taper `/resteafaire` montre aussi les noms possibles.
+
+> « Qu'est-ce qui reste à faire ? » ou `/resteafaire`
+
+```text
+== modes : 33
+== pouvoirs : 24
+== billard : 30
+== joueur : 25
+== camera : 6
+== combat : 16
+== menus : 35
+== game-feel : 6
+== level-maker : 20
+== dimensions : 12
+== online : 5
+== equipe : 13
+== pistes (rien n est decide)
+  Pouvoirs candidats [piste] : 21
+  Modes de jeu [piste] : 17
+  …
+  Technique [suggestion de Claude] : 15
+```
+
+Les chiffres se recoupent : une tâche peut compter dans deux chantiers. Claude les résume en une phrase chacun et suggère par où commencer.
+
+Puis on choisit un chantier :
+
+> « Où en sont les modes ? » ou `/resteafaire modes`
+
+Claude relit chaque ligne de la TODO, retire les doublons, et range le chantier en **En cours**, **À tester**, **Pas commencé** et **Envisagé seulement** (les pistes, présentées à part car rien n'y est décidé), avec le numéro de ligne de la TODO.
+
+| Chantier | Ce qu'il couvre |
+|---|---|
+| `modes` | Modes de jeu et leurs lots, type de partie, Boogie Night |
+| `pouvoirs` | Pouvoirs, caisses, jetons, répartition aléatoire |
+| `billard` | Visée, tir, distance de jeu, règles de base |
+| `joueur` | Animations, prise de la queue, objets tenus, ragdoll, manette |
+| `camera` | Caméra de jeu, de placement, en écran partagé |
+| `combat` | Bagarre, coups, jauge, PNJ |
+| `menus` | Menus, HUD, interface, borne d'arcade |
+| `game-feel` | Juice, Feel, secousses, combos |
+| `level-maker` | Créateur de niveau, étages, kits |
+| `dimensions` | Dimensions, environnements, règles loufoques |
+| `online` | Jeu en ligne |
+| `equipe` | Notion, bot Discord, skills, organisation du dépôt |
+
+Aussi : `/resteafaire pistes` (toutes les idées non décidées, une par ligne), `/resteafaire tout` (les tâches principales de chaque chantier), `/resteafaire correctifs` (la liste des bugs à corriger). Un nom approchant marche aussi (« caméra », « ui », « bagarre »).

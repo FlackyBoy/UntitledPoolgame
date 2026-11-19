@@ -18,8 +18,12 @@ namespace UntitledPoolGame.Pool
         private int bouncesLeft;
         private int owner;
 
-        // Where the weapon last tested it for a hit.
+        // Where the weapon last tested it for a hit, and where it was the
+        // test before: with three or four players, it's tested against each
+        // of them in the same frame, along the same stretch.
         public Vector3 LastTested { get; set; }
+        public Vector3 TestedFrom { get; set; }
+        public int TestedFrame { get; set; } = -1;
 
         // A freezing shot: how long a player it hits stays frozen (0 = a plain
         // shot), and a ball.
@@ -55,7 +59,8 @@ namespace UntitledPoolGame.Pool
             FreezePlayerTime = freezePlayerTime;
             this.freezeBallTime = freezeBallTime;
             transform.position = position;
-            LastTested = position;
+            LastTested = TestedFrom = position;
+            TestedFrame = -1;
             dieAt = Time.time + lifetime;
             bouncesLeft = bounces;
             gameObject.SetActive(true);

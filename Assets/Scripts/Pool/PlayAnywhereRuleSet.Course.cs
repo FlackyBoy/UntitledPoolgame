@@ -5,11 +5,11 @@ using UnityEngine;
 namespace UntitledPoolGame.Pool
 {
     // Play Anywhere's match: Courses holes of the scene, played in their
-    // Order. When both players are done with one, the score card shows for
+    // Order. When every player is done with one, the score card shows for
     // Scoreboard Time, then the balls go to the next hole's tees (the
     // placed objects are cleared). After the last one, the lowest total
-    // wins: a tie goes to whoever won more holes, then to whoever holed out
-    // first on the last one.
+    // wins: a tie goes to whoever won more holes (alone with the fewest
+    // strokes on it), then to whoever finished first on the last one.
     public partial class PlayAnywhereRuleSet
     {
         private readonly List<PlayAnywhereHole> course = new List<PlayAnywhereHole>();
@@ -23,8 +23,8 @@ namespace UntitledPoolGame.Pool
         public int TotalOf(int player)
         {
             int total = 0;
-            foreach (PlayAnywhereScoreboard.Row r in results) total += player == 0 ? r.player1 : r.player2;
-            return phase == Phase.Intermission ? total : total + strokes[player];
+            foreach (PlayAnywhereScoreboard.Row r in results) total += r.StrokesOf(player);
+            return phase == Phase.Intermission ? total : total + StrokesOf(player);
         }
 
         // Only the hole being played and its crate are seen (and solid); the
@@ -61,11 +61,13 @@ namespace UntitledPoolGame.Pool
                 Debug.Log($"[PlayAnywhere] Partie de {course.Count} parcours{(wanted > course.Count ? $" (Courses demande {wanted}, la scène n'en a que {course.Count})" : "")} : {string.Join(", ", course.ConvertAll(h => h.name))}.");
         }
 
-        // Both players are done with this hole: the score card, then the
+        // Every player is done with this hole: the score card, then the
         // next hole or the end of the match.
         private void EndCourse()
         {
-            results.Add(new PlayAnywhereScoreboard.Row { course = holeIndex + 1, par = hole.Par, player1 = strokes[0], player2 = strokes[1] });
+            int[] played = new int[ballCount];
+            System.Array.Copy(strokes, played, ballCount);
+            results.Add(new PlayAnywhereScoreboard.Row { course = holeIndex + 1, par = hole.Par, strokes = played });
             phase = Phase.Intermission;
             bool last = holeIndex + 1 >= course.Count;
             int winner = -1;
@@ -79,7 +81,11 @@ namespace UntitledPoolGame.Pool
 
             string title = last ? "Score final" : $"Parcours {holeIndex + 1}/{course.Count} terminé";
             if (settings.debugLogs)
-                Debug.Log($"[PlayAnywhere] {title} : J1 {strokes[0]} coups, J2 {strokes[1]} (par {hole.Par}) ; total J1 {TotalOf(0)}, J2 {TotalOf(1)}. {footer}");
+            {
+                var parts = new string[ballCount];
+                for (int p = 0; p < ballCount; p++) parts[p] = $"J{p + 1} {strokes[p]} coups (total {TotalOf(p)})";
+                Debug.Log($"[PlayAnywhere] {title} (par {hole.Par}) : {string.Join(", ", parts)}. {footer}");
+            }
             PlayAnywhereScoreboard.Show(title, results, course, footer, winner, settings.scoreboardTime);
             match.StartCoroutine(AfterScoreboard(match.MatchGeneration, last, winner));
         }
@@ -99,7 +105,7 @@ namespace UntitledPoolGame.Pool
             holeIndex = index;
             hole = course[index];
             ShowOnly(hole);
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
                 if (balls[p] != null) balls[p].ReturnFromTableHole(hole.TeePosition(p, balls[p].Radius) + Vector3.up * TeeLift);
             ResetHoleState();
             CheckTees();
@@ -115,7 +121,7 @@ namespace UntitledPoolGame.Pool
         // A tee with no ground right under it: the ball falls from it.
         private void CheckTees()
         {
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < ballCount; p++)
             {
                 if (balls[p] == null) continue;
                 Vector3 tee = hole.TeePosition(p, balls[p].Radius);
@@ -148,27 +154,45 @@ namespace UntitledPoolGame.Pool
             return found;
         }
 
-        // Lowest total; tie: more holes won; tie again: first to hole out
-        // on the last hole. why: the tie-break used, for the card.
+        // Lowest total; tie: more holes won (alone with the fewest strokes);
+        // tie again: first to finish the last hole. why: the tie-break
+        // used, for the card.
         private int MatchWinner(out string why)
         {
-            int total1 = 0, total2 = 0, won1 = 0, won2 = 0;
+            var total = new int[ballCount];
+            var won = new int[ballCount];
             foreach (PlayAnywhereScoreboard.Row r in results)
             {
-                total1 += r.player1;
-                total2 += r.player2;
-                if (r.player1 < r.player2) won1++;
-                else if (r.player2 < r.player1) won2++;
+                int best = int.MaxValue, bestPlayer = -1;
+                for (int p = 0; p < ballCount; p++)
+                {
+                    int s = r.StrokesOf(p);
+                    total[p] += s;
+                    if (s < best) { best = s; bestPlayer = p; }
+                    else if (s == best) bestPlayer = -1;
+                }
+                if (bestPlayer >= 0) won[bestPlayer]++;
             }
+            int lowest = int.MaxValue;
+            for (int p = 0; p < ballCount; p++) lowest = Mathf.Min(lowest, total[p]);
+            var tied = new List<int>();
+            for (int p = 0; p < ballCount; p++)
+                if (total[p] == lowest) tied.Add(p);
             why = "";
-            if (total1 != total2) return total1 < total2 ? 0 : 1;
-            if (won1 != won2)
+            if (tied.Count == 1) return tied[0];
+
+            int most = -1;
+            foreach (int p in tied) most = Mathf.Max(most, won[p]);
+            tied.RemoveAll(p => won[p] < most);
+            if (tied.Count == 1)
             {
                 why = " (égalité de coups, plus de parcours gagnés)";
-                return won1 > won2 ? 0 : 1;
+                return tied[0];
             }
             why = " (égalité parfaite, a fini le dernier parcours le premier)";
-            return Mathf.Max(0, firstFinisher);
+            foreach (int p in finishOrder)
+                if (tied.Contains(p)) return p;
+            return tied[0];
         }
 
         private string CourseLabel() => course.Count > 1 ? $"Parcours {holeIndex + 1}/{course.Count} · " : "";

@@ -2,8 +2,9 @@ using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
-    // Which types each mode can be played in (turn based, Speed Pool) and
-    // which one it starts on in the menus. Read through PoolMatchSetup.
+    // Which types each mode can be played in (turn based, Speed Pool), which
+    // one it starts on in the menus, and up to how many players. Read
+    // through PoolMatchSetup.
     [CreateAssetMenu(fileName = "PoolModeSettings", menuName = "Pool/Mode Settings")]
     public class PoolModeSettings : ScriptableObject
     {
@@ -19,6 +20,9 @@ namespace UntitledPoolGame.Pool
             public PoolMatchType defaultType = PoolMatchType.TurnBased;
             [Tooltip("Partie avec pouvoirs : les caisses et la bille à pouvoir ne donnent que les pouvoirs propres à ce mode (ceux qui le listent dans leur Only In Modes). Décoché : aussi les pouvoirs communs (Only In Modes vide).")]
             public bool ownPowersOnly;
+            [Tooltip("Nombre de joueurs au plus pour ce mode, de 2 à 4. 0 = autant que ses règles le permettent (PoolMatchSetup.MaxPlayers) ; une valeur plus haute que ce que les règles savent gérer est ramenée à leur maximum.")]
+            [Range(0, PoolMatchRules.MaxPlayers)]
+            public int maxPlayers;
 
             public ModeEntry(PoolGameMode mode, bool turnBased, bool speedPool, PoolMatchType defaultType, bool ownPowersOnly = false)
             {

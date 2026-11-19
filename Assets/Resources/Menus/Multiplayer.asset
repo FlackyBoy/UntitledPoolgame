@@ -71,7 +71,7 @@ MonoBehaviour:
     borderWidth: 0
     cornerRadius: 14
     text: Local
-    subText: "\xE9cran partag\xE9 \xB7 2 manettes"
+    subText: "\xE9cran partag\xE9 \xB7 2 \xE0 4 manettes"
     textSize: 44
     subTextSize: 24
     textColor: {r: 1, g: 0.96862745, b: 0.8901961, a: 1}

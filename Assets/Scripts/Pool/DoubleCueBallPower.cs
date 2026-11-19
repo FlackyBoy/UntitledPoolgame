@@ -12,6 +12,6 @@ namespace UntitledPoolGame.Pool
         public override PocketSizeRole Role => PocketSizeRole.Giant;
         public override PowerType Type => PowerType.Effect;
 
-        protected override void Apply(PocketSizeRuleSet rules, int player) => rules.AddSecondCueBall(duration);
+        protected override void Apply(PocketSizeRuleSet rules, int player) => rules.AddSecondCueBall(player, duration);
     }
 }

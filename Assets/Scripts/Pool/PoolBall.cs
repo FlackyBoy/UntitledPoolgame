@@ -84,6 +84,26 @@ namespace UntitledPoolGame.Pool
         // Where it comes back after a scratch (a mode may have moved it).
         public Vector3 RespawnPosition => spawnPosition;
 
+        // Speed Pool at three or four mixes the rack (SpeedPoolRuleSet.MixRack):
+        // another ball's spot for this match only, the table's own kept.
+        private bool movedForMatch;
+
+        public void MoveForMatch(Vector3 spawn)
+        {
+            movedForMatch = true;
+            spawnPosition = spawn;
+            ResetToSpawn();
+        }
+
+        // Before the next match (SpeedPoolRuleSet.FitToPlayers).
+        public void BackFromMatchSpot()
+        {
+            if (!movedForMatch) return;
+            movedForMatch = false;
+            spawnPosition = tableSpawnPosition;
+            if (gameObject.activeSelf) ResetToSpawn();
+        }
+
         // Speed Pool: this cue ball becomes the player's, tinted, starting
         // (and coming back after a scratch) at spawn.
         public void MakePlayerCueBall(int player, Vector3 spawn, Color tint)
@@ -170,6 +190,19 @@ namespace UntitledPoolGame.Pool
             IsExtra = true;
             spawnPosition = tableSpawnPosition = spawn;
             ResetToSpawn();
+        }
+
+        // Speed Pool at four, each for themselves: a copy in the second rack
+        // (PlayerBallGroups.TwoRacks), J3's or J4's, tinted to tell it apart.
+        public bool InSecondRack { get; private set; }
+
+        public void MarkSecondRack(Vector3 spawn, Color tint)
+        {
+            InSecondRack = true;
+            spawnPosition = tableSpawnPosition = spawn;
+            ResetToSpawn();
+            Renderer meshRenderer = GetComponentInChildren<Renderer>();
+            if (meshRenderer != null) meshRenderer.material.color *= tint;
         }
 
         // Called when a shot is struck.

@@ -3,8 +3,10 @@ using UnityEngine;
 namespace UntitledPoolGame.Pool
 {
     // Shooter Billard: the Shooter miniature's fight, but what counts is the
-    // balls. J1 has the solids, J2 the stripes, no 8; the first to have all of
-    // theirs in a pocket wins (sending in one of the other's helps them).
+    // balls, shared out as in 8-ball Speed Pool (PlayerBallGroups): J1 the
+    // solids, J2 the stripes; at three, 1-5, 6-11 and 12-15; at four, 2 v 2
+    // or each for themselves with a second rack. No 8. The first side to have
+    // all of theirs in a pocket wins (sending in someone else's helps them).
     // Pushed there with kicks and shots.
     //
     // No health and no elimination: being hit only costs time. Each hit slows
@@ -12,19 +14,34 @@ namespace UntitledPoolGame.Pool
     // off the table comes back, only a pocket counts.
     public class ShooterPoolRuleSet : ShooterMiniRuleSet
     {
-        private readonly int[] ballsLeft = new int[2];
+        // Per side (in 2 v 2, the team's first player).
+        private readonly int[] ballsLeft = new int[PoolMatchRules.MaxPlayers];
 
         protected override int BallsKept => int.MaxValue;
         protected override bool KeepsBall(PoolBall ball) => ball.Group != BallGroup.Eight;
+        // Patterns and halos as in 8-ball, from three players.
+        protected override bool ShowsOwnerMarkers => true;
+
+        protected override void BeforeBallsPlaced() => AddSecondRack();
 
         protected override void OnBallsPlaced()
         {
-            ballsLeft[0] = ballsLeft[1] = 0;
+            System.Array.Clear(ballsLeft, 0, ballsLeft.Length);
             foreach (PoolBall ball in PoolBall.Active)
             {
                 int owner = OwnerOf(ball);
                 if (owner >= 0) ballsLeft[owner]++;
             }
+            AddOwnerLooks();
+        }
+
+        // The most any other side has left: with two, the other player's.
+        private int OthersLeft(int player)
+        {
+            int side = PlayerBallGroups.SideOf(player), most = 0;
+            for (int q = 0; q < PlayerBallGroups.Sides; q++)
+                if (q != side) most = Mathf.Max(most, ballsLeft[q]);
+            return most;
         }
 
         protected override void UpdateEffects(Fighter f) =>
@@ -68,17 +85,24 @@ namespace UntitledPoolGame.Pool
 
         // ---------- HUD ----------
 
-        public override string HealthLabel(int player) => player == 0 ? Settings.solidsLabel : Settings.stripesLabel;
+        // Solids or stripes (the second rack's too); at three, the numbers.
+        public override string HealthLabel(int player)
+        {
+            int side = PlayerBallGroups.SideOf(player);
+            if (PlayerBallGroups.Split != GroupSplit.Thirds) return side % 2 == 0 ? Settings.solidsLabel : Settings.stripesLabel;
+            int[] numbers = PlayerBallGroups.Numbers(side);
+            return numbers.Length > 0 ? $"{numbers[0]}-{numbers[numbers.Length - 1]}" : "";
+        }
 
         public override string DescribeScore(int player)
         {
             ShooterMiniSettings s = Settings;
             return CurrentPhase == Phase.Countdown
                 ? string.Format(s.countdownFormat, CountdownLeft)
-                : string.Format(s.ballsLeftFormat, ballsLeft[player], ballsLeft[1 - player]);
+                : string.Format(s.ballsLeftFormat, ballsLeft[PlayerBallGroups.SideOf(player)], OthersLeft(player));
         }
 
         public override int PlateKey(int player) =>
-            ((ballsLeft[player] * 32 + ballsLeft[1 - player]) * 16 + (CurrentPhase == Phase.Countdown ? CountdownLeft : 0)) * 2 + player;
+            ((ballsLeft[PlayerBallGroups.SideOf(player)] * 32 + OthersLeft(player)) * 16 + (CurrentPhase == Phase.Countdown ? CountdownLeft : 0)) * 2 + player;
     }
 }

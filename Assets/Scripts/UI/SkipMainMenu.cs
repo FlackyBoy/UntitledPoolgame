@@ -20,6 +20,8 @@ namespace UntitledPoolGame.Core
         [SerializeField] private bool powers;
         [Tooltip("Score à atteindre, si 14.1.")]
         [Min(1)] [SerializeField] private int targetScore = 150;
+        [Tooltip("À 4 joueurs en Speed Pool : coché = 2 contre 2 (J1 et J3 les pleines, J2 et J4 les rayées), décoché = chacun pour soi avec un second triangle.")]
+        [SerializeField] private bool teams = true;
 
         // Before the type and the powers were picked apart, Speed Pool's
         // powers were this enum (1 = with powers). Read so scenes keep them.
@@ -41,7 +43,7 @@ namespace UntitledPoolGame.Core
             bool legacyPowers = mode == PoolGameMode.SpeedPool && partyMode == 1;
             PoolMatchType matchType = type == TypeChoice.ModeDefault ? PoolMatchSetup.NativeType(mode)
                 : type == TypeChoice.SpeedPool ? PoolMatchType.SpeedPool : PoolMatchType.TurnBased;
-            rules.RequestStart(new PoolMatchSetup(mode, matchType, powers || legacyPowers, targetScore));
+            rules.RequestStart(new PoolMatchSetup(mode, matchType, powers || legacyPowers, targetScore) { teams = teams });
         }
     }
 }

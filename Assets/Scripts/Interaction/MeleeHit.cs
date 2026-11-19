@@ -31,7 +31,17 @@ namespace UntitledPoolGame.Interaction
             target = broadcaster.puppetMaster;
             if (target == null || target == ownPuppet || target.transform.IsChildOf(attacker) || alreadyHit.Contains(target)) return false;
             alreadyHit.Add(target);
-            return true;
+            // Teammates (2 v 2) don't hit each other at all, not even a push.
+            return !Teammates(attacker, target);
+        }
+
+        // Once per body hit, not per frame: two lookups up the hierarchy.
+        private static bool Teammates(Transform attacker, PuppetMaster target)
+        {
+            if (!PlayerBallGroups.Teams) return false;
+            PlayerInput own = attacker.GetComponentInParent<PlayerInput>();
+            PlayerInput other = target.GetComponentInParent<PlayerInput>();
+            return own != null && other != null && PlayerBallGroups.TeammateOf(own.playerIndex) == other.playerIndex;
         }
 
         public static BehaviourPuppet FindPuppetBehaviour(PuppetMaster puppetMaster)

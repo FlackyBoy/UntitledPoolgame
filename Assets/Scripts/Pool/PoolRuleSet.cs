@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UntitledPoolGame.Pool
 {
@@ -16,6 +17,11 @@ namespace UntitledPoolGame.Pool
         // Every frame of the match, before the shot loop (rounds, clocks, falls).
         public virtual void Tick(PoolMatchRules match) { }
 
+        // Each player has their own balls (PlayerBallGroups, Speed Pool): a
+        // player joining mid-match restarts it, to share them out again.
+        // False when the mode has no groups or makes room itself (Sumo Pool).
+        public virtual bool SharesBallsOut => false;
+
         // Whether this player may strike now, on top of the turn rules
         // (PoolMatchRules.CanPlayerShoot).
         public virtual bool AllowsShot(PoolMatchRules match, int playerIndex) => true;
@@ -32,6 +38,10 @@ namespace UntitledPoolGame.Pool
         // own turn and rolling-balls rules.
         public virtual bool AllowsPower(int player) => true;
 
+        // Punches and kicks on top of CombatSettings' melee modes (Pocket
+        // Size: the tiny ones between themselves).
+        public virtual bool AllowsMelee(int player) => false;
+
         // Multiplier on every shot's strength.
         public virtual float ShotPowerScale => 1f;
 
@@ -43,6 +53,25 @@ namespace UntitledPoolGame.Pool
         {
             score = target = 0;
             return false;
+        }
+
+        // What the view from above frames (the free quarter at three
+        // players): the middle of the play area, its half extents along the
+        // table's length (x) and width (y), and the table's rotation. False
+        // without a table.
+        public virtual bool GetOverview(out Vector3 center, out Vector2 halfSize, out Quaternion rotation)
+        {
+            PoolTableSurface surface = PoolTableSurface.Instance;
+            if (surface == null)
+            {
+                center = Vector3.zero; halfSize = Vector2.zero; rotation = Quaternion.identity;
+                return false;
+            }
+            center = surface.transform.position;
+            center.y = surface.FeltTopY;
+            halfSize = new Vector2(surface.HalfLength, surface.HalfWidth);
+            rotation = surface.transform.rotation;
+            return true;
         }
     }
 }

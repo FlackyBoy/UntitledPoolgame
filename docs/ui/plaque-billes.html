@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plaque des billes — Prototype UI</title>
+<meta name="description" content="8-ball en Speed Pool à 3 ou 4 joueurs : comment la plaque de chaque joueur montre ses billes, ce qu'il lui reste, la 8 à rentrer, l'équipier et l'élimination. Trois propositions : A titre + reste, B gros compteur, C les billes elles-mêmes.">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="proto.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Nunito:wght@700;900&display=swap">
+<style>
+  .stage { --ink: #1c1510; --cream: #fff6e3; --yel: #ffd23f; --red: #ff4d3d;
+           --felt: #1d7f4b; --felt-d: #125c35; --wood: #6b3a1e;
+           font-family: "Nunito", sans-serif; color: #fff; background: var(--ink); }
+  .grid { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .25em; background: var(--ink); }
+  .q { position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 10%, rgba(255,214,140,.25), transparent 60%), linear-gradient(#3a271c 0 30%, #4a3122 30%); }
+  .q .tbl { position: absolute; left: 2%; right: 2%; top: 30%; bottom: -10%; clip-path: polygon(16% 0, 84% 0, 100% 100%, 0 100%); background: var(--wood); }
+  .q .tbl::after { content: ""; position: absolute; inset: 5% 4% 0; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); background: radial-gradient(ellipse at 50% 40%, var(--felt), var(--felt-d)); }
+  .q.free { background: #0f0a07; display: grid; place-items: center; }
+  .q.free span { font: .9em "Bowlby One"; opacity: .4; letter-spacing: .05em; }
+
+  /* A ball on the felt, its owner's mark under it (squashed: seen at an angle). */
+  .tb { position: absolute; transform: translate(-50%, -50%); z-index: 1; --s: 2.2em; }
+
+  /* A pool ball: plain colour, or white with a band (stripes), its number on a white disc. */
+  .bl { position: relative; display: block; width: var(--s, 1.6em); aspect-ratio: 1; border-radius: 50%; flex: none;
+        background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.8) 0 8%, transparent 9%), var(--bg);
+        box-shadow: inset -.12em -.16em 0 rgba(0,0,0,.28), 0 .1em 0 rgba(0,0,0,.35); }
+  .bl.st { --bg: linear-gradient(#fbf6ea 0 24%, var(--c) 24% 76%, #fbf6ea 76%); }
+  .bl:not(.st):not(.pt) { --bg: var(--c); }
+  /* The other owners' patterns, the way stripes have a band: the ball's colour as a cross, a square or a triangle around the number, on white. */
+  .bl.pt { --bg: #fbf6ea; }
+  .bl.pt::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--c); }
+  .bl.pt-cross::before { clip-path: polygon(8% 20%, 20% 8%, 50% 38%, 80% 8%, 92% 20%, 62% 50%, 92% 80%, 80% 92%, 50% 62%, 20% 92%, 8% 80%, 38% 50%); }
+  .bl.pt-square::before { clip-path: inset(16%); }
+  .bl.pt-triangle::before { clip-path: polygon(50% 0, 100% 88%, 0 88%); }
+  .bl::after { content: attr(data-n); position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 52%; aspect-ratio: 1; border-radius: 50%;
+               background: #fff; color: var(--ink); display: grid; place-items: center; font: 900 calc(var(--s, 1.6em) * .32) "Nunito"; line-height: 1; }
+  .bl.dark { filter: brightness(.55); }
+  .bl.gone { opacity: .22; transform: scale(.75); }
+  .bl.pop { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { 0% { transform: scale(1.5); } 100% { transform: scale(.75); } }
+
+  .card { background: var(--cream); color: var(--ink); border: .16em solid var(--ink); border-radius: .7em; box-shadow: 0 .26em 0 var(--ink); }
+  .plate { position: absolute; left: 3%; top: 6%; z-index: 3; display: flex; align-items: center; gap: .45em; padding: .25em .6em .25em .25em; font-size: .85em; transition: filter .3s, opacity .3s; }
+  .who { position: relative; width: 2.6em; height: 2.6em; border-radius: .55em; display: grid; place-items: center; font: 1em "Bowlby One"; color: #fff; border: .15em solid var(--ink); flex: none; }
+  .who .sh { position: absolute; right: -.45em; bottom: -.45em; width: 1.25em; height: 1.25em; background: #fff; border: .12em solid var(--ink); border-radius: 50%; padding: .12em; box-sizing: border-box; }
+  .who .sh .bl { --s: 100%; width: 100%; box-shadow: none; }
+  .who .sh .bl::after { display: none; }
+  .hdr { font: .62em "Bowlby One"; letter-spacing: .06em; opacity: .55; }
+  .mate { font: .7em "Bowlby One"; color: #fff; padding: .15em .45em; border-radius: .35em; border: .1em solid var(--ink); white-space: nowrap; }
+  .eight { display: flex; align-items: center; gap: .35em; padding: .15em .5em .15em .2em; border-radius: .5em; background: var(--yel); border: .12em solid var(--ink); font: .9em "Bowlby One"; animation: wob 1s ease-in-out infinite; }
+  @keyframes wob { 50% { transform: rotate(-3deg) scale(1.06); } }
+  .q.out .plate { filter: grayscale(1); opacity: .7; }
+  .q .stamp { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; background: rgba(10,6,4,.5); }
+  .q.out .stamp { display: grid; }
+  .stamp span { font: 2.4em "Bowlby One"; color: var(--red); -webkit-text-stroke: .05em var(--ink); paint-order: stroke fill; text-shadow: .05em .07em 0 var(--ink); transform: rotate(-6deg); }
+  .stamp small { display: block; text-align: center; font: 900 .36em "Nunito"; -webkit-text-stroke: 0; color: #fff; text-shadow: none; margin-top: .3em; }
+  .q .win { position: absolute; inset: 0; z-index: 5; display: none; place-items: center; background: rgba(10,6,4,.55); }
+  .q.won .win { display: grid; }
+  .win span { font: 2.2em "Bowlby One"; color: var(--yel); -webkit-text-stroke: .05em var(--ink); paint-order: stroke fill; text-shadow: .05em .07em 0 var(--ink); transform: rotate(-4deg); text-align: center; }
+
+  /* A: title + what's left. */
+  .a-balls { display: flex; flex-direction: column; gap: .12em; }
+  .a-row { display: flex; gap: .2em; }
+  .a-row .bl { --s: 1.45em; box-shadow: 0 0 0 .14em var(--pc), 0 .1em 0 rgba(0,0,0,.35); }
+  .left { display: flex; flex-direction: column; align-items: center; line-height: 1; margin-left: .2em; }
+  .left b { font: 1.7em "Bowlby One"; }
+  .left small { font: 900 .6em "Nunito"; opacity: .6; }
+
+  /* B: one big count. */
+  .b-count { display: flex; align-items: baseline; gap: .3em; }
+  .b-count b { font: 2.3em "Bowlby One"; line-height: .9; }
+  .b-count small { font: 900 .75em "Nunito"; opacity: .65; max-width: 5em; line-height: 1.05; }
+  .b-group { font: 900 .7em "Nunito"; opacity: .6; }
+
+  /* C: each ball on its felt mark; the potted ones in the tray. */
+  .c-balls { display: flex; gap: .15em; align-items: center; }
+  .c-ball { position: relative; width: 2.5em; height: 2.5em; display: grid; place-items: center; }
+  .c-ball .bl { --s: 1.5em; z-index: 1; }
+  .c-ball.gone { display: none; }
+  .tray { display: flex; align-items: center; gap: .05em; padding: .15em .35em; border-radius: 1em; background: rgba(28,21,16,.12); border: .1em dashed rgba(28,21,16,.35); min-width: 1.4em; min-height: 1.3em; }
+  .tray .bl { --s: .9em; margin-left: -.35em; }
+  .tray .bl:first-child { margin-left: 0; }
+  .tray .bl::after { display: none; }
+</style>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-head">
+    <div>
+      <h1>Plaque des billes</h1>
+      <p>8-ball en Speed Pool à 3 ou 4 : ce que la plaque de chaque joueur montre de ses billes, de ce qui lui reste, de la 8 à rentrer, de son équipier. Sur la table, à partir de 3, les billes de chaque joueur ont son motif, comme les rayées ont leur bande : pleine (J1), bande (J2), croix (J3), carré (J4), à la couleur de la bille autour de son numéro. Changer de partie et simuler dans la barre sous l'écran.</p>
+    </div>
+    <a href="../ui.html">← Tous les concepts</a>
+  </div>
+  <div class="stage-box"><div class="stage">
+    <section class="scr" id="a" data-label="A · titre + reste"></section>
+    <section class="scr" id="b" data-label="B · gros compteur"></section>
+    <section class="scr" id="c" data-label="C · les billes elles-mêmes"></section>
+  </div></div>
+  <div class="proto-notes">
+    <div><b>A · titre + reste</b>« TES BILLES » et toutes ses billes en miniature, cerclées de sa couleur, avec leur motif, grisées une fois rentrées, puis le nombre qui reste. Groupe vide : la pastille « TA 8 ! » remplace le compte. En équipe : « AVEC J3 ».</div>
+    <div><b>B · gros compteur</b>Juste le nombre de billes qui restent, en gros, et le nom du groupe en petit. Le plus lisible d'un coup d'œil, mais on ne voit plus lesquelles il reste. Groupe vide : la 8 à la place du chiffre.</div>
+    <div><b>C · les billes elles-mêmes</b>Les billes qui restent, en grand, avec le même motif que sur la table (le lien plaque / table est direct) ; une bille rentrée glisse dans le bac à droite. Groupe vide : la 8 seule.</div>
+    <div><b>Dans tous les cas</b>La pastille du joueur porte son motif dans un coin. Rentrer la 8 trop tôt : « ÉLIMINÉ » à 3 et à 4 chacun pour soi (la partie continue sans lui), défaite de l'équipe en 2 contre 2.</div>
+  </div>
+</div>
+<script>
+const COL = { 1: '#f4c20d', 2: '#1f5fd1', 3: '#d8262b', 4: '#6b2fa3', 5: '#f07a1a', 6: '#188a47', 7: '#8a2a1b', 8: '#151515' };
+const ballColor = n => COL[n > 8 ? n - 8 : n];
+const PC = ['#2f7cf6', '#ef4a3c', '#2ec25a', '#a25cf2'];
+// Each owner's pattern from 3 players on (ownerPatterns in SpeedPoolSettings); in 2 v 2, solids and stripes.
+const PAT = ['solid', 'stripe', 'cross', 'square'];
+const patOf = (n, side) => n === 8 || side == null || F().players < 3 ? (n > 8 ? 'stripe' : 'solid') : PAT[side];
+const patClass = pat => pat === 'stripe' ? 'st' : pat === 'solid' ? '' : `pt pt-${pat}`;
+const ball = (n, extra = '', dark = false, side = null) => `<span class="bl ${patClass(patOf(n, side))} ${dark ? 'dark' : ''} ${extra}" data-n="${n}" style="--c:${ballColor(n)}"></span>`;
+// The side's pattern, in its player's colour, for the player tag.
+const swatch = side => `<span class="bl ${patClass(F().players < 3 ? ['solid', 'stripe'][side] : PAT[side])}" style="--c:${PC[side]}"></span>`;
+
+// Sides: who owns which balls, per kind of match.
+const FORMATS = {
+  three: { label: '3 joueurs', players: 3, sides: [
+    { nums: [1, 2, 3, 4, 5], name: 'Billes 1 à 5' }, { nums: [6, 7, 9, 10, 11], name: 'Billes 6 à 11' }, { nums: [12, 13, 14, 15], name: 'Billes 12 à 15' }] },
+  ffa: { label: '4 chacun pour soi', players: 4, sides: [
+    { nums: [1, 2, 3, 4, 5, 6, 7], name: 'Pleines' }, { nums: [9, 10, 11, 12, 13, 14, 15], name: 'Rayées' },
+    { nums: [1, 2, 3, 4, 5, 6, 7], name: 'Croix' }, { nums: [9, 10, 11, 12, 13, 14, 15], name: 'Carrés' }] },
+  teams: { label: '2 contre 2', players: 4, teams: true, sides: [
+    { nums: [1, 2, 3, 4, 5, 6, 7], name: 'Pleines' }, { nums: [9, 10, 11, 12, 13, 14, 15], name: 'Rayées' }] },
+};
+let fmt = 'three', potted = [], out = [], winner = -1, justPotted = null;
+const F = () => FORMATS[fmt];
+const sideOf = p => F().teams ? p % 2 : p;
+function reset() { potted = F().sides.map(() => new Set()); out = [false, false, false, false]; winner = -1; justPotted = null; }
+
+// Four balls of the player's side and two of the others on the felt, with their marks.
+function feltBalls(p) {
+  const spots = [[30, 52], [44, 46], [60, 58], [72, 48], [38, 72], [56, 80]];
+  const list = [];
+  const mine = F().sides[sideOf(p)];
+  mine.nums.filter(n => !potted[sideOf(p)].has(n)).slice(0, 4).forEach(n => list.push({ n, side: sideOf(p), dark: mine.dark }));
+  F().sides.forEach((s, i) => { if (i !== sideOf(p) && list.length < 6) { const n = s.nums.find(x => !potted[i].has(x)); if (n) list.push({ n, side: i, dark: s.dark }); } });
+  return list.map((b, i) => `<div class="tb" style="left:${spots[i][0]}%;top:${spots[i][1]}%">${ball(b.n, '', b.dark, b.side)}</div>`).join('');
+}
+function who(p) {
+  const s = sideOf(p);
+  return `<span class="who" style="background:${PC[p]}">J${p + 1}<span class="sh">${swatch(s)}</span></span>`;
+}
+function mateTag(p) {
+  if (!F().teams) return '';
+  const m = (p + 2) % 4;
+  return `<span class="mate" style="background:${PC[m]}">AVEC J${m + 1}</span>`;
+}
+function plateA(p) {
+  const s = sideOf(p), side = F().sides[s], left = side.nums.filter(n => !potted[s].has(n));
+  const balls = side.nums.map(n => ball(n, potted[s].has(n) ? 'gone' + (justPotted && justPotted.side === s && justPotted.n === n ? ' pop' : '') : '', side.dark, s)).join('');
+  const tail = left.length ? `<span class="left"><b>${left.length}</b><small>reste${left.length > 1 ? 'nt' : ''}</small></span>`
+    : `<span class="eight"><span class="bl" data-n="8" style="--s:1.4em;--c:#151515"></span>TA 8 !</span>`;
+  return `${who(p)}<span class="a-balls"><span class="hdr">TES BILLES · ${side.name.toUpperCase()}</span><span class="a-row" style="--pc:${PC[s]}">${balls}</span></span>${tail}${mateTag(p)}`;
+}
+function plateB(p) {
+  const s = sideOf(p), side = F().sides[s], left = side.nums.filter(n => !potted[s].has(n)).length;
+  const main = left ? `<span class="b-count"><b>${left}</b><small>bille${left > 1 ? 's' : ''} à rentrer</small></span>`
+    : `<span class="eight"><span class="bl" data-n="8" style="--s:1.6em;--c:#151515"></span>LA 8 !</span>`;
+  return `${who(p)}<span style="display:flex;flex-direction:column;gap:.1em">${main}<span class="b-group">${side.name}</span></span>${mateTag(p)}`;
+}
+function plateC(p) {
+  const s = sideOf(p), side = F().sides[s], left = side.nums.filter(n => !potted[s].has(n));
+  const mark = n => `<span class="c-ball">${ball(n, '', side.dark && n !== 8, s)}</span>`;
+  const balls = left.length ? side.nums.filter(n => !potted[s].has(n)).map(n => mark(n)).join('') : `${mark(8)}<span class="eight" style="animation:none;padding:.1em .45em">LA 8 !</span>`;
+  const tray = [...potted[s]].map(n => ball(n, '', side.dark, s)).join('');
+  return `${who(p)}<span class="c-balls">${balls}</span><span class="tray" title="rentrées">${tray}</span>${mateTag(p)}`;
+}
+const PLATES = { a: plateA, b: plateB, c: plateC };
+function quarter(p, kind) {
+  const teamWon = winner >= 0 && F().teams && sideOf(p) === sideOf(winner);
+  const won = winner === p || teamWon;
+  return `<div class="q ${out[p] ? 'out' : ''} ${won ? 'won' : ''}"><div class="tbl"></div>${feltBalls(p)}
+    <div class="plate card">${PLATES[kind](p)}</div>
+    <div class="stamp"><span>ÉLIMINÉ<small>tu as rentré la 8 trop tôt</small></span></div>
+    <div class="win"><span>${F().teams ? `J${sideOf(winner) + 1} ET J${sideOf(winner) + 3}<br>GAGNENT !` : `J${winner + 1} GAGNE !`}</span></div></div>`;
+}
+function build(scr) {
+  const kind = scr.id;
+  let html = '';
+  for (let p = 0; p < 4; p++) html += p < F().players ? quarter(p, kind) : `<div class="q free"><span>VUE DE DESSUS</span></div>`;
+  scr.innerHTML = `<div class="grid">${html}</div>`;
+}
+const rebuild = scr => build(scr);
+function setFormat(f, scr) { fmt = f; reset(); rebuild(scr); }
+function potFor(p, scr) {
+  const s = sideOf(p), next = F().sides[s].nums.find(n => !potted[s].has(n));
+  if (!next) return;
+  potted[s].add(next); justPotted = { side: s, n: next }; rebuild(scr);
+}
+
+window.PROTO = {
+  enter: { a: scr => { reset(); build(scr); }, b: scr => { reset(); build(scr); }, c: scr => { reset(); build(scr); } },
+  events: {
+    three: { label: 'Partie à 3', run: scr => setFormat('three', scr) },
+    ffa: { label: '4 chacun pour soi', run: scr => setFormat('ffa', scr) },
+    teams: { label: '2 contre 2', run: scr => setFormat('teams', scr) },
+    pot: { label: 'J1 rentre une bille', run: scr => potFor(0, scr) },
+    mate: { label: 'J3 rentre une bille', run: scr => potFor(2, scr) },
+    clear: { label: 'J1 vide son groupe', run: scr => { const s = sideOf(0); F().sides[s].nums.forEach(n => potted[s].add(n)); justPotted = null; rebuild(scr); } },
+    early: { label: 'J2 rentre la 8 trop tôt', run: scr => {
+      if (F().teams) winner = 0; else out[1] = true;
+      rebuild(scr);
+    } },
+    win: { label: 'J1 rentre la 8', run: scr => { winner = 0; rebuild(scr); } },
+  },
+};
+</script>
+<script src="proto.js"></script>
+</body>
+</html>
