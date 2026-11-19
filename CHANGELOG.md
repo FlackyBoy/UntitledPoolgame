@@ -5,6 +5,7 @@ chronologique inverse (les plus récentes en haut).
 
 ## 2026-11-18
 - **Cache-cache : à plus de 2 joueurs, on peut de nouveau prendre une bille** (compilé, non testé) : quand la partie redémarrait (arrivée d'un 3e joueur, « Rejouer »), les billes gardaient un composant en cours de destruction et ne répondaient plus, avec une erreur à chaque image. Le composant est maintenant désactivé puis réactivé au lieu d'être détruit.
+- **Retours du playtest notés dans les pistes** (Snake Pool, Power Wash, Play Anywhere, Pocket Size, Sumo, Cache-cache, objets qui apparaissent au hasard).
 
 ## 2026-11-17
 - **Sumo Pool : la bille du joueur a la physique des billes du billard** (validé en jeu le 17/11) : elle ralentit sur le tapis comme les billes de la table, n'a plus de freinage ni de virage assisté, et les chocs sont ceux du billard, sans bonus. Le stick pousse, le dash ne change pas. Même chose en Sumo Billard, avec le frottement des billes à rentrer. Case *Pool Ball Physics* dans `SumoPoolSettings` (décochée : la conduite arcade d'avant).
@@ -20,6 +21,13 @@ chronologique inverse (les plus récentes en haut).
   - **8-ball en Speed Pool de 2 à 4** (lot 3a, validé en jeu le 18/11) : une blanche par joueur ; à 3, chacun ses cinq billes (1-5, 6-10, 11-15) ; à 4, 2 contre 2 ou chacun pour soi avec un second triangle plus foncé, au choix dans le menu (LB / RB) ou dans *Lancer sans le menu* (*Teams*).
   - **Écran des joueurs du menu à 4 places** (validé en jeu le 17/11) : *Jouer > 2 à 4 joueurs*, J2 à J4 rejoignent dans le salon ; à 3 ou 4, seuls les modes qui se jouent à autant sont proposés (les autres grisés), Boogie Night reste à 2.
   - **Quart libre à 3 joueurs** (validé en jeu le 17/11) : la case vide de l'écran montre la table vue de dessus avec le total de chacun, un grand panneau des scores au compte à rebours et en fin de manche, et « J4 : START POUR REJOINDRE ». Prototype : `docs/ui/quart-libre.html`.
+- **Validé en jeu** par l'utilisateur :
+  - modes : Pocket Size (avec le corps Mini), le nouveau menu (1 / 2 joueurs, Sélection, Boogie Night, carte R&D), le type de partie × mode × pouvoirs, Power Wash Pool (lots 1 et 2, ses six pouvoirs), les retouches de Play Anywhere des 03 et 04/11 ;
+  - combat : les mains nues, le poing qui suit le regard, les commandes rendues après un coup reçu en visée, le niveau 2 des pouvoirs ;
+  - menus : tout le parcours du 09/10 (pause, scène du menu et écran de chargement, TextFx, choix de la scène d'un niveau, Menu Studio, Text FX Studio, Feel branché sur la partie, écran des touches) ;
+  - outils : le menu debug, *Lancer sans le menu*, le Level Maker (salle dans une salle, étages, éclairage précalculé), les skills de Claude ;
+  - anciens chantiers : la prise de la queue `LocalCueHolder` et les bend goals, le ragdoll resté au sol et le retour en « Grounded Directional », les objets tenus en main.
+- **Skill `resteafaire`** : `/resteafaire` montre tout de suite les chantiers du projet (modes, pouvoirs, caméra, menus, Level Maker…) avec le nombre de tâches ouvertes de chacun, puis les pistes encore non décidées ; `/resteafaire pistes` les détaille, et `/resteafaire <chantier>` détaille ce qui est en cours, à tester, pas commencé ou seulement envisagé. Exemples sur le site, rubrique Outils.
 - **Réorganisation du code de l'interface en jeu** (aucun changement en jeu, validé en jeu) : le fichier de l'affichage pendant la partie est découpé en sept, un par rôle (construction, plaque, événements, annonces et cartes, fin de partie, dessin), sans rien changer à ce qu'il fait.
 - **Réorganisation des règles des modes** (aucun changement en jeu, validé en jeu) : chaque mode dit lui-même quand on peut tirer, ce qu'il suit à chaque image, ce qu'il fait d'un tir, s'il change la force du tir ou s'il remet la blanche en jeu. Le fichier qui gère la partie ne liste plus les modes un par un : un nouveau mode y touche une ligne au lieu de cinq.
 - **Validé en jeu** par l'utilisateur : la table interdite, la Bagarre, le Cache-cache (bouger, Sonar), la grenade et la cadence du Shooter, ainsi que la réorganisation du code des parties.

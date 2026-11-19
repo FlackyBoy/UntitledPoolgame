@@ -90,7 +90,7 @@ Frottement de roulement et de glissement calculés par bille, rebonds vifs sur l
 
 ## 6. Modes de jeu
 
-Une partie se compose de **trois choix indépendants** 🔄 (27/10, non testé) :
+Une partie se compose de **trois choix indépendants** ✅ (27/10, validé le 17/11) :
 
 - le **type** : **chacun son tour**, ou **Speed Pool** : pas de tour, les deux joueurs tirent **en même temps**, chacun avec sa blanche (bleue J1, rouge J2). Les types possibles de chaque mode et celui sur lequel il démarre se règlent dans `PoolModeSettings` ; 9-ball et 14.1 se jouent seulement chacun son tour pour l'instant ;
 - le **mode** : les règles, ci-dessous ;
@@ -127,7 +127,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 - **Trois catégories**, chacune avec sa couleur, son matériau et son modèle de caisse : **Attaque**, **Défense**, **Effet**.
 - **Activation** avec le bouton de pouvoir. **Quand** on peut le lancer se règle pour chaque pouvoir : réservé à son propre tour (Effets), ou utilisable pendant le tour adverse (Attaques). Une attaque lancée pendant le tour adverse prend effet **immédiatement** ; lancée pendant son propre tour, elle attend le début du tour adverse, ou elle est refusée si le pouvoir le demande. Un pouvoir peut aussi être interdit pendant que les billes roulent.
 - **Retour à l'envoi** ✅ : le lanceur voit « Envoyé ! » (ou « Activé ! »), l'adversaire reçoit une carte « J1 T'ENVOIE … » qui dit si ça frappe tout de suite ou au début de son tour, et chacun a son moment Feel. Un appui au mauvais moment fait trembler la pastille du pouvoir avec la raison. Le personnage **pointe** la cible pendant le choix et **lève le pouce** une fois le pouvoir envoyé, pour que l'adversaire le voie aussi dans la salle.
-- **Niveaux** 🔄 : un pouvoir a un niveau (1 ou 2, version renforcée), atteint en ramassant le même pouvoir une deuxième fois ; un badge « N2 » le montre dans le HUD. Seul le Trou a pour l'instant un vrai niveau 2 (un groupe de trous) ; les autres restent identiques au niveau 2, en attendant que leur version renforcée soit décidée.
+- **Niveaux** ✅ : un pouvoir a un niveau (1 ou 2, version renforcée), atteint en ramassant le même pouvoir une deuxième fois ; un badge « N2 » le montre dans le HUD. Seul le Trou a pour l'instant un vrai niveau 2 (un groupe de trous) ; les autres restent identiques au niveau 2, en attendant que leur version renforcée soit décidée.
 - **Pouvoirs qui visent la table** ✅ (Trou) : même choix que pour une poche, mais le pointeur vise un point du tapis, avec un cercle d'aperçu de la zone touchée.
 - **Pouvoirs qui visent un trou** : le bouton de pouvoir ouvre d'abord un **choix du trou**. Un pointeur blanc au centre de la vue désigne le trou, qui est entouré d'un cercle. Interact valide, le bouton de pouvoir annule. Le personnage **pointe du doigt** l'endroit visé pendant le choix, puis **lève le pouce** une fois le pouvoir envoyé ✅.
 
@@ -151,7 +151,7 @@ D'autres modes aux objectifs propres sont envisagés (voir *Pistes & suggestions
 | **Boue retournée** (Power Wash) | Effet | Les billes de l'adversaire lavent à sa couleur (traces et éclaboussures de poche) | 10 s |
 | **Roomba** (Power Wash) | Effet | Le joueur vise un point du tapis : un robot aspirateur y lave à sa couleur, tourne aux bandes et pousse les billes | 20 s |
 
-Les six pouvoirs de Power Wash Pool (🔄 compilés, pas encore testés) ne sortent que dans ce mode (*Only In Modes*). En dehors, aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
+Les six pouvoirs de Power Wash Pool (✅ validés le 17/11) ne sortent que dans ce mode (*Only In Modes*). En dehors, aucun pouvoir de **Défense** n'existe encore. Une vingtaine d'idées de pouvoirs attendent d'être choisies (voir *Pistes & suggestions*).
 
 ## 8. Dimensions et environnements 📌
 
@@ -173,7 +173,7 @@ Les six pouvoirs de Power Wash Pool (🔄 compilés, pas encore testés) ne sort
 ## 9. Combat et PNJ
 
 - **Coup de queue** ✅, **« armer en tournant »** : queue en main et hors visée, **maintenir Attaque** charge le coup, **relâcher** frappe. La **direction** vient de la rotation faite pendant la charge : tourner à droite arme la queue à droite (le coup balaie vers la gauche), et inversement ; lever la tête = coup vertical ; sans rotation = estoc de la pointe, en position de tir. On voit pendant la charge le coup qui va partir. À la frappe, la vue revient vers là où l'on regardait à l'appui, ou vers l'adversaire proche (assistance légère), pour que le coup tombe sur la cible. Un coup léger fait tituber, un coup chargé fait **tomber en ragdoll** (chute garantie à pleine charge). Possible dans les modes qui permettent de frapper, ou avec le pouvoir *Bagarre*.
-- **Mains nues** 🔄 (code écrit, à tester) : **poing** (mains vides) et **pied**, dans les mêmes conditions. Esprit **Gang Beasts** : les poings partent en crochet dès le clic et s'enchaînent en spammant, en alternant les mains ; ils font tituber (pas de poing chargé). Le pied : clic bref = coup de pied, appui maintenu = coup chargé ; le **pied chargé est un coup de pied spartiate** façon *300* : la cible est projetée loin en arrière, avec un zoom sur la vue de l'attaquant.
+- **Mains nues** ✅ (validé le 17/11) : **poing** (mains vides) et **pied**, dans les mêmes conditions. Esprit **Gang Beasts** : les poings partent en crochet dès le clic et s'enchaînent en spammant, en alternant les mains ; ils font tituber (pas de poing chargé). Le pied : clic bref = coup de pied, appui maintenu = coup chargé ; le **pied chargé est un coup de pied spartiate** façon *300* : la cible est projetée loin en arrière, avec un zoom sur la vue de l'attaquant.
 - **Jauge d'encaissement** 🔄 (R&D : testé sur le joueur de R&D, pas encore sur le joueur normal) : les coups reçus remplissent une jauge ; tant qu'elle n'est pas pleine, le joueur titube seulement ; au-delà de 60 %, il est **sonné** (plus lent, il dérive, la vue tangue) ; pleine, il est **K.O.** : il tombe en ragdoll et reste quelques secondes au sol. À son **réveil**, la jauge est vide et un court répit évite les K.O. en boucle. Elle redescend avec le temps. Pour l'instant, seuls les poings et les pieds la remplissent.
 - **Garde** 🔄 (R&D : testé sur le joueur de R&D, pas encore sur le joueur normal) : maintenir **Ctrl gauche / LT**.
   - **Ce qu'elle bloque** : les coups de face, à la tête et au corps, qui ne comptent presque plus. Le pied passe à moitié.
@@ -205,11 +205,11 @@ Le **menu d'avant-partie** suit la direction retenue, en version 2D (🔄, à te
 
 Les temps forts ont leur interjection (« FAUTE ! », « Dans le mille ! », « OHHH ! »). Un pouvoir ramassé arrive comme un sponsor. La fin de partie montre la carte du gagnant avec « Revanche ». À venir : replay en incrustation, ardoise et trophées de fin.
 
-### Parcours des menus 🔄 (intégré, à tester)
+### Parcours des menus ✅ (validé le 17/11)
 
 Proposé le 05/10 dans le prototype [Parcours des menus](ui/parcours.html), intégré dans Unity le 08/10 avec les variantes retenues (menu sur la table, pause en carte). Le menu a sa propre scène. Choisir un niveau le charge derrière un **écran de chargement** (variante « Le retour des billes » : carte postale du niveau, billes qui tombent dans la gouttière, astuces, puis chaque joueur appuie sur A). Les textes, les astuces et les images des niveaux sont modifiables sans toucher au code. Les sauvegardes, l'histoire, les niveaux prison et station et le jeu en ligne restent à venir.
 
-- **Menu principal** (refait le 30/10 🔄, compilé, non testé) : **Jouer** · **Réglages** · **Quitter**.
+- **Menu principal** (refait le 30/10, ✅ validé le 17/11) : **Jouer** · **Réglages** · **Quitter**.
   - **Jouer > 1 joueur** : niveau puis mode, seul à la table en attendant l'IA (qui n'est pas prête) ;
   - **Jouer > 2 à 4 joueurs** : J2, J3 et J4 rejoignent (écran partagé), niveau, puis **Mode de jeu** (à 3 ou 4, les modes qui ne se jouent pas encore à autant sont grisés ; Boogie Night reste à 2) :
     - **Sélection** : un mode (Classique, Catch the Hole, Hungry Hole, Snake Pool, Power Wash Pool, Play Anywhere, Pocket Size, Shooter miniature, Shooter Billard, Bowling Pool, Sumo Pool, Sumo Billard ; 9-ball et 14.1 retirés du menu et de la roue le 30/10, toujours jouables avec *Lancer sans le menu*), avec sur la ligne sélectionnée le type (Y / Tab : chacun son tour ou Speed Pool) et les pouvoirs (X / P) ;
