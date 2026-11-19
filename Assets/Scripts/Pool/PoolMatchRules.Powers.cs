@@ -163,7 +163,8 @@ namespace UntitledPoolGame.Pool
         // Until when each player may hit outside the modes that allow it (BrawlPower).
         private readonly float[] meleeUntil = new float[MaxPlayers];
 
-        public bool CanHit(int player) => CombatSettings.Instance.AllowsMelee(Mode) || Time.time < meleeUntil[player];
+        public bool CanHit(int player) =>
+            CombatSettings.Instance.AllowsMelee(Mode) || Time.time < meleeUntil[player] || (ruleSet != null && ruleSet.AllowsMelee(player));
 
         public void AllowMelee(int player, float duration)
         {

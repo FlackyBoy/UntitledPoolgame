@@ -38,6 +38,10 @@ namespace UntitledPoolGame.Pool
         // own turn and rolling-balls rules.
         public virtual bool AllowsPower(int player) => true;
 
+        // Punches and kicks on top of CombatSettings' melee modes (Pocket
+        // Size: the tiny ones between themselves).
+        public virtual bool AllowsMelee(int player) => false;
+
         // Multiplier on every shot's strength.
         public virtual float ShotPowerScale => 1f;
 

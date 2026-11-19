@@ -10,7 +10,7 @@ Jouer (1 joueur : niveau puis mode ; 2 à 4 joueurs : J2, J3 et J4 rejoignent, n
 | Clic, Entrée, Espace | A / ✕ | Tirer (valider) |
 | Échap, Retour arrière | B / ○ | Écran précédent |
 | Tab | Y / △ | Mode sélectionné dans la liste : chacun son tour ou Speed Pool (pas pour 9-ball ni 14.1) |
-| + / - | LB / RB | À 4 joueurs, 8-ball en Speed Pool, Sumo Billard, Shooter miniature et Shooter Billard : 2 contre 2 ou chacun pour soi |
+| + / - | LB / RB | À 4 joueurs, 8-ball en Speed Pool, Sumo Billard, Shooter miniature, Shooter Billard, Pocket Size et Cache-cache : 2 contre 2 ou chacun pour soi |
 | P | X / □ | Avec ou sans pouvoirs (tous les modes) |
 | Molette, - / + | LB / RB | 14.1 : changer le score cible |
 | Gauche / droite, molette, - / + | Gauche / droite, LB / RB | Boogie Night : nombre de parties |

@@ -45,7 +45,8 @@ namespace UntitledPoolGame.Pool
         public static void Refresh()
         {
             SpeedPoolSettings s = PoolSettingsLoader.LoadOrDefault<SpeedPoolSettings>("SpeedPoolSettings");
-            bool wanted = PlayerBallGroups.Teams && SumoPoolRuleSet.Current == null && (s.teamChevrons || s.teamRings);
+            // Nor in Hide and seek: a mark would show where a hider is.
+            bool wanted = PlayerBallGroups.Teams && SumoPoolRuleSet.Current == null && HideAndSeekRuleSet.Current == null && (s.teamChevrons || s.teamRings);
             if (!wanted)
             {
                 if (instance != null) Destroy(instance.gameObject);

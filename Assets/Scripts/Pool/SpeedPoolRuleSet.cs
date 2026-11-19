@@ -178,6 +178,71 @@ namespace UntitledPoolGame.Pool
             return true;
         }
 
+        // Modes that hand the cue balls out by role, the owners changing every
+        // round (Pocket Size, Hide and seek): the table's own cue ball and
+        // count - 1 fresh clones; any other cue ball (another mode's, the last
+        // match's) goes. tableCue remembers the table's own across "Rejouer",
+        // when its owner is no longer J1: FindPlayerCueBalls goes by owner.
+        protected static bool TakeCueBalls(ref PoolBall tableCue, int count, List<PoolBall> cues, string label)
+        {
+            if (tableCue == null)
+            {
+                foreach (PoolBall ball in PoolBall.Active)
+                {
+                    if (!ball.IsCueBall) continue;
+                    if (tableCue == null || (ball.CueOwner <= 0 && tableCue.CueOwner > 0)) tableCue = ball;
+                }
+            }
+            if (tableCue == null)
+            {
+                Debug.LogWarning($"[{label}] Pas de bille blanche sur la table.");
+                return false;
+            }
+            for (int i = PoolBall.Active.Count - 1; i >= 0; i--)
+            {
+                PoolBall ball = PoolBall.Active[i];
+                if (!ball.IsCueBall || ball == tableCue) continue;
+                // Inactive first: this frame's lookups would still find it.
+                ball.gameObject.SetActive(false);
+                Object.Destroy(ball.gameObject);
+            }
+            foreach (PoolBall ball in cues)
+            {
+                if (ball == null || ball == tableCue) continue;
+                ball.gameObject.SetActive(false);
+                Object.Destroy(ball.gameObject);
+            }
+            cues.Clear();
+            tableCue.gameObject.SetActive(true);
+            cues.Add(tableCue);
+            for (int i = 1; i < count; i++)
+            {
+                PoolBall clone = Object.Instantiate(tableCue, tableCue.transform.parent);
+                clone.name = $"CueBall_{i + 1} ({label})";
+                cues.Add(clone);
+            }
+            return true;
+        }
+
+        // The other end of TakeCueBalls: the clones gone, the table's own
+        // shared again.
+        protected static void ReleaseCueBalls(ref PoolBall tableCue, List<PoolBall> cues)
+        {
+            foreach (PoolBall ball in cues)
+            {
+                if (ball == null || ball == tableCue) continue;
+                ball.gameObject.SetActive(false);
+                Object.Destroy(ball.gameObject);
+            }
+            cues.Clear();
+            if (tableCue != null)
+            {
+                tableCue.gameObject.SetActive(true);
+                tableCue.MakeSharedCueBall();
+            }
+            tableCue = null;
+        }
+
         // Turn based only (Speed Pool never resolves a shot, see
         // PoolMatchRules.Update). Called when a shot is struck.
         public void BeginShot()

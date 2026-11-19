@@ -14,6 +14,6 @@ namespace UntitledPoolGame.Pool
         public override PocketSizeRole Role => PocketSizeRole.Tiny;
         public override PowerType Type => PowerType.Effect;
 
-        protected override void Apply(PocketSizeRuleSet rules, int player) => rules.BoostTiny(duration, multiplier);
+        protected override void Apply(PocketSizeRuleSet rules, int player) => rules.BoostTiny(player, duration, multiplier);
     }
 }

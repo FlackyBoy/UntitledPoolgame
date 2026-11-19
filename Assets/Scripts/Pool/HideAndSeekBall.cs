@@ -25,6 +25,14 @@ namespace UntitledPoolGame.Pool
             this.speed = speed;
             this.acceleration = acceleration;
             Stop();
+            enabled = true;
+        }
+
+        // The mode is over: the ball is a plain ball again until the next Prepare.
+        public void Release()
+        {
+            Stop();
+            enabled = false;
         }
 
         // wish: horizontal direction, its length the share of full speed.
