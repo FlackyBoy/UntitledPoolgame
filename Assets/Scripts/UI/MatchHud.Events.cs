@@ -103,7 +103,8 @@ namespace UntitledPoolGame.Core
             string line = !power.TargetsOpponent ? cfg.incomingBuffLine
                 : waitsForOpponentTurn ? cfg.incomingNextTurnLine : cfg.incomingNowLine;
             string header = Format(power.TargetsOpponent ? cfg.incomingAttackHeaderFormat : cfg.incomingBuffHeaderFormat, player + 1);
-            Incoming(1 - player, power, header, line);
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            Incoming(rules != null ? rules.TargetOf(player) : 1 - player, power, header, line);
         }
 
         // The slot shakes, with a word on why (an emptied text = no word).

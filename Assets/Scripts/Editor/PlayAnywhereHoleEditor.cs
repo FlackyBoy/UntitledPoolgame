@@ -138,6 +138,8 @@ namespace UntitledPoolGame.PoolEditor
 
             MoveTransform(hole.Player1Tee, new Color(0.3f, 0.6f, 1f), "Départ J1", null);
             MoveTransform(hole.Player2Tee, new Color(1f, 0.35f, 0.3f), "Départ J2", null);
+            MoveTransform(hole.Player3Tee, new Color(0.2f, 0.8f, 0.35f), "Départ J3", null);
+            MoveTransform(hole.Player4Tee, new Color(0.65f, 0.35f, 0.95f), "Départ J4", null);
             MoveTransform(hole.Cup, Color.yellow, "Trou", hole.Flag);
 
             for (int i = 0; i < hole.PointCount; i++)

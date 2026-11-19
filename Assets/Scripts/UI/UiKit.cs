@@ -24,6 +24,8 @@ namespace UntitledPoolGame.Core
         public static Color CubeDark => S.cubeDark;
         public static Color P1 => S.player1;
         public static Color P2 => S.player2;
+        // J1 to J4 (index 0 to 3).
+        public static Color PlayerColor(int player) => player <= 0 ? S.player1 : player == 1 ? S.player2 : player == 2 ? S.player3 : S.player4;
         public static Color Ink => S.ink;
         public static Color Card => S.card;
         public static Color Yellow => S.yellow;

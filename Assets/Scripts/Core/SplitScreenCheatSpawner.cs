@@ -63,9 +63,9 @@ namespace UntitledPoolGame.Core
         {
             if (manager == null) manager = PlayerInputManager.instance;
             if (manager == null) return "Pas de PlayerInputManager dans la scène.";
-            // -1 = no limit.
-            if (manager.maxPlayerCount >= 0 && manager.playerCount >= manager.maxPlayerCount)
-                return $"Déjà {manager.playerCount} joueurs (Max Player Count du PlayerInputManager).";
+            int limit = PlayerDeviceRouter.JoinLimit(manager);
+            if (manager.playerCount >= limit)
+                return $"Déjà {manager.playerCount} joueurs (au plus {limit} : Max Player Count du PlayerInputManager, ou ce que le mode accepte).";
 
             Gamepad pad = FreeGamepad();
             if (pad != null)

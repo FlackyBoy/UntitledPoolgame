@@ -482,7 +482,7 @@ namespace UntitledPoolGame.Pool
             across.y = 0f;
             float reach = theirs + ours + GrappleArrival;
             if (across.sqrMagnitude <= reach * reach)
-                rules.GrappleLanded(player, across, opponentDamage, opponentKnockSpeed, "le grappin");
+                rules.GrappleLanded(player, caught, across, opponentDamage, opponentKnockSpeed, "le grappin");
         }
 
         // Set like a kick's (LocalUnarmedMelee.KickBalls): where the player
@@ -525,8 +525,13 @@ namespace UntitledPoolGame.Pool
             {
                 if (shot == null || !shot.gameObject.activeSelf) continue;
                 Vector3 now = shot.transform.position;
-                Vector3 before = shot.LastTested;
-                shot.LastTested = now;
+                if (shot.TestedFrame != Time.frameCount)
+                {
+                    shot.TestedFrame = Time.frameCount;
+                    shot.TestedFrom = shot.LastTested;
+                    shot.LastTested = now;
+                }
+                Vector3 before = shot.TestedFrom;
                 if (!SegmentsWithin(before, now, bottom, top, reach, out point)) continue;
                 direction = (now - before).normalized;
                 freeze = shot.FreezePlayerTime;

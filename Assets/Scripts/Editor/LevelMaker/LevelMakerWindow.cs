@@ -51,6 +51,8 @@ namespace UntitledPoolGame.PoolEditor
 
         private void OnDisable()
         {
+            RevertPreview(restoreSelection: false);   // a replacement not validated
+
             SceneView.duringSceneGui -= OnSceneGUI;
             SceneView.beforeSceneGui -= OnBeforeSceneGUI;
             EditorApplication.hierarchyChanged -= MarkDirty;

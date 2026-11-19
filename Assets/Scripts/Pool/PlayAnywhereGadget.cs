@@ -16,9 +16,9 @@ namespace UntitledPoolGame.Pool
         private PlayAnywhereProp prop;
         private bool propLooked;
         // Per player, the ball's position last step, in this object's space.
-        private readonly Vector3[] lastLocal = new Vector3[2];
-        private readonly bool[] hasLast = new bool[2];
-        private readonly float[] cooldownUntil = new float[2];
+        private readonly Vector3[] lastLocal = new Vector3[PoolMatchRules.MaxPlayers];
+        private readonly bool[] hasLast = new bool[PoolMatchRules.MaxPlayers];
+        private readonly float[] cooldownUntil = new float[PoolMatchRules.MaxPlayers];
         // Farther than this in one step, the ball was moved (out of bounds,
         // a pipe): its path doesn't count.
         private const float TeleportDistance = 0.6f;
@@ -34,7 +34,7 @@ namespace UntitledPoolGame.Pool
             PlayAnywhereRuleSet rules = PlayAnywhereRuleSet.Current;
             if ((prop != null && !prop.IsPlaced) || rules == null) return;
 
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < lastLocal.Length; p++)
             {
                 PoolBall ball = rules.PlayableBall(p);
                 if (ball == null)

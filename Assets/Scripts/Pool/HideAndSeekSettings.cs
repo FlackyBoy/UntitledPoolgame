@@ -11,10 +11,18 @@ namespace UntitledPoolGame.Pool
     public class HideAndSeekSettings : ScriptableObject
     {
         [Header("Partie")]
-        [Tooltip("Points pour gagner la partie. Une manche donne un point au chercheur s'il trouve la bille, au cacheur sinon. Les rôles s'inversent à chaque manche.")]
+        [Tooltip("À 2 joueurs : points pour gagner la partie. Une manche donne un point au chercheur s'il trouve la bille, au cacheur sinon. Les rôles s'inversent à chaque manche.")]
         [Min(1)] public int pointsToWin = 3;
-        [Tooltip("Joueur qui cherche à la première manche (0 = J1, 1 = J2).")]
-        [Range(0, 1)] public int firstSeeker = 0;
+        [Tooltip("Joueur qui cherche à la première manche (0 = J1, 1 = J2…). À 3 et à 4 chacun pour soi, chacun cherche à son tour ; en 2 contre 2, son équipe cherche d'abord.")]
+        [Range(0, 3)] public int firstSeeker = 0;
+
+        [Header("À plus de 2 joueurs")]
+        [Tooltip("Nombre de fois que chacun (chaque équipe en 2 contre 2) cherche dans la partie. Un chercheur contre tous les cacheurs ; la partie se joue en un nombre fixe de manches, le plus de points gagne.")]
+        [Min(1)] public int roundsPerSeeker = 1;
+        [Tooltip("Points de chaque chercheur quand tous les cacheurs sont trouvés avant la fin.")]
+        [Min(0)] public int seekerWinPoints = 3;
+        [Tooltip("Quand un cacheur n'est pas trouvé, tous les cacheurs marquent, selon leur rang : jamais trouvé d'abord, puis trouvé le plus tard… (même rang à égalité). Le premier nombre va au meilleur.")]
+        public int[] hiderRankPoints = { 3, 2, 1 };
         [Tooltip("Temps pour se cacher, en secondes : le chercheur ferme les yeux. Arrivé au bout, le cacheur prend la bille la plus proche.")]
         [Min(1f)] public float hideTime = 15f;
         [Tooltip("Temps de la recherche, en secondes. Arrivé au bout, le cacheur gagne la manche.")]

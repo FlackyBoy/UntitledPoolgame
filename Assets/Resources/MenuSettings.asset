@@ -27,6 +27,8 @@ MonoBehaviour:
   cubeDark: {r: 0.12156863, g: 0.36078432, b: 0.6, a: 1}
   player1: {r: 0.18431373, g: 0.4862745, b: 0.9647059, a: 1}
   player2: {r: 0.9372549, g: 0.2901961, b: 0.23529412, a: 1}
+  player3: {r: 0.18039216, g: 0.7607843, b: 0.3529412, a: 1}
+  player4: {r: 0.63529414, g: 0.36078432, b: 0.9490196, a: 1}
   bodyFont: {fileID: 0}
   titleFont: {fileID: 0}
   background: {fileID: 0}
@@ -87,7 +89,7 @@ MonoBehaviour:
   comingSoonStamp: "Bient\xF4t"
   comingSoonToast: "Bient\xF4t !"
   justForFunContext: 1 joueur
-  localContext: 2 joueurs
+  localContextFormat: '{0} joueurs'
   modeHeading: Quel type de partie ?
   classicMode:
     ball:
@@ -117,7 +119,7 @@ MonoBehaviour:
   multiplayerHeading: Multijoueur
   localBall:
     label: Local
-    sub: "\xE9cran partag\xE9 \xB7 2 manettes"
+    sub: "\xE9cran partag\xE9 \xB7 2 \xE0 4 manettes"
     number: J1
     color: {r: 0.18431373, g: 0.4862745, b: 0.9647059, a: 1}
     stripe: 0
@@ -139,7 +141,7 @@ MonoBehaviour:
   readyFormat: "{0} - pr\xEAt"
   gamepadName: Manette
   keyboardName: Clavier & souris
-  player2Joined: Salut J2 !
+  playerJoinedFormat: Salut J{0} !
   pauseTitle: Pause
   resumeItem:
     label: Reprendre

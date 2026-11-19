@@ -4,11 +4,14 @@ using UnityEngine;
 namespace UntitledPoolGame.Pool
 {
     // Sumo Billard: Sumo Pool's table and balls, but what counts is the rack.
-    // J1 has the solids, J2 the stripes, no 8; the first with all of theirs in a
-    // pocket wins (sending in one of the other's helps them). A player who falls
-    // only comes back after a moment, and one of their potted balls comes back
-    // at once: pushing the other in still pays. No rounds, so the countdown only
-    // opens the match.
+    // The balls are shared out as in 8-ball Speed Pool (PlayerBallGroups): J1
+    // the solids, J2 the stripes; at three, 1-5, 6-11 and 12-15; at four, 2 v 2
+    // or each for themselves with a second rack. No 8. The first side with all
+    // of theirs in a pocket wins (sending in someone else's helps them). A
+    // player who falls only comes back after a moment, and one of their potted
+    // balls comes back at once: pushing the others in still pays. No rounds,
+    // so the countdown only opens the match. A player who joins restarts it
+    // (SharesBallsOut).
     public class SumoBilliardRuleSet : SumoPoolRuleSet
     {
         private const float RowSpacing = 0.8660254f; // sqrt(3)/2: balls touching in a triangle
@@ -29,14 +32,29 @@ namespace UntitledPoolGame.Pool
         // Off the table: OnPocketed turns it off just after HandlePocketed.
         private readonly List<PoolBall> toRespot = new List<PoolBall>();
         // When each player comes back after a fall, 0 = on the table.
-        private readonly float[] comeBackAt = new float[2];
+        private readonly float[] comeBackAt = new float[PoolMatchRules.MaxPlayers];
 
         public override bool ShowsPlate => CurrentPhase == Phase.Countdown;
+        // The balls are shared out for however many players there are.
+        public override bool SharesBallsOut => true;
+        protected override bool ShowsOwnerMarkers => true;
 
         // The copies are Speed Pool's.
         protected override bool KeepsTableBall(PoolBall ball) => !ball.IsExtra && OwnerOf(ball) >= 0;
 
+        protected override float TableBallFriction(float scale) => Settings.tableBallFriction * scale;
+
         protected override void PlaceTableBalls(Vector3 center, Quaternion rotation, float scale)
+        {
+            System.Array.Clear(comeBackAt, 0, comeBackAt.Length);
+            AddSecondRack();
+            if (PlayerBallGroups.Sides > 2) PlaceMixedBalls(center, rotation, scale);
+            else PlaceSolidsAndStripes(center, rotation, scale);
+            AddOwnerLooks();
+        }
+
+        // Two sides: the diamond above, mirrored.
+        private void PlaceSolidsAndStripes(Vector3 center, Quaternion rotation, float scale)
         {
             var solids = new List<PoolBall>();
             var stripes = new List<PoolBall>();
@@ -56,6 +74,51 @@ namespace UntitledPoolGame.Pool
             }
         }
 
+        // Three or four sides: the balls packed in a round cluster in the
+        // middle, dealt one each in turn from the centre out (players and
+        // balls in a random order), so nobody has all theirs on the edge.
+        private void PlaceMixedBalls(Vector3 center, Quaternion rotation, float scale)
+        {
+            int sides = PlayerBallGroups.Sides;
+            var bySide = new List<PoolBall>[sides];
+            for (int s = 0; s < sides; s++) bySide[s] = new List<PoolBall>();
+            int count = 0;
+            foreach (PoolBall ball in PoolBall.Active)
+            {
+                int side = OwnerOf(ball);
+                if (ball.IsCueBall || side < 0) continue;
+                bySide[side].Add(ball);
+                count++;
+            }
+
+            // Hexagonal packing (balls touching), nearest the middle first.
+            var spots = new List<Vector2>();
+            for (int ring = 0; spots.Count < count * 3 && ring < 12; ring++)
+                for (int r = -ring; r <= ring; r++)
+                    for (int q = -ring; q <= ring; q++)
+                    {
+                        if (Mathf.Max(Mathf.Abs(q), Mathf.Abs(r), Mathf.Abs(q + r)) != ring) continue;
+                        spots.Add(new Vector2(q + r * 0.5f, r * RowSpacing));
+                    }
+            spots.Sort((a, b) => a.sqrMagnitude.CompareTo(b.sqrMagnitude));
+
+            var order = new int[sides];
+            for (int s = 0; s < sides; s++)
+            {
+                order[s] = s;
+                Shuffle(bySide[s]);
+            }
+            for (int s = sides - 1; s > 0; s--)
+            {
+                int k = Random.Range(0, s + 1);
+                (order[s], order[k]) = (order[k], order[s]);
+            }
+            int next = 0;
+            for (int round = 0; next < count && next < spots.Count; round++)
+                foreach (int s in order)
+                    if (round < bySide[s].Count && next < spots.Count) PlaceTableBall(bySide[s], round, center, rotation, spots[next++], scale);
+        }
+
         private void PlaceTableBall(List<PoolBall> group, int index, Vector3 center, Quaternion rotation, Vector2 spot, float scale)
         {
             if (index >= group.Count) return;
@@ -63,7 +126,7 @@ namespace UntitledPoolGame.Pool
             float spacing = ball.Radius * 2f * Settings.rackSpacing;
             ball.SetSpawn(center + rotation * new Vector3(spot.x, 0f, spot.y) * spacing + Vector3.up * ball.Radius);
             ball.ResetToSpawn();
-            ball.RollingFrictionOverride = Settings.tableBallFriction * scale;
+            ball.RollingFrictionOverride = TableBallFriction(scale);
             racked.Add(ball);
         }
 
@@ -93,10 +156,11 @@ namespace UntitledPoolGame.Pool
         {
             foreach (PoolBall ball in toRespot) match.RespotBall(ball);
             toRespot.Clear();
-            for (int p = 0; p < 2; p++)
+            for (int p = 0; p < comeBackAt.Length; p++)
             {
                 if (comeBackAt[p] <= 0f || Time.time < comeBackAt[p]) continue;
                 comeBackAt[p] = 0f;
+                if (balls[p] == null) continue;
                 PoolBall ball = balls[p].Ball;
                 // Another ball may have rolled onto its start.
                 Vector3 spot = PoolMatchRules.FindFreeSpot(ball.RespawnPosition, ball);
@@ -119,10 +183,11 @@ namespace UntitledPoolGame.Pool
                 toRespot.Add(ball);
                 return;
             }
+            // owner: the side (in 2 v 2, the team's first player).
             pottedByPlayer[owner].Add(ball);
             if (Settings.debugLogs) Debug.Log($"[SumoPool] Bille {ball.Number} rentrée, pour J{owner + 1}.", ball);
-            if (!IsGroupCleared(GroupOf(owner), ball)) return;
-            if (Settings.debugLogs) Debug.Log($"[SumoPool] Victoire de J{owner + 1}.");
+            if (!IsSideCleared(owner, ball)) return;
+            if (Settings.debugLogs) Debug.Log($"[SumoPool] Victoire de J{owner + 1}{(PlayerBallGroups.Teams ? " et de son équipier" : "")}.");
             SetControllable(false);
             match.Win(owner);
         }
@@ -130,16 +195,23 @@ namespace UntitledPoolGame.Pool
         private void PlayerFell(PoolMatchRules match, PoolBall ball)
         {
             int p = ball.CueOwner;
-            if (p < 0 || p > 1) return;
+            if (p < 0 || p >= comeBackAt.Length || balls[p] == null) return;
             if (ball.LastPocket != null) ball.FallIntoTableHole(ball.LastPocket.transform.position, Settings.sinkTime);
             comeBackAt[p] = Time.time + Mathf.Max(Settings.fallRespawnDelay, Settings.sinkTime);
             if (Settings.debugLogs) Debug.Log($"[SumoPool] J{p + 1} tombe.", ball);
-            if (Settings.fallReturnsBall) RespotLastPotted(match, p);
+            if (Settings.fallReturnsBall) RespotLastPotted(match, PlayerBallGroups.SideOf(p));
         }
 
         // ---------- HUD ----------
 
-        public override string DescribeScore(int player) => player == 0 ? Settings.solidsLabel : Settings.stripesLabel;
+        // Solids or stripes (the second rack's too); at three, the numbers.
+        public override string DescribeScore(int player)
+        {
+            int side = PlayerBallGroups.SideOf(player);
+            if (PlayerBallGroups.Split != GroupSplit.Thirds) return side % 2 == 0 ? Settings.solidsLabel : Settings.stripesLabel;
+            int[] numbers = PlayerBallGroups.Numbers(side);
+            return numbers.Length > 0 ? $"{numbers[0]}-{numbers[numbers.Length - 1]}" : "";
+        }
 
         public override string DescribeRound() =>
             CurrentPhase == Phase.Countdown ? base.DescribeRound() : Settings.billiardGoal;

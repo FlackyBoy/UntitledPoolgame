@@ -6,7 +6,7 @@ using UntitledPoolGame.Core;
 namespace UntitledPoolGame.Pool
 {
     // Play Anywhere: the score card shown between two courses and at the end
-    // of the match (PlayAnywhereRuleSet), over both halves of the screen. Laid
+    // of the match (PlayAnywhereRuleSet), over the whole screen, a row per player. Laid
     // out like a golf card, in the HUD's "billard pop" style: one column per
     // course, the ones to come left empty; a score under par is circled, over
     // par squared. The course just played and the totals stamp in one by one.
@@ -14,11 +14,17 @@ namespace UntitledPoolGame.Pool
     {
         public struct Row
         {
-            public int course, par, player1, player2;
+            public int course, par;
+            // Per player.
+            public int[] strokes;
+
+            public int StrokesOf(int player) => strokes != null && player >= 0 && player < strokes.Length ? strokes[player] : 0;
         }
 
         private const float NameWidth = 170f, TotalWidth = 170f, MaxCell = 96f, MaxCoursesWidth = 1200f;
-        private const float RowHeight = 92f;
+        // A player's row; lower from three players, for the card to fit.
+        private const float TwoPlayersRowHeight = 92f, MorePlayersRowHeight = 74f;
+        private float rowHeight = TwoPlayersRowHeight;
         // Right of the totals, for the sticker: not over the number.
         private const float StickerRoom = 124f;
         private const float PopTime = 0.28f, StampTime = 0.18f;
@@ -104,14 +110,28 @@ namespace UntitledPoolGame.Pool
 
             int count = Mathf.Max(course.Count, rows.Count);
             float cell = Mathf.Min(MaxCell, MaxCoursesWidth / Mathf.Max(1, count));
-            int total1 = 0, total2 = 0, totalPar = 0;
+            int players = 2;
+            foreach (Row r in rows)
+                if (r.strokes != null) players = Mathf.Max(players, r.strokes.Length);
+            rowHeight = players > 2 ? MorePlayersRowHeight : TwoPlayersRowHeight;
+            var totals = new int[players];
+            int totalPar = 0;
             foreach (Row r in rows)
             {
-                total1 += r.player1;
-                total2 += r.player2;
+                for (int p = 0; p < players; p++) totals[p] += r.StrokesOf(p);
                 totalPar += r.par;
             }
-            int leader = winner >= 0 ? winner : total1 < total2 ? 0 : total2 < total1 ? 1 : -1;
+            // Before the end: the lowest total, alone (no sticker on a tie).
+            int leader = winner;
+            if (leader < 0)
+            {
+                int lowest = int.MaxValue;
+                for (int p = 0; p < players; p++)
+                {
+                    if (totals[p] < lowest) { lowest = totals[p]; leader = p; }
+                    else if (totals[p] == lowest) leader = -1;
+                }
+            }
 
             VisualElement table = Box(card);
             table.style.paddingLeft = table.style.paddingRight = 28;
@@ -144,8 +164,8 @@ namespace UntitledPoolGame.Pool
             }
             Text(Total(pars), $"{totalPar}", bodyFont, 28, Faded(0.65f));
 
-            PlayerRow(table, 0, cfg.player1Color, rows, count, cell, total1, totalPar, leader, winner);
-            PlayerRow(table, 1, cfg.player2Color, rows, count, cell, total2, totalPar, leader, winner);
+            for (int p = 0; p < players; p++)
+                PlayerRow(table, p, cfg.PlayerColor(p), rows, count, cell, totals[p], totalPar, leader, winner);
 
             if (!string.IsNullOrEmpty(footer))
             {
@@ -156,7 +176,7 @@ namespace UntitledPoolGame.Pool
                 pill.style.paddingLeft = pill.style.paddingRight = 28;
                 pill.style.paddingTop = pill.style.paddingBottom = 9;
                 pill.style.maxWidth = 1200;
-                pill.style.backgroundColor = winner == 0 ? cfg.player1Color : winner == 1 ? cfg.player2Color : Color.clear;
+                pill.style.backgroundColor = winner >= 0 ? cfg.PlayerColor(winner) : Color.clear;
                 Radius(pill, 16);
                 if (winner >= 0) Border(pill, 4, cfg.inkColor);
                 Label text = Text(pill, footer, titleFont, winner >= 0 ? 34 : 28, winner >= 0 ? Color.white : cfg.inkColor);
@@ -176,7 +196,7 @@ namespace UntitledPoolGame.Pool
         private void PlayerRow(VisualElement table, int player, Color colour, IReadOnlyList<Row> rows, int count, float cell, int total, int totalPar, int leader, int winner)
         {
             bool won = winner == player;
-            VisualElement row = RowBox(table, new Color(colour.r, colour.g, colour.b, won ? 0.32f : 0.2f), RowHeight);
+            VisualElement row = RowBox(table, new Color(colour.r, colour.g, colour.b, won ? 0.32f : 0.2f), rowHeight);
             row.style.marginTop = 6;
             Radius(row, 14);
 
@@ -195,13 +215,13 @@ namespace UntitledPoolGame.Pool
 
             for (int i = 0; i < count; i++)
             {
-                VisualElement c = Cell(row, cell, RowHeight, i, rows.Count);
+                VisualElement c = Cell(row, cell, rowHeight, i, rows.Count);
                 if (i >= rows.Count)
                 {
                     Text(c, "·", titleFont, 32, Faded(0.3f));
                     continue;
                 }
-                int strokes = player == 0 ? rows[i].player1 : rows[i].player2;
+                int strokes = rows[i].StrokesOf(player);
                 VisualElement mark = Mark(c, strokes, strokes - rows[i].par, cell);
                 // The course just played comes in player after player.
                 if (i == rows.Count - 1) stamps.Add((mark, 0.4f + 0.25f * player));

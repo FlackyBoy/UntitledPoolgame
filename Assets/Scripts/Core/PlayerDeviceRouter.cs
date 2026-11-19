@@ -25,7 +25,6 @@ namespace UntitledPoolGame.Core
     {
         public const string KeyboardScheme = "Keyboard&Mouse";
         public const string GamepadScheme = "Gamepad";
-        private const int DefaultMaxPlayers = 2;
         private const float StickThreshold = 0.5f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -46,12 +45,18 @@ namespace UntitledPoolGame.Core
 
         // Set by Assign: the devices were chosen in the menu.
         private static bool joinLocked;
+        private static PlayerDeviceRouter instance;
+
+        // A player can still arrive with a button in this level (not after
+        // the menu chose the devices, not without join by button).
+        public static bool JoinByButtonOpen => !joinLocked && instance != null && instance.joinOnPress;
 
         private PlayerInputManager manager;
         private bool joinOnPress;
 
         private void Awake()
         {
+            instance = this;
             joinLocked = false;
             manager = FindAnyObjectByType<PlayerInputManager>();
             // Runs after the scene's OnEnable: the manager already listens,
@@ -159,8 +164,19 @@ namespace UntitledPoolGame.Core
             // Not behind the menu of a level played from the editor.
             PoolMatchRules rules = PoolMatchRules.Instance;
             if (rules != null && !rules.MatchStarted) return false;
-            int max = manager.maxPlayerCount >= 0 ? manager.maxPlayerCount : DefaultMaxPlayers;
-            return playerCount < max;
+            return playerCount < JoinLimit(manager);
+        }
+
+        // How many players the level takes: the PlayerInputManager's Max
+        // Player Count (-1 = up to PoolMatchRules.MaxPlayers), and during a
+        // match no more than its mode is written for (PoolMatchSetup.MaxPlayers):
+        // a third player can't walk into a two-player mode.
+        public static int JoinLimit(PlayerInputManager manager)
+        {
+            int max = manager != null && manager.maxPlayerCount >= 0 ? manager.maxPlayerCount : PoolMatchRules.MaxPlayers;
+            PoolMatchRules rules = PoolMatchRules.Instance;
+            if (rules != null && rules.MatchStarted) max = Mathf.Min(max, PoolMatchSetup.MaxPlayers(rules.Mode, rules.Setup.type));
+            return max;
         }
 
         // Why CanJoin said no (diagnostic).
@@ -172,7 +188,7 @@ namespace UntitledPoolGame.Core
             if (LevelLoader.Busy) return "chargement en cours";
             PoolMatchRules rules = PoolMatchRules.Instance;
             if (rules != null && !rules.MatchStarted) return "la partie n'a pas commencé";
-            return $"déjà {playerCount} joueurs (max {(manager.maxPlayerCount >= 0 ? manager.maxPlayerCount : DefaultMaxPlayers)})";
+            return $"déjà {playerCount} joueurs (max {JoinLimit(manager)} : Max Player Count du PlayerInputManager, ou ce que le mode accepte)";
         }
 
         private static void Give(PlayerInput player, string scheme, params InputDevice[] devices)

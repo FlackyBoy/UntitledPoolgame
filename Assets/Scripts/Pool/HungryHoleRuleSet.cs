@@ -22,8 +22,6 @@ namespace UntitledPoolGame.Pool
         // A cue ball whose hole was eaten: its "pot" isn't a scratch.
         private PoolBall eatenCue;
 
-        protected override bool KeepsEightBall => true;
-
         public override void Setup(PoolMatchRules match)
         {
             hungry = PoolSettingsLoader.LoadOrDefault<HungryHoleSettings>("HungryHoleSettings");

@@ -13,9 +13,9 @@ namespace UntitledPoolGame.PoolEditor
     // changing kit keeps the layout.
     public partial class LevelMakerWindow
     {
-        private enum RoomTool { None, Walls, Openings, Floors, Stairs, Props, Lights }
+        private enum RoomTool { None, Select, Walls, Openings, Floors, Stairs, Props, Lights }
 
-        private static readonly string[] RoomToolNames = { "Aucun", "Murs", "Ouvertures", "Sol / plafond", "Escaliers", "Props", "Lumières" };
+        private static readonly string[] RoomToolNames = { "Aucun", "Sélection", "Murs", "Ouvertures", "Sol / plafond", "Escaliers", "Props", "Lumières" };
         private static readonly float[] GridSteps = { 0.25f, 0.5f, 1f, 2f };
         private static readonly string[] GridStepNames = { "0,25 m", "0,5 m", "1 m", "2 m" };
         // Finer than the trace's: 0,1 m lets 1,2 m tubes touch end to end.
@@ -30,7 +30,7 @@ namespace UntitledPoolGame.PoolEditor
         private int openingBrush;
         // Selected variant of each kind (index in the palette's list; -1 pillar = none).
         private int wallBrush, pillarBrush, doorBrush, windowBrush, floorBrush, ceilingBrush, stairsBrush, railingBrush;
-        private bool brushCeiling;
+        private bool brushFloor = true, brushCeiling;
         private Vector2 wallScroll, pillarScroll, openingScroll, floorScroll, ceilingScroll, stairsScroll;
         // Level being traced on (0 = ground floor) and the stairs' climbing direction.
         private int activeLevel;
@@ -50,10 +50,19 @@ namespace UntitledPoolGame.PoolEditor
         private int propIndex;
         private bool propRandomYaw = true;
         private float propYaw;
+        // Axis the wheel and R turn the prop around: 0 = vertical (yaw),
+        // 1 = the prop's X, 2 = its Z. propTilt holds the X and Z angles.
+        private int propAxis;
+        private Vector2 propTilt, lightTilt;
+        private static readonly string[] PropAxisNames = { "Y (vertical)", "X", "Z" };
         private float propMinScale = 1f, propMaxScale = 1f;
         private int lightBrush;
         private Vector2 lightScroll;
         private float lightYaw;
+        private float lightScale = 1f;
+        private const float MinBrushScale = 0.1f, MaxBrushScale = 5f;
+        // Scale of the next object placed by the Props or Lights tool.
+        private float CurrentScale => roomTool == RoomTool.Lights ? lightScale : nextScale;
         private Color neonColor = new Color(1f, 0.15f, 0.55f);
         private float neonIntensity = 1.5f;
         private bool neonShadows;
@@ -83,6 +92,7 @@ namespace UntitledPoolGame.PoolEditor
 
         private void StopRoomTool()
         {
+            RevertPreview(restoreSelection: true);   // a replacement not validated
             roomTool = RoomTool.None;
             trace.Clear();
             hoveredModule = null;
@@ -135,6 +145,7 @@ namespace UntitledPoolGame.PoolEditor
             var tool = (RoomTool)GUILayout.Toolbar((int)roomTool, RoomToolNames, GUILayout.Height(24));
             if (tool != roomTool)
             {
+                RevertPreview(restoreSelection: true);   // a replacement not validated
                 trace.Clear();
                 hoveredModule = null;
                 hoveredRoom = null;
@@ -143,6 +154,7 @@ namespace UntitledPoolGame.PoolEditor
             }
             switch (roomTool)
             {
+                case RoomTool.Select: DrawSelectToolOptions(); break;
                 case RoomTool.Walls: DrawWallToolOptions(); break;
                 case RoomTool.Openings: DrawOpeningToolOptions(); break;
                 case RoomTool.Floors: DrawFloorToolOptions(); break;
@@ -167,8 +179,10 @@ namespace UntitledPoolGame.PoolEditor
 
         // Thumbnails of a palette list; the selected index is the variant
         // used. withNone adds a first "Aucun" entry (index -1).
-        private int VariantGrid(string label, List<GameObject> list, int selected, ref Vector2 scroll, bool withNone = false)
+        // width: room the grid has (the window's by default).
+        private int VariantGrid(string label, List<GameObject> list, int selected, ref Vector2 scroll, bool withNone = false, float width = -1f)
         {
+            if (width < 0f) width = position.width;
             EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
             var entries = new List<GUIContent>();
             if (withNone) entries.Add(new GUIContent("Aucun"));
@@ -182,15 +196,21 @@ namespace UntitledPoolGame.PoolEditor
             }
 
             const int size = 64;
-            int columns = Mathf.Max(1, (int)((position.width - 30) / (size + 6)));
+            int columns = Mathf.Max(1, (int)((width - 30) / (size + 6)));
             int rows = Mathf.CeilToInt(entries.Count / (float)columns);
             scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(Mathf.Min(2, rows) * (size + 4) + 8));
             int offset = withNone ? 1 : 0;
-            int index = Mathf.Clamp(selected + offset, 0, entries.Count - 1);
+            // selected < -1: nothing picked yet, no thumbnail highlighted.
+            int index = selected < -1 ? -1 : Mathf.Clamp(selected + offset, 0, entries.Count - 1);
             index = GUILayout.SelectionGrid(index, entries.ToArray(), columns,
                 GUILayout.Width(columns * (size + 6)), GUILayout.Height(rows * (size + 4)));
             EditorGUILayout.EndScrollView();
             if (AssetPreview.IsLoadingAssetPreviews()) Repaint();
+            if (index < 0)
+            {
+                EditorGUILayout.LabelField("  —", EditorStyles.miniLabel);
+                return selected;
+            }
 
             int variant = index - offset;
             string name = variant < 0 ? "Aucun" : list[variant] != null ? list[variant].name : "(vide)";
@@ -209,10 +229,32 @@ namespace UntitledPoolGame.PoolEditor
                 if (GUILayout.Button(room != null ? $"Appliquer {what} à « {room.name} »" : $"Sélectionne une salle pour lui appliquer {what}"))
                 {
                     Undo.RecordObject(room, "Variantes de la salle");
+                    var before = LookOf(room);
                     apply(room);
-                    RoomBuilder.BuildWithNeighbours(room);
+                    RebuildChanged(room, before);
                     MarkDirty();
                 }
+        }
+
+        // What a room's build depends on, to rebuild only the parts that
+        // changed: the rest of the room keeps the changes made by hand.
+        private static (PrefabPalette palette, int wall, bool flip, int pillar, int floor, bool hasFloor, int ceiling, bool hasCeiling,
+            PrefabPalette floorKit, PrefabPalette ceilingKit)
+            LookOf(RoomOutline r) => (r.palette, r.wallVariant, r.flipWalls, r.pillarVariant, r.floorVariant, r.hasFloor, r.ceilingVariant, r.hasCeiling,
+                r.FloorPalette, r.CeilingPalette);
+
+        private static void RebuildChanged(RoomOutline room,
+            (PrefabPalette palette, int wall, bool flip, int pillar, int floor, bool hasFloor, int ceiling, bool hasCeiling,
+                PrefabPalette floorKit, PrefabPalette ceilingKit) before)
+        {
+            var now = LookOf(room);
+            var parts = new List<RoomModuleKind>();
+            // Another kit or wall: every module moves (and the ceiling's height).
+            if (now.palette != before.palette || now.wall != before.wall || now.flip != before.flip) parts.Add(RoomModuleKind.Wall);
+            if (now.pillar != before.pillar) parts.Add(RoomModuleKind.Pillar);
+            if (now.floor != before.floor || now.hasFloor != before.hasFloor || now.floorKit != before.floorKit) parts.Add(RoomModuleKind.Floor);
+            if (now.ceiling != before.ceiling || now.hasCeiling != before.hasCeiling || now.ceilingKit != before.ceilingKit) parts.Add(RoomModuleKind.Ceiling);
+            RoomBuilder.RebuildWithNeighbours(room, parts);
         }
 
         private void CreateEmptyPalette()
@@ -392,20 +434,29 @@ namespace UntitledPoolGame.PoolEditor
         private void DrawFloorToolOptions()
         {
             floorBrush = VariantGrid("Sol", Palette.floorTiles, floorBrush, ref floorScroll);
+            brushFloor = EditorGUILayout.Toggle("Avec sol", brushFloor);
             ceilingBrush = VariantGrid("Plafond", Palette.ceilingTiles, ceilingBrush, ref ceilingScroll);
             brushCeiling = EditorGUILayout.Toggle("Avec plafond", brushCeiling);
             ApplyToSelectedRoom("ce sol et ce plafond", ApplyFloorBrush);
             EditorGUILayout.HelpBox("Clic sur une salle fermée (mur, sol…) dans la vue Scène : lui applique ce sol" +
-                                    " (et ce plafond si « Avec plafond » est coché, sinon le plafond est retiré).", MessageType.None);
+                                    " si « Avec sol » est coché et ce plafond si « Avec plafond » est coché ;" +
+                                    " une case décochée retire la partie correspondante.", MessageType.None);
         }
 
+        // The variants are stored even when their part is off, so ticking the
+        // box again in the room list brings back the chosen tile.
         private void ApplyFloorBrush(RoomOutline room)
         {
             room.floorVariant = floorBrush;
             room.ceilingVariant = ceilingBrush;
-            room.hasFloor = true;
+            // The tool's kit may not be the room's: the tiles come from it.
+            room.floorPalette = room.ceilingPalette = Palette == room.palette ? null : Palette;
+            room.hasFloor = brushFloor;
             room.hasCeiling = brushCeiling;
         }
+
+        private string FloorBrushLabel() =>
+            $"{(brushFloor ? $"sol {floorBrush + 1}" : "sans sol")}, {(brushCeiling ? $"plafond {ceilingBrush + 1}" : "sans plafond")}";
 
         private void DrawPropToolOptions()
         {
@@ -427,16 +478,26 @@ namespace UntitledPoolGame.PoolEditor
 
             propRandomYaw = EditorGUILayout.Toggle("Rotation aléatoire", propRandomYaw);
             if (!propRandomYaw) propYaw = EditorGUILayout.Slider("Rotation", propYaw, 0f, 360f);
-            EditorGUILayout.MinMaxSlider("Échelle", ref propMinScale, ref propMaxScale, 0.5f, 2f);
-            EditorGUILayout.LabelField(" ", $"{propMinScale:0.00} – {propMaxScale:0.00}", EditorStyles.miniLabel);
+            DrawTiltOptions(ref propTilt);
+            EditorGUILayout.MinMaxSlider(new GUIContent("Échelle", "Tirée au hasard entre les deux valeurs ; égales = échelle fixe. + / - dans la vue Scène : ×1,1 / ÷1,1."),
+                ref propMinScale, ref propMaxScale, MinBrushScale, MaxBrushScale);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.PrefixLabel(" ");
+                propMinScale = Mathf.Clamp(EditorGUILayout.FloatField(propMinScale), MinBrushScale, MaxBrushScale);
+                EditorGUILayout.LabelField("–", GUILayout.Width(12));
+                propMaxScale = Mathf.Clamp(EditorGUILayout.FloatField(propMaxScale), propMinScale, MaxBrushScale);
+                if (GUILayout.Button("×1", GUILayout.Width(32))) propMinScale = propMaxScale = 1f;
+            }
             if (nextScale < propMinScale || nextScale > propMaxScale) nextScale = Random.Range(propMinScale, propMaxScale);
             propAlignToSurface = EditorGUILayout.Toggle("Suivre la pente / le mur", propAlignToSurface);
             propSnapToProps = EditorGUILayout.Toggle("Aimanter aux autres props", propSnapToProps);
             if (propSnapToProps)
                 propSnapDistance = EditorGUILayout.Slider("Distance d'aimantation", propSnapDistance, 0.05f, 1f);
             propRoomGuides = EditorGUILayout.Toggle("Repères de la salle", propRoomGuides);
-            EditorGUILayout.HelpBox("Le fantôme montre le prop tel qu'il sera posé. Clic : le poser. Ctrl + molette : le faire tourner (Maj = plus fin ; Alt = par 45°), R : +45°. " +
-                                    "Tourner coupe la rotation aléatoire. Maj + clic : retirer le prop visé." +
+            EditorGUILayout.HelpBox("Le fantôme montre le prop tel qu'il sera posé. Clic : le poser. Ctrl + molette : le faire tourner autour de l'axe choisi " +
+                                    "(Maj = plus fin ; Alt = par 45°), R : +45°, T : axe suivant (Y, X, Z). + / - : plus grand / plus petit (fixe l'échelle).Le prop incliné reste posé sur la surface par son point le plus bas. " +
+                                    "Tourner sur Y coupe la rotation aléatoire. Maj + clic : retirer le prop visé." +
                                     (propSnapToProps ? " Aimanté : le prop prend l'orientation du prop le plus proche (au quart de tour près) et se colle " +
                                                        "contre ses côtés, aligné sur ses bords ou son centre ; loin de tout prop, il s'aimante aux lignes du milieu de la salle." : "") +
                                     (propRoomGuides ? " Repères : lignes du milieu de la salle (vertes quand le prop est dessus), écart du prop à chaque mur, " +
@@ -462,14 +523,35 @@ namespace UntitledPoolGame.PoolEditor
                 neonShadows = EditorGUILayout.Toggle("Ombres", neonShadows);
             }
             lightYaw = EditorGUILayout.Slider("Rotation", lightYaw, 0f, 360f);
+            DrawTiltOptions(ref lightTilt);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                lightScale = EditorGUILayout.Slider(new GUIContent("Échelle", "+ / - dans la vue Scène : ×1,1 / ÷1,1."), lightScale, MinBrushScale, MaxBrushScale);
+                if (GUILayout.Button("×1", GUILayout.Width(32))) lightScale = 1f;
+            }
             lightGridSnap = EditorGUILayout.Toggle("Aimanter à une grille", lightGridSnap);
             if (lightGridSnap)
                 lightGridStep = EditorGUILayout.Popup("Pas de la grille", lightGridStep, LightGridStepNames);
             propRoomGuides = EditorGUILayout.Toggle("Repères de la salle", propRoomGuides);
             EditorGUILayout.HelpBox("La lumière se colle sur la surface visée (mur, plafond, sol). Aimantée, son centre tombe sur la grille affichée sur cette surface. Clic : la poser. Ctrl + molette : la faire tourner (Maj = plus fin ; " +
-                                    "Alt = par 45°), R : +45°. Maj + clic : retirer le prop visé. Une fois posée, sa couleur, son intensité et ses ombres se changent dans l'Inspector (Neon Light). " +
+                                    "Alt = par 45°) autour de l'axe choisi, R : +45°, T : axe suivant (Y = autour de la normale de la surface, X, Z = axes de la lumière ; " +
+                                    "inclinée, elle reste posée par son point le plus bas). + / - : plus grande / plus petite. Maj + clic : retirer le prop visé. Une fois posée, sa couleur, son intensité et ses ombres se changent dans l'Inspector (Neon Light). " +
                                     "Repères au sol et au plafond seulement.", MessageType.None);
         }
+
+        // Axis picker and X / Z angles, shared by the Props and Lights tools
+        // (the axis is shared, each tool keeps its own angles).
+        private void DrawTiltOptions(ref Vector2 tilt)
+        {
+            propAxis = EditorGUILayout.Popup(new GUIContent("Axe de rotation", "Axe autour duquel Ctrl + molette et R font tourner l'objet. T : axe suivant."),
+                propAxis, PropAxisNames);
+            tilt.x = EditorGUILayout.Slider("Rotation X", tilt.x, -180f, 180f);
+            tilt.y = EditorGUILayout.Slider("Rotation Z", tilt.y, -180f, 180f);
+            using (new EditorGUI.DisabledScope(tilt == Vector2.zero))
+                if (GUILayout.Button("Redresser (X et Z à 0)")) tilt = Vector2.zero;
+        }
+
+        private ref Vector2 ActiveTilt => ref roomTool == RoomTool.Lights ? ref lightTilt : ref propTilt;
 
         private void DrawRoomList()
         {
@@ -495,7 +577,11 @@ namespace UntitledPoolGame.PoolEditor
                             // around their ceiling and floor.
                             List<RoomOutline> related = RoomBuilder.Related(room);
                             Undo.DestroyObjectImmediate(room.gameObject);
-                            foreach (RoomOutline other in related) RoomBuilder.Build(other);
+                            foreach (RoomOutline other in related)
+                            {
+                                RoomBuilder.RebuildPart(other, RoomModuleKind.Floor);
+                                RoomBuilder.RebuildPart(other, RoomModuleKind.Ceiling);
+                            }
                             MarkDirty();
                             GUIUtility.ExitGUI();
                         }
@@ -516,21 +602,23 @@ namespace UntitledPoolGame.PoolEditor
                         using (new EditorGUILayout.HorizontalScope())
                         {
                             floor = EditorGUILayout.ToggleLeft("Sol", floor, GUILayout.Width(60));
-                            if (p != null) using (new EditorGUI.DisabledScope(!floor)) floorV = VariantPopup(null, p.floorTiles, floorV, false);
+                            if (p != null) using (new EditorGUI.DisabledScope(!floor)) floorV = VariantPopup(null, room.FloorPalette.floorTiles, floorV, false);
                         }
                         using (new EditorGUILayout.HorizontalScope())
                         {
                             ceiling = EditorGUILayout.ToggleLeft("Plafond", ceiling, GUILayout.Width(60));
-                            if (p != null) using (new EditorGUI.DisabledScope(!ceiling)) ceilingV = VariantPopup(null, p.ceilingTiles, ceilingV, false);
+                            if (p != null) using (new EditorGUI.DisabledScope(!ceiling)) ceilingV = VariantPopup(null, room.CeilingPalette.ceilingTiles, ceilingV, false);
                         }
                     }
                     bool flip = EditorGUILayout.ToggleLeft("Retourner les murs", room.flipWalls);
                     if (EditorGUI.EndChangeCheck())
                     {
                         Undo.RecordObject(room, "Modifier la salle");
+                        var before = LookOf(room);
                         if (wall != room.wallVariant)
                         {
                             room.openings.RemoveAll(o => o.kind == RoomModuleKind.Wall && o.variant == wall);
+                            room.floorPalette = room.ceilingPalette = null;   // the tiles below come from the room's kit
                             // Floor and ceiling follow the new wall's width.
                             float width = RoomBuilder.ModuleWidth(p, wall);
                             if (p.floorTiles.Count > 0) floorV = RoomBuilder.BestTileFor(p.floorTiles, width);
@@ -547,7 +635,7 @@ namespace UntitledPoolGame.PoolEditor
                         room.hasFloor = floor;
                         room.hasCeiling = ceiling;
                         room.flipWalls = flip;
-                        RoomBuilder.BuildWithNeighbours(room);
+                        RebuildChanged(room, before);
                         MarkDirty();
                     }
                     if (GUILayout.Button("Reconstruire (après modification des prefabs du kit)"))
@@ -630,8 +718,9 @@ namespace UntitledPoolGame.PoolEditor
                           "murs déjà présents non reconstruits.", room);
             RoomBuilder.Build(room);
             Selection.activeGameObject = room.gameObject;
-            // Ceilings below, floor holes above and the room around depend on it.
-            foreach (RoomOutline other in RoomBuilder.Related(room)) RoomBuilder.Build(other);
+            // Ceilings below, floor holes above and the room around depend on
+            // it: only their floors and ceilings are rebuilt.
+            RoomBuilder.RebuildNeighbourTiles(room);
             trace.Clear();
             MarkDirty();
             Repaint();
@@ -659,6 +748,7 @@ namespace UntitledPoolGame.PoolEditor
 
             switch (roomTool)
             {
+                case RoomTool.Select: SelectToolGUI(e); break;
                 case RoomTool.Walls: WallToolGUI(e); break;
                 case RoomTool.Openings: OpeningToolGUI(e); break;
                 case RoomTool.Floors: FloorToolGUI(e); break;
@@ -971,12 +1061,12 @@ namespace UntitledPoolGame.PoolEditor
                 Handles.color = new Color(0.3f, 1f, 0.6f);
                 for (int i = 0; i < room.points.Count; i++)
                     Handles.DrawLine(room.points[i] + Vector3.up * 0.05f, room.points[(i + 1) % room.points.Count] + Vector3.up * 0.05f, 3f);
-                Handles.Label(room.points[0] + Vector3.up * 0.5f, $"{room.name} → sol {floorBrush + 1}{(brushCeiling ? $", plafond {ceilingBrush + 1}" : ", sans plafond")}",
+                Handles.Label(room.points[0] + Vector3.up * 0.5f, $"{room.name} → {FloorBrushLabel()}",
                     EditorStyles.whiteBoldLabel);
                 if (e.type == EventType.Repaint)
                 {
                     ghostPieces.Clear();
-                    RoomBuilder.PreviewFloors(room, floorBrush, brushCeiling ? ceilingBrush : -1, ghostPieces);
+                    RoomBuilder.PreviewFloors(room, brushFloor ? floorBrush : -1, brushCeiling ? ceilingBrush : -1, ghostPieces);
                     DrawGhost(GhostReplaceColor);
                 }
             }
@@ -984,8 +1074,9 @@ namespace UntitledPoolGame.PoolEditor
             if (e.type == EventType.MouseDown && e.button == 0 && !e.alt && room != null)
             {
                 Undo.RecordObject(room, "Sol et plafond");
+                var before = LookOf(room);
                 ApplyFloorBrush(room);
-                RoomBuilder.BuildWithNeighbours(room);
+                RebuildChanged(room, before);
                 hoveredRoom = null;
                 e.Use();
                 MarkDirty();
@@ -1018,7 +1109,7 @@ namespace UntitledPoolGame.PoolEditor
             if (!lights && props.Count == 0) return;
             GameObject prefab = lights ? Palette.Light(lightBrush) : props[Mathf.Clamp(propIndex, 0, props.Count - 1)];
             if (prefab == null) return;
-            float scale = lights ? 1f : nextScale;
+            float scale = CurrentScale;
 
             if (!nextRolled) RollNextProp();
             if (e.type == EventType.KeyDown && e.keyCode == KeyCode.R)
@@ -1027,6 +1118,21 @@ namespace UntitledPoolGame.PoolEditor
                 e.Use();
                 Repaint();
             }
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.T)
+            {
+                propAxis = (propAxis + 1) % PropAxisNames.Length;
+                e.Use();
+                Repaint();
+                SceneView.RepaintAll();
+            }
+            if (e.type == EventType.KeyDown && ScaleKey(e.keyCode) != 0)
+            {
+                ScaleNext(ScaleKey(e.keyCode) > 0 ? 1.1f : 1f / 1.1f);
+                scale = CurrentScale;
+                e.Use();
+                Repaint();
+            }
+            Vector2 tilt = ActiveTilt;
 
             Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
             Physics.SyncTransforms();
@@ -1066,7 +1172,7 @@ namespace UntitledPoolGame.PoolEditor
             {
                 float radius = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? Mathf.Max(pb.extents.x, pb.extents.z) * scale : 0.3f;
                 RoomBuilder.PropPose(prefab, point, normal, yaw, scale,
-                    out Vector3 ghostPosition, out Quaternion ghostRotation, out Vector3 ghostScale, lights);
+                    out Vector3 ghostPosition, out Quaternion ghostRotation, out Vector3 ghostScale, lights, tilt);
                 bool colored = lights && prefab.GetComponentInChildren<NeonLight>(true) != null;
                 PrefabGhost.Draw(prefab, ghostPosition, ghostRotation, ghostScale,
                     colored ? new Color(neonColor.r, neonColor.g, neonColor.b, 0.6f) : GhostColor);
@@ -1083,7 +1189,9 @@ namespace UntitledPoolGame.PoolEditor
                 if (onLightGrid) DrawSurfaceGrid(point, normal, LightGridSteps[lightGridStep]);
                 string snapNote = (walls > 1 ? "  dans le coin" : walls == 1 ? "  contre le mur" : "")
                                   + (snappedTo != null ? $"  aimanté à {snappedTo.name}" : centerSnapped ? "  aimanté au milieu de la salle" : "");
-                Handles.Label(point + normal * 0.3f, $"{prefab.name}  {yaw:0}°{snapNote}", EditorStyles.whiteBoldLabel);
+                string rotationNote = $"Y {yaw:0}°" + (tilt != Vector2.zero ? $"  X {tilt.x:0}°  Z {tilt.y:0}°" : "") + $"  (axe {"YXZ"[propAxis]})"
+                                      + (Mathf.Approximately(scale, 1f) ? "" : $"  ×{scale:0.##}");
+                Handles.Label(point + normal * 0.3f, $"{prefab.name}  {rotationNote}{snapNote}", EditorStyles.whiteBoldLabel);
             }
             if (e.type == EventType.MouseMove) SceneView.RepaintAll();
 
@@ -1095,7 +1203,7 @@ namespace UntitledPoolGame.PoolEditor
             }
             else
             {
-                GameObject placed = RoomBuilder.PlaceProp(prefab, point, normal, yaw, scale, Palette, null, lights);
+                GameObject placed = RoomBuilder.PlaceProp(prefab, point, normal, yaw, scale, Palette, null, lights, tilt);
                 NeonLight neon = lights && placed != null ? placed.GetComponentInChildren<NeonLight>(true) : null;
                 if (neon != null)
                 {
@@ -1152,7 +1260,7 @@ namespace UntitledPoolGame.PoolEditor
         private RoomModule SnapProp(GameObject prefab, ref Vector3 point, ref float yaw)
         {
             if (!RoomBuilder.TryMeasure(prefab, out Bounds pb)) return null;
-            Vector3 half = pb.extents * nextScale;
+            Vector3 half = pb.extents * CurrentScale;
             float reach = Mathf.Max(half.x, half.z) + propSnapDistance;
             int count = Physics.OverlapBoxNonAlloc(point + Vector3.up * half.y, new Vector3(reach, Mathf.Max(half.y, 0.5f), reach),
                 snapBuffer, Quaternion.identity, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
@@ -1327,7 +1435,7 @@ namespace UntitledPoolGame.PoolEditor
         private int SnapToWalls(RoomOutline room, GameObject prefab, ref Vector3 point, ref float yaw)
         {
             if (!room.hasWalls || !RoomBuilder.TryMeasure(prefab, out Bounds pb)) return 0;
-            Vector3 half = pb.extents * nextScale;
+            Vector3 half = pb.extents * CurrentScale;
             int first = SnapToWall(room, half, -1, ref point, ref yaw);
             if (first < 0) return 0;
             return SnapToWall(room, half, first, ref point, ref yaw) < 0 ? 1 : 2;
@@ -1409,7 +1517,7 @@ namespace UntitledPoolGame.PoolEditor
             Handles.DrawDottedLine(middle - right * WallDistance(room, middle, -right), middle + right * WallDistance(room, middle, right), 4f);
 
             // Prop half-size along the room's axes, whatever its yaw.
-            Vector3 half = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? pb.extents * nextScale : Vector3.zero;
+            Vector3 half = RoomBuilder.TryMeasure(prefab, out Bounds pb) ? pb.extents * CurrentScale : Vector3.zero;
             float turn = (yaw - frame.eulerAngles.y) * Mathf.Deg2Rad;
             float cos = Mathf.Abs(Mathf.Cos(turn)), sin = Mathf.Abs(Mathf.Sin(turn));
             float alongRight = cos * half.x + sin * half.z, alongForward = sin * half.x + cos * half.z;
@@ -1505,10 +1613,36 @@ namespace UntitledPoolGame.PoolEditor
             nextRolled = true;
         }
 
+        // +1 for + (or =, the same key without Shift on a QWERTY layout), -1
+        // for -, from the main keyboard or the keypad.
+        private static int ScaleKey(KeyCode key) => key switch
+        {
+            KeyCode.KeypadPlus or KeyCode.Plus or KeyCode.Equals => 1,
+            KeyCode.KeypadMinus or KeyCode.Minus => -1,
+            _ => 0,
+        };
+
+        // Scaling by hand fixes the props' scale (min = max) from the one the
+        // ghost had, as turning by hand stops the random rotation.
+        private void ScaleNext(float factor)
+        {
+            if (roomTool == RoomTool.Lights)
+            {
+                lightScale = Mathf.Clamp(lightScale * factor, MinBrushScale, MaxBrushScale);
+                return;
+            }
+            nextScale = Mathf.Clamp(nextScale * factor, MinBrushScale, MaxBrushScale);
+            propMinScale = propMaxScale = nextScale;
+        }
+
         // Turning by hand takes over from the random rotation, from where
         // the ghost was.
         private void RotateNextProp(float degrees)
         {
+            // X and Z stay in -180..180, as on their sliders.
+            ref Vector2 tilt = ref ActiveTilt;
+            if (propAxis == 1) { tilt.x = Mathf.Repeat(tilt.x + degrees + 180f, 360f) - 180f; return; }
+            if (propAxis == 2) { tilt.y = Mathf.Repeat(tilt.y + degrees + 180f, 360f) - 180f; return; }
             if (roomTool == RoomTool.Lights)
             {
                 lightYaw = Mathf.Repeat(lightYaw + degrees, 360f);
@@ -1531,7 +1665,10 @@ namespace UntitledPoolGame.PoolEditor
             if (e.type != EventType.ScrollWheel || !(e.control || e.command) || EditorApplication.isPlaying) return;
             if (step != Step.Room || (roomTool != RoomTool.Props && roomTool != RoomTool.Lights && roomTool != RoomTool.Stairs) || Palette == null) return;
             float delta = Mathf.Abs(e.delta.y) >= Mathf.Abs(e.delta.x) ? e.delta.y : e.delta.x;
-            float current = roomTool == RoomTool.Stairs ? stairsYaw : NextYaw;
+            float current = roomTool == RoomTool.Stairs ? stairsYaw
+                : propAxis == 1 ? ActiveTilt.x
+                : propAxis == 2 ? ActiveTilt.y
+                : NextYaw;
             float degrees;
             if (e.alt)
             {

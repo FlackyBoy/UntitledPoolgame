@@ -79,6 +79,8 @@ namespace UntitledPoolGame.Player
 
         private CharacterController controller;
         private LocalPoolAimController poolAimController;
+        // Shrunk bodies (Pocket Size, Shooter): SizeScale.
+        private LocalFpsPlayerController fps;
         private LocalPlayerHandController handController;
         private bool hasSpeedParameter;
         private bool hasIsAimingParameter;
@@ -96,6 +98,7 @@ namespace UntitledPoolGame.Player
         {
             controller = GetComponent<CharacterController>();
             poolAimController = GetComponent<LocalPoolAimController>();
+            fps = GetComponent<LocalFpsPlayerController>();
             handController = GetComponent<LocalPlayerHandController>();
             hasSpeedParameter = AnimatorHasFloat(animator, speedParameterName);
             hasIsAimingParameter = AnimatorHasBool(animator, isAimingParameterName);
@@ -156,8 +159,12 @@ namespace UntitledPoolGame.Player
 
             // Horizontal only — gravity's fall speed shouldn't blend toward
             // a running animation while airborne/falling.
+            // In full-size units: the Animator's thresholds are, and a shrunk
+            // body walks at a fraction of the speed (at 0.05, its walk stayed
+            // under the idle threshold and only the run played).
             Vector3 velocity = controller.velocity;
             velocity.y = 0f;
+            if (fps != null && fps.SizeScale > 0f && fps.SizeScale < 1f) velocity /= fps.SizeScale;
             float horizontalSpeed = velocity.magnitude;
             bool isStandingStill = horizontalSpeed <= idleSpeedThreshold;
 

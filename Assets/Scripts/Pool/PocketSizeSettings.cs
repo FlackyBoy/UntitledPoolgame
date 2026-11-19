@@ -16,8 +16,14 @@ namespace UntitledPoolGame.Pool
         [Min(0f)] public float countdown = 3f;
         [Tooltip("Temps pendant lequel le résultat d'une manche reste affiché avant la suivante, en secondes.")]
         [Min(0f)] public float roundOverTime = 4f;
-        [Tooltip("Joueur qui est le grand dans la première manche (0 = J1, 1 = J2). Les rôles s'inversent à la deuxième.")]
-        [Range(0, 1)] public int firstGiant = 0;
+        [Tooltip("Joueur qui est le grand dans la première manche (0 = J1, 1 = J2…). À 2, les rôles s'inversent à la deuxième manche ; à 3 et à 4 chacun pour soi, chacun est le grand une fois, dans l'ordre ; en 2 contre 2, son équipe est grande dans la première manche, l'autre dans la seconde.")]
+        [Range(0, 3)] public int firstGiant = 0;
+
+        [Header("Points (à plus de 2)")]
+        [Tooltip("Points du grand (de chaque grand en 2 contre 2) quand tous les petits ont perdu avant la fin du temps. À 2 joueurs, une manche gagnée vaut ces points, ou le premier de Tiny Rank Points pour le petit : à valeurs égales, c'est une manche gagnée.")]
+        [Min(0)] public int giantWinPoints = 3;
+        [Tooltip("Quand un petit tient jusqu'à la fin du temps, tous les petits marquent, selon leur rang : le moins touché prend le premier nombre, le suivant le deuxième… (à égalité de touches, le même rang). Les petits éliminés comptent aussi, derniers.")]
+        public int[] tinyRankPoints = { 3, 2, 1 };
 
         [Header("Le petit")]
         [Tooltip("Le corps du petit : une variante du prefab du joueur, à sa taille (échelle de sa racine : 0,05 ≈ 12 cm). Il remplace le corps du joueur le temps de la manche. Son ragdoll démarre à cette taille et reste actif.")]
@@ -81,6 +87,12 @@ namespace UntitledPoolGame.Pool
         public string countdownFormat = "Prêt ? {0}";
         [Tooltip("{0} = touches du petit, {1} = touches pour perdre.")]
         public string hitsFormat = "touché {0}/{1}";
+        [Tooltip("Plaque du grand, à plusieurs petits. {0} = petits encore en jeu, {1} = petits au départ.")]
+        public string tiniesLeftFormat = "petits {0}/{1}";
+        [Tooltip("Plaque d'un petit éliminé avant la fin de la manche.")]
+        public string tinyOutText = "éliminé";
+        [Tooltip("À plus de 2, les points du joueur (de son équipe en 2 contre 2). {0} = points.")]
+        public string pointsFormat = "{0} pts";
         public string roundWonText = "Manche gagnée !";
         public string roundLostText = "Manche perdue";
 

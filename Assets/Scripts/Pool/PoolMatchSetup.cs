@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace UntitledPoolGame.Pool
 {
     // What a match is made of, three independent choices: the type (turn
@@ -12,6 +14,10 @@ namespace UntitledPoolGame.Pool
         public bool powers;
         // 14.1 only.
         public int targetScore;
+        // Four players, modes with groups (PlayerBallGroups): 2 against 2
+        // (one rack, solids and stripes per team) rather than each for
+        // themselves (two racks).
+        public bool teams;
 
         public PoolMatchSetup(PoolGameMode mode, PoolMatchType type, bool powers, int targetScore)
         {
@@ -19,6 +25,7 @@ namespace UntitledPoolGame.Pool
             this.type = type;
             this.powers = powers;
             this.targetScore = targetScore;
+            teams = false;
         }
 
         // Party and SpeedPool were modes before the type and the powers were
@@ -65,6 +72,43 @@ namespace UntitledPoolGame.Pool
             PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(mode);
             return entry == null ? type == PoolMatchType.TurnBased : entry.Allows(type);
         }
+
+        // Up to how many players the mode is played with in this type: what
+        // its rules are written for, lowered by PoolModeSettings' Max Players
+        // (0 = no lower). Most rule sets still assume two players (one
+        // opponent, `1 - player`); each one is raised here once it handles more.
+        public static int MaxPlayers(PoolGameMode mode, PoolMatchType type)
+        {
+            int written = RulesMaxPlayers(Current(mode), type);
+            PoolModeSettings.ModeEntry entry = PoolModeSettings.Instance.Find(Current(mode));
+            int max = entry != null && entry.maxPlayers > 0 ? Mathf.Min(entry.maxPlayers, written) : written;
+            return Mathf.Clamp(max, 2, PoolMatchRules.MaxPlayers);
+        }
+
+        private static int RulesMaxPlayers(PoolGameMode mode, PoolMatchType type) => mode switch
+        {
+            // Last one on the table scores (SumoPoolRuleSet).
+            PoolGameMode.SumoPool => PoolMatchRules.MaxPlayers,
+            // The same balls as 8-ball in Speed Pool (SumoBilliardRuleSet).
+            PoolGameMode.SumoBilliard => PoolMatchRules.MaxPlayers,
+            // Each for themselves; Shooter Billard on 8-ball's groups.
+            PoolGameMode.ShooterMini => PoolMatchRules.MaxPlayers,
+            PoolGameMode.ShooterPool => PoolMatchRules.MaxPlayers,
+            // A cue ball and a tee each (PlayAnywhereRuleSet).
+            PoolGameMode.PlayAnywhere => PoolMatchRules.MaxPlayers,
+            // One giant (one seeker) against all the others, or 2 v 2.
+            PoolGameMode.PocketSize => PoolMatchRules.MaxPlayers,
+            PoolGameMode.HideAndSeek => PoolMatchRules.MaxPlayers,
+            // Speed Pool: a cue ball and a group each (PlayerBallGroups). In
+            // turns, the 8-ball formats at more than two are still to come.
+            PoolGameMode.EightBall => type == PoolMatchType.SpeedPool ? PoolMatchRules.MaxPlayers : 2,
+            _ => 2,
+        };
+
+        // At four, the mode can be played 2 against 2 or each for themselves.
+        public static bool HasTeamChoice(PoolGameMode mode, PoolMatchType type) =>
+            (Current(mode) == PoolGameMode.EightBall && type == PoolMatchType.SpeedPool) || Current(mode) == PoolGameMode.SumoBilliard || Current(mode) == PoolGameMode.ShooterPool || Current(mode) == PoolGameMode.ShooterMini
+            || Current(mode) == PoolGameMode.PocketSize || Current(mode) == PoolGameMode.HideAndSeek;
 
         // Bowling Pool: no balls on the table for the powers to work on. Sumo modes:
         // the players are the balls, nothing to shoot a power with. Hide and seek:

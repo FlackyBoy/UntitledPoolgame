@@ -32,15 +32,16 @@ Le code avance plus vite que les essais en jeu. Ce skill réduit l'effort de tes
 
 ## Traiter le retour
 
-**Lire les logs avant de demander quoi que ce soit.** La console de l'éditeur ouvert s'écrit en direct dans `%LOCALAPPDATA%\Unity\Editor\Editor.log`, qui est énorme. Ne jamais l'ouvrir en entier :
+**Lire les logs avant de demander quoi que ce soit.** La console de l'éditeur ouvert s'écrit en direct dans `Logs/Editor.log`, à la racine du projet (depuis le 17/11 ; `%LOCALAPPDATA%\Unity\Editor\Editor.log` ne contient plus qu'un renvoi vers lui), qui est énorme. Ne jamais l'ouvrir en entier :
 
 ```bash
-LOG="$LOCALAPPDATA/Unity/Editor/Editor.log"
+LOG=Logs/Editor.log
+[ -s "$LOG" ] || LOG="$LOCALAPPDATA/Unity/Editor/Editor.log"
 tail -c 20000000 "$LOG" | grep -a -E "\[Bowling\]|\[Devices\]" | tail -n 60
 tail -c 20000000 "$LOG" | grep -a -E "Exception|Assertion failed" | sort | uniq -c | sort -rn | head -n 20
 ```
 
-`Editor-prev.log` contient la session précédente, si Unity a été relancé. Les lignes ne sont pas horodatées : les derniers résultats peuvent venir d'une session plus ancienne, à recouper avec ce que dit l'utilisateur. Une exception du log n'accuse pas forcément le point testé : vérifier son origine avant de conclure.
+`Logs/Editor-prev.log` contient la session précédente, si Unity a été relancé. Les lignes ne sont pas horodatées : les derniers résultats peuvent venir d'une session plus ancienne, à recouper avec ce que dit l'utilisateur. Une exception du log n'accuse pas forcément le point testé : vérifier son origine avant de conclure.
 
 Ne demander à l'utilisateur que ce qu'un log ne peut pas dire : ce qu'il a vu et ressenti.
 

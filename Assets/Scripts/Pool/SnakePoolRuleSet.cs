@@ -22,8 +22,6 @@ namespace UntitledPoolGame.Pool
         // so Cleanup can take the rings down once the rule set is gone.
         private static readonly PoolPocket[] calledPocket = new PoolPocket[2];
 
-        protected override bool KeepsEightBall => true;
-
         public override void Setup(PoolMatchRules match)
         {
             snake = PoolSettingsLoader.LoadOrDefault<SnakePoolSettings>("SnakePoolSettings");
