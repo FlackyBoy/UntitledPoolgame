@@ -13,7 +13,6 @@
 | [`/github`](#github) | Branche, commit, Pull Request, merge | « Prépare un commit » |
 | [`/refacto`](#refacto) | Auditer ou réorganiser le code sans changer le jeu | « Fais un audit de `PoolMatchRules` » |
 | [`/resteafaire`](#resteafaire) | Voir ce qui reste à faire, chantier par chantier | « Qu'est-ce qui reste sur les modes ? » |
-| `/notion-todo` | Tenir la base Notion à jour avec la TODO | « Démarre la tâche Curling Pool » |
 
 Une fonctionnalité passe en général par cette chaîne :
 
@@ -91,7 +90,7 @@ Après le test, inutile de copier la console :
 
 > « C'est bon pour 1 et 3, mais au 2 la queue passe à travers la table. » ou `/a-tester retour`
 
-Claude lit le journal d'Unity, cherche les exceptions, puis met à jour la TODO et Notion. **Seul un humain valide :** des logs propres restent un indice, jamais une validation.
+Claude lit le journal d'Unity, cherche les exceptions, puis met à jour la TODO. **Seul un humain valide :** des logs propres restent un indice, jamais une validation.
 
 ## github
 
@@ -189,6 +188,6 @@ Claude relit chaque ligne de la TODO, retire les doublons, et range le chantier 
 | `level-maker` | Créateur de niveau, étages, kits |
 | `dimensions` | Dimensions, environnements, règles loufoques |
 | `online` | Jeu en ligne |
-| `equipe` | Notion, bot Discord, skills, organisation du dépôt |
+| `equipe` | Skills, organisation du dépôt |
 
 Aussi : `/resteafaire pistes` (toutes les idées non décidées, une par ligne), `/resteafaire tout` (les tâches principales de chaque chantier), `/resteafaire correctifs` (la liste des bugs à corriger). Un nom approchant marche aussi (« caméra », « ui », « bagarre »).

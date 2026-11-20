@@ -25,7 +25,7 @@ C'est Claude qui propose les noms : l'utilisateur n'a pas à les connaître. Les
 | `level-maker` | Créateur de niveau, étages, kits, génération procédurale |
 | `dimensions` | Système de dimensions, environnements, règles loufoques |
 | `online` | Jeu en ligne, réseau |
-| `equipe` | Notion, bot Discord, skills, organisation du dépôt à deux |
+| `equipe` | Skills, organisation du dépôt à deux |
 
 Mots-clés spéciaux :
 - `pistes` : toutes les idées de `docs/content/pistes.md`, par section (pistes de l'utilisateur, puis suggestions de Claude), présentées comme non décidées ;
@@ -52,7 +52,7 @@ Ne rien demander à l'utilisateur : afficher directement la vue d'ensemble.
 
 ## `pistes` : toutes les idées non décidées
 
-`bash .claude/skills/resteafaire/chantiers.sh pistes` donne chaque idée avec sa ligne dans `pistes.md`. Les présenter par section, en une ligne chacune, avec `pistes.md:<ligne>`. Signaler celles qui sont déjà implémentées (la ligne le dit souvent) ou déjà passées dans la TODO. Ne jamais en faire une tâche : si l'utilisateur en retient une, elle va dans la TODO et dans Notion selon le skill `notion-todo`.
+`bash .claude/skills/resteafaire/chantiers.sh pistes` donne chaque idée avec sa ligne dans `pistes.md`. Les présenter par section, en une ligne chacune, avec `pistes.md:<ligne>`. Signaler celles qui sont déjà implémentées (la ligne le dit souvent) ou déjà passées dans la TODO. Ne jamais en faire une tâche : si l'utilisateur en retient une, elle va dans la TODO.
 
 ## Avec une catégorie : détailler le chantier
 
@@ -64,7 +64,7 @@ Ne rien demander à l'utilisateur : afficher directement la vue d'ensemble.
 
    Le tri par mots-clés n'est qu'un premier tri. **Relire chaque ligne dans `TODO.md`** (lire autour du numéro donné, pas le fichier entier) pour retirer ce qui n'a rien à voir et repérer ce qui manque : chercher aussi avec Grep les mots de la catégorie dans la TODO.
 
-2. **Dédoublonner** : une même tâche apparaît souvent dans « À tester en jeu », dans un résumé (« Outils : reste à faire ») et dans sa ligne détaillée. Le commentaire `<!-- notion:… -->` identique ou le même titre trahit le doublon : n'en garder qu'une, la plus détaillée.
+2. **Dédoublonner** : une même tâche apparaît souvent dans « À tester en jeu », dans un résumé (« Outils : reste à faire ») et dans sa ligne détaillée. Le même titre trahit le doublon : n'en garder qu'une, la plus détaillée.
 
 3. **Compléter**, sans mélanger avec la TODO :
    - le GDD (`docs/content/gdd.md`) : les parties 📌 (prévu) ou 🔄 de la catégorie ;
@@ -95,9 +95,9 @@ Ne rien demander à l'utilisateur : afficher directement la vue d'ensemble.
    - Le statut vient de la TODO, pas d'une impression : « compilé, non testé » va dans « À tester », même si la ligne est 🔄.
    - Donner la référence `TODO.md:<ligne>` pour pouvoir y aller.
    - Signaler ce qui bloque (« attend le système de dimensions », « tâche de l'utilisateur »), et ce qui semble dépassé ou fait sans que la TODO le dise, sous forme de question.
-   - Pas d'estimation de temps inventée : seulement celles écrites dans la TODO ou dans Notion.
+   - Pas d'estimation de temps inventée : seulement celles écrites dans la TODO.
 
-5. Finir par une suggestion de prochaine étape, et proposer `/notion-todo start` si l'utilisateur choisit une tâche.
+5. Finir par une suggestion de prochaine étape.
 
 ## Entretien
 

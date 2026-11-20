@@ -3,6 +3,10 @@
 Toutes les modifications notables apportées au projet sont listées ici, dans l'ordre
 chronologique inverse (les plus récentes en haut).
 
+## 2026-11-20
+- **Suivi : la TODO remise à jour** : la section « À tester en jeu », en tête de la TODO et donc du site, datait du 16/10 et ne contenait plus les nouveautés. Elle liste maintenant ce qui attend un essai, le plus récent en haut (modes à rôles à 4, qualité graphique et ambiances, Level Maker, menu debug), puis les anciens chantiers à confirmer.
+- **Plus de suivi Notion** (décision de l'utilisateur) : les mentions « pas encore dans Notion » et les liens vers les pages Notion sont retirés de la TODO, et les skills ne passent plus par Notion. Le suivi vit dans la TODO, le changelog et le site.
+
 ## 2026-11-18
 - **Cache-cache : à plus de 2 joueurs, on peut de nouveau prendre une bille** (compilé, non testé) : quand la partie redémarrait (arrivée d'un 3e joueur, « Rejouer »), les billes gardaient un composant en cours de destruction et ne répondaient plus, avec une erreur à chaque image. Le composant est maintenant désactivé puis réactivé au lieu d'être détruit.
 - **Retours du playtest notés dans les pistes** (Snake Pool, Power Wash, Play Anywhere, Pocket Size, Sumo, Cache-cache, objets qui apparaissent au hasard).

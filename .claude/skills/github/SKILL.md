@@ -65,8 +65,7 @@ Intégrer `origin/master` par un merge, jamais par un rebase de ce qui est déj�
    - 2 à 5 puces sur ce que la feature apporte ;
    - ce qui reste à tester, s'il y en a ;
    - les lignes d'attribution indiquées dans la conversation.
-3. Lancer `notion-todo pr`. Si Notion échoue (espace plein), le signaler sans bloquer la PR.
-4. Donner le lien de la PR.
+3. Donner le lien de la PR, et rappeler que le site ne montrera ces changements qu'après le merge.
 
 Une PR par feature. Si la branche en contient plusieurs, le dire avant d'ouvrir.
 
@@ -75,5 +74,5 @@ Une PR par feature. Si la branche en contient plusieurs, le dire avant d'ouvrir.
 1. Vérifier `gh pr view <n> --json mergeable,reviewDecision,statusCheckRollup`, et que `master` n'a pas divergé au point de faire un `sync` d'abord.
 2. **Demander l'accord de l'utilisateur pour cette PR**, en rappelant ce qui n'a pas été testé.
 3. `gh pr merge <n> --merge --delete-branch` : pas de squash, le Discord montre le détail des commits.
-4. Lancer `notion-todo done`. Une fonctionnalité non essayée passe dans « À tester en jeu », pas en ✅.
+4. Une fonctionnalité non essayée passe dans « À tester en jeu », pas en ✅. Vérifier ensuite que le site s'est reconstruit (`gh api repos/FlackyBoy/UntitledPoolgame/pages/builds --jq '.[0].status'` doit dire `built`).
 5. Revenir sur `master` à jour seulement si l'arbre de travail le permet sans rien perdre.
