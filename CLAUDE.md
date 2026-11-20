@@ -33,10 +33,8 @@ Jeu de billard « friend slop » en vue FPS, Unity 6 (6000.6), URP, 2 joueurs en
 - Ne pas toucher à `Assets/Scenes/BarSplitscreen.unity` sans demande explicite (configuration de l'utilisateur) et ne pas le commiter.
 - Je ne peux pas lancer Unity : le dire quand une modification n'est ni compilée ni testée.
 - Skills du projet (`.claude/skills/`, exemples sur le site : `docs/content/outils/skills.md`) : `unity-check` après chaque modification de `.cs`, `nouveau-mode` et `nouveau-pouvoir` pour ces ajouts, `a-tester` pour les sessions de test, `github` pour les branches, commits et PR, `refacto` pour un chantier de réorganisation, `resteafaire` pour faire le point sur ce qui reste, par chantier. Un skill ajouté ou changé = sa section mise à jour sur le site.
-- Suivi Notion : skill `notion-todo` (`.claude/skills/notion-todo/SKILL.md`). `start` en commençant une tâche de la TODO, `pr` à la création d'une PR, `done` au merge. Le temps passé vient des hooks, jamais d'une estimation de tête.
-  - **Chaque ligne ajoutée à la TODO est aussi créée dans Notion** (descriptif, « Comment tester », statut, rubrique, estimation) avec son commentaire `<!-- notion:… -->`.
-  - **Chaque changement de statut dans la TODO est reporté dans Notion** (À faire, En cours, En revue, À tester, Fait).
-  - Les idées non décidées vont dans `pistes.md` et la page Notion **Pistes**, pas dans la base des tâches.
+- Plus de suivi Notion (abandonné le 20/11) : le suivi vit dans `TODO.md`, `CHANGELOG.md` et le site. Les idées non décidées vont dans `pistes.md`.
+- **Le site doit rester à jour à chaque changement** : il ne lit que `master`, donc mettre à jour les pages concernées avec le travail, puis proposer de pousser la branche et d'ouvrir la PR. Tenir la section « À tester en jeu » de la TODO à jour (c'est elle qu'on voit en premier sur le site).
 - À chaque fonctionnalité ou correctif : mettre à jour `TODO.md` et `CHANGELOG.md` ; mettre à jour le GDD quand le statut d'une fonctionnalité change ; la doc technique quand une classe, un flux ou un réglage change ; ajouter aux pistes ce qui est seulement envisagé.
 - Commit / push uniquement quand l'utilisateur le demande, en ne commitant que les fichiers concernés.
 - **Avant chaque commit, faire une passe sur ce qui a été fait** :

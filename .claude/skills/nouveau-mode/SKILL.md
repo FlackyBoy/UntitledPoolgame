@@ -24,7 +24,7 @@ Décider, ou demander si le choix change le jeu :
 - présence sur la roue de Boogie Night ;
 - nom affiché et règles du menu, en une ou deux phrases drôles et claires.
 
-Lancer `notion-todo start`. Notion est plein pour l'instant : si la création échoue, le noter dans la ligne de la TODO et continuer.
+Ajouter la ligne du mode dans la TODO (« En cours »).
 
 ## Code
 

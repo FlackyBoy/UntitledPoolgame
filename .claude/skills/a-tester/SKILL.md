@@ -49,15 +49,15 @@ Ne demander à l'utilisateur que ce qu'un log ne peut pas dire : ce qu'il a vu e
 
 **Seul l'utilisateur valide.** Des logs propres sont un indice, jamais une validation.
 
-| Retour | TODO | Notion |
-|---|---|---|
-| Validé | ✅ avec la date, retiré de « À tester en jeu » | `Fait` |
-| Problème | Noter ce qui a été vu, reste 🔄 ou ⬜ | `En cours` ou `À faire` |
-| Pas testé | Rien | Rien |
-| Problème de ressenti ou réglage | Noter le retour ; proposer une valeur seulement avec un diagnostic | Inchangé |
+| Retour | TODO |
+|---|---|
+| Validé | ✅ avec la date, retiré de « À tester en jeu » |
+| Problème | Noter ce qui a été vu, reste 🔄 ou ⬜ |
+| Pas testé | Rien |
+| Problème de ressenti ou réglage | Noter le retour ; proposer une valeur seulement avec un diagnostic |
 
 - Passer aussi la ligne du CHANGELOG et le statut du GDD si la fonctionnalité change de statut.
-- Notion est plein pour l'instant : les pages existantes se modifient encore, mais les lignes marquées « pas encore dans Notion » n'ont pas de page. Ne pas réessayer de les créer sans que l'utilisateur ait libéré de la place.
+- Tout nouveau « compilé, non testé » s'ajoute aussi à « À tester en jeu », en tête de la TODO : c'est ce que le site montre d'abord.
 - Terminer par un résumé court : validés, à corriger, restants.
 
 ## Après un problème
